@@ -53,28 +53,50 @@ export function NotificationsPage() {
 
   useEffect(() => {
     loadNotifications();
-  }, []);
+    const pollInterval = setInterval(() => {
+      loadNotifications(true);
+    }, 5000);
 
-  useEffect(() => {
+    let eventSource: EventSource | null = null;
+    try {
+      eventSource = new EventSource("/api/notifications/stream", { withCredentials: true });
+      eventSource.onmessage = (event) => {
+        try {
+          const item = JSON.parse(event.data);
+          if (item && item.message) {
+            setNotifications((prev) => [item, ...prev.filter((p) => p.id !== item.id)]);
+          }
+        } catch {}
+      };
+    } catch {}
+
     const handler = (e: Event) => {
       const notif = (e as CustomEvent).detail as Notification;
       if (notif?.id) {
-        setNotifications((prev) => [notif, ...prev]);
+        setNotifications((prev) => [notif, ...prev.filter((p) => p.id !== notif.id)]);
       }
     };
     window.addEventListener("notification_received", handler);
-    return () => window.removeEventListener("notification_received", handler);
+
+    return () => {
+      clearInterval(pollInterval);
+      if (eventSource) eventSource.close();
+      window.removeEventListener("notification_received", handler);
+    };
   }, []);
 
-  const loadNotifications = async () => {
+  const loadNotifications = async (silent = false) => {
     try {
+      if (!silent) setLoading(true);
       const res = await fetchWithAuth("/api/notifications");
       setNotifications(res?.items || []);
-      await fetchWithAuth("/api/notifications/read", { method: "PUT" });
+      if (!silent) {
+        await fetchWithAuth("/api/notifications/read", { method: "PUT" });
+      }
     } catch {
       // Silently fail
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 

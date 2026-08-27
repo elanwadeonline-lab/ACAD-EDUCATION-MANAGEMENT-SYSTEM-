@@ -132,7 +132,9 @@ export const api = {
   createAcademicTerm: (sessionId: number, name: string, startDate?: string, endDate?: string) => fetchWithAuth<{ success: boolean; message: string }>("/api/academic/terms", { method: "POST", body: JSON.stringify({ sessionId, name, startDate, endDate }) }),
   activateAcademicSession: (sessionId: number) => fetchWithAuth<{ success: boolean; message: string }>("/api/academic/activate-session", { method: "POST", body: JSON.stringify({ sessionId }) }),
   activateAcademicTerm: (termId: number) => fetchWithAuth<{ success: boolean; message: string }>("/api/academic/activate-term", { method: "POST", body: JSON.stringify({ termId }) }),
-  endTerm: () => fetchWithAuth<{ success: boolean; message: string }>("/api/academic/end-term", { method: "POST" }),
+  endTerm: (data?: any) => fetchWithAuth<{ success: boolean; message: string }>("/api/academic/end-term", { method: "POST", body: JSON.stringify(data || {}) }),
+  deleteAcademicSession: (id: number) => fetchWithAuth<{ success: boolean; message: string }>(`/api/academic/sessions/${id}`, { method: "DELETE" }),
+  deleteAcademicTerm: (id: number) => fetchWithAuth<{ success: boolean; message: string }>(`/api/academic/terms/${id}`, { method: "DELETE" }),
   getAcademicStats: (sessionId?: number, termId?: number) => fetchWithAuth<any>(`/api/academic/stats${buildAcademicQuery(sessionId, termId)}`),
   
   // v8: Grading System APIs
@@ -416,6 +418,20 @@ export const api = {
     if (sessionId) url += `?sessionId=${sessionId}`;
     return fetchWithAuth<{ snapshots: any[] }>(url);
   },
+  /** Publish or schedule subject results */
+  publishResults: (data: { subject_id: number; action: "publish_now" | "schedule" | "hold"; release_time?: string | null }) =>
+    fetchWithAuth<any>("/api/teacher/results/publish", { method: "POST", body: JSON.stringify(data) }),
+  /** Get admin inquiry message threads */
+  getAdminMessageThreads: () => fetchWithAuth<any[]>("/api/admin/messages/threads"),
+  /** Get specific admin inquiry message thread */
+  getAdminMessageThread: (id: number) => fetchWithAuth<{ thread: any; messages: any[] }>(`/api/admin/messages/threads/${id}`),
+  /** Send reply to guardian from admin */
+  sendAdminMessageReply: (id: number, text: string) =>
+    fetchWithAuth<any>(`/api/admin/messages/threads/${id}`, { method: "POST", body: JSON.stringify({ text }) }),
+  /** Get user notifications */
+  getNotifications: () => fetchWithAuth<{ items: any[] }>("/api/notifications"),
+  /** Mark all notifications as read */
+  markNotificationsRead: () => fetchWithAuth<any>("/api/notifications/read", { method: "PUT" }),
   /** Generic GET request helper */
   get: <T = any>(url: string) => fetchWithAuth<T>(url),
   /** Generic POST request helper */

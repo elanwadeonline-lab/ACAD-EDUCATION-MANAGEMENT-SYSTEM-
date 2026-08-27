@@ -17,6 +17,7 @@ import {
   CheckCircleIcon,
   WarningIcon,
   CheckIcon,
+  TrashIcon,
 } from "../../../components/icons/Icons";
 import styles from "./page.module.css";
 
@@ -178,6 +179,44 @@ function AcademicSessionsContent() {
           await refreshAcademic();
         } catch (err: any) {
           setMsg({ type: "error", text: err.message || "Failed to end term" });
+        }
+      },
+    });
+  };
+
+  const handleDeleteSession = (sessionId: number, sessionName: string) => {
+    setConfirmState({
+      open: true,
+      title: "Delete Academic Session?",
+      message: `Permanently delete "${sessionName}" and all its terms? This cannot be undone. Sessions with exams or gradebooks cannot be deleted.`,
+      onConfirm: async () => {
+        setConfirmState(null);
+        try {
+          const res = await api.deleteAcademicSession(sessionId);
+          setMsg({ type: "success", text: res.message || "Academic session deleted." });
+          await loadData();
+          await refreshAcademic();
+        } catch (err: any) {
+          setMsg({ type: "error", text: err.message || "Failed to delete session" });
+        }
+      },
+    });
+  };
+
+  const handleDeleteTerm = (termId: number, termName: string) => {
+    setConfirmState({
+      open: true,
+      title: "Delete Term?",
+      message: `Permanently delete "${termName}"? Terms with exams or gradebooks cannot be deleted.`,
+      onConfirm: async () => {
+        setConfirmState(null);
+        try {
+          const res = await (api as any).deleteAcademicTerm(termId);
+          setMsg({ type: "success", text: res.message || "Term deleted." });
+          await loadData();
+          await refreshAcademic();
+        } catch (err: any) {
+          setMsg({ type: "error", text: err.message || "Failed to delete term" });
         }
       },
     });
@@ -364,13 +403,32 @@ function AcademicSessionsContent() {
                       {isGroupActive ? (
                         <span className={styles.activeSessionBadge}>Active Session</span>
                       ) : (
-                        <button
-                          type="button"
-                          className={styles.activateLink}
-                          onClick={() => handleActivateSession(s.id, s.name)}
-                        >
-                          Set Active →
-                        </button>
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                          <button
+                            type="button"
+                            className={styles.activateLink}
+                            onClick={() => handleActivateSession(s.id, s.name)}
+                          >
+                            Set Active →
+                          </button>
+                          <button
+                            type="button"
+                            title="Delete this session"
+                            onClick={() => handleDeleteSession(s.id, s.name)}
+                            style={{
+                              background: "none",
+                              border: "none",
+                              cursor: "pointer",
+                              color: "#EF4444",
+                              padding: "0.15rem",
+                              borderRadius: "4px",
+                              display: "flex",
+                              alignItems: "center",
+                            }}
+                          >
+                            <TrashIcon width="13" height="13" />
+                          </button>
+                        </div>
                       )}
                     </div>
 
@@ -388,13 +446,32 @@ function AcademicSessionsContent() {
                               {t.is_active ? (
                                 <span className={styles.activeTermBadge}>Active Term</span>
                               ) : isGroupActive ? (
-                                <button
-                                  type="button"
-                                  className={styles.activateTermLink}
-                                  onClick={() => handleActivateTerm(t.id, t.name)}
-                                >
-                                  Activate Term
-                                </button>
+                                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                                  <button
+                                    type="button"
+                                    className={styles.activateTermLink}
+                                    onClick={() => handleActivateTerm(t.id, t.name)}
+                                  >
+                                    Activate Term
+                                  </button>
+                                  <button
+                                    type="button"
+                                    title="Delete this term"
+                                    onClick={() => handleDeleteTerm(t.id, t.name)}
+                                    style={{
+                                      background: "none",
+                                      border: "none",
+                                      cursor: "pointer",
+                                      color: "#EF4444",
+                                      padding: "0.15rem",
+                                      borderRadius: "4px",
+                                      display: "flex",
+                                      alignItems: "center",
+                                    }}
+                                  >
+                                    <TrashIcon width="12" height="12" />
+                                  </button>
+                                </div>
                               ) : null}
                             </div>
                           </div>

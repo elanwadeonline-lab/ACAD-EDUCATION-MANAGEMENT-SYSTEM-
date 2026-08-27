@@ -197,10 +197,27 @@ function TimetableContent() {
     setModalOpen(true);
   };
 
+  function computeEndTime(startTime: string, durationMinutes: number): string {
+    if (!startTime) return "";
+    const [hStr, mStr] = startTime.split(":");
+    const h = parseInt(hStr, 10);
+    const m = parseInt(mStr, 10);
+    if (isNaN(h) || isNaN(m)) return "";
+    const totalMinutes = h * 60 + m + Number(durationMinutes || 60);
+    const endH = Math.floor(totalMinutes / 60) % 24;
+    const endM = totalMinutes % 60;
+    return `${String(endH).padStart(2, "0")}:${String(endM).padStart(2, "0")}`;
+  }
+
   const submit = async (e: FormEvent) => {
     e.preventDefault();
+    let calculatedEndTime = form.end_time;
+    if (!calculatedEndTime && form.start_time && form.duration) {
+      calculatedEndTime = computeEndTime(form.start_time, Number(form.duration));
+    }
+
     if (form.schedule_status === "scheduled") {
-      if (!form.subject_id || !form.exam_date || !form.start_time || !form.end_time || !form.duration || !form.teacher_id) {
+      if (!form.subject_id || !form.exam_date || !form.start_time || !calculatedEndTime || !form.duration || !form.teacher_id) {
         showToast("error", "Please complete all required fields for a scheduled exam.");
         return;
       }
@@ -220,7 +237,7 @@ function TimetableContent() {
         section: form.section || null,
         exam_date: form.exam_date,
         start_time: form.start_time,
-        end_time: form.end_time,
+        end_time: calculatedEndTime,
         duration: Number(form.duration),
         exam_mode: form.exam_mode,
         allow_students: form.allow_students ? 1 : 0,
@@ -238,7 +255,7 @@ function TimetableContent() {
         showToast("success", "Timetable slot created.");
       }
       setModalOpen(false);
-      await load();
+      load();
     } catch (err) {
       showToast("error", err instanceof Error ? err.message : "Failed to save schedule.");
     } finally {
@@ -540,7 +557,16 @@ function TimetableContent() {
                 className={styles.formInput}
                 type="time"
                 value={form.start_time}
-                onChange={(e) => setForm({ ...form, start_time: e.target.value })}
+                onChange={(e) => {
+                  const st = e.target.value;
+                  const dur = Number(form.duration) || 60;
+                  const computedEnd = computeEndTime(st, dur);
+                  setForm((prev) => ({
+                    ...prev,
+                    start_time: st,
+                    end_time: computedEnd || prev.end_time,
+                  }));
+                }}
                 required
               />
             </div>

@@ -13,33 +13,70 @@ export function StudentTopBar() {
   const pathname = usePathname() || "";
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [notifyMenuOpen, setNotifyMenuOpen] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(3);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notifications, setNotifications] = useState<any[]>([]);
   const menuRef = useRef<HTMLDivElement>(null);
   const notifyRef = useRef<HTMLDivElement>(null);
 
-  const notifications = [
-    {
-      id: 1,
-      icon: "📢",
-      title: "First Term Academic Session Active",
-      time: "1 hour ago",
-      link: "/student/dashboard",
-    },
-    {
-      id: 2,
-      icon: "📅",
-      title: "Continuous Assessment Timetable Published",
-      time: "3 hours ago",
-      link: "/student/dashboard",
-    },
-    {
-      id: 3,
-      icon: "📝",
-      title: "Class Offline Assignments Synced",
-      time: "1 day ago",
-      link: "/student/offline-assignments",
-    },
-  ];
+  const loadNotifications = async () => {
+    try {
+      const res = await fetch("/api/notifications", { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        const items = data?.items || [];
+        setNotifications(items.slice(0, 6));
+        setUnreadCount(items.filter((i: any) => !i.is_read).length);
+      }
+    } catch {}
+  };
+
+  useEffect(() => {
+    loadNotifications();
+    const interval = setInterval(loadNotifications, 5000);
+
+    let eventSource: EventSource | null = null;
+    try {
+      eventSource = new EventSource("/api/notifications/stream", { withCredentials: true });
+      eventSource.onmessage = (event) => {
+        try {
+          const item = JSON.parse(event.data);
+          if (item && item.message) {
+            setNotifications((prev) => [item, ...prev.filter((p) => p.id !== item.id)].slice(0, 6));
+            setUnreadCount((c) => c + 1);
+            window.dispatchEvent(new CustomEvent("notification_received", { detail: item }));
+          }
+        } catch {}
+      };
+      eventSource.onerror = () => {
+        // Silently handled — interval fallback continues polling
+      };
+    } catch {}
+
+    const handler = (e: any) => {
+      const detail = e.detail;
+      if (detail && detail.id) {
+        setNotifications((prev) => [detail, ...prev.filter((p) => p.id !== detail.id)].slice(0, 6));
+        setUnreadCount((c) => c + 1);
+      } else {
+        loadNotifications();
+      }
+    };
+    window.addEventListener("notification_received", handler);
+
+    return () => {
+      clearInterval(interval);
+      if (eventSource) eventSource.close();
+      window.removeEventListener("notification_received", handler);
+    };
+  }, []);
+
+  const handleMarkAllRead = async () => {
+    try {
+      await fetch("/api/notifications/read", { method: "PUT", credentials: "include" });
+      setUnreadCount(0);
+      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: 1 })));
+    } catch {}
+  };
 
   // Close menus on outside click
   useEffect(() => {
@@ -100,27 +137,46 @@ export function StudentTopBar() {
                     <button
                       type="button"
                       className={styles.notifyClearBtn}
-                      onClick={() => setUnreadCount(0)}
+                      onClick={handleMarkAllRead}
                     >
                       Mark all read
                     </button>
                   )}
                 </div>
                 <div className={styles.notifyList}>
-                  {notifications.map((n) => (
-                    <Link
-                      key={n.id}
-                      href={n.link}
-                      className={styles.notifyItem}
-                      onClick={() => setNotifyMenuOpen(false)}
-                    >
-                      <div className={styles.notifyIconBox}>{n.icon}</div>
-                      <div className={styles.notifyItemContent}>
-                        <span className={styles.notifyItemText}>{n.title}</span>
-                        <span className={styles.notifyItemTime}>{n.time}</span>
-                      </div>
-                    </Link>
-                  ))}
+                  {notifications.length === 0 ? (
+                    <div style={{ padding: "1.5rem 1rem", textAlign: "center", color: "#64748B", fontSize: "0.75rem" }}>
+                      No new notifications
+                    </div>
+                  ) : (
+                    notifications.map((n) => (
+                      <Link
+                        key={n.id}
+                        href={n.link || "/student/notifications"}
+                        className={styles.notifyItem}
+                        onClick={() => setNotifyMenuOpen(false)}
+                      >
+                        <div className={styles.notifyIconBox}>
+                          {n.type === "results" ? "📊" : n.type === "exam" ? "📝" : "📢"}
+                        </div>
+                        <div className={styles.notifyItemContent}>
+                          <span className={styles.notifyItemText}>{n.message}</span>
+                          <span className={styles.notifyItemTime}>
+                            {n.created_at ? new Date(n.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "Recent"}
+                          </span>
+                        </div>
+                      </Link>
+                    ))
+                  )}
+                </div>
+                <div style={{ padding: "0.5rem", borderTop: "1px solid var(--color-border, #E2E8F0)", textAlign: "center" }}>
+                  <Link
+                    href="/student/notifications"
+                    onClick={() => setNotifyMenuOpen(false)}
+                    style={{ fontSize: "0.75rem", fontWeight: 600, color: "#165AF6", textDecoration: "none" }}
+                  >
+                    View all notifications →
+                  </Link>
                 </div>
               </div>
             )}

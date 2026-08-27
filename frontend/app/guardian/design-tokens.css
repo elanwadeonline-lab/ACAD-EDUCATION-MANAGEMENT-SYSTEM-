@@ -1,4 +1,6 @@
 /* ── ACAD Guardian PWA Mobile Design Tokens ── */
+/* Intentionality • Inter Typography Hierarchy • 8px Rhythm System */
+
 :root {
   /* 1. Palette: Neutral Foundation + Primary Brand Blue + Semantic Accents */
   --g-bg-app: #F8FAFC;
@@ -73,13 +75,15 @@
   --g-shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.03);
   --g-shadow-sheet: 0 -10px 30px -5px rgba(15, 23, 42, 0.12);
 
-  /* 6. Transitions */
+  /* 6. Transitions & Motion */
   --g-ease: cubic-bezier(0.16, 1, 0.3, 1);
-  --g-duration: 200ms;
+  --g-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --g-duration: 180ms;
 }
 
 @media (prefers-reduced-motion: reduce) {
   :root {
     --g-duration: 0ms;
+    --g-ease-spring: linear;
   }
 }

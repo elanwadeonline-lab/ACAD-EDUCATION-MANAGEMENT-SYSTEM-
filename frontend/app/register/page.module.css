@@ -12,10 +12,10 @@
 /* ── Container Card ──────────────────────────────── */
 .container {
   display: grid;
-  grid-template-columns: 1fr 1.2fr;
-  max-width: 820px;
+  grid-template-columns: 1fr 1.25fr;
+  max-width: 860px;
   width: 100%;
-  min-height: 480px;
+  min-height: 520px;
   background: var(--color-surface, #FFFFFF);
   border-radius: 16px;
   box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.04);

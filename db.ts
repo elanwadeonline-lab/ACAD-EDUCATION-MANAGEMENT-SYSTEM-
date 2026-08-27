@@ -127,7 +127,7 @@ export function initializeDatabase(): void {
       id            INTEGER PRIMARY KEY AUTOINCREMENT,
       name          TEXT NOT NULL,
       email         TEXT UNIQUE NOT NULL,
-      role          TEXT NOT NULL CHECK(role IN ('student', 'teacher', 'operator')),
+      role          TEXT NOT NULL CHECK(role IN ('student', 'teacher', 'operator', 'guardian')),
       password_hash TEXT NOT NULL,
       grade         TEXT CHECK (role != 'student' OR grade IS NOT NULL),
       is_active     INTEGER NOT NULL DEFAULT 1 CHECK (is_active IN (0,1)),
@@ -146,6 +146,10 @@ export function initializeDatabase(): void {
   addColumnIfMissing("users", "session_id", "INTEGER");
   addColumnIfMissing("users", "term_id",    "INTEGER");
   addColumnIfMissing("users", "grade_level_id", "INTEGER");
+  addColumnIfMissing("users", "notify_attendance", "INTEGER DEFAULT 1");
+  addColumnIfMissing("users", "notify_results", "INTEGER DEFAULT 1");
+  addColumnIfMissing("users", "notify_fees", "INTEGER DEFAULT 1");
+  addColumnIfMissing("users", "notify_messages", "INTEGER DEFAULT 1");
 
   // ── subjects ─────────────────────────────────────────────────────────────
   db.run(`
@@ -187,6 +191,7 @@ export function initializeDatabase(): void {
   addColumnIfMissing("subjects", "assessment_type", "TEXT DEFAULT 'school_mode'");
   addColumnIfMissing("subjects", "result_policy", "TEXT DEFAULT 'immediate'");
   addColumnIfMissing("subjects", "result_release_time", "TEXT");
+  addColumnIfMissing("subjects", "results_released", "INTEGER NOT NULL DEFAULT 1");
 
   // ── questions ────────────────────────────────────────────────────────────
   db.run(`
@@ -1966,7 +1971,7 @@ export const queries = {
   getPendingGuardianLinks:  db.prepare("SELECT gsl.*, gu.name as guardian_name, gu.email as guardian_email, su.name as student_name, su.grade as student_grade, su.reg_id FROM guardian_student_links gsl JOIN users gu ON gu.id = gsl.guardian_id JOIN users su ON su.id = gsl.student_id WHERE gsl.status = 'pending' ORDER BY gsl.created_at DESC"),
   getAllGuardianLinks:       db.prepare("SELECT gsl.*, gu.name as guardian_name, gu.email as guardian_email, su.name as student_name, su.grade as student_grade, su.reg_id FROM guardian_student_links gsl JOIN users gu ON gu.id = gsl.guardian_id JOIN users su ON su.id = gsl.student_id ORDER BY gsl.created_at DESC LIMIT 200"),
   getGuardianWards:         db.prepare("SELECT gsl.*, su.name as student_name, su.grade, su.reg_id, su.image_url FROM guardian_student_links gsl JOIN users su ON su.id = gsl.student_id WHERE gsl.guardian_id = ? AND gsl.status = 'approved'"),
-  getStudentGuardians:      db.prepare("SELECT gsl.*, gu.name as guardian_name, gu.email, gu.phone FROM guardian_student_links gsl JOIN users gu ON gu.id = gsl.guardian_id WHERE gsl.student_id = ? AND gsl.status = 'approved'"),
+  getStudentGuardians:      db.prepare("SELECT gsl.*, gu.name as guardian_name, gu.email as guardian_email, gu.phone, gu.notify_results, gu.notify_attendance FROM guardian_student_links gsl JOIN users gu ON gu.id = gsl.guardian_id WHERE gsl.student_id = ? AND gsl.status = 'approved'"),
   createGuardianLink:       db.prepare("INSERT INTO guardian_student_links (guardian_id, student_id, relationship, verification_method) VALUES (?, ?, ?, 'manual_admin')"),
   updateGuardianLinkStatus: db.prepare("UPDATE guardian_student_links SET status=?, verified_by=?, verified_at=(strftime('%Y-%m-%dT%H:%M:%SZ','now')) WHERE id=?"),
   getGuardianLink:          db.prepare("SELECT * FROM guardian_student_links WHERE id=?"),
@@ -2419,6 +2424,12 @@ export const queries = {
     SELECT * FROM push_subscriptions WHERE user_id = ?
   `),
 
+  getClasses: db.prepare(`
+    SELECT c.*,
+           (SELECT COUNT(*) FROM class_enrollments ce WHERE ce.class_id = c.id) as enrolled_count
+    FROM classes c
+    ORDER BY c.name ASC
+  `),
   getTeacherClasses: db.prepare(`
     SELECT c.*,
            (SELECT COUNT(*) FROM class_enrollments ce WHERE ce.class_id = c.id) as enrolled_count
@@ -2448,11 +2459,25 @@ export const queries = {
     SET notify_attendance = ?, notify_results = ?, notify_fees = ?, notify_messages = ?
     WHERE id = ?
   `),
-  getStudentGuardians: db.prepare(`
-    SELECT gsl.guardian_id, u.name as guardian_name, u.email as guardian_email, u.notify_results, u.notify_attendance
-    FROM guardian_student_links gsl
-    JOIN users u ON u.id = gsl.guardian_id
-    WHERE gsl.student_id = ? AND gsl.status = 'approved'
+  updateSubjectResultPolicy: db.prepare(`
+    UPDATE subjects
+    SET result_policy = ?, result_release_time = ?, results_released = ?
+    WHERE id = ?
+  `),
+  publishSubjectResults: db.prepare(`
+    UPDATE subjects
+    SET results_released = 1, result_policy = 'immediate'
+    WHERE id = ?
+  `),
+  getAdminMessageThreads: db.prepare(`
+    SELECT gmt.*,
+           u.name as guardian_name, u.email as guardian_email, u.phone as guardian_phone,
+           s.name as student_name, s.grade as student_grade, s.reg_id as student_reg_id
+    FROM guardian_message_threads gmt
+    JOIN users u ON u.id = gmt.guardian_id
+    LEFT JOIN users s ON s.id = gmt.student_id
+    WHERE gmt.category = 'school' OR gmt.recipient_id IN (SELECT id FROM users WHERE role = 'operator')
+    ORDER BY gmt.last_message_at DESC
   `),
 };
 

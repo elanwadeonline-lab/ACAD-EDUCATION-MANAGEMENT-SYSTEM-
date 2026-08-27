@@ -268,8 +268,11 @@ async function readJson(req: Request, maxSize = 1048576): Promise<any> {
   }
 
   try {
-    return await req.json();
-  } catch {
+    const text = await req.text();
+    if (!text || !text.trim()) return {};
+    return JSON.parse(text);
+  } catch (e: any) {
+    if (e instanceof HttpError) throw e;
     throw new HttpError(400, "Invalid JSON");
   }
 }
@@ -291,7 +294,7 @@ function parseCookies(req: Request): Record<string, string> {
   return out;
 }
 
-function requireAuth(req: Request): { userId: number; role: string; token: string; jti: string } {
+function requireAuth(req: Request): { userId: number; role: string; token: string; jti: string; name?: string; email?: string } {
   const cookies = parseCookies(req);
   const cookieToken = cookies.__exampool_session;
   const authHeader = req.headers.get("authorization");
@@ -800,6 +803,9 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     const gradeLevelId = body?.grade_level_id ? Number(body.grade_level_id) : null;
     const dob = trimStr(body?.dob) || null;
     const phone = trimStr(body?.phone) || null;
+    const address = trimStr(body?.address) || null;
+    const relationship = trimStr(body?.relationship || "Parent").slice(0, 40);
+    const studentRegInput = trimStr(body?.student_reg_id || body?.student_id || body?.ward_reg_id || "");
     
     if (!name || !role) return apiError(400, "Missing required fields");
     if (role !== "student" && !email) return apiError(400, "Email is required for this role");
@@ -809,7 +815,7 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
       return apiError(400, `Password must be at least ${MIN_PASSWORD_LENGTH} characters`);
     }
     if (role === "operator" && (!auth || auth.role !== "operator")) return apiError(403, "operator cannot self-register");
-    if (role !== "student" && role !== "teacher" && role !== "operator") return apiError(403, "Invalid role");
+    if (role !== "student" && role !== "teacher" && role !== "operator" && role !== "guardian") return apiError(403, "Invalid role");
     if (role === "student" && !gradeLevelId) return apiError(400, "Grade Level ID is required for student accounts");
     // MVP gap fix: allow operator to create student/teacher without DOB/phone by providing safe defaults (password-reset still works via admin reset)
     let effectiveDob = dob;
@@ -821,7 +827,7 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     if (role === "student" && !effectiveDob) return apiError(400, "Date of Birth is required for student accounts");
     if (role === "teacher" && !effectivePhone) return apiError(400, "Phone number is required for teacher accounts");
     
-    const prefix = role === "teacher" ? "TCH" : "REG";
+    const prefix = role === "teacher" ? "TCH" : role === "guardian" ? "GDN" : "REG";
     const regId = `${prefix}-${Date.now().toString(36).toUpperCase()}`;
     
     // Auto-generate dummy email for student if not provided
@@ -839,7 +845,20 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     
     let result: { lastInsertRowid: number | bigint };
     try {
-      result = queries.createUser.run(name, email, role, hash, resolvedGradeString, regId, null, null, null, role === "teacher" ? effectivePhone : null, role === "student" ? effectiveDob : null, role === "student" ? gradeLevelId : null) as {
+      result = queries.createUser.run(
+        name,
+        email,
+        role,
+        hash,
+        resolvedGradeString,
+        regId,
+        null,
+        null,
+        role === "guardian" ? address : null,
+        (role === "teacher" || role === "guardian") ? effectivePhone : null,
+        role === "student" ? effectiveDob : null,
+        role === "student" ? gradeLevelId : null
+      ) as {
         lastInsertRowid: number | bigint;
       };
     } catch (e) {
@@ -872,7 +891,47 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
       }
     }
 
-    return apiSuccess({ user: { id: newUserId, name, email, role, reg_id: regId, grade_level_id: role === "student" ? gradeLevelId : null } }, 201);
+    // Auto-link student for Guardian if provided
+    if (role === "guardian" && studentRegInput) {
+      try {
+        const cleanReg = studentRegInput.trim();
+        let student = db.prepare(`
+          SELECT * FROM users 
+          WHERE role = 'student' 
+            AND (
+              UPPER(TRIM(reg_id)) = UPPER(TRIM(?))
+              OR UPPER(TRIM(email)) = UPPER(TRIM(?))
+              OR CAST(id AS TEXT) = TRIM(?)
+            )
+          LIMIT 1
+        `).get(cleanReg, cleanReg, cleanReg) as any;
+
+        if (!student) {
+          student = db.prepare(`
+            SELECT * FROM users 
+            WHERE role = 'student' 
+              AND (
+                reg_id LIKE ? 
+                OR UPPER(TRIM(name)) = UPPER(TRIM(?))
+              )
+            LIMIT 1
+          `).get(`%${cleanReg}%`, cleanReg) as any;
+        }
+
+        if (student && student.role === "student") {
+          db.prepare("INSERT OR IGNORE INTO guardian_student_links (guardian_id, student_id, relationship, status) VALUES (?, ?, ?, 'pending')").run(
+            newUserId,
+            student.id,
+            relationship
+          );
+          auditLog(newUserId, "GUARDIAN_AUTO_LINK_PENDING", "guardian_student_links", student.id, JSON.stringify({ relationship, reg_id: student.reg_id }));
+        }
+      } catch (err) {
+        console.warn("[Register] Guardian auto-link error:", err);
+      }
+    }
+
+    return apiSuccess({ user: { id: newUserId, name, email, role, reg_id: regId, grade_level_id: role === "student" ? gradeLevelId : null, phone: effectivePhone, address } }, 201);
   }
 
   if (method === "GET" && pathname === "/api/auth/me") {
@@ -1417,6 +1476,42 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     return apiSuccess({ sessions, terms });
   }
 
+  // ── DELETE academic session ──────────────────────────────────────────────
+  const deleteSessionMatch = pathname.match(/^\/api\/academic\/sessions\/(\d+)$/);
+  if (deleteSessionMatch && method === "DELETE") {
+    const auth = requireAuth(req);
+    requireRole(auth.role, ["operator"]);
+    const sessionId = Number(deleteSessionMatch[1]);
+    if (!isPositiveIntId(sessionId)) return apiError(400, "Invalid session id");
+
+    const session = queries.getAcademicSessionById.get(sessionId) as any;
+    if (!session) return apiError(404, "Academic session not found");
+
+    // Guard: Cannot delete the only active session
+    if (session.is_active) {
+      const totalCount = (db.prepare("SELECT COUNT(*) as c FROM academic_sessions").get() as any)?.c ?? 0;
+      if (Number(totalCount) <= 1) return apiError(409, "Cannot delete the only academic session.");
+      return apiError(409, "Cannot delete the currently active session. Activate another session first.");
+    }
+
+    // Guard: Block if any grading subjects, exams, or subjects exist in this session
+    const gsCount = (db.prepare("SELECT COUNT(*) as c FROM grading_subjects WHERE session_id = ?").get(sessionId) as any)?.c ?? 0;
+    const examCount = (db.prepare("SELECT COUNT(*) as c FROM exams WHERE session_id = ?").get(sessionId) as any)?.c ?? 0;
+    const subjectCount = (db.prepare("SELECT COUNT(*) as c FROM subjects WHERE session_id = ?").get(sessionId) as any)?.c ?? 0;
+    if (Number(gsCount) > 0 || Number(examCount) > 0 || Number(subjectCount) > 0) {
+      return apiError(409, `Cannot delete session: it has ${Number(gsCount)} gradebook(s), ${Number(examCount)} exam(s), and ${Number(subjectCount)} subject(s). Remove this data first or use Factory Reset.`);
+    }
+
+    // Safe to delete — cascade-delete its terms too
+    db.transaction(() => {
+      db.prepare("DELETE FROM academic_terms WHERE session_id = ?").run(sessionId);
+      db.prepare("DELETE FROM academic_sessions WHERE id = ?").run(sessionId);
+    })();
+
+    auditLog(auth.userId, "DELETE_SESSION", "academic_sessions", sessionId, JSON.stringify({ name: session.name }));
+    return apiSuccess({ success: true, message: `Academic session "${session.name}" deleted successfully.` });
+  }
+
   if (method === "POST" && pathname === "/api/academic/sessions") {
     const auth = requireAuth(req);
     requireRole(auth.role, ["operator"]);
@@ -1453,6 +1548,29 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     } catch (err: any) {
       return apiError(400, err.message || "Failed to create term");
     }
+  }
+
+  // ── DELETE academic term ──────────────────────────────────────────────────
+  const deleteTermMatch = pathname.match(/^\/api\/academic\/terms\/(\d+)$/);
+  if (deleteTermMatch && method === "DELETE") {
+    const auth = requireAuth(req);
+    requireRole(auth.role, ["operator"]);
+    const termId = Number(deleteTermMatch[1]);
+    if (!isPositiveIntId(termId)) return apiError(400, "Invalid term id");
+
+    const term = queries.getAcademicTermById.get(termId) as any;
+    if (!term) return apiError(404, "Academic term not found");
+    if (term.is_active) return apiError(409, "Cannot delete the currently active term. End it first.");
+
+    const gsCount = (db.prepare("SELECT COUNT(*) as c FROM grading_subjects WHERE term_id = ?").get(termId) as any)?.c ?? 0;
+    const examCount = (db.prepare("SELECT COUNT(*) as c FROM exams WHERE term_id = ?").get(termId) as any)?.c ?? 0;
+    if (Number(gsCount) > 0 || Number(examCount) > 0) {
+      return apiError(409, `Cannot delete term: it has ${Number(gsCount)} gradebook(s) and ${Number(examCount)} exam(s).`);
+    }
+
+    db.prepare("DELETE FROM academic_terms WHERE id = ?").run(termId);
+    auditLog(auth.userId, "DELETE_TERM", "academic_terms", termId, JSON.stringify({ name: term.name }));
+    return apiSuccess({ success: true, message: `Term "${term.name}" deleted successfully.` });
   }
 
   if (method === "POST" && pathname === "/api/academic/activate-session") {
@@ -2059,9 +2177,26 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
           }
         }
       }
+
+      // Raw CBT scores from source_cbt_subject_id (always available regardless of policy type)
+      // Keyed by student_id: { score, total_score, pct }
+      const rawCbtScores: Record<number, { score: number; total_score: number; pct: number }> = {};
+      if (subject.source_cbt_subject_id) {
+        const sourceExams = queries.getExamsBySubject.all(subject.source_cbt_subject_id) as any[];
+        for (const e of sourceExams) {
+          if (e.status === 'completed' && e.score != null) {
+            rawCbtScores[e.student_id] = {
+              score: Number(e.score),
+              total_score: Number(e.total_score || 0),
+              pct: e.total_score > 0 ? Math.round((e.score / e.total_score) * 100) : 0,
+            };
+          }
+        }
+      }
       
-      return apiSuccess({ students, policies, manualScores, cbtScores, termResults, pass_mark: subject.pass_mark });
+      return apiSuccess({ students, policies, manualScores, cbtScores, rawCbtScores, termResults, pass_mark: subject.pass_mark });
     }
+
     
     if (method === "POST") {
       const auth = requireAuth(req);
@@ -2855,18 +2990,28 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     const targetSessionId = qSessionId || activeSession?.id;
     const targetTermId = qTermId || activeTerm?.id;
 
-    if (!targetSessionId || !targetTermId) return apiSuccess([]);
-
     if (auth.role === "student") {
       let query = `
-        SELECT s.* FROM subjects s
-        INNER JOIN subject_enrollments se ON se.subject_id = s.id AND se.student_id = ?
-        WHERE (s.is_timetable_published = 1 OR s.is_published = 1)
+        SELECT DISTINCT s.* FROM subjects s
+        LEFT JOIN subject_enrollments se ON se.subject_id = s.id AND se.student_id = ?
+        LEFT JOIN users u ON u.id = ?
+        LEFT JOIN grade_levels gl_u ON u.grade_level_id = gl_u.id
+        LEFT JOIN grade_levels gl_s ON s.grade_level_id = gl_s.id
+        WHERE (s.is_timetable_published = 1 OR s.is_published = 1 OR se.student_id IS NOT NULL OR EXISTS (SELECT 1 FROM exams ex WHERE ex.student_id = ? AND ex.subject_id = s.id))
+        AND (
+          se.student_id IS NOT NULL
+          OR EXISTS (SELECT 1 FROM exams ex WHERE ex.student_id = ? AND ex.subject_id = s.id)
+          OR (s.class IS NOT NULL AND u.grade IS NOT NULL AND REPLACE(LOWER(TRIM(s.class)), ' ', '') = REPLACE(LOWER(TRIM(u.grade)), ' ', ''))
+          OR (s.grade_level_id IS NOT NULL AND u.grade_level_id IS NOT NULL AND s.grade_level_id = u.grade_level_id)
+          OR (gl_s.name IS NOT NULL AND gl_u.name IS NOT NULL AND REPLACE(LOWER(TRIM(gl_s.name)), ' ', '') = REPLACE(LOWER(TRIM(gl_u.name)), ' ', ''))
+          OR (s.class IS NULL AND s.grade_level_id IS NULL)
+          OR LOWER(TRIM(COALESCE(s.class, ''))) IN ('all', 'all cohorts', 'general')
+        )
       `;
-      const params: any[] = [auth.userId];
+      const params: any[] = [auth.userId, auth.userId, auth.userId, auth.userId];
       if (targetSessionId && targetTermId) {
-        query += " AND s.session_id = ? AND s.term_id = ?";
-        params.push(targetSessionId, targetTermId);
+        query += " AND (s.session_id = ? AND s.term_id = ? OR s.session_id IS NULL OR se.student_id IS NOT NULL OR EXISTS (SELECT 1 FROM exams ex WHERE ex.student_id = ? AND ex.subject_id = s.id))";
+        params.push(targetSessionId, targetTermId, auth.userId);
       }
       query += " ORDER BY s.name";
       return apiSuccess(db.prepare(query).all(...params));
@@ -2876,7 +3021,7 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
       let query = "SELECT * FROM subjects WHERE teacher_id = ?";
       const params: any[] = [auth.userId];
       if (targetSessionId && targetTermId) {
-        query += " AND session_id = ? AND term_id = ?";
+        query += " AND (session_id = ? AND term_id = ? OR session_id IS NULL)";
         params.push(targetSessionId, targetTermId);
       }
       query += " ORDER BY name";
@@ -2886,7 +3031,7 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     let query = "SELECT * FROM subjects";
     const params: any[] = [];
     if (targetSessionId && targetTermId) {
-      query += " WHERE session_id = ? AND term_id = ?";
+      query += " WHERE (session_id = ? AND term_id = ? OR session_id IS NULL)";
       params.push(targetSessionId, targetTermId);
     }
     query += " ORDER BY id DESC";
@@ -3314,6 +3459,41 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
   }
 
   // ── Subject student roster (enrollment management) ───────────────────────────
+  const subjectBulkEnrollMatch = pathname.match(/^\/api\/subjects\/(\d+)\/students\/bulk$/);
+  if (subjectBulkEnrollMatch && method === "POST") {
+    const auth = requireAuth(req);
+    requireRole(auth.role, ["operator", "teacher"]);
+    const subjectId = Number(subjectBulkEnrollMatch[1]);
+    if (!isPositiveIntId(subjectId)) return apiError(400, "Invalid subject id");
+    const subject = queries.getSubjectById.get(subjectId) as any;
+    if (!subject) return apiError(404, "Subject not found");
+    if (auth.role === "teacher" && !sameUserId(subject.teacher_id, auth.userId)) return apiError(403, "Not authorized");
+    
+    const body = await readJson(req);
+    const grade = trimStr(body?.grade);
+    
+    let targetStudents: any[] = [];
+    if (!grade || grade.toLowerCase() === "all") {
+      targetStudents = db.prepare("SELECT id, name FROM users WHERE role = 'student' AND is_active = 1").all() as any[];
+    } else {
+      targetStudents = db.prepare(`
+        SELECT u.id, u.name 
+        FROM users u 
+        LEFT JOIN grade_levels gl ON u.grade_level_id = gl.id 
+        WHERE u.role = 'student' AND u.is_active = 1 AND (u.grade = ? OR gl.name = ?)
+      `).all(grade, grade) as any[];
+    }
+    
+    db.transaction(() => {
+      for (const st of targetStudents) {
+        queries.enrollStudent.run(subjectId, st.id, auth.userId);
+      }
+    })();
+    
+    auditLog(auth.userId, "STUDENT_BULK_ENROLL", "subject_enrollment", subjectId, JSON.stringify({ grade, enrolled_count: targetStudents.length }));
+    return apiSuccess({ success: true, count: targetStudents.length, message: `Enrolled ${targetStudents.length} student(s) into subject.` });
+  }
+
   const subjectStudentsMatch = pathname.match(/^\/api\/subjects\/(\d+)\/students$/);
 
   if (subjectStudentsMatch && method === "GET") {
@@ -4079,25 +4259,21 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     const targetSessionId = qSessionId || activeSession?.id;
     const targetTermId = qTermId || activeTerm?.id;
 
-    if (!targetSessionId || !targetTermId) return apiSuccess([]);
-
-    let baseFilter = "e.status = 'completed'";
-    const params: any[] = [];
-    
-    if (targetSessionId && targetTermId) {
-      baseFilter += " AND (e.session_id = ? AND e.term_id = ? OR e.session_id IS NULL)";
-      params.push(targetSessionId, targetTermId);
-    }
-
     if (auth.role === "student") {
-      params.unshift(auth.userId);
+      let studentFilter = "e.student_id = ? AND e.status = 'completed'";
+      const params: any[] = [auth.userId];
+      if (qSessionId && qTermId) {
+        studentFilter += " AND (e.session_id = ? AND e.term_id = ? OR e.session_id IS NULL)";
+        params.push(qSessionId, qTermId);
+      }
       const studentRows = db.prepare(`
         SELECT e.*, s.name as subject_name, s.result_policy, s.result_release_time, s.assessment_type, s.mode as subject_mode,
           (SELECT COUNT(*) FROM questions q WHERE q.subject_id = e.subject_id) as total_questions, 
           (SELECT COUNT(*) FROM student_answers sa WHERE sa.exam_id = e.id AND (sa.selected_option IS NOT NULL OR (sa.essay_response IS NOT NULL AND TRIM(sa.essay_response) != ''))) as answered_questions 
         FROM exams e 
         JOIN subjects s ON s.id = e.subject_id 
-        WHERE e.student_id = ? AND ${baseFilter}
+        WHERE ${studentFilter}
+        ORDER BY e.id DESC
       `).all(...params) as any[];
 
       const sanitizedRows = studentRows.map((r) => {
@@ -4130,6 +4306,14 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
 
       return apiSuccess(sanitizedRows);
     }
+
+    let baseFilter = "e.status = 'completed'";
+    const params: any[] = [];
+    if (targetSessionId && targetTermId) {
+      baseFilter += " AND (e.session_id = ? AND e.term_id = ? OR e.session_id IS NULL)";
+      params.push(targetSessionId, targetTermId);
+    }
+
     if (auth.role === "teacher") {
       params.unshift(auth.userId);
       return apiSuccess(
@@ -6213,18 +6397,40 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     requireRole(auth.role, ["guardian", "operator"]);
     const body = await readJson(req);
     const guardian_id = auth.role === "guardian" ? auth.userId : Number(body?.guardian_id);
-    let student_id = Number(body?.student_id);
-    const regIdV2 = trimStr(body?.reg_id || body?.regId || body?.student_reg_id || "");
-    if (!isPositiveIntId(student_id) && regIdV2) {
-      const byRegV2 = queries.getUserByEmailOrReg.get(regIdV2.toUpperCase(), regIdV2.toUpperCase()) as any;
-      if (byRegV2 && byRegV2.role === "student") student_id = Number(byRegV2.id);
-      else {
-        const byRegExactV2 = db.prepare("SELECT id FROM users WHERE reg_id = ? AND role='student' LIMIT 1").get(regIdV2) as any;
-        if (byRegExactV2) student_id = Number(byRegExactV2.id);
+    let student_id = isPositiveIntId(Number(body?.student_id)) ? Number(body?.student_id) : 0;
+    const regIdV2 = trimStr(body?.reg_id || body?.regId || body?.student_reg_id || body?.admission_number || (body?.student_id ? String(body.student_id) : ""));
+    if (!student_id && regIdV2) {
+      let studentMatch = db.prepare(`
+        SELECT id, role, name, reg_id 
+        FROM users 
+        WHERE role = 'student' 
+          AND (
+            UPPER(TRIM(reg_id)) = UPPER(TRIM(?))
+            OR UPPER(TRIM(email)) = UPPER(TRIM(?))
+            OR CAST(id AS TEXT) = TRIM(?)
+          )
+        LIMIT 1
+      `).get(regIdV2, regIdV2, regIdV2) as any;
+
+      if (!studentMatch) {
+        studentMatch = db.prepare(`
+          SELECT id, role, name, reg_id 
+          FROM users 
+          WHERE role = 'student' 
+            AND (
+              reg_id LIKE ? 
+              OR UPPER(TRIM(name)) = UPPER(TRIM(?))
+            )
+          LIMIT 1
+        `).get(`%${regIdV2}%`, regIdV2) as any;
+      }
+
+      if (studentMatch) {
+        student_id = Number(studentMatch.id);
       }
     }
     const relationship = trimStr(body?.relationship || "Parent").slice(0, 40);
-    if (!isPositiveIntId(guardian_id) || !isPositiveIntId(student_id)) return apiError(400, "guardian_id and student_id/reg_id required");
+    if (!isPositiveIntId(guardian_id) || !isPositiveIntId(student_id)) return apiError(400, "Student registration number or ID not found. Please verify the registration number.");
     const student = queries.getUserById.get(student_id) as any;
     const guardian = queries.getUserById.get(guardian_id) as any;
     if (!student || student.role !== "student") return apiError(400, "Invalid student id");
@@ -6910,26 +7116,73 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     const auth = requireAuth(req);
     requireRole(auth.role, ["guardian"]);
     const body = await readJson(req);
-    let student_id = Number(body?.student_id);
-    const regIdInput = trimStr(body?.reg_id || body?.regId || body?.student_reg_id || "");
-    if (!isPositiveIntId(student_id) && regIdInput) {
-      const byReg = queries.getUserByEmailOrReg.get(regIdInput.toUpperCase(), regIdInput.toUpperCase()) as any;
-      if (byReg && byReg.role === "student") student_id = Number(byReg.id);
-      else {
-        const byRegExact = db.prepare("SELECT id FROM users WHERE reg_id = ? AND role='student' LIMIT 1").get(regIdInput) as any;
-        if (byRegExact) student_id = Number(byRegExact.id);
+    let student_id = isPositiveIntId(Number(body?.student_id)) ? Number(body?.student_id) : 0;
+    const rawInput = trimStr(body?.reg_id || body?.regId || body?.student_reg_id || body?.admission_number || (body?.student_id ? String(body.student_id) : ""));
+
+    if (!student_id && rawInput) {
+      // 1. Try exact match by reg_id, email, or numeric ID
+      let studentMatch = db.prepare(`
+        SELECT id, role, name, reg_id, grade 
+        FROM users 
+        WHERE role = 'student' 
+          AND (
+            UPPER(TRIM(reg_id)) = UPPER(TRIM(?))
+            OR UPPER(TRIM(email)) = UPPER(TRIM(?))
+            OR CAST(id AS TEXT) = TRIM(?)
+          )
+        LIMIT 1
+      `).get(rawInput, rawInput, rawInput) as any;
+
+      // 2. Fallback to case-insensitive partial match
+      if (!studentMatch) {
+        studentMatch = db.prepare(`
+          SELECT id, role, name, reg_id, grade 
+          FROM users 
+          WHERE role = 'student' 
+            AND (
+              reg_id LIKE ? 
+              OR UPPER(TRIM(name)) = UPPER(TRIM(?))
+            )
+          LIMIT 1
+        `).get(`%${rawInput}%`, rawInput) as any;
+      }
+
+      if (studentMatch) {
+        student_id = Number(studentMatch.id);
       }
     }
+
     const relationship = trimStr(body?.relationship || "Parent").slice(0, 40);
-    if (!isPositiveIntId(student_id)) return apiError(400, "student_id or valid reg_id required");
+    if (!isPositiveIntId(student_id)) {
+      return apiError(400, "Student registration number or ID not found. Please verify the registration number.");
+    }
+
     const student = queries.getUserById.get(student_id) as any;
-    if (!student || student.role !== "student") return apiError(400, "Invalid student id");
+    if (!student || student.role !== "student") {
+      return apiError(400, "Student registration number or ID not found. Please verify the registration number.");
+    }
+
     try {
       const result = queries.createGuardianLink.run(auth.userId, student_id, relationship) as { lastInsertRowid: number | bigint };
-      auditLog(auth.userId, "GUARDIAN_LINK_REQUEST", "guardian_student_links", Number(result.lastInsertRowid), JSON.stringify({ student_id, relationship }));
-      return apiSuccess({ id: Number(result.lastInsertRowid), status: "pending" }, 201);
+      auditLog(auth.userId, "GUARDIAN_LINK_REQUEST", "guardian_student_links", Number(result.lastInsertRowid), JSON.stringify({ 
+        student_id, 
+        relationship, 
+        reg_id: student.reg_id, 
+        student_name: student.name 
+      }));
+      return apiSuccess({ 
+        id: Number(result.lastInsertRowid), 
+        status: "pending",
+        student: {
+          id: student.id,
+          name: student.name,
+          grade: student.grade,
+          reg_id: student.reg_id
+        },
+        message: "Link request created successfully." 
+      }, 201);
     } catch (e) {
-      if (isSqliteUniqueError(e)) return apiError(409, "A link between you and this student already exists");
+      if (isSqliteUniqueError(e)) return apiError(409, "A link request between you and this student already exists");
       throw e;
     }
   }
@@ -7178,6 +7431,185 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     } catch {
       return apiError(400, "Invalid token");
     }
+  }
+
+  // ── Result Publishing & Release Controls (Teacher & Operator) ─────────────
+  if (pathname === "/api/teacher/results/publish" && method === "POST") {
+    const auth = requireAuth(req);
+    requireRole(auth.role, ["teacher", "operator"]);
+    const body = await readJson(req);
+    const subjectId = Number(body?.subject_id);
+    const action = String(body?.action || "publish_now"); // 'publish_now' | 'schedule' | 'hold'
+    const releaseTime = body?.release_time ? String(body.release_time) : null;
+
+    if (!isPositiveIntId(subjectId)) return apiError(400, "Valid subject_id is required");
+
+    const subject = queries.getSubjectById.get(subjectId) as any;
+    if (!subject) return apiError(404, "Subject not found");
+    if (auth.role === "teacher" && !sameUserId(subject.teacher_id, auth.userId)) {
+      return apiError(403, "You do not own this subject");
+    }
+
+    let resultPolicy = "immediate";
+    let resultsReleased = 1;
+    let finalReleaseTime: string | null = null;
+
+    if (action === "schedule") {
+      if (!releaseTime || !isValidExamDateTime(releaseTime)) {
+        return apiError(400, "Valid future release_time is required for scheduled release");
+      }
+      resultPolicy = "scheduled";
+      resultsReleased = 0;
+      finalReleaseTime = releaseTime;
+    } else if (action === "hold") {
+      resultPolicy = "manual";
+      resultsReleased = 0;
+      finalReleaseTime = null;
+    } else {
+      resultPolicy = "immediate";
+      resultsReleased = 1;
+      finalReleaseTime = new Date().toISOString();
+    }
+
+    queries.updateSubjectResultPolicy.run(resultPolicy, finalReleaseTime, resultsReleased, subjectId);
+
+    if (action === "publish_now") {
+      queries.releaseSubjectResults.run(subjectId);
+    } else if (action === "schedule") {
+      db.prepare("UPDATE exams SET result_status = 'scheduled' WHERE subject_id = ? AND status = 'completed'").run(subjectId);
+    } else if (action === "hold") {
+      db.prepare("UPDATE exams SET result_status = 'hidden' WHERE subject_id = ? AND status = 'completed'").run(subjectId);
+    }
+
+    // If publishing now, notify students and guardians!
+    let studentCount = 0;
+    let guardianCount = 0;
+
+    if (action === "publish_now") {
+      try {
+        const studentRows = db.prepare(`
+          SELECT DISTINCT e.student_id, u.name, u.email
+          FROM exams e
+          JOIN users u ON u.id = e.student_id
+          WHERE e.subject_id = ? AND e.status = 'completed'
+        `).all(subjectId) as any[];
+
+        for (const s of studentRows) {
+          studentCount++;
+          const studentMsg = `Exam Results Released: Your score in ${subject.name} (${subject.code}) is now available!`;
+          queries.createNotification.run(s.student_id, "results", studentMsg, "/student/results");
+          notifyUser(s.student_id, {
+            type: "results",
+            message: studentMsg,
+            link: "/student/results",
+          });
+
+          // Notify student's guardians
+          const guardians = queries.getStudentGuardians.all(s.student_id) as any[];
+          for (const g of guardians) {
+            const guardianUser = queries.getUserById.get(Number(g.guardian_id)) as any;
+            if (guardianUser && guardianUser.notify_results === 0) continue;
+            guardianCount++;
+            const guardianMsg = `Academic Update: Examination results for ${s.name} in ${subject.name} (${subject.code}) have been officially published.`;
+            queries.createNotification.run(
+              Number(g.guardian_id),
+              "results",
+              guardianMsg,
+              `/guardian/performance?ward_id=${s.student_id}`
+            );
+            notifyUser(Number(g.guardian_id), {
+              type: "results",
+              message: guardianMsg,
+              link: `/guardian/performance?ward_id=${s.student_id}`,
+            });
+          }
+        }
+      } catch (err) {
+        console.warn("[results/publish] Notification dispatch error:", err);
+      }
+    }
+
+    auditLog(auth.userId, "RESULTS_POLICY_UPDATED", "subjects", subjectId, JSON.stringify({ action, resultPolicy, finalReleaseTime, resultsReleased, studentCount, guardianCount }));
+
+    return apiSuccess({
+      success: true,
+      subject_id: subjectId,
+      result_policy: resultPolicy,
+      result_release_time: finalReleaseTime,
+      results_released: resultsReleased,
+      notified_students: studentCount,
+      notified_guardians: guardianCount,
+      message: action === "publish_now" ? `Results for ${subject.code} published live!` : action === "schedule" ? `Results scheduled for ${finalReleaseTime}` : "Results held manually.",
+    });
+  }
+
+  // ── Admin Message / Inquiry Desk ──────────────────────────────────────────
+  if (pathname === "/api/admin/messages/threads" && method === "GET") {
+    const auth = requireAuth(req);
+    requireRole(auth.role, ["operator"]);
+    const threads = queries.getAdminMessageThreads.all() as any[];
+    return apiSuccess(threads);
+  }
+
+  const adminThreadMatch = pathname.match(/^\/api\/admin\/messages\/threads\/(\d+)$/);
+  if (adminThreadMatch && method === "GET") {
+    const auth = requireAuth(req);
+    requireRole(auth.role, ["operator"]);
+    const threadId = Number(adminThreadMatch[1]);
+    const thread = queries.getThreadById.get(threadId) as any;
+    if (!thread) return apiError(404, "Thread not found");
+
+    // Reset unread counter for recipient/admin
+    queries.markThreadReadForRecipient.run(threadId);
+    const messages = queries.getMessagesByThread.all(threadId);
+    const guardian = queries.getUserById.get(thread.guardian_id) as any;
+    const student = thread.student_id ? (queries.getUserById.get(thread.student_id) as any) : null;
+
+    return apiSuccess({
+      thread: {
+        ...thread,
+        guardian_name: guardian?.name || "Guardian",
+        guardian_email: guardian?.email,
+        guardian_phone: guardian?.phone,
+        student_name: student?.name,
+        student_grade: student?.grade,
+        student_reg_id: student?.reg_id,
+      },
+      messages,
+    });
+  }
+
+  if (adminThreadMatch && method === "POST") {
+    const auth = requireAuth(req);
+    requireRole(auth.role, ["operator"]);
+    const threadId = Number(adminThreadMatch[1]);
+    const thread = queries.getThreadById.get(threadId) as any;
+    if (!thread) return apiError(404, "Thread not found");
+
+    const body = await readJson(req);
+    const text = trimStr(body?.text || "");
+    if (!text) return apiError(400, "Message text required");
+
+    const msgRes = queries.insertMessage.run(threadId, auth.userId, "operator", text, 0) as { lastInsertRowid: number | bigint };
+    queries.updateThreadLastMessage.run(text, 1, 0, threadId);
+
+    // Dispatch real-time SSE notification & push notification to Guardian
+    notifyUser(Number(thread.guardian_id), {
+      type: "chat_message",
+      message: `School Administration: ${text.slice(0, 80)}`,
+      link: "/guardian/messages",
+    });
+
+    queries.createNotification.run(
+      Number(thread.guardian_id),
+      "chat_message",
+      `School Administration replied: "${text.slice(0, 80)}"`,
+      "/guardian/messages"
+    );
+
+    auditLog(auth.userId, "ADMIN_REPLY_INQUIRY", "guardian_message_threads", threadId, JSON.stringify({ messageId: Number(msgRes.lastInsertRowid) }));
+
+    return apiSuccess({ id: Number(msgRes.lastInsertRowid), text, sender_role: "operator", created_at: new Date().toISOString() }, 201);
   }
 
   // ── VAPID Public Key Discovery ────────────────────────────────────────────

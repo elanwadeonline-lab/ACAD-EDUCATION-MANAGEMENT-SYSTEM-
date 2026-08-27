@@ -92,18 +92,21 @@ function LinksContent() {
 
   const handleCreateLink = async (e: FormEvent) => {
     e.preventDefault();
-    if (!form.student_id) {
-      showToast("error", "Please enter a student ID.");
+    const query = form.student_id.trim();
+    if (!query) {
+      showToast("error", "Please enter a student Registration ID or Student ID.");
       return;
     }
 
     setSaving(true);
     try {
-      await api.post<any>("/api/guardian/links", {
-        student_id: Number(form.student_id),
+      const res = await api.post<any>("/api/guardian/links", {
+        student_id: isNaN(Number(query)) ? undefined : Number(query),
+        reg_id: query,
         relationship: form.relationship,
       });
-      showToast("success", "Link request created successfully. Waiting for approval.");
+      const studentName = res?.student?.name ? ` for ${res.student.name}` : "";
+      showToast("success", `Link request created${studentName} successfully.`);
       setShowModal(false);
       setForm({ student_id: "", relationship: "Parent" });
       await loadData();
@@ -404,15 +407,18 @@ function LinksContent() {
         <form onSubmit={handleCreateLink}>
           <div className={styles.modalContent}>
             <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Student ID *</label>
+              <label className={styles.formLabel}>Student Registration Number or ID *</label>
               <input
                 type="text"
                 required
                 className={styles.formInput}
-                placeholder="Enter student's registration ID"
+                placeholder="e.g. REG-2026-001 or Student ID"
                 value={form.student_id}
                 onChange={(e) => setForm({ ...form, student_id: e.target.value })}
               />
+              <p style={{ fontSize: "0.75rem", color: "#64748B", marginTop: "0.35rem" }}>
+                Enter your child&#39;s official school registration number (or student ID) to link their profile.
+              </p>
             </div>
 
             <div className={styles.formGroup}>

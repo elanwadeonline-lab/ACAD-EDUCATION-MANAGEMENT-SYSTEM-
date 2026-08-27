@@ -35,7 +35,7 @@
   position: sticky;
   top: 0;
   z-index: 40;
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.94);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--g-border, #E2E8F0);
@@ -47,6 +47,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
+  transition: background-color var(--g-duration, 180ms) ease, border-color var(--g-duration, 180ms) ease;
 }
 
 .headerLeft {
@@ -62,15 +63,20 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: #F1F5F9;
-  border: 1px solid #E2E8F0;
-  color: #0F172A;
+  background: var(--g-surface-subtle, #F1F5F9);
+  border: 1px solid var(--g-border, #E2E8F0);
+  color: var(--g-text-primary, #0F172A);
   cursor: pointer;
-  transition: all 140ms ease;
+  transition: all var(--g-duration, 180ms) var(--g-ease);
 }
 
 .backBtn:hover {
-  background: #E2E8F0;
+  background: var(--g-border, #E2E8F0);
+  transform: translateX(-1px);
+}
+
+.backBtn:active {
+  transform: scale(0.92);
 }
 
 .brandLink {
@@ -78,6 +84,11 @@
   align-items: center;
   gap: 0.45rem;
   text-decoration: none;
+  transition: transform var(--g-duration, 180ms) var(--g-ease);
+}
+
+.brandLink:hover {
+  transform: scale(1.02);
 }
 
 .brandIconBox {
@@ -90,12 +101,17 @@
   justify-content: center;
   color: #FFFFFF;
   box-shadow: 0 2px 5px rgba(22, 90, 246, 0.25);
+  transition: transform var(--g-duration, 180ms) var(--g-ease);
+}
+
+.brandLink:hover .brandIconBox {
+  transform: rotate(-3deg);
 }
 
 .brandTitle {
   font-size: 0.9375rem;
   font-weight: 800;
-  color: #0F172A;
+  color: var(--g-text-primary, #0F172A);
   letter-spacing: -0.02em;
 }
 
@@ -104,25 +120,30 @@
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  background: #EFF4FF;
-  border: 1px solid #DBEAFE;
+  background: var(--g-primary-subtle, #EFF4FF);
+  border: 1px solid var(--g-primary-border, #DBEAFE);
   padding: 0.28rem 0.65rem 0.28rem 0.35rem;
   border-radius: 999px;
   cursor: pointer;
-  transition: all 140ms ease;
+  transition: all var(--g-duration, 180ms) var(--g-ease);
   max-width: 175px;
 }
 
 .childSelectorPill:hover {
   background: #E0EBFF;
   border-color: #BFDBFE;
+  transform: translateY(-1px);
+}
+
+.childSelectorPill:active {
+  transform: scale(0.96);
 }
 
 .childAvatarTiny {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: #165AF6;
+  background: var(--g-primary, #165AF6);
   color: #FFFFFF;
   font-size: 0.625rem;
   font-weight: 700;
@@ -130,20 +151,26 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(22, 90, 246, 0.25);
 }
 
 .childPillText {
   font-size: 0.75rem;
   font-weight: 700;
-  color: #165AF6;
+  color: var(--g-primary, #165AF6);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .childPillChevron {
-  color: #165AF6;
+  color: var(--g-primary, #165AF6);
   flex-shrink: 0;
+  transition: transform var(--g-duration, 180ms) ease;
+}
+
+.childSelectorPill:hover .childPillChevron {
+  transform: translateY(1px);
 }
 
 /* Header Right */
@@ -158,21 +185,26 @@
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
+  background: var(--g-surface, #FFFFFF);
+  border: 1px solid var(--g-border, #E2E8F0);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #475569;
+  color: var(--g-text-secondary, #475569);
   cursor: pointer;
-  transition: all 140ms ease;
+  transition: all var(--g-duration, 180ms) var(--g-ease);
   text-decoration: none;
 }
 
 .notifyBtn:hover {
-  background: #F8FAFC;
-  color: #0F172A;
+  background: var(--g-surface-subtle, #F8FAFC);
+  color: var(--g-text-primary, #0F172A);
   border-color: #CBD5E1;
+  transform: translateY(-1px);
+}
+
+.notifyBtn:active {
+  transform: scale(0.92);
 }
 
 .notifyDot {
@@ -182,14 +214,20 @@
   min-width: 14px;
   height: 14px;
   border-radius: 999px;
-  background: #DC2626;
+  background: var(--g-danger, #DC2626);
   color: #FFFFFF;
   font-size: 0.5625rem;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1.5px solid #FFFFFF;
+  border: 1.5px solid var(--g-surface, #FFFFFF);
+  animation: pulseScale 2s infinite ease-in-out;
+}
+
+@keyframes pulseScale {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.12); }
 }
 
 /* ── 2. Scrollable Body Content ── */
@@ -219,6 +257,7 @@
   padding-bottom: max(var(--g-safe-bottom, 0px), 0.5rem);
   z-index: 50;
   box-shadow: 0 -4px 15px rgba(15, 23, 42, 0.04);
+  transition: background-color var(--g-duration, 180ms) ease, border-color var(--g-duration, 180ms) ease;
 }
 
 @media (max-width: 480px) {
@@ -235,23 +274,28 @@
   align-items: center;
   gap: 0.2rem;
   text-decoration: none;
-  color: #64748B;
+  color: var(--g-text-muted, #64748B);
   font-size: 0.6875rem;
   font-weight: 600;
-  transition: all 140ms ease;
+  transition: color var(--g-duration, 180ms) var(--g-ease), transform var(--g-duration, 180ms) var(--g-ease);
   position: relative;
-  padding: 0.2rem 0.5rem;
+  padding: 0.25rem 0.5rem;
   border-radius: 8px;
   cursor: pointer;
   flex: 1;
 }
 
 .navItem:hover {
-  color: #0F172A;
+  color: var(--g-text-primary, #0F172A);
+  transform: translateY(-1px);
+}
+
+.navItem:active {
+  transform: scale(0.94);
 }
 
 .navItemActive {
-  color: #165AF6 !important;
+  color: var(--g-primary, #165AF6) !important;
   font-weight: 700 !important;
 }
 
@@ -262,6 +306,11 @@
   justify-content: center;
   width: 24px;
   height: 24px;
+  transition: transform var(--g-duration, 180ms) var(--g-ease);
+}
+
+.navItemActive .navIconBox {
+  transform: scale(1.08);
 }
 
 .navBadge {
@@ -271,8 +320,8 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #DC2626;
-  border: 1.5px solid #FFFFFF;
+  background: var(--g-danger, #DC2626);
+  border: 1.5px solid var(--g-surface, #FFFFFF);
 }
 
 .navLabel {
@@ -295,7 +344,7 @@
 .sheetContainer {
   width: 100%;
   max-width: 440px;
-  background: #FFFFFF;
+  background: var(--g-surface, #FFFFFF);
   border-top-left-radius: 24px;
   border-top-right-radius: 24px;
   padding: 0.75rem 1.25rem max(var(--g-safe-bottom, 0px), 1.75rem) 1.25rem;
@@ -322,14 +371,14 @@
 .sheetTitle {
   font-size: 1rem;
   font-weight: 700;
-  color: #0F172A;
+  color: var(--g-text-primary, #0F172A);
   margin: 0;
 }
 
 .sheetCloseBtn {
-  background: #F1F5F9;
-  border: none;
-  color: #64748B;
+  background: var(--g-surface-subtle, #F1F5F9);
+  border: 1px solid var(--g-border, #E2E8F0);
+  color: var(--g-text-muted, #64748B);
   width: 28px;
   height: 28px;
   border-radius: 50%;
@@ -337,11 +386,17 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  transition: all var(--g-duration, 180ms) ease;
 }
 
 .sheetCloseBtn:hover {
-  background: #E2E8F0;
-  color: #0F172A;
+  background: var(--g-border, #E2E8F0);
+  color: var(--g-text-primary, #0F172A);
+  transform: rotate(90deg);
+}
+
+.sheetCloseBtn:active {
+  transform: scale(0.9);
 }
 
 .wardList {
@@ -355,22 +410,27 @@
   align-items: center;
   justify-content: space-between;
   padding: 0.85rem 1rem;
-  background: #F8FAFC;
-  border: 1.5px solid #E2E8F0;
+  background: var(--g-surface-subtle, #F8FAFC);
+  border: 1.5px solid var(--g-border, #E2E8F0);
   border-radius: 14px;
   cursor: pointer;
-  transition: all 140ms ease;
+  transition: all var(--g-duration, 180ms) var(--g-ease);
   text-align: left;
 }
 
 .wardCardOption:hover {
   border-color: #CBD5E1;
-  background: #F1F5F9;
+  background: var(--g-border-subtle, #F1F5F9);
+  transform: translateY(-1px);
+}
+
+.wardCardOption:active {
+  transform: scale(0.985);
 }
 
 .wardCardOptionActive {
-  background: #EFF4FF !important;
-  border-color: #165AF6 !important;
+  background: var(--g-primary-subtle, #EFF4FF) !important;
+  border-color: var(--g-primary, #165AF6) !important;
   box-shadow: 0 2px 8px rgba(22, 90, 246, 0.12);
 }
 
@@ -384,7 +444,7 @@
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  background: #165AF6;
+  background: var(--g-primary, #165AF6);
   color: #FFFFFF;
   font-size: 0.875rem;
   font-weight: 700;
@@ -392,6 +452,7 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(22, 90, 246, 0.25);
 }
 
 .wardMetaCol {
@@ -403,17 +464,17 @@
 .wardNameText {
   font-size: 0.875rem;
   font-weight: 700;
-  color: #0F172A;
+  color: var(--g-text-primary, #0F172A);
 }
 
 .wardGradeText {
   font-size: 0.75rem;
   font-weight: 600;
-  color: #64748B;
+  color: var(--g-text-muted, #64748B);
 }
 
 .wardCheckIcon {
-  color: #165AF6;
+  color: var(--g-primary, #165AF6);
 }
 
 .linkNewWardBtn {
@@ -425,15 +486,20 @@
   border-radius: 12px;
   border: 1px dashed #CBD5E1;
   background: transparent;
-  color: #165AF6;
+  color: var(--g-primary, #165AF6);
   font-size: 0.8125rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all 140ms ease;
+  transition: all var(--g-duration, 180ms) var(--g-ease);
   text-decoration: none;
 }
 
 .linkNewWardBtn:hover {
-  background: #EFF4FF;
-  border-color: #165AF6;
+  background: var(--g-primary-subtle, #EFF4FF);
+  border-color: var(--g-primary, #165AF6);
+  transform: translateY(-1px);
+}
+
+.linkNewWardBtn:active {
+  transform: scale(0.985);
 }

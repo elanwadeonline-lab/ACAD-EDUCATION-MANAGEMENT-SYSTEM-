@@ -86,6 +86,7 @@ function GradingSubjectDetails() {
   const [policies, setPolicies] = useState<any[]>([]);
   const [students, setStudents] = useState<any[]>([]);
   const [cbtScores, setCbtScores] = useState<Record<number, Record<number, number>>>({});
+  const [rawCbtScores, setRawCbtScores] = useState<Record<number, { score: number; total_score: number; pct: number }>>({});
   const [termResults, setTermResults] = useState<any[]>([]);
   const [draftScores, setDraftScores] = useState<Record<number, Record<number, number | string>>>({});
   const [cbtSubjects, setCbtSubjects] = useState<any[]>([]);
@@ -131,6 +132,7 @@ function GradingSubjectDetails() {
       if (scoresData) {
         setStudents(scoresData.students || []);
         setCbtScores(scoresData.cbtScores || {});
+        setRawCbtScores(scoresData.rawCbtScores || {});
         setTermResults(scoresData.termResults || []);
         setPassMark(scoresData.pass_mark ?? "");
         const draft: Record<number, Record<number, number | string>> = {};
@@ -466,6 +468,13 @@ function GradingSubjectDetails() {
                 <thead>
                   <tr className="border-b border-slate-200 bg-slate-50 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
                     <th className="p-3.5 sticky left-0 bg-slate-50 z-10">Candidate</th>
+                    {/* CBT Exam auto-score column — shown when source exam exists */}
+                    {subjectDetails?.source_cbt_subject_id && (
+                      <th className="p-3.5 text-center whitespace-nowrap bg-indigo-50 border-l-2 border-indigo-200">
+                        <div className="text-indigo-700 font-bold">CBT Score</div>
+                        <div className="text-indigo-400 font-mono text-[10px]">Auto · Read-only</div>
+                      </th>
+                    )}
                     {policies.map((p, i) => (
                       <th key={p.id ?? i} className="p-3.5 text-center whitespace-nowrap">
                         <div className="text-slate-900 font-bold">{p.name}</div>
@@ -490,6 +499,21 @@ function GradingSubjectDetails() {
                           <div className="font-bold text-slate-900">{st.name}</div>
                           <div className="text-slate-500 font-mono text-[11px]">{st.reg_id}</div>
                         </td>
+                        {/* Raw CBT score column */}
+                        {subjectDetails?.source_cbt_subject_id && (
+                          <td className="p-3 text-center bg-indigo-50/40 border-l-2 border-indigo-100">
+                            {rawCbtScores[st.id] ? (
+                              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1px" }}>
+                                <span className="inline-flex items-center justify-center font-mono font-bold px-2 py-1 rounded bg-indigo-100 border border-indigo-300 text-indigo-800 text-xs">
+                                  {rawCbtScores[st.id]!.score}/{rawCbtScores[st.id]!.total_score}
+                                </span>
+                                <span className="text-[10px] text-indigo-500 font-mono">{rawCbtScores[st.id]!.pct}%</span>
+                              </div>
+                            ) : (
+                              <span className="text-slate-400 font-mono italic text-xs">Not taken</span>
+                            )}
+                          </td>
+                        )}
                         {policies.map((p, i) => {
                           const isCbt = p.type !== "manual";
                           const cbtVal = isCbt

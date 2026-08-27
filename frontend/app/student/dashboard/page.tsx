@@ -78,7 +78,7 @@ function DashboardContent() {
     try {
       const [subjectsData, resultsData, activeData, telemetryData] = await Promise.all([
         api.getSubjects(selectedSession?.id, selectedTerm?.id),
-        api.getResults(selectedSession?.id, selectedTerm?.id),
+        api.getResults(),
         api.getActiveExams(),
         api.getStudentTelemetry().catch(() => null),
       ]);
@@ -141,7 +141,7 @@ function DashboardContent() {
     };
   }, [selectedSession?.id, selectedTerm?.id]);
 
-  const takenIds = useMemo(() => new Set(results.map((r) => Number(r.subject_id))), [results]);
+  const takenIds = useMemo(() => new Set(results.filter((r) => r.status === "completed").map((r) => Number(r.subject_id))), [results]);
 
   const firstName = user?.name?.split(" ")[0] ?? "Student";
 
@@ -159,6 +159,30 @@ function DashboardContent() {
     }
   };
 
+  // Merge enrolled subjects with any completed examination subjects
+  const allDisplaySubjects = useMemo(() => {
+    const map = new Map<number, Subject>();
+    for (const s of subjects) {
+      map.set(Number(s.id), s);
+    }
+    for (const r of results) {
+      const sid = Number(r.subject_id);
+      if (sid && !map.has(sid)) {
+        map.set(sid, {
+          id: sid,
+          name: r.subject_name || "Examination Paper",
+          code: (r as any).subject_code || (r.subject_name ? r.subject_name.slice(0, 6).toUpperCase() : "EXAM"),
+          term: (r as any).term || "Current Term",
+          total_score: Number(r.total_score || 100),
+          teacher_id: 0,
+          is_published: 1,
+          mode: ((r as any).subject_mode as any) || "exam",
+        });
+      }
+    }
+    return Array.from(map.values());
+  }, [subjects, results]);
+
   // Group exams by status
   const { liveExams, upcomingExams, completedExams } = useMemo(() => {
     const now = currentTime;
@@ -166,7 +190,7 @@ function DashboardContent() {
     const upcoming: Subject[] = [];
     const completed: Subject[] = [];
 
-    for (const s of subjects) {
+    for (const s of allDisplaySubjects) {
       const isTaken = takenIds.has(Number(s.id));
       if (isTaken) {
         completed.push(s);
@@ -191,14 +215,14 @@ function DashboardContent() {
       }
     }
     return { liveExams: live, upcomingExams: upcoming, completedExams: completed };
-  }, [subjects, takenIds, currentTime]);
+  }, [allDisplaySubjects, takenIds, currentTime]);
 
   const filteredSubjects = useMemo(() => {
     if (selectedTab === "live") return liveExams;
     if (selectedTab === "upcoming") return upcomingExams;
     if (selectedTab === "completed") return completedExams;
-    return subjects;
-  }, [selectedTab, subjects, liveExams, upcomingExams, completedExams]);
+    return allDisplaySubjects;
+  }, [selectedTab, allDisplaySubjects, liveExams, upcomingExams, completedExams]);
 
   const recentSubmissions = useMemo(() => {
     return results
@@ -433,6 +457,7 @@ function DashboardContent() {
                 {filteredSubjects.map((s, idx) => {
                   const isTaken = takenIds.has(Number(s.id));
                   const isLive = liveExams.some((l) => l.id === s.id);
+                  const isUpcoming = upcomingExams.some((u) => u.id === s.id);
                   const isCore = idx === 0 || s.code?.toUpperCase().includes("ENG") || s.code?.toUpperCase().includes("MTH");
 
                   return (
@@ -467,9 +492,18 @@ function DashboardContent() {
                           <Link href={`/student/exam?subjectId=${s.id}`} className={styles.subjectBtnLive}>
                             <span>Enter Exam Hall →</span>
                           </Link>
+                        ) : isUpcoming ? (
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", padding: "0.4rem 0.6rem", background: "var(--color-surface-2, #F8FAFC)", borderRadius: "8px", border: "1px solid var(--color-border, #E2E8F0)" }}>
+                            <span style={{ fontSize: "0.6875rem", color: "var(--color-muted, #64748B)", fontWeight: 600 }}>
+                              🕒 {s.exam_datetime ? new Date(s.exam_datetime).toLocaleDateString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "Scheduled"}
+                            </span>
+                            <span style={{ fontSize: "0.6875rem", color: "#2563EB", fontWeight: 700 }}>
+                              Scheduled
+                            </span>
+                          </div>
                         ) : (
                           <Link href={`/student/practice?subjectId=${s.id}`} className={styles.subjectBtnPractice}>
-                            <span>Practice →</span>
+                            <span>Study & Practice →</span>
                           </Link>
                         )}
                       </div>
@@ -485,7 +519,7 @@ function DashboardContent() {
       {/* ── 3. 5-Tile Quick Action Matrix (Quick Action Cards) ── */}
       <motion.section className={styles.actionGrid} variants={itemVariants}>
         {/* 1. Start Mock Exam (Blue #165AF6) */}
-        <Link href="/student/practice" className={styles.actionTile}>
+        <Link href="/student/subjects" className={styles.actionTile}>
           <div className={styles.actionTileHeader}>
             <div
               className={styles.actionTileIconBox}
@@ -638,9 +672,9 @@ function DashboardContent() {
               <CalendarIcon width="18" height="18" style={{ color: "#165AF6" }} />
               <h3 className={styles.feedHeading}>Upcoming Examination Schedule</h3>
             </div>
-            <Link href="/student/practice" className={styles.feedViewAll}>
+            <a href="#curriculum-track" className={styles.feedViewAll}>
               View All
-            </Link>
+            </a>
           </div>
 
           <div className={styles.feedBody}>
@@ -652,7 +686,7 @@ function DashboardContent() {
             ) : (
               <>
                 {/* Live Exam Item (if active) */}
-                {liveExams.slice(0, 1).map((item) => {
+                {liveExams.slice(0, 3).map((item) => {
                   const d = item.exam_datetime ? new Date(item.exam_datetime) : new Date();
                   const monthName = d.toLocaleDateString("en-US", { month: "short" }).toUpperCase();
                   const dayNumber = d.getDate();
@@ -684,7 +718,7 @@ function DashboardContent() {
                 })}
 
                 {/* Upcoming Exam Items */}
-                {upcomingExams.slice(0, liveExams.length > 0 ? 1 : 2).map((item) => {
+                {upcomingExams.slice(0, 3).map((item) => {
                   const d = item.exam_datetime ? new Date(item.exam_datetime) : new Date(Date.now() + 86400000);
                   const monthName = d.toLocaleDateString("en-US", { month: "short" }).toUpperCase();
                   const dayNumber = d.getDate();
@@ -708,9 +742,9 @@ function DashboardContent() {
                           </span>
                         </div>
                       </div>
-                      <Link href={`/student/practice?subjectId=${item.id}`} className={styles.scheduleBtnSecondary}>
-                        View Details
-                      </Link>
+                      <a href="#curriculum-track" className={styles.scheduleBtnSecondary}>
+                        View All
+                      </a>
                     </div>
                   );
                 })}

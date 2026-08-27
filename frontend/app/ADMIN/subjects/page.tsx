@@ -119,6 +119,8 @@ function SubjectsContent() {
   const [enrollLoading, setEnrollLoading] = useState(false);
   const [enrollSearch, setEnrollSearch] = useState("");
   const [enrollStudentId, setEnrollStudentId] = useState("");
+  const [selectedRosterClass, setSelectedRosterClass] = useState("all");
+  const [rosterViewMode, setRosterViewMode] = useState<"class_directory" | "enrolled_list">("class_directory");
   const [enrollSaving, setEnrollSaving] = useState(false);
   const [bulkSaving, setBulkSaving] = useState(false);
 
@@ -302,6 +304,8 @@ function SubjectsContent() {
   // Enrollment Drawer Operations
   const openEnrollDrawer = async (s: Subject) => {
     setEnrollSubject(s);
+    setSelectedRosterClass(s.class || "all");
+    setRosterViewMode("class_directory");
     setEnrollSearch("");
     setEnrollStudentId("");
     setEnrollLoading(true);
@@ -827,7 +831,7 @@ function SubjectsContent() {
         isOpen={Boolean(enrollSubject)}
         onClose={() => setEnrollSubject(null)}
         title={`Candidate Roster: ${enrollSubject?.name || ""}`}
-        subtitle={`${enrollSubject?.code || ""} · ${enrolled.length} candidate(s)`}
+        subtitle={`${enrollSubject?.code || ""} · ${enrolled.length} candidate(s) enrolled`}
         size="wide"
         footer={
           <Button variant="secondary" size="sm" onClick={() => setEnrollSubject(null)}>
@@ -836,100 +840,229 @@ function SubjectsContent() {
         }
       >
         <div className={styles.enrollSection}>
-          <div className={styles.enrollActionBox}>
-            <div style={{ fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--color-text)" }}>
-              Enroll Individual Candidate
+          {/* Class / Cohort Selector Tabs */}
+          <div>
+            <div style={{ fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--color-muted)", marginBottom: "0.4rem" }}>
+              Filter by Student Class / Cohort
             </div>
-            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-              <select
-                className={styles.formSelect}
-                value={enrollStudentId}
-                onChange={(e) => setEnrollStudentId(e.target.value)}
-                style={{ flex: 1, minWidth: "200px" }}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.35rem" }}>
+              <button
+                type="button"
+                onClick={() => setSelectedRosterClass("all")}
+                style={{
+                  padding: "0.35rem 0.65rem",
+                  borderRadius: "6px",
+                  fontSize: "0.75rem",
+                  fontWeight: selectedRosterClass === "all" ? 700 : 500,
+                  border: `1px solid ${selectedRosterClass === "all" ? "#165AF6" : "var(--color-border)"}`,
+                  background: selectedRosterClass === "all" ? "#EFF4FF" : "var(--color-surface)",
+                  color: selectedRosterClass === "all" ? "#165AF6" : "var(--color-text)",
+                  cursor: "pointer",
+                }}
               >
-                <option value="">Select student…</option>
-                {students
-                  .filter((st) => !enrolled.some((e) => e.id === st.id || (e as any).student_user_id === st.id))
-                  .map((st) => (
-                    <option key={st.id} value={st.id}>
-                      {st.name} ({st.grade || "No class"}) - {st.email}
-                    </option>
-                  ))}
-              </select>
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={handleEnrollSingle}
-                disabled={!enrollStudentId}
-                loading={enrollSaving}
-              >
-                Enroll
-              </Button>
-            </div>
-
-            <div style={{ paddingTop: "0.5rem", borderTop: "1px solid var(--color-border)" }}>
-              <div style={{ fontSize: "0.75rem", color: "var(--color-muted)", marginBottom: "0.4rem" }}>
-                Bulk Enroll Cohort:
-              </div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "0.35rem" }}>
-                {gradeLevels.map((gl) => (
-                  <Button
+                All Classes ({students.length})
+              </button>
+              {gradeLevels.map((gl) => {
+                const countInGrade = students.filter((st) => st.grade === gl.name).length;
+                const isSelected = selectedRosterClass === gl.name;
+                return (
+                  <button
                     key={gl.id}
-                    variant="secondary"
-                    size="xs"
-                    loading={bulkSaving}
-                    onClick={() => handleBulkEnroll(gl.name)}
+                    type="button"
+                    onClick={() => setSelectedRosterClass(gl.name)}
+                    style={{
+                      padding: "0.35rem 0.65rem",
+                      borderRadius: "6px",
+                      fontSize: "0.75rem",
+                      fontWeight: isSelected ? 700 : 500,
+                      border: `1px solid ${isSelected ? "#165AF6" : "var(--color-border)"}`,
+                      background: isSelected ? "#EFF4FF" : "var(--color-surface)",
+                      color: isSelected ? "#165AF6" : "var(--color-text)",
+                      cursor: "pointer",
+                    }}
                   >
-                    + {gl.name}
-                  </Button>
-                ))}
-              </div>
+                    {gl.name} ({countInGrade})
+                  </button>
+                );
+              })}
             </div>
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.5rem" }}>
-            <span style={{ fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", color: "var(--color-text)" }}>
-              Enrolled Candidates ({enrolled.length})
-            </span>
+          {/* Cohort Summary & Quick Bulk Action */}
+          {selectedRosterClass !== "all" && (
+            <div style={{ background: "#F8FAFC", border: "1px solid var(--color-border)", borderRadius: "8px", padding: "0.75rem 1rem", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
+              <div>
+                <div style={{ fontWeight: 600, fontSize: "0.8125rem", color: "var(--color-text)" }}>
+                  Class: {selectedRosterClass}
+                </div>
+                <div style={{ fontSize: "0.75rem", color: "var(--color-muted)" }}>
+                  {students.filter((st) => st.grade === selectedRosterClass).length} total candidates in school directory ·{" "}
+                  {students.filter((st) => st.grade === selectedRosterClass && enrolled.some((e) => e.id === st.id || (e as any).student_user_id === st.id)).length} currently enrolled
+                </div>
+              </div>
+              <Button
+                variant="primary"
+                size="xs"
+                loading={bulkSaving}
+                onClick={() => handleBulkEnroll(selectedRosterClass)}
+              >
+                Enroll All in {selectedRosterClass}
+              </Button>
+            </div>
+          )}
+
+          {/* Search and View Mode Switcher */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.5rem", flexWrap: "wrap", paddingTop: "0.5rem", borderTop: "1px solid var(--color-border)" }}>
+            <div style={{ display: "flex", gap: "0.35rem" }}>
+              <button
+                type="button"
+                onClick={() => setRosterViewMode("class_directory")}
+                style={{
+                  padding: "0.3rem 0.6rem",
+                  borderRadius: "6px",
+                  fontSize: "0.75rem",
+                  fontWeight: rosterViewMode === "class_directory" ? 600 : 500,
+                  background: rosterViewMode === "class_directory" ? "var(--color-surface-2)" : "transparent",
+                  border: `1px solid ${rosterViewMode === "class_directory" ? "var(--color-border)" : "transparent"}`,
+                  cursor: "pointer",
+                }}
+              >
+                Class Directory
+              </button>
+              <button
+                type="button"
+                onClick={() => setRosterViewMode("enrolled_list")}
+                style={{
+                  padding: "0.3rem 0.6rem",
+                  borderRadius: "6px",
+                  fontSize: "0.75rem",
+                  fontWeight: rosterViewMode === "enrolled_list" ? 600 : 500,
+                  background: rosterViewMode === "enrolled_list" ? "var(--color-surface-2)" : "transparent",
+                  border: `1px solid ${rosterViewMode === "enrolled_list" ? "var(--color-border)" : "transparent"}`,
+                  cursor: "pointer",
+                }}
+              >
+                Enrolled Candidates ({enrolled.length})
+              </button>
+            </div>
+
             <input
               type="text"
-              placeholder="Filter roster…"
+              placeholder="Search candidate name or reg ID…"
               value={enrollSearch}
               onChange={(e) => setEnrollSearch(e.target.value)}
               className={styles.searchInput}
-              style={{ maxWidth: "200px", padding: "0.35rem 0.65rem" }}
+              style={{ maxWidth: "220px", padding: "0.35rem 0.65rem", fontSize: "0.75rem" }}
             />
           </div>
 
-          {enrollLoading ? (
-            <div style={{ textAlign: "center", padding: "2rem", color: "var(--color-muted)", fontSize: "0.8125rem" }}>
-              Loading roster…
+          {/* View Mode 1: Class Directory (shows all students in selected class with enroll/remove action) */}
+          {rosterViewMode === "class_directory" && (
+            <div>
+              {enrollLoading ? (
+                <div style={{ textAlign: "center", padding: "2rem", color: "var(--color-muted)", fontSize: "0.8125rem" }}>
+                  Loading candidate directory…
+                </div>
+              ) : (
+                <div className={styles.enrollList}>
+                  {students
+                    .filter((st) => selectedRosterClass === "all" || st.grade === selectedRosterClass)
+                    .filter((st) => !enrollSearch || st.name.toLowerCase().includes(enrollSearch.toLowerCase()) || (st.email && st.email.toLowerCase().includes(enrollSearch.toLowerCase())) || ((st as any).reg_id && String((st as any).reg_id).toLowerCase().includes(enrollSearch.toLowerCase())))
+                    .map((st) => {
+                      const isEnrolled = enrolled.some((e) => e.id === st.id || (e as any).student_user_id === st.id);
+                      return (
+                        <div key={st.id} className={styles.enrollItem}>
+                          <div>
+                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                              <span style={{ fontWeight: 600, color: "var(--color-text)", fontSize: "0.8125rem" }}>
+                                {st.name}
+                              </span>
+                              <span
+                                style={{
+                                  fontSize: "0.625rem",
+                                  fontWeight: 600,
+                                  padding: "0.1rem 0.35rem",
+                                  borderRadius: "4px",
+                                  background: isEnrolled ? "#ECFDF5" : "#F1F5F9",
+                                  color: isEnrolled ? "#059669" : "#64748B",
+                                }}
+                              >
+                                {isEnrolled ? "Enrolled" : "Not Enrolled"}
+                              </span>
+                            </div>
+                            <div style={{ fontSize: "0.75rem", color: "var(--color-muted)" }}>
+                              {st.grade || "General"} · {(st as any).reg_id || st.email}
+                            </div>
+                          </div>
+                          {isEnrolled ? (
+                            <button
+                              type="button"
+                              onClick={() => handleUnenroll(st.id)}
+                              className={styles.actionBtnDanger}
+                            >
+                              Remove
+                            </button>
+                          ) : (
+                            <Button
+                              variant="secondary"
+                              size="xs"
+                              onClick={async () => {
+                                if (!enrollSubject) return;
+                                try {
+                                  await api.enrollStudent(enrollSubject.id, st.id);
+                                  showToast("success", `${st.name} enrolled.`);
+                                  const data = (await api.getSubjectStudents(enrollSubject.id)) as EnrolledStudent[];
+                                  setEnrolled(data ?? []);
+                                } catch (err) {
+                                  showToast("error", "Failed to enroll student.");
+                                }
+                              }}
+                            >
+                              + Enroll
+                            </Button>
+                          )}
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
             </div>
-          ) : enrolled.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "2rem", color: "var(--color-muted)", fontSize: "0.8125rem" }}>
-              No candidates enrolled in this subject yet.
-            </div>
-          ) : (
-            <div className={styles.enrollList}>
-              {enrolled
-                .filter((st) => !enrollSearch || st.name.toLowerCase().includes(enrollSearch.toLowerCase()))
-                .map((st) => (
-                  <div key={st.id || (st as any).student_user_id} className={styles.enrollItem}>
-                    <div>
-                      <div style={{ fontWeight: 600, color: "var(--color-text)" }}>{st.name}</div>
-                      <div style={{ fontSize: "0.75rem", color: "var(--color-muted)" }}>
-                        {st.grade || "General"} · {st.reg_id || st.email}
+          )}
+
+          {/* View Mode 2: Enrolled List Only */}
+          {rosterViewMode === "enrolled_list" && (
+            <div>
+              {enrollLoading ? (
+                <div style={{ textAlign: "center", padding: "2rem", color: "var(--color-muted)", fontSize: "0.8125rem" }}>
+                  Loading enrolled list…
+                </div>
+              ) : enrolled.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "2rem", color: "var(--color-muted)", fontSize: "0.8125rem" }}>
+                  No candidates enrolled in this subject yet.
+                </div>
+              ) : (
+                <div className={styles.enrollList}>
+                  {enrolled
+                    .filter((st) => !enrollSearch || st.name.toLowerCase().includes(enrollSearch.toLowerCase()) || (st.reg_id && st.reg_id.toLowerCase().includes(enrollSearch.toLowerCase())))
+                    .map((st) => (
+                      <div key={st.id || (st as any).student_user_id} className={styles.enrollItem}>
+                        <div>
+                          <div style={{ fontWeight: 600, color: "var(--color-text)" }}>{st.name}</div>
+                          <div style={{ fontSize: "0.75rem", color: "var(--color-muted)" }}>
+                            {st.grade || "General"} · {st.reg_id || st.email}
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleUnenroll(st.id || (st as any).student_user_id)}
+                          className={styles.actionBtnDanger}
+                        >
+                          Remove
+                        </button>
                       </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleUnenroll(st.id || (st as any).student_user_id)}
-                      className={styles.actionBtnDanger}
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ))}
+                    ))}
+                </div>
+              )}
             </div>
           )}
         </div>

@@ -800,7 +800,7 @@ function SettingsContent() {
                   Irreversible System Reset
                 </div>
                 <div style={{ fontSize: "0.8125rem", color: "var(--color-text)", lineHeight: 1.5 }}>
-                  This operation permanently wipes all questions, user accounts, candidate submissions, and broadsheets.
+                  This operation permanently wipes all school examination questions, user accounts, candidate submissions, and broadsheets. External exam body questions (JAMB, WAEC, NECO, NABTEB) in the national content bank are safely preserved.
                 </div>
 
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", marginTop: "0.25rem" }}>
@@ -979,7 +979,7 @@ function SettingsContent() {
           <div style={{ background: "#FFFFFF", borderRadius: "12px", border: "1px solid var(--color-border)", padding: "1.5rem", maxWidth: "400px", width: "100%", display: "flex", flexDirection: "column", gap: "1rem", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)" }}>
             <div style={{ fontWeight: 600, fontSize: "1rem", color: "var(--color-text)" }}>Confirm Factory Reset</div>
             <div style={{ fontSize: "0.8125rem", color: "var(--color-danger, #DC2626)", lineHeight: 1.5 }}>
-              All examination data, user records, and candidate submissions will be permanently wiped. This action is irreversible.
+              All local examination data, user records, and candidate submissions will be permanently wiped. National content bank questions (JAMB, WAEC, NECO, NABTEB) remain safely preserved. This action is irreversible.
             </div>
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem", paddingTop: "0.75rem", borderTop: "1px solid var(--color-border)" }}>
               <Button variant="secondary" size="sm" onClick={() => setShowFinalModal(false)}>

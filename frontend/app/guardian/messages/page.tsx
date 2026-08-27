@@ -140,91 +140,100 @@ function MessagesList() {
 
   return (
     <div className={styles.container}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-        <h1 className={styles.pageTitle} style={{ margin: 0 }}>Messages & Enquiries</h1>
-        {contacts.length > 0 && (
-          <button
-            type="button"
-            onClick={() => setShowNewChatModal(true)}
-            style={{
-              padding: "0.45rem 0.85rem",
-              background: "#165AF6",
-              color: "#fff",
-              border: "none",
-              borderRadius: "8px",
-              fontSize: "0.8125rem",
-              fontWeight: 600,
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: "0.35rem",
-            }}
-          >
-            <span>+ New Chat</span>
-          </button>
-        )}
+      {/* Header */}
+      <div className={styles.headerRow}>
+        <h1 className={styles.pageTitle}>Messages</h1>
+        <button
+          type="button"
+          className={styles.newChatBtn}
+          onClick={() => setShowNewChatModal(true)}
+          title="New Message"
+          aria-label="New Message"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+        </button>
       </div>
 
       {/* Search Bar */}
-      <div className={styles.searchBox}>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2.5">
+      <div className={styles.searchBarWrapper}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className={styles.searchIcon}>
           <circle cx="11" cy="11" r="8" />
           <line x1="21" y1="21" x2="16.65" y2="16.65" />
         </svg>
         <input
           type="text"
-          placeholder="Search teachers, admins or messages..."
+          placeholder="Search messages..."
           className={styles.searchInput}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
+        {searchQuery && (
+          <button
+            type="button"
+            className={styles.clearSearchBtn}
+            onClick={() => setSearchQuery("")}
+          >
+            ✕
+          </button>
+        )}
       </div>
 
-      {/* Filter Pills */}
-      <div className={styles.filterPills}>
-        {["all", "teacher", "school", "system"].map((cat) => (
+      {/* Filter Category Pills */}
+      <div className={styles.filterPillsRow}>
+        {[
+          { key: "all", label: "All" },
+          { key: "school", label: "School" },
+          { key: "teacher", label: "Teacher" },
+          { key: "system", label: "System" },
+        ].map((f) => (
           <button
-            key={cat}
+            key={f.key}
             type="button"
-            className={`${styles.filterPill} ${selectedFilter === cat ? styles.filterPillActive : ""}`}
-            onClick={() => setSelectedFilter(cat)}
+            className={`${styles.filterPill} ${selectedFilter === f.key ? styles.filterPillActive : ""}`}
+            onClick={() => setSelectedFilter(f.key)}
           >
-            {cat === "all"
-              ? "All Chats"
-              : cat === "teacher"
-              ? "Teachers"
-              : cat === "school"
-              ? "School Admin"
-              : "System Notices"}
+            {f.label}
           </button>
         ))}
       </div>
 
       {/* Thread List */}
       <div className={styles.threadList}>
-        {filteredThreads.map((thread) => (
-          <div
-            key={thread.id}
-            className={`${styles.threadCard} ${thread.unread ? styles.threadCardActive : ""}`}
-            onClick={() => handleOpenThread(thread)}
-          >
-            <div className={styles.threadLeft}>
-              <div className={styles.avatarCircle}>{thread.sender_name.charAt(0)}</div>
-              <div className={styles.threadMeta}>
-                <div className={styles.threadNameRow}>
-                  <span className={styles.senderName}>{thread.sender_name}</span>
+        {filteredThreads.length > 0 ? (
+          filteredThreads.map((thread) => (
+            <div
+              key={thread.id}
+              className={`${styles.threadCard} ${thread.unread ? styles.threadCardActive : ""}`}
+              onClick={() => handleOpenThread(thread)}
+            >
+              <div className={styles.threadLeft}>
+                <div className={styles.avatarCircle}>{thread.sender_name.charAt(0)}</div>
+                <div className={styles.threadMeta}>
+                  <div className={styles.threadNameRow}>
+                    <span className={styles.senderName}>{thread.sender_name}</span>
+                  </div>
+                  <span className={styles.senderRole}>{thread.sender_role}</span>
+                  <span className={styles.lastMsg}>{thread.last_message}</span>
                 </div>
-                <span className={styles.senderRole}>{thread.sender_role}</span>
-                <span className={styles.lastMsg}>{thread.last_message}</span>
+              </div>
+
+              <div className={styles.threadRight}>
+                <span className={styles.timeLabel}>{thread.time_label}</span>
+                {thread.unread && <span className={styles.unreadBadge} />}
               </div>
             </div>
-
-            <div className={styles.threadRight}>
-              <span className={styles.timeLabel}>{thread.time_label}</span>
-              {thread.unread && <span className={styles.unreadBadge} />}
-            </div>
+          ))
+        ) : (
+          <div style={{ textAlign: "center", padding: "3rem 1rem", color: "#64748B" }}>
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" strokeWidth="1.5" style={{ margin: "0 auto 0.75rem", display: "block" }}>
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg>
+            <p style={{ fontSize: "0.875rem", margin: 0 }}>No conversations in this section.</p>
           </div>
-        ))}
+        )}
       </div>
 
       {/* Interactive Chat Modal */}
@@ -240,8 +249,12 @@ function MessagesList() {
                 type="button"
                 className={styles.chatCloseBtn}
                 onClick={() => setActiveThread(null)}
+                aria-label="Close"
               >
-                ✕
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
               </button>
             </div>
 
@@ -285,8 +298,16 @@ function MessagesList() {
                 <div className={styles.chatHeaderName}>Message Teachers & School</div>
                 <div className={styles.chatHeaderRole}>Select recipient for {activeWard?.name}</div>
               </div>
-              <button type="button" className={styles.chatCloseBtn} onClick={() => setShowNewChatModal(false)}>
-                ✕
+              <button
+                type="button"
+                className={styles.chatCloseBtn}
+                onClick={() => setShowNewChatModal(false)}
+                aria-label="Close"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
               </button>
             </div>
 
@@ -314,7 +335,12 @@ function MessagesList() {
                     <div style={{ fontWeight: 600, fontSize: "0.875rem", color: "#0F172A" }}>{c.name}</div>
                     <div style={{ fontSize: "0.75rem", color: "#64748B" }}>{c.role_label}</div>
                   </div>
-                  <span style={{ fontSize: "0.8125rem", color: "#165AF6", fontWeight: 600 }}>Message →</span>
+                  <span style={{ fontSize: "0.8125rem", color: "#165AF6", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>
+                    <span>Message</span>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="9 18 15 12 9 6" />
+                    </svg>
+                  </span>
                 </div>
               ))}
             </div>

@@ -47,7 +47,7 @@ function UsersContent() {
   const [toast, setToast] = useState<Toast>(null);
 
   const [gradeLevels, setGradeLevels] = useState<any[]>([]);
-  const [modal, setModal] = useState<"operator" | "user" | null>(null);
+  const [modal, setModal] = useState<"operator" | "user" | "guardian" | null>(null);
   const [form, setForm] = useState<any>({
     name: "",
     email: "",
@@ -56,6 +56,9 @@ function UsersContent() {
     grade_level_id: "",
     dob: "",
     phone: "",
+    relationship: "Parent",
+    student_reg_id: "",
+    address: "",
   });
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<User | null>(null);
@@ -130,6 +133,18 @@ function UsersContent() {
       if (modal === "operator") {
         await api.createOperator({ name: form.name, email: form.email, password: form.password });
         showToast("success", `Operator "${form.name}" created successfully.`);
+      } else if (modal === "guardian") {
+        await api.register({
+          name: form.name,
+          email: form.email,
+          password: form.password,
+          role: "guardian",
+          phone: form.phone || undefined,
+          relationship: form.relationship || "Parent",
+          address: form.address || undefined,
+          student_reg_id: form.student_reg_id ? form.student_reg_id.trim() : undefined,
+        });
+        showToast("success", `Guardian account "${form.name}" created successfully.`);
       } else {
         await api.register({
           name: form.name,
@@ -144,7 +159,7 @@ function UsersContent() {
         showToast("success", `User "${form.name}" created successfully.`);
       }
       setModal(null);
-      setForm({ name: "", email: "", password: "", role: "student", grade_level_id: "", dob: "", phone: "" });
+      setForm({ name: "", email: "", password: "", role: "student", grade_level_id: "", dob: "", phone: "", relationship: "Parent", student_reg_id: "", address: "" });
       await refresh();
     } catch (err) {
       showToast("error", err instanceof Error ? err.message : "Creation failed");
@@ -219,6 +234,17 @@ function UsersContent() {
         subtitle="Manage student cohorts, faculty members, and administrative operator accounts."
         actions={
           <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              leftIcon={<UsersIcon width="14" height="14" />}
+              onClick={() => {
+                setForm({ name: "", email: "", password: "", role: "guardian", phone: "", relationship: "Parent", student_reg_id: "", address: "" });
+                setModal("guardian");
+              }}
+            >
+              + New Guardian
+            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -566,6 +592,138 @@ function UsersContent() {
               loading={saving}
             >
               Create Account
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* ── MODAL 1B: CREATE GUARDIAN ACCOUNT ── */}
+      <Modal
+        open={modal === "guardian"}
+        onClose={() => setModal(null)}
+        title="Create Guardian Account"
+        size="md"
+      >
+        <form onSubmit={handleCreateUser}>
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>
+              Guardian Full Name <span className={styles.requiredAsterisk}>*</span>
+            </label>
+            <input
+              type="text"
+              required
+              className={styles.formInput}
+              placeholder="e.g. Mr. Babatunde Adeleke"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+            />
+          </div>
+
+          <div className={styles.formRow}>
+            <div className={styles.formGroup} style={{ flex: 1 }}>
+              <label className={styles.formLabel}>
+                Email Address <span className={styles.requiredAsterisk}>*</span>
+              </label>
+              <input
+                type="email"
+                required
+                className={styles.formInput}
+                placeholder="guardian@example.com"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+              />
+            </div>
+            <div className={styles.formGroup} style={{ flex: 1 }}>
+              <label className={styles.formLabel}>
+                Phone / WhatsApp <span className={styles.requiredAsterisk}>*</span>
+              </label>
+              <input
+                type="tel"
+                required
+                className={styles.formInput}
+                placeholder="+234 800 000 0000"
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <div className={styles.formRow}>
+            <div className={styles.formGroup} style={{ flex: 1 }}>
+              <label className={styles.formLabel}>Relationship to Ward</label>
+              <select
+                className={styles.formSelect}
+                value={form.relationship}
+                onChange={(e) => setForm({ ...form, relationship: e.target.value })}
+              >
+                <option value="Parent">Parent</option>
+                <option value="Father">Father</option>
+                <option value="Mother">Mother</option>
+                <option value="Guardian">Legal Guardian</option>
+                <option value="Uncle/Aunt">Uncle / Aunt</option>
+                <option value="Sibling">Elder Sibling</option>
+                <option value="Sponsor">Sponsor</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div className={styles.formGroup} style={{ flex: 1 }}>
+              <label className={styles.formLabel}>Link Student (Reg ID / Admission No)</label>
+              <input
+                type="text"
+                className={styles.formInput}
+                placeholder="e.g. REG-MT8WJWA2"
+                value={form.student_reg_id}
+                onChange={(e) => setForm({ ...form, student_reg_id: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>Residential Address (Optional)</label>
+            <input
+              type="text"
+              className={styles.formInput}
+              placeholder="e.g. 14 Crescent Avenue, Ikeja"
+              value={form.address}
+              onChange={(e) => setForm({ ...form, address: e.target.value })}
+            />
+          </div>
+
+          <div className={styles.formGroup}>
+            <div className="flex items-center justify-between mb-1">
+              <label className={styles.formLabel}>
+                Password <span className={styles.requiredAsterisk}>*</span>
+              </label>
+              <button
+                type="button"
+                className="text-[11px] font-bold text-slate-700 hover:text-black hover:underline cursor-pointer"
+                onClick={() => setForm({ ...form, password: generateSecureCode() })}
+              >
+                Generate Passcode
+              </button>
+            </div>
+            <input
+              type="text"
+              required
+              className={`${styles.formInput} ${styles.formInputMono}`}
+              placeholder="Enter or generate password"
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+            />
+          </div>
+
+          <div className={styles.modalFooter}>
+            <Button type="button" variant="outline" size="md" onClick={() => setModal(null)}>
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              size="md"
+              leftIcon={<CheckIcon width="16" height="16" />}
+              loading={saving}
+            >
+              Create Guardian Account
             </Button>
           </div>
         </form>

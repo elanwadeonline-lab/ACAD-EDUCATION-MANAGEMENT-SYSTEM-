@@ -1,4 +1,4 @@
-/* ── Settings & More Mobile Screen Styles ── */
+/* ── Settings Mobile Screen Styles ── */
 
 .container {
   display: flex;
@@ -15,129 +15,81 @@
   letter-spacing: -0.02em;
 }
 
-/* User Card */
-.userCard {
+/* Settings Card */
+.settingsCard {
   background: #FFFFFF;
   border: 1px solid #E2E8F0;
-  border-radius: 18px;
-  padding: 1.25rem;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
-}
-
-.userAvatar {
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #165AF6 0%, #0D47C9 100%);
-  color: #FFFFFF;
-  font-size: 1.25rem;
-  font-weight: 800;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.userMeta {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-}
-
-.userName {
-  font-size: 1rem;
-  font-weight: 700;
-  color: #0F172A;
-}
-
-.userRole {
-  font-size: 0.75rem;
-  color: #64748B;
-}
-
-/* Settings Group */
-.settingsGroup {
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  border-radius: 18px;
-  padding: 0.35rem 0.5rem;
+  border-radius: 20px;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
 }
 
-.groupHeading {
-  font-size: 0.6875rem;
-  font-weight: 700;
-  color: #94A3B8;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  padding: 0.75rem 0.75rem 0.25rem 0.75rem;
-  margin: 0;
-}
-
-.navRow {
+.settingRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.75rem 0.75rem;
-  border-radius: 12px;
-  text-decoration: none;
-  color: #0F172A;
-  transition: all 140ms ease;
-  cursor: pointer;
-  background: transparent;
+  padding: 1.1rem 1.25rem;
+  background: #FFFFFF;
   border: none;
+  border-bottom: 1px solid #F1F5F9;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
   width: 100%;
+  text-align: left;
+  transition: background 140ms ease;
 }
 
-.navRow:hover {
+.settingRow:hover {
   background: #F8FAFC;
 }
 
-.navRowLeft {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.navRowIcon {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: #F1F5F9;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.settingLabel {
   font-size: 0.875rem;
-  color: #475569;
-  flex-shrink: 0;
-}
-
-.navRowLabel {
-  font-size: 0.84375rem;
   font-weight: 600;
   color: #0F172A;
 }
 
-.navRowChevron {
+.settingRightGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.settingValueText {
+  font-size: 0.8125rem;
+  color: #64748B;
+}
+
+.chevron {
   color: #94A3B8;
+  flex-shrink: 0;
 }
 
-.logoutRow {
-  color: #DC2626 !important;
+/* Logout Button */
+.logoutBtn {
+  width: 100%;
+  padding: 0.85rem;
+  background: #FFFFFF;
+  border: 1.5px solid #FCA5A5;
+  color: #DC2626;
+  border-radius: 14px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 140ms ease;
+  margin-top: 0.5rem;
 }
 
-.logoutRow .navRowLabel {
-  color: #DC2626 !important;
+.logoutBtn:hover {
+  background: #FEF2F2;
+  border-color: #EF4444;
 }
 
-.logoutRow .navRowIcon {
-  background: #FEF2F2 !important;
-  color: #DC2626 !important;
+.logoutBtn:active {
+  transform: scale(0.98);
 }
 
 /* Modal Drawer / Form Styles */

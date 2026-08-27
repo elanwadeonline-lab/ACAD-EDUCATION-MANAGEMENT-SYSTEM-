@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { RequireRole } from "../../../components/auth/RequireRole";
 import { useGuardian } from "../../../components/guardian/GuardianContext";
@@ -21,7 +21,7 @@ function SettingsContent() {
   const { logout } = useAuth();
 
   // Modals state
-  const [activeModal, setActiveModal] = useState<"security" | "profile" | "notifications" | null>(null);
+  const [activeModal, setActiveModal] = useState<"security" | "profile" | "notifications" | "support" | null>(null);
 
   // Security Form State
   const [currentPassword, setCurrentPassword] = useState("");
@@ -135,149 +135,94 @@ function SettingsContent() {
 
   return (
     <div className={styles.container}>
-      <h1 className={styles.pageTitle}>More & Settings</h1>
+      <h1 className={styles.pageTitle}>Settings</h1>
 
-      {/* ── 1. User Profile Header ── */}
-      <section className={styles.userCard}>
-        <div className={styles.userAvatar}>{guardianName.charAt(0)}</div>
-        <div className={styles.userMeta}>
-          <span className={styles.userName}>{guardianName}</span>
-          <span className={styles.userRole}>
-            Guardian • {wards.length} Linked {wards.length === 1 ? "Child" : "Children"}
-          </span>
+      {/* ── Settings Row List ── */}
+      <section className={styles.settingsCard}>
+        {/* 1. Profile Information */}
+        <button
+          type="button"
+          className={styles.settingRow}
+          onClick={() => setActiveModal("profile")}
+        >
+          <span className={styles.settingLabel}>Profile Information</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={styles.chevron}>
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </button>
+
+        {/* 2. Change Password */}
+        <button
+          type="button"
+          className={styles.settingRow}
+          onClick={() => setActiveModal("security")}
+        >
+          <span className={styles.settingLabel}>Change Password</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={styles.chevron}>
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </button>
+
+        {/* 3. Notification Preferences */}
+        <button
+          type="button"
+          className={styles.settingRow}
+          onClick={() => setActiveModal("notifications")}
+        >
+          <span className={styles.settingLabel}>Notification Preferences</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={styles.chevron}>
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </button>
+
+        {/* 4. Linked Children */}
+        <Link href="/guardian/wards" className={styles.settingRow}>
+          <span className={styles.settingLabel}>Linked Children</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={styles.chevron}>
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </Link>
+
+        {/* 5. Language */}
+        <div className={styles.settingRow}>
+          <span className={styles.settingLabel}>Language</span>
+          <div className={styles.settingRightGroup}>
+            <span className={styles.settingValueText}>English</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={styles.chevron}>
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </div>
+        </div>
+
+        {/* 6. Help & Support */}
+        <button
+          type="button"
+          className={styles.settingRow}
+          onClick={() => setActiveModal("support")}
+        >
+          <span className={styles.settingLabel}>Help & Support</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={styles.chevron}>
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </button>
+
+        {/* 7. About */}
+        <div className={styles.settingRow} style={{ borderBottom: "none" }}>
+          <span className={styles.settingLabel}>About ACAD Guardian</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={styles.chevron}>
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
         </div>
       </section>
 
-      {/* ── 2. Academic Quick Links ── */}
-      <section className={styles.settingsGroup}>
-        <h2 className={styles.groupHeading}>Academic Modules</h2>
-
-        <Link href="/guardian/fees" className={styles.navRow}>
-          <div className={styles.navRowLeft}>
-            <div className={styles.navRowIcon} style={{ background: "#EFF4FF", color: "#165AF6" }}>
-              💳
-            </div>
-            <span className={styles.navRowLabel}>Fee Payments & Billing</span>
-          </div>
-          <span className={styles.navRowChevron}>›</span>
-        </Link>
-
-        <Link href="/guardian/examinations" className={styles.navRow}>
-          <div className={styles.navRowLeft}>
-            <div className={styles.navRowIcon} style={{ background: "#ECFDF5", color: "#059669" }}>
-              📅
-            </div>
-            <span className={styles.navRowLabel}>Examinations & Timetable</span>
-          </div>
-          <span className={styles.navRowChevron}>›</span>
-        </Link>
-
-        <Link href="/guardian/attendance" className={styles.navRow}>
-          <div className={styles.navRowLeft}>
-            <div className={styles.navRowIcon} style={{ background: "#FFFBEB", color: "#D97706" }}>
-              🕒
-            </div>
-            <span className={styles.navRowLabel}>Attendance Audit</span>
-          </div>
-          <span className={styles.navRowChevron}>›</span>
-        </Link>
-
-        <Link href="/guardian/performance" className={styles.navRow}>
-          <div className={styles.navRowLeft}>
-            <div className={styles.navRowIcon} style={{ background: "#F5F3FF", color: "#7C3AED" }}>
-              📊
-            </div>
-            <span className={styles.navRowLabel}>Subject Performance Analytics</span>
-          </div>
-          <span className={styles.navRowChevron}>›</span>
-        </Link>
-
-        <Link href="/guardian/links" className={styles.navRow}>
-          <div className={styles.navRowLeft}>
-            <div className={styles.navRowIcon} style={{ background: "#F1F5F9", color: "#475569" }}>
-              🔗
-            </div>
-            <span className={styles.navRowLabel}>Manage Linked Wards</span>
-          </div>
-          <span className={styles.navRowChevron}>›</span>
-        </Link>
-      </section>
-
-      {/* ── 3. App Preferences & Security ── */}
-      <section className={styles.settingsGroup}>
-        <h2 className={styles.groupHeading}>Preferences & Security</h2>
-
-        <button
-          type="button"
-          className={styles.navRow}
-          onClick={() => setActiveModal("notifications")}
-        >
-          <div className={styles.navRowLeft}>
-            <div className={styles.navRowIcon} style={{ background: "#EFF6FF", color: "#2563EB" }}>
-              🔔
-            </div>
-            <span className={styles.navRowLabel}>Alerts & Notifications</span>
-          </div>
-          <span className={styles.navRowChevron}>›</span>
-        </button>
-
-        <button
-          type="button"
-          className={styles.navRow}
-          onClick={() => setActiveModal("profile")}
-        >
-          <div className={styles.navRowLeft}>
-            <div className={styles.navRowIcon} style={{ background: "#F0FDF4", color: "#16A34A" }}>
-              👤
-            </div>
-            <span className={styles.navRowLabel}>Guardian Contact Profile</span>
-          </div>
-          <span className={styles.navRowChevron}>›</span>
-        </button>
-
-        <button
-          type="button"
-          className={styles.navRow}
-          onClick={() => setActiveModal("security")}
-        >
-          <div className={styles.navRowLeft}>
-            <div className={styles.navRowIcon} style={{ background: "#FEF3C7", color: "#D97706" }}>
-              🔒
-            </div>
-            <span className={styles.navRowLabel}>Security & Password</span>
-          </div>
-          <span className={styles.navRowChevron}>›</span>
-        </button>
-
-        <button
-          type="button"
-          className={styles.navRow}
-          onClick={() => alert("ACAD Guardian Support: support@acad.edu or call +234 800 222 3456")}
-        >
-          <div className={styles.navRowLeft}>
-            <div className={styles.navRowIcon} style={{ background: "#F1F5F9", color: "#475569" }}>
-              💬
-            </div>
-            <span className={styles.navRowLabel}>Help & Support Desk</span>
-          </div>
-          <span className={styles.navRowChevron}>›</span>
-        </button>
-      </section>
-
-      {/* ── 4. Sign Out ── */}
-      <section className={styles.settingsGroup}>
-        <button
-          type="button"
-          className={`${styles.navRow} ${styles.logoutRow}`}
-          onClick={logout}
-        >
-          <div className={styles.navRowLeft}>
-            <div className={styles.navRowIcon}>🚪</div>
-            <span className={styles.navRowLabel}>Sign Out of ACAD</span>
-          </div>
-          <span className={styles.navRowChevron}>›</span>
-        </button>
-      </section>
+      {/* ── Log Out Button ── */}
+      <button
+        type="button"
+        className={styles.logoutBtn}
+        onClick={() => logout()}
+      >
+        Log Out
+      </button>
 
       {/* ── Modal: Security & Password ── */}
       {activeModal === "security" && (
@@ -285,8 +230,16 @@ function SettingsContent() {
           <div className={styles.modalBox} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <h3 className={styles.modalTitle}>Change Password</h3>
-              <button type="button" className={styles.closeBtn} onClick={() => setActiveModal(null)}>
-                ✕
+              <button
+                type="button"
+                className={styles.closeBtn}
+                onClick={() => setActiveModal(null)}
+                aria-label="Close"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
               </button>
             </div>
 
@@ -347,8 +300,16 @@ function SettingsContent() {
           <div className={styles.modalBox} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <h3 className={styles.modalTitle}>Guardian Profile</h3>
-              <button type="button" className={styles.closeBtn} onClick={() => setActiveModal(null)}>
-                ✕
+              <button
+                type="button"
+                className={styles.closeBtn}
+                onClick={() => setActiveModal(null)}
+                aria-label="Close"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
               </button>
             </div>
 
@@ -395,8 +356,16 @@ function SettingsContent() {
           <div className={styles.modalBox} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <h3 className={styles.modalTitle}>Notification Channels</h3>
-              <button type="button" className={styles.closeBtn} onClick={() => setActiveModal(null)}>
-                ✕
+              <button
+                type="button"
+                className={styles.closeBtn}
+                onClick={() => setActiveModal(null)}
+                aria-label="Close"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
               </button>
             </div>
 
@@ -439,6 +408,50 @@ function SettingsContent() {
                 {notifSaving ? "Saving Preferences..." : "Save Preferences"}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal: Support Desk ── */}
+      {activeModal === "support" && (
+        <div className={styles.modalOverlay} onClick={() => setActiveModal(null)}>
+          <div className={styles.modalBox} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h3 className={styles.modalTitle}>Help & Support Desk</h3>
+              <button
+                type="button"
+                className={styles.closeBtn}
+                onClick={() => setActiveModal(null)}
+                aria-label="Close"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+
+            <div style={{ background: "#F8FAFC", padding: "1.25rem", borderRadius: 12, border: "1px solid #E2E8F0", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+              <div style={{ fontSize: "0.875rem", fontWeight: 700, color: "#0F172A" }}>ExamPool School Support</div>
+              <div style={{ fontSize: "0.8125rem", color: "#475569", lineHeight: 1.5 }}>
+                Need help linking your ward, verifying exam records, or resolving payment queries? Reach our local academic liaison desk.
+              </div>
+              <div style={{ fontSize: "0.8125rem", color: "#165AF6", fontWeight: 600 }}>
+                Email: support@acad.edu
+              </div>
+              <div style={{ fontSize: "0.8125rem", color: "#165AF6", fontWeight: 600 }}>
+                Hotline: +234 800 222 3456
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className={styles.submitBtn}
+              onClick={() => setActiveModal(null)}
+              style={{ marginTop: "0.5rem" }}
+            >
+              Close
+            </button>
           </div>
         </div>
       )}

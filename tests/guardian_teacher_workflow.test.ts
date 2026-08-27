@@ -18,7 +18,7 @@ describe("Guardian-Teacher Hybrid Workflow & Attendance API Tests", () => {
       headers: { Authorization: `Bearer ${teacherToken}` },
     });
     expect(res.status).toBe(200);
-    const json = await res.json();
+    const json = await res.json() as any;
     const body = json.data;
     expect(body.has_class).toBe(true);
     expect(body.class_name).toBe("JSS 3");
@@ -45,7 +45,7 @@ describe("Guardian-Teacher Hybrid Workflow & Attendance API Tests", () => {
       }),
     });
     expect(res.status).toBe(200);
-    const json = await res.json();
+    const json = await res.json() as any;
     const body = json.data;
     expect(body.success).toBe(true);
     expect(body.count).toBe(1);
@@ -75,7 +75,7 @@ describe("Guardian-Teacher Hybrid Workflow & Attendance API Tests", () => {
       }),
     });
     expect(res.status).toBe(200);
-    const json = await res.json();
+    const json = await res.json() as any;
     const body = json.data;
     expect(body.success).toBe(true);
 
@@ -99,7 +99,7 @@ describe("Guardian-Teacher Hybrid Workflow & Attendance API Tests", () => {
       }),
     });
     expect(res.status).toBe(200);
-    const json = await res.json();
+    const json = await res.json() as any;
     const body = json.data;
     expect(body.success).toBe(true);
 
@@ -113,7 +113,7 @@ describe("Guardian-Teacher Hybrid Workflow & Attendance API Tests", () => {
       headers: { Authorization: `Bearer ${guardianToken}` },
     });
     expect(res.status).toBe(200);
-    const json = await res.json();
+    const json = await res.json() as any;
     const body = json.data;
     expect(body.token).toBeDefined();
     expect(body.share_url).toContain(`/student/report-card?student_id=${studentUser.id}`);
@@ -122,7 +122,7 @@ describe("Guardian-Teacher Hybrid Workflow & Attendance API Tests", () => {
   test("6. GET /api/notifications/vapid-public-key returns VAPID key", async () => {
     const res = await fetch(`${baseUrl}/api/notifications/vapid-public-key`);
     expect(res.status).toBe(200);
-    const json = await res.json();
+    const json = await res.json() as any;
     const body = json.data;
     expect(body.publicKey).toBeDefined();
     expect(typeof body.publicKey).toBe("string");

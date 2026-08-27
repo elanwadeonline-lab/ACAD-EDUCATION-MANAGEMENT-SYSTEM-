@@ -137,6 +137,12 @@ export default function LoginForm({ expectedRole }: { expectedRole: "student" | 
             <Link href="/register" className={styles.formSubtitleLink}>Create one →</Link>
           </p>
         )}
+        {expectedRole === "guardian" && (
+          <p className={styles.formSubtitle}>
+            New guardian?{" "}
+            <Link href="/register?role=guardian" className={styles.formSubtitleLink}>Create an account →</Link>
+          </p>
+        )}
       </div>
 
       {error && (

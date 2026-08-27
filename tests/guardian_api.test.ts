@@ -17,7 +17,7 @@ describe("Guardian Portal & Hybrid Messaging API Tests", () => {
       headers: { Cookie: `__exampool_session=${guardianToken}` },
     });
     expect(res.status).toBe(200);
-    const json = await res.json();
+    const json = await res.json() as any;
     expect(json.data.wards).toBeDefined();
     expect(json.data.wards.length).toBeGreaterThan(0);
     
@@ -37,7 +37,7 @@ describe("Guardian Portal & Hybrid Messaging API Tests", () => {
       headers: { Cookie: `__exampool_session=${guardianToken}` },
     });
     expect(res.status).toBe(200);
-    const json = await res.json();
+    const json = await res.json() as any;
     expect(json.data.subjects_performance.length).toBe(4);
     expect(json.data.subjects_performance[0].grade).toBeDefined();
   });
@@ -47,7 +47,7 @@ describe("Guardian Portal & Hybrid Messaging API Tests", () => {
       headers: { Cookie: `__exampool_session=${guardianToken}` },
     });
     expect(res.status).toBe(200);
-    const json = await res.json();
+    const json = await res.json() as any;
     expect(json.data.summary.present_days).toBeGreaterThan(0);
     expect(json.data.calendar.length).toBeGreaterThan(0);
   });
@@ -57,7 +57,7 @@ describe("Guardian Portal & Hybrid Messaging API Tests", () => {
       headers: { Cookie: `__exampool_session=${guardianToken}` },
     });
     expect(res.status).toBe(200);
-    const json = await res.json();
+    const json = await res.json() as any;
     expect(json.data.structures.length).toBe(3);
     expect(json.data.payments.length).toBe(2);
   });
@@ -67,7 +67,7 @@ describe("Guardian Portal & Hybrid Messaging API Tests", () => {
       headers: { Cookie: `__exampool_session=${guardianToken}` },
     });
     expect(res.status).toBe(200);
-    const json = await res.json();
+    const json = await res.json() as any;
     expect(json.data.length).toBeGreaterThan(0);
     const formTeacher = json.data.find((c: any) => c.role_label.includes("Form Teacher"));
     expect(formTeacher).toBeDefined();
@@ -79,7 +79,7 @@ describe("Guardian Portal & Hybrid Messaging API Tests", () => {
       headers: { Cookie: `__exampool_session=${guardianToken}` },
     });
     expect(threadsRes.status).toBe(200);
-    const threadsJson = await threadsRes.json();
+    const threadsJson = await threadsRes.json() as any;
     expect(threadsJson.data.length).toBeGreaterThan(0);
     const threadId = threadsJson.data[0].id;
 
@@ -99,7 +99,7 @@ describe("Guardian Portal & Hybrid Messaging API Tests", () => {
       headers: { Cookie: `__exampool_session=${teacherToken}` },
     });
     expect(teacherReadRes.status).toBe(200);
-    const threadDetails = await teacherReadRes.json();
+    const threadDetails = await teacherReadRes.json() as any;
     const lastMsg = threadDetails.data.messages[threadDetails.data.messages.length - 1];
     expect(lastMsg.text).toBe("Hello Mr. Adeleke, testing real-time chat from Guardian!");
 
