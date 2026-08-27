@@ -400,10 +400,10 @@ function AcademicSessionsContent() {
                       >
                         {s.name}
                       </h3>
-                      {isGroupActive ? (
-                        <span className={styles.activeSessionBadge}>Active Session</span>
-                      ) : (
-                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                        {isGroupActive ? (
+                          <span className={styles.activeSessionBadge}>Active Session</span>
+                        ) : (
                           <button
                             type="button"
                             className={styles.activateLink}
@@ -411,25 +411,25 @@ function AcademicSessionsContent() {
                           >
                             Set Active →
                           </button>
-                          <button
-                            type="button"
-                            title="Delete this session"
-                            onClick={() => handleDeleteSession(s.id, s.name)}
-                            style={{
-                              background: "none",
-                              border: "none",
-                              cursor: "pointer",
-                              color: "#EF4444",
-                              padding: "0.15rem",
-                              borderRadius: "4px",
-                              display: "flex",
-                              alignItems: "center",
-                            }}
-                          >
-                            <TrashIcon width="13" height="13" />
-                          </button>
-                        </div>
-                      )}
+                        )}
+                        <button
+                          type="button"
+                          title={`Delete session "${s.name}"`}
+                          onClick={() => handleDeleteSession(s.id, s.name)}
+                          style={{
+                            background: "none",
+                            border: "none",
+                            cursor: "pointer",
+                            color: "#EF4444",
+                            padding: "0.2rem",
+                            borderRadius: "4px",
+                            display: "flex",
+                            alignItems: "center",
+                          }}
+                        >
+                          <TrashIcon width="14" height="14" />
+                        </button>
+                      </div>
                     </div>
 
                     <div className={styles.termsList}>
@@ -443,10 +443,10 @@ function AcademicSessionsContent() {
                               <span className={styles.termName}>{t.name}</span>
                             </div>
                             <div className={styles.termMeta}>
-                              {t.is_active ? (
-                                <span className={styles.activeTermBadge}>Active Term</span>
-                              ) : isGroupActive ? (
-                                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                                {t.is_active ? (
+                                  <span className={styles.activeTermBadge}>Active Term</span>
+                                ) : isGroupActive ? (
                                   <button
                                     type="button"
                                     className={styles.activateTermLink}
@@ -454,25 +454,25 @@ function AcademicSessionsContent() {
                                   >
                                     Activate Term
                                   </button>
-                                  <button
-                                    type="button"
-                                    title="Delete this term"
-                                    onClick={() => handleDeleteTerm(t.id, t.name)}
-                                    style={{
-                                      background: "none",
-                                      border: "none",
-                                      cursor: "pointer",
-                                      color: "#EF4444",
-                                      padding: "0.15rem",
-                                      borderRadius: "4px",
-                                      display: "flex",
-                                      alignItems: "center",
-                                    }}
-                                  >
-                                    <TrashIcon width="12" height="12" />
-                                  </button>
-                                </div>
-                              ) : null}
+                                ) : null}
+                                <button
+                                  type="button"
+                                  title={`Delete term "${t.name}"`}
+                                  onClick={() => handleDeleteTerm(t.id, t.name)}
+                                  style={{
+                                    background: "none",
+                                    border: "none",
+                                    cursor: "pointer",
+                                    color: "#EF4444",
+                                    padding: "0.2rem",
+                                    borderRadius: "4px",
+                                    display: "flex",
+                                    alignItems: "center",
+                                  }}
+                                >
+                                  <TrashIcon width="13" height="13" />
+                                </button>
+                              </div>
                             </div>
                           </div>
                         ))

@@ -889,27 +889,28 @@ function SubjectsContent() {
           </div>
 
           {/* Cohort Summary & Quick Bulk Action */}
-          {selectedRosterClass !== "all" && (
-            <div style={{ background: "#F8FAFC", border: "1px solid var(--color-border)", borderRadius: "8px", padding: "0.75rem 1rem", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
-              <div>
-                <div style={{ fontWeight: 600, fontSize: "0.8125rem", color: "var(--color-text)" }}>
-                  Class: {selectedRosterClass}
-                </div>
-                <div style={{ fontSize: "0.75rem", color: "var(--color-muted)" }}>
-                  {students.filter((st) => st.grade === selectedRosterClass).length} total candidates in school directory ·{" "}
-                  {students.filter((st) => st.grade === selectedRosterClass && enrolled.some((e) => e.id === st.id || (e as any).student_user_id === st.id)).length} currently enrolled
-                </div>
+          <div style={{ background: "#F8FAFC", border: "1px solid var(--color-border)", borderRadius: "8px", padding: "0.75rem 1rem", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
+            <div>
+              <div style={{ fontWeight: 600, fontSize: "0.8125rem", color: "var(--color-text)" }}>
+                {selectedRosterClass === "all" ? "Cohort: All Candidates" : `Class: ${selectedRosterClass}`}
               </div>
-              <Button
-                variant="primary"
-                size="xs"
-                loading={bulkSaving}
-                onClick={() => handleBulkEnroll(selectedRosterClass)}
-              >
-                Enroll All in {selectedRosterClass}
-              </Button>
+              <div style={{ fontSize: "0.75rem", color: "var(--color-muted)" }}>
+                {selectedRosterClass === "all" ? (
+                  `${students.length} total candidates in directory · ${enrolled.length} currently enrolled`
+                ) : (
+                  `${students.filter((st) => (st.grade && selectedRosterClass && st.grade.replace(/\s+/g, '').toLowerCase() === selectedRosterClass.replace(/\s+/g, '').toLowerCase()) || st.grade === selectedRosterClass).length} total candidates in directory · ${students.filter((st) => ((st.grade && selectedRosterClass && st.grade.replace(/\s+/g, '').toLowerCase() === selectedRosterClass.replace(/\s+/g, '').toLowerCase()) || st.grade === selectedRosterClass) && enrolled.some((e) => e.id === st.id || (e as any).student_user_id === st.id)).length} currently enrolled`
+                )}
+              </div>
             </div>
-          )}
+            <Button
+              variant="primary"
+              size="xs"
+              loading={bulkSaving}
+              onClick={() => handleBulkEnroll(selectedRosterClass)}
+            >
+              {selectedRosterClass === "all" ? "Enroll All Candidates" : `Enroll All in ${selectedRosterClass}`}
+            </Button>
+          </div>
 
           {/* Search and View Mode Switcher */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.5rem", flexWrap: "wrap", paddingTop: "0.5rem", borderTop: "1px solid var(--color-border)" }}>
@@ -966,7 +967,7 @@ function SubjectsContent() {
               ) : (
                 <div className={styles.enrollList}>
                   {students
-                    .filter((st) => selectedRosterClass === "all" || st.grade === selectedRosterClass)
+                    .filter((st) => selectedRosterClass === "all" || st.grade === selectedRosterClass || (st.grade && selectedRosterClass && st.grade.replace(/\s+/g, '').toLowerCase() === selectedRosterClass.replace(/\s+/g, '').toLowerCase()))
                     .filter((st) => !enrollSearch || st.name.toLowerCase().includes(enrollSearch.toLowerCase()) || (st.email && st.email.toLowerCase().includes(enrollSearch.toLowerCase())) || ((st as any).reg_id && String((st as any).reg_id).toLowerCase().includes(enrollSearch.toLowerCase())))
                     .map((st) => {
                       const isEnrolled = enrolled.some((e) => e.id === st.id || (e as any).student_user_id === st.id);

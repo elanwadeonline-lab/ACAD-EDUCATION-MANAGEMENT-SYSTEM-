@@ -1487,25 +1487,27 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     const session = queries.getAcademicSessionById.get(sessionId) as any;
     if (!session) return apiError(404, "Academic session not found");
 
-    // Guard: Cannot delete the only active session
-    if (session.is_active) {
-      const totalCount = (db.prepare("SELECT COUNT(*) as c FROM academic_sessions").get() as any)?.c ?? 0;
-      if (Number(totalCount) <= 1) return apiError(409, "Cannot delete the only academic session.");
-      return apiError(409, "Cannot delete the currently active session. Activate another session first.");
-    }
-
-    // Guard: Block if any grading subjects, exams, or subjects exist in this session
-    const gsCount = (db.prepare("SELECT COUNT(*) as c FROM grading_subjects WHERE session_id = ?").get(sessionId) as any)?.c ?? 0;
-    const examCount = (db.prepare("SELECT COUNT(*) as c FROM exams WHERE session_id = ?").get(sessionId) as any)?.c ?? 0;
-    const subjectCount = (db.prepare("SELECT COUNT(*) as c FROM subjects WHERE session_id = ?").get(sessionId) as any)?.c ?? 0;
-    if (Number(gsCount) > 0 || Number(examCount) > 0 || Number(subjectCount) > 0) {
-      return apiError(409, `Cannot delete session: it has ${Number(gsCount)} gradebook(s), ${Number(examCount)} exam(s), and ${Number(subjectCount)} subject(s). Remove this data first or use Factory Reset.`);
-    }
-
-    // Safe to delete — cascade-delete its terms too
+    // Safe to delete — cascade-delete its terms and unlink dependent data
     db.transaction(() => {
+      db.prepare("UPDATE subjects SET session_id = NULL WHERE session_id = ?").run(sessionId);
+      db.prepare("UPDATE exams SET session_id = NULL WHERE session_id = ?").run(sessionId);
+      db.prepare("UPDATE grading_subjects SET session_id = NULL WHERE session_id = ?").run(sessionId);
+      db.prepare("UPDATE timetables SET session_id = NULL WHERE session_id = ?").run(sessionId);
+      db.prepare("DELETE FROM terms WHERE session = ?").run(session.name);
       db.prepare("DELETE FROM academic_terms WHERE session_id = ?").run(sessionId);
       db.prepare("DELETE FROM academic_sessions WHERE id = ?").run(sessionId);
+
+      // If the deleted session was active, activate the next remaining session
+      if (session.is_active) {
+        const remainingSession = db.prepare("SELECT id FROM academic_sessions ORDER BY id DESC LIMIT 1").get() as any;
+        if (remainingSession) {
+          db.prepare("UPDATE academic_sessions SET is_active = 1 WHERE id = ?").run(remainingSession.id);
+          const firstTerm = db.prepare("SELECT id FROM academic_terms WHERE session_id = ? ORDER BY id ASC LIMIT 1").get(remainingSession.id) as any;
+          if (firstTerm) {
+            db.prepare("UPDATE academic_terms SET is_active = 1 WHERE id = ?").run(firstTerm.id);
+          }
+        }
+      }
     })();
 
     auditLog(auth.userId, "DELETE_SESSION", "academic_sessions", sessionId, JSON.stringify({ name: session.name }));
@@ -1560,15 +1562,21 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
 
     const term = queries.getAcademicTermById.get(termId) as any;
     if (!term) return apiError(404, "Academic term not found");
-    if (term.is_active) return apiError(409, "Cannot delete the currently active term. End it first.");
+    db.transaction(() => {
+      db.prepare("UPDATE subjects SET term_id = NULL WHERE term_id = ?").run(termId);
+      db.prepare("UPDATE exams SET term_id = NULL WHERE term_id = ?").run(termId);
+      db.prepare("UPDATE grading_subjects SET term_id = NULL WHERE term_id = ?").run(termId);
+      db.prepare("UPDATE timetables SET term_id = NULL WHERE term_id = ?").run(termId);
+      db.prepare("DELETE FROM academic_terms WHERE id = ?").run(termId);
+      
+      if (term.is_active) {
+        const remainingTerm = db.prepare("SELECT id FROM academic_terms WHERE session_id = ? ORDER BY id ASC LIMIT 1").get(term.session_id) as any;
+        if (remainingTerm) {
+          db.prepare("UPDATE academic_terms SET is_active = 1 WHERE id = ?").run(remainingTerm.id);
+        }
+      }
+    })();
 
-    const gsCount = (db.prepare("SELECT COUNT(*) as c FROM grading_subjects WHERE term_id = ?").get(termId) as any)?.c ?? 0;
-    const examCount = (db.prepare("SELECT COUNT(*) as c FROM exams WHERE term_id = ?").get(termId) as any)?.c ?? 0;
-    if (Number(gsCount) > 0 || Number(examCount) > 0) {
-      return apiError(409, `Cannot delete term: it has ${Number(gsCount)} gradebook(s) and ${Number(examCount)} exam(s).`);
-    }
-
-    db.prepare("DELETE FROM academic_terms WHERE id = ?").run(termId);
     auditLog(auth.userId, "DELETE_TERM", "academic_terms", termId, JSON.stringify({ name: term.name }));
     return apiSuccess({ success: true, message: `Term "${term.name}" deleted successfully.` });
   }
@@ -3473,15 +3481,20 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     const grade = trimStr(body?.grade);
     
     let targetStudents: any[] = [];
-    if (!grade || grade.toLowerCase() === "all") {
+    if (!grade || grade.toLowerCase() === "all" || grade.toLowerCase() === "all cohorts") {
       targetStudents = db.prepare("SELECT id, name FROM users WHERE role = 'student' AND is_active = 1").all() as any[];
     } else {
       targetStudents = db.prepare(`
         SELECT u.id, u.name 
         FROM users u 
         LEFT JOIN grade_levels gl ON u.grade_level_id = gl.id 
-        WHERE u.role = 'student' AND u.is_active = 1 AND (u.grade = ? OR gl.name = ?)
-      `).all(grade, grade) as any[];
+        WHERE u.role = 'student' AND u.is_active = 1 AND (
+          u.grade = ? 
+          OR gl.name = ? 
+          OR REPLACE(LOWER(TRIM(COALESCE(u.grade, ''))), ' ', '') = REPLACE(LOWER(TRIM(?)), ' ', '')
+          OR REPLACE(LOWER(TRIM(COALESCE(gl.name, ''))), ' ', '') = REPLACE(LOWER(TRIM(?)), ' ', '')
+        )
+      `).all(grade, grade, grade, grade) as any[];
     }
     
     db.transaction(() => {
