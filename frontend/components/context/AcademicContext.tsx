@@ -97,14 +97,20 @@ export const AcademicProvider = ({ children }: { children: React.ReactNode }) =>
                 setSelectedSessionRaw(parsed);
               } else {
                 setSelectedSessionRaw(resActive.activeSession);
+                localStorage.setItem("exampool_selected_session", JSON.stringify(resActive.activeSession));
               }
             } else {
-              setSelectedSessionRaw((prev) => prev || resActive.activeSession);
+              setSelectedSessionRaw(resActive.activeSession);
             }
           } catch {
-            setSelectedSessionRaw((prev) => prev || resActive.activeSession);
+            setSelectedSessionRaw(resActive.activeSession);
           }
+        } else {
+          setActiveSession(null);
+          setSelectedSessionRaw(null);
+          localStorage.removeItem("exampool_selected_session");
         }
+
         if (resActive.activeTerm) {
           setActiveTerm(resActive.activeTerm);
           try {
@@ -116,17 +122,23 @@ export const AcademicProvider = ({ children }: { children: React.ReactNode }) =>
                 setSelectedTermRaw(null);
               } else {
                 const stillExistsT = resAll?.terms?.some((t: any) => t.id === parsedT.id);
-                if (stillExistsT) setSelectedTermRaw(parsedT);
-                else setSelectedTermRaw(resActive.activeTerm);
+                if (stillExistsT) {
+                  setSelectedTermRaw(parsedT);
+                } else {
+                  setSelectedTermRaw(resActive.activeTerm);
+                  localStorage.setItem("exampool_selected_term", JSON.stringify(resActive.activeTerm));
+                }
               }
             } else {
-              setSelectedTermRaw((prev) => (prev !== undefined ? prev : resActive.activeTerm) as any);
+              setSelectedTermRaw(resActive.activeTerm);
             }
           } catch {
-            setSelectedTermRaw((prev) => (prev !== undefined ? prev : resActive.activeTerm) as any);
+            setSelectedTermRaw(resActive.activeTerm);
           }
-          // Fallback if still null and activeTerm exists — keep activeTerm as default
-          setSelectedTermRaw((prev) => (prev === null ? null : prev || resActive.activeTerm));
+        } else {
+          setActiveTerm(null);
+          setSelectedTermRaw(null);
+          localStorage.removeItem("exampool_selected_term");
         }
       }
     } catch (e) {

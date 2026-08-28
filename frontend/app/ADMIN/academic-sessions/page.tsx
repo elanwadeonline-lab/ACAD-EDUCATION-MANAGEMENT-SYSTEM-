@@ -34,12 +34,14 @@ function AcademicSessionsContent() {
   const [sessions, setSessions] = useState<any[]>([]);
   const [terms, setTerms] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedSessionIds, setSelectedSessionIds] = useState<Set<number>>(new Set());
 
   // Modal States
   const [isSessionModalOpen, setIsSessionModalOpen] = useState(false);
   const [isTermModalOpen, setIsTermModalOpen] = useState(false);
   const [submittingSession, setSubmittingSession] = useState(false);
   const [submittingTerm, setSubmittingTerm] = useState(false);
+  const [deletingBulk, setDeletingBulk] = useState(false);
 
   // Form States
   const [newSessionName, setNewSessionName] = useState("");
@@ -55,6 +57,48 @@ function AcademicSessionsContent() {
     message: string;
     onConfirm: () => void;
   } | null>(null);
+
+  const toggleSelectAll = () => {
+    if (selectedSessionIds.size === sessions.length) {
+      setSelectedSessionIds(new Set());
+    } else {
+      setSelectedSessionIds(new Set(sessions.map((s) => s.id)));
+    }
+  };
+
+  const toggleSelectSession = (id: number) => {
+    setSelectedSessionIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleBulkDeleteSessions = () => {
+    const count = selectedSessionIds.size;
+    if (count === 0) return;
+    setConfirmState({
+      open: true,
+      title: `Delete ${count} Academic Session${count > 1 ? "s" : ""}?`,
+      message: `Permanently delete the selected ${count} academic session(s) and all their associated terms? This cannot be undone.`,
+      onConfirm: async () => {
+        setConfirmState(null);
+        try {
+          setDeletingBulk(true);
+          const res = await api.bulkDeleteAcademicSessions(Array.from(selectedSessionIds));
+          setMsg({ type: "success", text: res.message || `Successfully deleted ${count} session(s).` });
+          setSelectedSessionIds(new Set());
+          await loadData();
+          await refreshAcademic();
+        } catch (err: any) {
+          setMsg({ type: "error", text: err.message || "Failed to bulk delete sessions" });
+        } finally {
+          setDeletingBulk(false);
+        }
+      },
+    });
+  };
 
   useEffect(() => {
     if (selectedSession?.id) {
@@ -347,12 +391,67 @@ function AcademicSessionsContent() {
 
       {/* ── Chronological Session Lifecycle ────────────────── */}
       <section className={styles.timelineSection}>
-        <div className={styles.sectionHeader}>
+        <div className={styles.sectionHeader} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div className={styles.sectionTitle}>
             <span>Session Directory</span>
             <span className={styles.sectionCount}>{sessions.length}</span>
           </div>
+
+          {sessions.length > 0 && (
+            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+              <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.75rem", fontWeight: 600, color: "#64748B", cursor: "pointer" }}>
+                <input
+                  type="checkbox"
+                  checked={sessions.length > 0 && selectedSessionIds.size === sessions.length}
+                  onChange={toggleSelectAll}
+                  style={{ width: "14px", height: "14px", accentColor: "#0F766E", cursor: "pointer" }}
+                />
+                Select All ({sessions.length})
+              </label>
+            </div>
+          )}
         </div>
+
+        {/* ── Bulk Actions Toolbar ── */}
+        {selectedSessionIds.size > 0 && (
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            background: "linear-gradient(135deg, #1E293B 0%, #0F172A 100%)",
+            color: "#FFFFFF",
+            padding: "0.75rem 1.25rem",
+            borderRadius: "8px",
+            marginBottom: "1rem",
+            border: "1px solid #334155",
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+              <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "#38BDF8" }}>
+                {selectedSessionIds.size} session{selectedSessionIds.size > 1 ? "s" : ""} selected
+              </span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSelectedSessionIds(new Set())}
+                style={{ color: "#94A3B8" }}
+              >
+                Clear
+              </Button>
+              <Button
+                variant="danger"
+                size="sm"
+                leftIcon={<TrashIcon width="13" height="13" />}
+                onClick={handleBulkDeleteSessions}
+                loading={deletingBulk}
+              >
+                Delete Selected ({selectedSessionIds.size})
+              </Button>
+            </div>
+          </div>
+        )}
 
         {loading ? (
           <div className="flex flex-col items-center justify-center py-12 gap-2">
@@ -379,6 +478,7 @@ function AcademicSessionsContent() {
               {sessions.map((s) => {
                 const sessionTerms = terms.filter((t) => t.session_id === s.id);
                 const isGroupActive = Boolean(s.is_active);
+                const isSelected = selectedSessionIds.has(s.id);
 
                 return (
                   <div
@@ -386,8 +486,16 @@ function AcademicSessionsContent() {
                     className={`${styles.timelineYearGroup} ${
                       isGroupActive ? styles.timelineYearGroupActive : ""
                     }`}
+                    style={isSelected ? { background: "rgba(15, 118, 110, 0.05)", borderRadius: "8px", padding: "0.5rem" } : undefined}
                   >
                     <div className={styles.timelineYearMarker}>
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => toggleSelectSession(s.id)}
+                        style={{ width: "15px", height: "15px", accentColor: "#0F766E", cursor: "pointer", marginRight: "0.35rem" }}
+                        title={`Select session "${s.name}"`}
+                      />
                       <div
                         className={`${styles.timelineYearDot} ${
                           isGroupActive ? styles.timelineYearDotActive : ""

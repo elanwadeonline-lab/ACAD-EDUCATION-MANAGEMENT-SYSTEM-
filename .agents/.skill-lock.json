@@ -1,0 +1,50 @@
+{
+  "version": 3,
+  "skills": {
+    "find-skills": {
+      "source": "vercel-labs/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/vercel-labs/skills.git",
+      "skillPath": "skills/find-skills/SKILL.md",
+      "skillFolderHash": "76a98a285cb0434f3d39e1a873823556330e398b",
+      "installedAt": "2026-08-15T02:04:55.244Z",
+      "updatedAt": "2026-08-15T02:04:55.244Z"
+    },
+    "frontend-design": {
+      "source": "sickn33/agentic-awesome-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/sickn33/agentic-awesome-skills.git",
+      "skillPath": "skills/frontend-design/SKILL.md",
+      "skillFolderHash": "6852fc0a35e5d3b4d032c93ba43966e275c4967f",
+      "installedAt": "2026-08-19T13:47:07.525Z",
+      "updatedAt": "2026-08-19T13:47:07.525Z"
+    },
+    "design-taste-frontend": {
+      "source": "sickn33/antigravity-awesome-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/sickn33/antigravity-awesome-skills.git",
+      "skillPath": "skills/design-taste-frontend/SKILL.md",
+      "skillFolderHash": "5ca01fe2afcc441a692bfd1b9a10d523e7cd02b3",
+      "installedAt": "2026-08-19T13:48:26.443Z",
+      "updatedAt": "2026-08-19T13:48:26.443Z"
+    }
+  },
+  "dismissed": {
+    "findSkillsPrompt": true
+  },
+  "lastSelectedAgents": [
+    "amp",
+    "antigravity",
+    "antigravity-cli",
+    "cline",
+    "codex",
+    "cursor",
+    "deepagents",
+    "gemini-cli",
+    "github-copilot",
+    "kimi-code-cli",
+    "opencode",
+    "warp",
+    "zed"
+  ]
+}

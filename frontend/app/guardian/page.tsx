@@ -6,7 +6,7 @@ import LoginForm from "../../components/auth/LoginForm";
 
 function GuardianLoginHero() {
   return (
-    <div className={styles.heroPanl} style={{ background: "linear-gradient(145deg, #1E1B4B 0%, #312E81 100%)" }}>
+    <div className={styles.heroPanl}>
       <div className={styles.heroBrand}>
         <div className={styles.heroBrandIcon} style={{ background: "#6366F1" }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5">

@@ -99,10 +99,7 @@
   font-size: 0.75rem;
   font-weight: 600;
   color: #0F766E;
-  background: #F0FDFA;
-  border: 1px solid #CCFBF1;
   padding: 0.25rem 0.65rem;
-  border-radius: 9999px;
 }
 
 .statusDot {
@@ -124,8 +121,6 @@
   font-size: 0.75rem;
   font-weight: 500;
   color: var(--color-muted, #64748B);
-  background: var(--color-surface-2, #F1F5F9);
-  border: 1px solid var(--color-border, #E2E8F0);
   padding: 0.25rem 0.65rem;
   border-radius: 9999px;
 }
@@ -146,9 +141,6 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: var(--color-surface, #FFFFFF);
-  border: 1px solid var(--color-border, #E2E8F0);
-  border-radius: 14px;
   padding: 1rem 1.5rem;
   box-shadow: var(--shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.04));
 }
@@ -322,7 +314,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: #0F766E;
+  color: #4F46E5;
   margin-bottom: 0.5rem;
 }
 
@@ -345,7 +337,7 @@
 }
 
 .readinessList li span {
-  color: #10B981;
+  color: #4F46E5;
   font-weight: 700;
 }
 
@@ -387,10 +379,8 @@
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--color-primary, #0F766E);
-  background: #F0FDFA;
-  border: 1px solid #CCFBF1;
   padding: 0.2rem 0.5rem;
-  border-radius: 4px;
+  width: -moz-fit-content;
   width: fit-content;
 }
 

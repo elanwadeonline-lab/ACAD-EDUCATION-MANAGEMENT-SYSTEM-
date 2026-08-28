@@ -24,14 +24,14 @@
 
 /* ── Left Hero Pane ──────────────────────────────── */
 .heroPanl {
-  background: var(--color-text, #0F172A);
+  background: var(--color-text, #0f172a);
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: flex-start;
   text-align: left;
   gap: 2rem;
-  padding: 3.5rem 10%;
+  padding: 3.5rem 17%;
   position: relative;
   overflow: hidden;
   min-height: 100vh;

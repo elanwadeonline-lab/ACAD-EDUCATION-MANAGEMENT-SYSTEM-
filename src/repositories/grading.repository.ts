@@ -224,7 +224,20 @@ export class TermResultRepository extends BaseRepository<TermResult, Partial<Ter
       JOIN class_enrollments ce ON ce.student_id = u.id
       JOIN grading_subjects gs ON gs.class_id = ce.class_id
       WHERE gs.id = ?
-    `).all(subjectId, subjectId) as Record<string, unknown>[];
+      UNION
+      SELECT u.id, u.name, u.reg_id
+      FROM users u
+      LEFT JOIN grade_levels gl ON gl.id = u.grade_level_id
+      JOIN classes c ON c.name = COALESCE(gl.name, u.grade)
+      JOIN grading_subjects gs ON gs.class_id = c.id
+      WHERE gs.id = ? AND u.role = 'student' AND u.is_active = 1
+      UNION
+      SELECT u.id, u.name, u.reg_id
+      FROM users u
+      WHERE u.role = 'student' AND u.is_active = 1
+        AND (SELECT class_id FROM grading_subjects WHERE id = ?) IS NULL
+        AND (SELECT source_cbt_subject_id FROM grading_subjects WHERE id = ?) IS NULL
+    `).all(subjectId, subjectId, subjectId, subjectId, subjectId) as Record<string, unknown>[];
     return rows.map(r => ({ id: Number(r.id), name: String(r.name), reg_id: r.reg_id ? String(r.reg_id) : undefined }));
   }
 }

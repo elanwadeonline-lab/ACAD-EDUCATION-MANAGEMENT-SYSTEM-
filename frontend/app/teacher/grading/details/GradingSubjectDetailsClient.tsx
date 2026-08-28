@@ -215,6 +215,10 @@ function GradingSubjectDetails() {
 
   function addManualPolicy(isExam: boolean, name: string, marks: number) {
     if (isApproved) return;
+    if (isExam && policies.some((p) => p.is_exam === 1)) {
+      showToast("Only one final exam component is allowed. Written and CBT exams cannot coexist.", "error");
+      return;
+    }
     setPolicies((prev) => [...prev, { name, type: "manual", max_marks: marks, is_exam: isExam ? 1 : 0 }]);
   }
 
@@ -225,6 +229,13 @@ function GradingSubjectDetails() {
 
   function updatePolicy(idx: number, field: string, value: any) {
     if (isApproved) return;
+    if (field === "is_exam" && value === 1) {
+      const otherExam = policies.some((p, i) => i !== idx && p.is_exam === 1);
+      if (otherExam) {
+        showToast("A subject can only have one final exam component. Written Exam and CBT Exam cannot coexist.", "error");
+        return;
+      }
+    }
     setPolicies((prev) => {
       const next = [...prev];
       next[idx] = { ...next[idx]!, [field]: value };
@@ -235,6 +246,10 @@ function GradingSubjectDetails() {
 
   async function savePolicies() {
     if (totalMax <= 0) return showToast("Please configure at least one assessment policy with marks > 0", "error");
+    const examPols = policies.filter((p) => p.is_exam === 1);
+    if (examPols.length > 1) {
+      return showToast("Invalid Exam Policy: Written Exam and CBT Exam cannot coexist. A subject can only have at most one final exam component.", "error");
+    }
     try {
       setSavingPolicies(true);
       await api.updateGradingPolicies(subjectId, { policies, pass_mark: passMark });
@@ -663,6 +678,47 @@ function GradingSubjectDetails() {
                       <option value="1">Final Exam</option>
                     </select>
                   </div>
+
+                  <div className="w-36">
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase">Delivery</label>
+                    <select
+                      className="w-full px-2 py-1.5 rounded border border-slate-300 text-xs font-semibold bg-white"
+                      value={p.type || "manual"}
+                      disabled={isApproved}
+                      onChange={(e) => updatePolicy(idx, "type", e.target.value)}
+                    >
+                      {p.is_exam ? (
+                        <>
+                          <option value="manual">Written Exam</option>
+                          <option value="cbt_exam">CBT Exam</option>
+                        </>
+                      ) : (
+                        <>
+                          <option value="manual">Manual Assessment</option>
+                          <option value="cbt_test">CBT Test / Quiz</option>
+                        </>
+                      )}
+                    </select>
+                  </div>
+
+                  {(p.type === "cbt_exam" || p.type === "cbt_test") && (
+                    <div className="w-44">
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase">Linked CBT Subject</label>
+                      <select
+                        className="w-full px-2 py-1.5 rounded border border-slate-300 text-xs font-semibold bg-white"
+                        value={p.mapped_cbt_subject_id || ""}
+                        disabled={isApproved}
+                        onChange={(e) => updatePolicy(idx, "mapped_cbt_subject_id", e.target.value ? Number(e.target.value) : null)}
+                      >
+                        <option value="">Select CBT Subject...</option>
+                        {cbtSubjects.map((cs) => (
+                          <option key={cs.id} value={cs.id}>
+                            {cs.name} ({cs.code})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
 
                   {!isApproved && (
                     <button

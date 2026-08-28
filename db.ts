@@ -2223,38 +2223,50 @@ export const queries = {
   checkAssessmentHasScores: db.prepare("SELECT COUNT(*) as count FROM grading_student_scores WHERE grading_assessment_id = ?"),
   /** Get students for a grading subject (class roster + exam takers + manual score entries) */
   getGradingStudentsBySubject: db.prepare(`
+    WITH target_subject AS (
+      SELECT id, class_id, source_cbt_subject_id FROM grading_subjects WHERE id = ?
+    )
     SELECT DISTINCT u.id, u.name, u.email, u.reg_id, COALESCE(gl.name, u.grade) as grade
     FROM users u
+    CROSS JOIN target_subject gs
     LEFT JOIN grade_levels gl ON gl.id = u.grade_level_id
     WHERE u.role = 'student' AND u.is_active = 1
       AND (
         -- 1. Matched by grading subject's class_id
-        (EXISTS (
-          SELECT 1 FROM grading_subjects gs 
-          JOIN classes c ON c.id = gs.class_id 
-          WHERE gs.id = ? AND c.name = COALESCE(gl.name, u.grade)
-        ))
-        -- 2. OR matched by source CBT subject's class/grade or direct subject enrollment
-        OR (EXISTS (
-          SELECT 1 FROM grading_subjects gs
-          JOIN subjects s ON s.id = gs.source_cbt_subject_id
-          WHERE gs.id = ? AND (
-            (s.grade_level_id IS NOT NULL AND s.grade_level_id = u.grade_level_id)
-            OR (s.class IS NOT NULL AND s.class != '' AND s.class = COALESCE(gl.name, u.grade))
-            OR EXISTS (SELECT 1 FROM subject_enrollments se WHERE se.subject_id = s.id AND se.student_id = u.id)
+        (gs.class_id IS NOT NULL AND (
+          EXISTS (
+            SELECT 1 FROM classes c 
+            WHERE c.id = gs.class_id AND (
+              c.name = COALESCE(gl.name, u.grade) 
+              OR c.id = u.grade_level_id
+              OR EXISTS (SELECT 1 FROM class_enrollments ce WHERE ce.class_id = c.id AND ce.student_id = u.id)
+            )
           )
         ))
-        -- 3. OR student completed an exam mapped to this grading subject
+        -- 2. OR matched by source CBT subject
+        OR (gs.source_cbt_subject_id IS NOT NULL AND (
+          EXISTS (
+            SELECT 1 FROM subjects s
+            WHERE s.id = gs.source_cbt_subject_id AND (
+              (s.grade_level_id IS NOT NULL AND s.grade_level_id = u.grade_level_id)
+              OR (s.class IS NOT NULL AND s.class != '' AND s.class = COALESCE(gl.name, u.grade))
+              OR EXISTS (SELECT 1 FROM subject_enrollments se WHERE se.subject_id = s.id AND se.student_id = u.id)
+            )
+          )
+        ))
+        -- 3. OR general manual subject (no class or CBT constraint)
+        OR (gs.class_id IS NULL AND gs.source_cbt_subject_id IS NULL)
+        -- 4. OR student completed an exam mapped to this grading subject
         OR u.id IN (
           SELECT DISTINCT e.student_id FROM exams e
           JOIN grading_policies gp ON gp.mapped_cbt_subject_id = e.subject_id
-          WHERE gp.grading_subject_id = ? AND e.status = 'completed'
+          WHERE gp.grading_subject_id = gs.id AND e.status = 'completed'
         )
-        -- 4. OR student has a manual score entry in this grading subject
+        -- 5. OR student has a manual score entry in this grading subject
         OR u.id IN (
           SELECT DISTINCT ms.student_id FROM grading_manual_scores ms
           JOIN grading_policies gp ON gp.id = ms.grading_policy_id
-          WHERE gp.grading_subject_id = ?
+          WHERE gp.grading_subject_id = gs.id
         )
       )
     ORDER BY u.name

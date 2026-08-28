@@ -134,8 +134,15 @@ export const api = {
   activateAcademicTerm: (termId: number) => fetchWithAuth<{ success: boolean; message: string }>("/api/academic/activate-term", { method: "POST", body: JSON.stringify({ termId }) }),
   endTerm: (data?: any) => fetchWithAuth<{ success: boolean; message: string }>("/api/academic/end-term", { method: "POST", body: JSON.stringify(data || {}) }),
   deleteAcademicSession: (id: number) => fetchWithAuth<{ success: boolean; message: string }>(`/api/academic/sessions/${id}`, { method: "DELETE" }),
+  bulkDeleteAcademicSessions: (sessionIds: number[]) => fetchWithAuth<{ success: boolean; deleted_count: number; message: string }>("/api/academic/sessions/bulk-delete", { method: "POST", body: JSON.stringify({ session_ids: sessionIds }) }),
   deleteAcademicTerm: (id: number) => fetchWithAuth<{ success: boolean; message: string }>(`/api/academic/terms/${id}`, { method: "DELETE" }),
   getAcademicStats: (sessionId?: number, termId?: number) => fetchWithAuth<any>(`/api/academic/stats${buildAcademicQuery(sessionId, termId)}`),
+  
+  // Guardian Link Management APIs (Admin)
+  getGuardianLinkRequests: (status?: string) => fetchWithAuth<any[]>(status ? `/api/v2/guardian-links?status=${status}` : "/api/v2/guardian-links"),
+  approveGuardianLink: (linkId: number) => fetchWithAuth<{ id: number; status: string }>(`/api/v2/guardian-links/${linkId}/approve`, { method: "PUT" }),
+  rejectGuardianLink: (linkId: number) => fetchWithAuth<{ id: number; status: string }>(`/api/v2/guardian-links/${linkId}/reject`, { method: "PUT" }),
+  revokeGuardianLink: (linkId: number) => fetchWithAuth<{ id: number; status: string }>(`/api/v2/guardian-links/${linkId}/revoke`, { method: "PUT" }),
   
   // v8: Grading System APIs
   getGradingConfig: () => fetchWithAuth<any>("/api/grading/config"),

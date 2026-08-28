@@ -40,6 +40,8 @@ export default function OperatorUsersPage() {
 
 function UsersContent() {
   const [users, setUsers] = useState<User[]>([]);
+  const [guardianRequests, setGuardianRequests] = useState<any[]>([]);
+  const [approvingLinkId, setApprovingLinkId] = useState<number | null>(null);
   const { selectedSession, selectedTerm } = useAcademic();
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -75,13 +77,15 @@ function UsersContent() {
     async (signal?: AbortSignal) => {
       try {
         setLoading(true);
-        const [userData, glData] = await Promise.all([
+        const [userData, glData, reqData] = await Promise.all([
           api.getUsers(),
           api.getGradeLevels(),
+          api.getGuardianLinkRequests().catch(() => []),
         ]);
         if (signal?.aborted) return;
         setUsers((userData as User[]) ?? []);
         setGradeLevels(glData?.grades ?? []);
+        setGuardianRequests(reqData ?? []);
       } catch (err) {
         if (!signal?.aborted)
           showToast("error", err instanceof Error ? err.message : "Failed to load users");
@@ -91,6 +95,32 @@ function UsersContent() {
     },
     [showToast]
   );
+
+  const handleApproveLink = async (linkId: number) => {
+    try {
+      setApprovingLinkId(linkId);
+      await api.approveGuardianLink(linkId);
+      showToast("success", "Guardian link request approved successfully.");
+      await refresh();
+    } catch (err: any) {
+      showToast("error", err.message || "Failed to approve guardian link");
+    } finally {
+      setApprovingLinkId(null);
+    }
+  };
+
+  const handleRejectLink = async (linkId: number) => {
+    try {
+      setApprovingLinkId(linkId);
+      await api.rejectGuardianLink(linkId);
+      showToast("success", "Guardian link request rejected.");
+      await refresh();
+    } catch (err: any) {
+      showToast("error", err.message || "Failed to reject guardian link");
+    } finally {
+      setApprovingLinkId(null);
+    }
+  };
 
   useEffect(() => {
     const controller = new AbortController();
@@ -111,6 +141,20 @@ function UsersContent() {
     });
   }, [users, search, tab]);
 
+  const filteredGuardianRequests = useMemo(() => {
+    const q = search.toLowerCase();
+    return guardianRequests.filter((r) => {
+      if (!q) return true;
+      return (
+        (r.guardian_name && r.guardian_name.toLowerCase().includes(q)) ||
+        (r.guardian_email && r.guardian_email.toLowerCase().includes(q)) ||
+        (r.student_name && r.student_name.toLowerCase().includes(q)) ||
+        (r.reg_id && r.reg_id.toLowerCase().includes(q)) ||
+        (r.relationship && r.relationship.toLowerCase().includes(q))
+      );
+    });
+  }, [guardianRequests, search]);
+
   const counts = useMemo(
     () => ({
       all: users.length,
@@ -118,8 +162,9 @@ function UsersContent() {
       teacher: users.filter((u) => u.role === "teacher").length,
       guardian: users.filter((u) => u.role === "guardian").length,
       operator: users.filter((u) => u.role === "operator").length,
+      guardian_requests: guardianRequests.filter((r) => r.status === "pending").length,
     }),
-    [users]
+    [users, guardianRequests]
   );
 
   const handleCreateUser = async (e: FormEvent) => {
@@ -308,6 +353,24 @@ function UsersContent() {
           </button>
           <button
             type="button"
+            className={`${styles.tabItem} ${tab === "guardian_requests" ? styles.tabActive : ""}`}
+            onClick={() => setTab("guardian_requests")}
+            style={counts.guardian_requests > 0 ? { borderBottomColor: "#EF4444" } : undefined}
+          >
+            Guardian Requests
+            <span
+              className={styles.tabCount}
+              style={
+                counts.guardian_requests > 0
+                  ? { background: "#EF4444", color: "#FFFFFF", fontWeight: 700 }
+                  : undefined
+              }
+            >
+              {counts.guardian_requests}
+            </span>
+          </button>
+          <button
+            type="button"
             className={`${styles.tabItem} ${tab === "operator" ? styles.tabActive : ""}`}
             onClick={() => setTab("operator")}
           >
@@ -320,7 +383,11 @@ function UsersContent() {
           <input
             type="text"
             className={styles.searchInput}
-            placeholder="Search name, email, cohort..."
+            placeholder={
+              tab === "guardian_requests"
+                ? "Search guardian, ward, reg ID, relationship..."
+                : "Search name, email, cohort..."
+            }
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             aria-label="Search users"
@@ -328,13 +395,147 @@ function UsersContent() {
         </div>
       </div>
 
-      {/* ── 2. Invisible Data Table Container ── */}
+      {/* ── 2. Data Table Container ── */}
       <div className={styles.tableContainer}>
         {loading ? (
           <div className={styles.emptyState}>
             <div className="w-8 h-8 border-2 border-slate-700 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
             <div className={styles.emptySubtitle}>Loading directory accounts...</div>
           </div>
+        ) : tab === "guardian_requests" ? (
+          filteredGuardianRequests.length === 0 ? (
+            <div className={styles.emptyState}>
+              <EmptyState
+                title="No Guardian Requests"
+                description={
+                  search
+                    ? "No link requests match your search query."
+                    : "No pending or historical guardian-ward link requests found."
+                }
+              />
+            </div>
+          ) : (
+            <div className={styles.tableWrapper}>
+              <table className={styles.minimalTable}>
+                <thead>
+                  <tr>
+                    <th scope="col">Guardian Information</th>
+                    <th scope="col">Target Student / Ward</th>
+                    <th scope="col">Relationship</th>
+                    <th scope="col">Requested Date</th>
+                    <th scope="col">Status</th>
+                    <th scope="col" style={{ textAlign: "right" }}>
+                      Access Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredGuardianRequests.map((req) => (
+                    <tr key={req.id} className={styles.rowHover}>
+                      <td>
+                        <div className={styles.userCell}>
+                          <span className={styles.userName}>{req.guardian_name || "Guardian"}</span>
+                          <span className={styles.userEmail}>{req.guardian_email || req.guardian_phone || "No contact"}</span>
+                        </div>
+                      </td>
+
+                      <td>
+                        <div className={styles.userCell}>
+                          <span className={styles.userName}>{req.student_name || "Student"}</span>
+                          <span className={styles.userEmail}>
+                            {req.reg_id || `ID: ${req.student_id}`} {req.grade ? `• ${req.grade}` : ""}
+                          </span>
+                        </div>
+                      </td>
+
+                      <td>
+                        <span className={styles.cohortCell} style={{ fontWeight: 600 }}>
+                          {req.relationship || "Parent"}
+                        </span>
+                      </td>
+
+                      <td>
+                        <span style={{ fontSize: "0.75rem", color: "#64748B" }}>
+                          {req.created_at ? new Date(req.created_at).toLocaleDateString() : "Recent"}
+                        </span>
+                      </td>
+
+                      <td>
+                        {req.status === "approved" ? (
+                          <div className={`${styles.statusCell} ${styles.statusActive}`}>
+                            <span className={`${styles.statusDot} ${styles.statusDotActive}`} />
+                            Approved
+                          </div>
+                        ) : req.status === "pending" ? (
+                          <div
+                            className={styles.statusCell}
+                            style={{ color: "#D97706", background: "rgba(245, 158, 11, 0.1)", padding: "0.2rem 0.5rem", borderRadius: "4px", display: "inline-flex", alignItems: "center", gap: "0.35rem" }}
+                          >
+                            <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#F59E0B" }} />
+                            Pending Review
+                          </div>
+                        ) : (
+                          <div
+                            className={styles.statusCell}
+                            style={{ color: "#EF4444", background: "rgba(239, 68, 68, 0.1)", padding: "0.2rem 0.5rem", borderRadius: "4px", display: "inline-flex", alignItems: "center", gap: "0.35rem" }}
+                          >
+                            <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#EF4444" }} />
+                            {req.status === "rejected" ? "Rejected" : "Revoked"}
+                          </div>
+                        )}
+                      </td>
+
+                      <td>
+                        <div className={styles.actionsCell}>
+                          {req.status === "pending" ? (
+                            <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", justifyContent: "flex-end" }}>
+                              <Button
+                                variant="primary"
+                                size="xs"
+                                onClick={() => handleApproveLink(req.id)}
+                                loading={approvingLinkId === req.id}
+                                leftIcon={<CheckIcon width="12" height="12" />}
+                                style={{ background: "#059669", borderColor: "#059669" }}
+                              >
+                                Approve Access
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="xs"
+                                onClick={() => handleRejectLink(req.id)}
+                                disabled={approvingLinkId === req.id}
+                                style={{ color: "#EF4444", borderColor: "#FECACA" }}
+                              >
+                                Reject
+                              </Button>
+                            </div>
+                          ) : req.status === "approved" ? (
+                            <Button
+                              variant="ghost"
+                              size="xs"
+                              onClick={() => handleRejectLink(req.id)}
+                              style={{ color: "#64748B" }}
+                            >
+                              Revoke
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="outline"
+                              size="xs"
+                              onClick={() => handleApproveLink(req.id)}
+                              style={{ color: "#059669", borderColor: "#A7F3D0" }}
+                            >
+                              Re-Approve
+                            </Button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )
         ) : filtered.length === 0 ? (
           <div className={styles.emptyState}>
             <EmptyState

@@ -240,6 +240,10 @@ export class GradingService {
       if (p.is_exam) examTotal += Number(p.max_marks);
       else caTotal += Number(p.max_marks);
     }
+    const examPolicies = policies.filter((p) => p.is_exam === 1 || p.is_exam === true || (p as any).is_exam === "1");
+    if (examPolicies.length > 1) {
+      throw new Error("Invalid Exam Policy: Written Exam and CBT Exam cannot coexist. A subject can only have either a single Written Exam or a single CBT Exam for its final exam component.");
+    }
     if (caTotal !== config.ca_max) throw new Error(`Continuous Assessment total must be exactly ${config.ca_max} marks. Currently: ${caTotal}`);
     if (examTotal !== config.exam_max) throw new Error(`Examination total must be exactly ${config.exam_max} marks. Currently: ${examTotal}`);
 

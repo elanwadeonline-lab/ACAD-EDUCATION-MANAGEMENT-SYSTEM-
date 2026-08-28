@@ -95,9 +95,9 @@ export default function SetupPage() {
               </svg>
             </div>
             <div>
-              <span className={styles.brandTitle}>ExamPool Hub</span>
+              <span className={styles.brandTitle}>ACAD</span>
               <span className={styles.brandDivider}>/</span>
-              <span className={styles.brandSubtitle}>Central Server Provisioning</span>
+              <span className={styles.brandSubtitle}>Academic Assessment & Administration</span>
             </div>
           </div>
 
