@@ -1,30 +1,22 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { RequireRole } from "../../../components/auth/RequireRole";
+import { useGuardian } from "../../../components/guardian/GuardianContext";
 import { api } from "../../../lib/api";
-import { useAcademic } from "../../../components/context/AcademicContext";
-import {
-  CalendarIcon,
-  RefreshIcon,
-  ActivityIcon,
-} from "../../../components/icons/Icons";
-import { Skeleton } from "../../../components/ui/Skeleton";
-import { EmptyState } from "../../../components/ui/EmptyState";
 import styles from "./page.module.css";
 
-interface CalendarEvent {
+interface CalendarItem {
   id: number;
-  term_id: number;
   title: string;
-  description: string;
+  description?: string;
   start_date: string;
-  end_date: string;
-  type: "holiday" | "exam_period" | "resumption" | "event" | "deadline" | "other";
-  created_at: string;
+  end_date?: string;
+  type: "exam_period" | "holiday" | "event" | "resumption" | "deadline" | "other";
+  time_str?: string;
+  venue?: string;
 }
-
-type EventTypeFilter = "all" | CalendarEvent["type"];
 
 export default function GuardianCalendarPage() {
   return (
@@ -35,263 +27,178 @@ export default function GuardianCalendarPage() {
 }
 
 function CalendarContent() {
-  const [events, setEvents] = useState<CalendarEvent[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState("");
-  const [typeFilter, setTypeFilter] = useState<EventTypeFilter>("all");
+  const router = useRouter();
+  const { openChildSwitcher } = useGuardian();
+  const [events, setEvents] = useState<CalendarItem[]>([]);
+  const [filter, setFilter] = useState<string>("all");
+  const [currentMonthIndex, setCurrentMonthIndex] = useState(new Date().getMonth());
+  const [loading, setLoading] = useState(false);
 
-  const { selectedSession, selectedTerm } = useAcademic();
-
-  const loadData = useCallback(async (isRefresh = false) => {
-    try {
-      if (isRefresh) setRefreshing(true);
-      else setLoading(true);
-      setError("");
-
-      const data = await api.get<any>("/api/v2/calendar");
-      setEvents(data ?? []);
-    } catch (err: any) {
-      setError(err.message || "Failed to load calendar events");
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [selectedSession?.id, selectedTerm?.id]);
+  const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    setLoading(true);
+    api.get<CalendarItem[]>("/api/guardian/calendar")
+      .then((res) => {
+        if (Array.isArray(res)) {
+          setEvents(res);
+        } else {
+          setEvents([]);
+        }
+      })
+      .catch(() => {
+        setEvents([]);
+      })
+      .finally(() => setLoading(false));
+  }, []);
 
-  const filteredEvents = events.filter((event) => {
-    if (typeFilter === "all") return true;
-    return event.type === typeFilter;
+  const filteredEvents = events.filter((ev) => {
+    if (filter === "all") return true;
+    return ev.type === filter;
   });
-
-  const eventTypeFilters: { value: EventTypeFilter; label: string }[] = [
-    { value: "all", label: "All Events" },
-    { value: "holiday", label: "Holidays" },
-    { value: "exam_period", label: "Exam Periods" },
-    { value: "resumption", label: "Resumption" },
-    { value: "event", label: "Events" },
-    { value: "deadline", label: "Deadlines" },
-    { value: "other", label: "Other" },
-  ];
-
-  const getEventTypeClass = (type: string) => {
-    switch (type) {
-      case "holiday":
-        return styles.typeHoliday;
-      case "exam_period":
-        return styles.typeExamPeriod;
-      case "resumption":
-        return styles.typeResumption;
-      case "event":
-        return styles.typeEvent;
-      case "deadline":
-        return styles.typeDeadline;
-      default:
-        return styles.typeOther;
-    }
-  };
-
-  const getEventTypeLabel = (type: string) => {
-    switch (type) {
-      case "holiday":
-        return "Holiday";
-      case "exam_period":
-        return "Exam Period";
-      case "resumption":
-        return "Resumption";
-      case "event":
-        return "Event";
-      case "deadline":
-        return "Deadline";
-      default:
-        return "Other";
-    }
-  };
-
-  const formatDate = (dateStr: string) => {
-    if (!dateStr) return "";
-    const date = new Date(dateStr);
-    return date.toLocaleDateString("en-GB", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
-  };
-
-  const getDateParts = (dateStr: string) => {
-    if (!dateStr) return { month: "", day: "" };
-    const date = new Date(dateStr);
-    return {
-      month: date.toLocaleDateString("en-GB", { month: "short" }).toUpperCase(),
-      day: date.getDate().toString(),
-    };
-  };
-
-  if (error) {
-    return (
-      <div style={{
-        background: "var(--color-surface, #FFFFFF)",
-        border: "1px solid var(--color-border, #E2E8F0)",
-        borderRadius: "12px",
-        padding: "3rem 2rem",
-        textAlign: "center",
-        maxWidth: "460px",
-        margin: "3rem auto",
-      }}>
-        <div style={{
-          width: "40px",
-          height: "40px",
-          borderRadius: "10px",
-          background: "rgba(220, 38, 38, 0.08)",
-          color: "var(--color-danger, #DC2626)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          margin: "0 auto 1rem",
-        }}>
-          <ActivityIcon width="20" height="20" />
-        </div>
-        <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "var(--color-text, #0F172A)", marginBottom: "0.35rem" }}>
-          Unable to Load Calendar
-        </h3>
-        <p style={{ color: "var(--color-muted, #64748B)", fontSize: "0.8125rem", marginBottom: "1.25rem", lineHeight: 1.5 }}>
-          {error}
-        </p>
-        <button
-          className="btn btn-primary btn-sm"
-          onClick={() => loadData()}
-          style={{ padding: "0.45rem 1.25rem", borderRadius: "8px", fontWeight: 600 }}
-        >
-          <RefreshIcon width="13" height="13" /> Retry Connection
-        </button>
-      </div>
-    );
-  }
-
-  if (loading) {
-    return (
-      <div className={styles.container}>
-        <div className={styles.headerWrapper}>
-          <div className={styles.headerLeft}>
-            <Skeleton width={200} height={28} borderRadius="6px" />
-            <Skeleton width={260} height={16} borderRadius="4px" style={{ marginTop: "0.35rem" }} />
-          </div>
-          <div className={styles.headerRight}>
-            <Skeleton width={120} height={30} borderRadius="6px" />
-          </div>
-        </div>
-        <div className={styles.commandStrip}>
-          <div className={styles.filterButtons}>
-            <Skeleton width={100} height={32} borderRadius="8px" />
-            <Skeleton width={100} height={32} borderRadius="8px" />
-            <Skeleton width={100} height={32} borderRadius="8px" />
-          </div>
-        </div>
-        <div className={styles.eventsList}>
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className={styles.eventCard}>
-              <Skeleton width={56} height={56} borderRadius="12px" />
-              <div style={{ flex: 1 }}>
-                <Skeleton width={200} height={16} borderRadius="4px" />
-                <Skeleton width={150} height={12} borderRadius="4px" style={{ marginTop: "0.35rem" }} />
-                <Skeleton width={100} height={12} borderRadius="4px" style={{ marginTop: "0.5rem" }} />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className={styles.container}>
-      {/* Page Header */}
-      <div className={styles.headerWrapper}>
-        <div className={styles.headerLeft}>
-          <div className={styles.titleRow}>
-            <h1 className={styles.pageTitle}>Academic Calendar</h1>
-            <span className={styles.roleBadge}>Guardian</span>
-          </div>
-          <p className={styles.subtitle}>
-            View academic events, holidays, and exam schedules.
-          </p>
-        </div>
+      {/* Header */}
+      <div className={styles.headerRow}>
+        <h1 className={styles.pageTitle}>Academic Calendar</h1>
 
-        <div className={styles.headerRight}>
-          <button
-            onClick={() => loadData(true)}
-            disabled={refreshing}
-            className="btn btn-outline btn-sm"
-            style={{ padding: "0.35rem 0.7rem", borderRadius: "8px", fontWeight: 600 }}
-          >
-            <RefreshIcon width="12" height="12" style={{ color: "#6366F1", animation: refreshing ? "spin 1s linear infinite" : "none" }} />
-            <span>{refreshing ? "Syncing…" : "Sync"}</span>
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={openChildSwitcher}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.35rem",
+            padding: "0.35rem 0.75rem",
+            borderRadius: "999px",
+            background: "var(--g-surface, #FFFFFF)",
+            border: "1px solid var(--g-border, #E2E8F0)",
+            fontSize: "0.75rem",
+            fontWeight: 700,
+            color: "var(--g-text-primary, #0F172A)",
+            cursor: "pointer"
+          }}
+        >
+          <span>Wards</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </button>
       </div>
 
-      {/* Command Strip with Filters */}
-      <div className={styles.commandStrip}>
-        <div className={styles.filterButtons}>
-          {eventTypeFilters.map((filter) => (
+      {/* Filter Tabs */}
+      <div className={styles.tabList}>
+        <button
+          type="button"
+          className={`${styles.tabBtn} ${filter === "all" ? styles.tabBtnActive : ""}`}
+          onClick={() => setFilter("all")}
+        >
+          All
+        </button>
+        <button
+          type="button"
+          className={`${styles.tabBtn} ${filter === "exam_period" ? styles.tabBtnActive : ""}`}
+          onClick={() => setFilter("exam_period")}
+        >
+          Exams
+        </button>
+        <button
+          type="button"
+          className={`${styles.tabBtn} ${filter === "event" ? styles.tabBtnActive : ""}`}
+          onClick={() => setFilter("event")}
+        >
+          School Events
+        </button>
+        <button
+          type="button"
+          className={`${styles.tabBtn} ${filter === "holiday" ? styles.tabBtnActive : ""}`}
+          onClick={() => setFilter("holiday")}
+        >
+          Holidays
+        </button>
+      </div>
+
+      {/* Month Carousel Heading */}
+      <section className={styles.monthSection}>
+        <div className={styles.monthHeaderRow}>
+          <h2 className={styles.monthTitle}>{months[currentMonthIndex]} 2026</h2>
+          <div className={styles.monthNavGroup}>
             <button
-              key={filter.value}
               type="button"
-              className={`${styles.filterButton} ${typeFilter === filter.value ? styles.filterButtonActive : ""}`}
-              onClick={() => setTypeFilter(filter.value)}
+              className={styles.navBtn}
+              onClick={() => setCurrentMonthIndex((prev) => Math.max(0, prev - 1))}
+              aria-label="Previous month"
             >
-              {filter.label}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
             </button>
-          ))}
+            <button
+              type="button"
+              className={styles.navBtn}
+              onClick={() => setCurrentMonthIndex((prev) => Math.min(11, prev + 1))}
+              aria-label="Next month"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </button>
+          </div>
         </div>
-      </div>
 
-      {/* Events List */}
-      {filteredEvents.length > 0 ? (
+        {/* Events Feed */}
         <div className={styles.eventsList}>
-          {filteredEvents.map((event) => {
-            const dateParts = getDateParts(event.start_date);
-            return (
-              <div key={event.id} className={styles.eventCard}>
-                <div className={styles.eventDate}>
-                  <span className={styles.eventMonth}>{dateParts.month}</span>
-                  <span className={styles.eventDay}>{dateParts.day}</span>
-                </div>
+          {filteredEvents.length === 0 ? (
+            <div style={{
+              padding: "2.5rem 1.5rem",
+              textAlign: "center",
+              background: "var(--g-surface, #FFFFFF)",
+              border: "1px solid var(--g-border, #E2E8F0)",
+              borderRadius: "var(--g-radius-lg, 16px)",
+              color: "var(--g-text-secondary, #64748B)"
+            }}>
+              <p style={{ fontSize: "0.9375rem", fontWeight: 600, color: "var(--g-text-primary, #0F172A)", marginBottom: "0.35rem" }}>
+                No events scheduled
+              </p>
+              <p style={{ fontSize: "0.8125rem", margin: 0 }}>
+                Scheduled examinations, school holidays, and PTA fixtures will appear on this calendar.
+              </p>
+            </div>
+          ) : (
+            filteredEvents.map((ev) => {
+              const d = new Date(ev.start_date);
+              const monthStr = d.toLocaleString("default", { month: "short" }).toUpperCase();
+              const dayNum = d.getDate();
+              const badgeClass = ev.type === "exam_period" ? styles.badgeExam : ev.type === "holiday" ? styles.badgeHoliday : styles.badgeEvent;
+              const badgeText = ev.type === "exam_period" ? "Exam" : ev.type === "holiday" ? "Holiday" : "Event";
 
-                <div className={styles.eventDetails}>
-                  <div className={styles.eventTitle}>{event.title}</div>
-                  {event.description && (
-                    <div className={styles.eventDescription}>{event.description}</div>
-                  )}
-                  <div className={styles.eventMeta}>
-                    <span className={`${styles.eventTypeBadge} ${getEventTypeClass(event.type)}`}>
-                      {getEventTypeLabel(event.type)}
-                    </span>
-                    <span className={styles.eventMetaItem}>
-                      <CalendarIcon width="12" height="12" />
-                      {formatDate(event.start_date)} - {formatDate(event.end_date)}
+              return (
+                <div key={ev.id} className={styles.eventCard}>
+                  <div className={styles.eventDateBox}>
+                    <span className={styles.eventMonth}>{monthStr}</span>
+                    <span className={styles.eventDay}>{dayNum}</span>
+                  </div>
+
+                  <div className={styles.eventInfoCol}>
+                    <div className={styles.eventTitleRow}>
+                      <span className={styles.eventTitle}>{ev.title}</span>
+                      <span className={`${styles.eventBadge} ${badgeClass}`}>{badgeText}</span>
+                    </div>
+                    <span className={styles.eventMetaLine}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 12 16 14" />
+                      </svg>
+                      <span>{ev.time_str || "09:00 AM"} • {ev.venue || "Campus"}</span>
                     </span>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
-      ) : (
-        <EmptyState
-          title={typeFilter === "all" ? "No Events Available" : `No ${getEventTypeLabel(typeFilter)} Events`}
-          description={
-            typeFilter === "all"
-              ? "No academic calendar events have been published yet."
-              : `No ${getEventTypeLabel(typeFilter).toLowerCase()} events found.`
-          }
-          icon={<CalendarIcon width="22" height="22" />}
-        />
-      )}
+      </section>
     </div>
   );
 }

@@ -1,10 +1,11 @@
-import { describe, test, expect, beforeAll } from "bun:test";
+import { describe, test, expect, beforeAll, afterAll } from "bun:test";
 import { setSetting, getCampusEntitlements, checkModuleAccess, ModuleAccessError, applySoftwareUpdate } from "../src/services/entitlementService";
 import { handleControlPlaneApi } from "../control_plane/server";
 import { seedControlPlane } from "../control_plane/database/seed";
 import { organizationRepository } from "../control_plane/database/repositories/organizationRepository";
 import { schoolRepository } from "../control_plane/database/repositories/schoolRepository";
 import { featureFlagRepository } from "../control_plane/database/repositories/featureFlagRepository";
+import { controlDb } from "../control_plane/database/client";
 
 let platformToken = "";
 let testSchoolId = 1;
@@ -145,5 +146,23 @@ describe("Institutional Feature Gating & Entitlement Enforcement", () => {
     });
     await handleControlPlaneApi(reEnableReq, new URL(reEnableReq.url));
     expect(featureFlagRepository.getFlagsForSchool(testSchoolId).grading_center).toBe(true);
+  });
+
+  afterAll(() => {
+    setSetting("feature_flag_grading_center", "true");
+    setSetting("feature_flag_timetables", "true");
+    setSetting("feature_flag_guardian_portal", "true");
+    setSetting("feature_flag_cbt_exam", "true");
+    setSetting("feature_flag_question_bank", "true");
+    setSetting("feature_flag_report_cards", "true");
+    setSetting("feature_flag_attendance_tracker", "true");
+    setSetting("feature_flag_fee_management", "true");
+    setSetting("feature_flag_offline_assignments", "true");
+    setSetting("feature_flag_ai_learning_engine", "true");
+    setSetting("license_status", "active");
+    setSetting("plan_tier", "enterprise");
+    try {
+      controlDb.run("DELETE FROM schools WHERE school_code != 'ACAD-LOCAL'");
+    } catch {}
   });
 });

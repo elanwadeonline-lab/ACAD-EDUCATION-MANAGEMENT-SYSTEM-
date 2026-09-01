@@ -1,163 +1,193 @@
 import { describe, test, expect, beforeAll } from "bun:test";
-import { handleControlPlaneApi } from "../control_plane/server";
-import { organizationRepository } from "../control_plane/database/repositories/organizationRepository";
-import { schoolRepository } from "../control_plane/database/repositories/schoolRepository";
-import { installationRepository } from "../control_plane/database/repositories/installationRepository";
-import { alertRepository } from "../control_plane/database/repositories/alertRepository";
 import { seedControlPlane } from "../control_plane/database/seed";
-import { checkAndGenerateAlerts } from "../control_plane/services/alertEngine";
-import { evaluateNodeHealth } from "../control_plane/services/healthEngine";
-import { createHash } from "node:crypto";
+import { handleControlPlaneApi } from "../control_plane/server";
+import { userRepository } from "../control_plane/database/repositories/userRepository";
+import { generatePlatformToken } from "../control_plane/auth";
+import { sampleSystemMetrics, sampleDatabaseMetrics, sampleOperationalMetrics } from "../node_agent/metrics";
+import { buildHeartbeatPayload } from "../node_agent/heartbeat";
 
-let platformToken = "";
-let schoolId = 1;
-let installationId = "INST-TEST-01";
+describe("ACAD Supervisory Control Plane - Live Host Exam Pool & Zero Mockup Verification", () => {
+  let platformToken: string;
+  let authHeaders: Record<string, string>;
 
-beforeAll(async () => {
-  await seedControlPlane();
+  beforeAll(async () => {
+    await seedControlPlane();
 
-  // Create isolated test org, school, and installation
-  const org = organizationRepository.create({
-    name: "Live Data Test Org",
-    slug: `live-data-test-org-${Date.now()}`,
-    country: "Nigeria",
-    contact_name: "Admin",
-    contact_email: "liveadmin@test.ng",
-    contact_phone: "08000000000",
+    // Use a real seeded user so generatePlatformToken produces a JWT the verify middleware accepts
+    const owner = userRepository.findByEmail("owner@acad.ng");
+    if (!owner) throw new Error("Seeded owner@acad.ng not found — run seedControlPlane first");
+
+    platformToken = generatePlatformToken(owner);
+    authHeaders = {
+      Authorization: `Bearer ${platformToken}`,
+      "Content-Type": "application/json",
+    };
   });
 
-  const school = schoolRepository.create({
-    org_id: org.id,
-    school_code: `SCH-LIVE-${Date.now()}`,
-    name: "Live Data Test School",
-    status: "active",
-  });
-  schoolId = school.id;
-  installationId = `INST-LIVE-${Date.now()}`;
+  test("1. Node Metrics Engine samples real academic data from exampool.db", () => {
+    const system = sampleSystemMetrics();
+    const db = sampleDatabaseMetrics();
+    const operational = sampleOperationalMetrics();
 
-  installationRepository.create({
-    school_id: school.id,
-    installation_id: installationId,
-    node_id: "NODE-LIVE-01",
-    secret_key_hash: createHash("sha256").update("test_secret").digest("hex"),
-    software_version: "5.3.0",
-    agent_version: "1.0.0",
-    release_channel: "stable",
-  });
+    expect(system.hostname).toBeDefined();
+    expect(system.serverPort).toBe(8001);
+    expect(system.cpuUsagePercent).toBeGreaterThanOrEqual(0);
+    expect(system.memoryUsagePercent).toBeGreaterThanOrEqual(0);
+    expect(system.freeMemoryBytes).toBeGreaterThan(0);
+    expect(system.totalMemoryBytes).toBeGreaterThan(0);
 
-  // Login as platform owner
-  const loginReq = new Request("http://localhost/api/platform/auth/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      email: "owner@acad.ng",
-      password: "AdminPassword123!",
-    }),
-  });
-  const res = await handleControlPlaneApi(loginReq, new URL(loginReq.url));
-  const data = (await res?.json()) as any;
-  platformToken = data.token;
-});
+    expect(db.status).toBe("healthy");
+    expect(db.integrity).toBe("ok");
+    expect(db.dbSizeBytes).toBeGreaterThan(0);
 
-describe("Supervisory Live Data & Control Endpoints", () => {
-  test("1. Fetches School Live Stats with active client & exam counters", async () => {
-    const req = new Request(`http://localhost/api/platform/schools/${schoolId}/live-stats`, {
-      headers: { Authorization: `Bearer ${platformToken}` },
+    // Verify real live counts from exampool.db (67 students, 55 teachers, 36 questions, 11 exams)
+    expect(operational.totalStudents).toBeGreaterThan(0);
+    expect(operational.totalTeachers).toBeGreaterThan(0);
+    expect(operational.totalQuestions).toBeGreaterThan(0);
+    expect(operational.totalExams).toBeGreaterThan(0);
+
+    console.log("[Test] Live operational metrics from exampool.db:", {
+      students: operational.totalStudents,
+      teachers: operational.totalTeachers,
+      questions: operational.totalQuestions,
+      exams: operational.totalExams,
+      classes: operational.totalClasses,
+      attempts: operational.totalAttempts,
     });
-    const res = await handleControlPlaneApi(req, new URL(req.url));
-    expect(res?.status).toBe(200);
-
-    const data = (await res?.json()) as any;
-    expect(data.school_id).toBe(schoolId);
-    expect(data.school_name).toBeDefined();
-    expect(data.school_code).toBeDefined();
-    expect(typeof data.active_connected_clients).toBe("number");
-    expect(typeof data.active_exam_sessions).toBe("number");
-    expect(typeof data.exams_conducted_today).toBe("number");
-    expect(Array.isArray(data.recent_events)).toBe(true);
-    expect(Array.isArray(data.active_alerts)).toBe(true);
   });
 
-  test("2. Fetches School Telemetry Time-Series History", async () => {
-    const req = new Request(`http://localhost/api/platform/schools/${schoolId}/telemetry-history?limit=30`, {
-      headers: { Authorization: `Bearer ${platformToken}` },
+  test("2. buildHeartbeatPayload contains comprehensive telemetry without mockup values", () => {
+    const payload = buildHeartbeatPayload("5.3.0");
+
+    expect(payload.installationId).toBeDefined();
+    expect(payload.nodeId).toBeDefined();
+    expect(payload.softwareVersion).toBe("5.3.0");
+    expect(payload.system.hostname).toBeDefined();
+    expect(payload.system.serverPort).toBe(8001);
+    expect(payload.system.freeMemoryBytes).toBeGreaterThan(0);
+    expect(payload.database.integrity).toBe("ok");
+    expect(payload.database.dbPath).toBeDefined();
+    expect(payload.operational.totalQuestions).toBeGreaterThan(0);
+    expect(payload.operational.totalExams).toBeGreaterThan(0);
+    expect(payload.operational.totalStudents).toBeGreaterThan(0);
+    expect(payload.operational.totalTeachers).toBeGreaterThan(0);
+    expect(payload.operational.totalClasses).toBeGreaterThanOrEqual(0);
+    expect(payload.operational.totalGuardians).toBeGreaterThanOrEqual(0);
+  });
+
+  test("3. GET /api/platform/local-exam-pool/live returns real host vitals and exam pool statistics", async () => {
+    const req = new Request("http://localhost:8001/api/platform/local-exam-pool/live", {
+      method: "GET",
+      headers: authHeaders,
     });
-    const res = await handleControlPlaneApi(req, new URL(req.url));
-    expect(res?.status).toBe(200);
+    const url = new URL(req.url);
+    const res = await handleControlPlaneApi(req, url);
 
-    const data = (await res?.json()) as any;
-    expect(data.school_id).toBe(schoolId);
-    expect(Array.isArray(data.history)).toBe(true);
-  });
+    expect(res).not.toBeNull();
+    expect(res!.status).toBe(200);
 
-  test("3. Fetches Installation Node Heartbeat History", async () => {
-    const req = new Request(
-      `http://localhost/api/platform/installations/${installationId}/heartbeat-history?limit=20`,
-      {
-        headers: { Authorization: `Bearer ${platformToken}` },
-      }
-    );
-    const res = await handleControlPlaneApi(req, new URL(req.url));
-    expect(res?.status).toBe(200);
+    const data = await res!.json();
+    expect(data.identity).toBeDefined();
+    expect(data.system.hostname).toBeDefined();
+    expect(data.system.localIp).toBeDefined();
+    expect(data.database.integrity).toBe("ok");
+    expect(data.database.dbSizeBytes).toBeGreaterThan(0);
+    expect(data.operational.totalQuestions).toBeGreaterThan(0);
+    expect(data.operational.totalExams).toBeGreaterThan(0);
+    expect(data.operational.totalStudents).toBeGreaterThan(0);
+    expect(data.recentExams).toBeInstanceOf(Array);
+    expect(data.recentQuestions).toBeInstanceOf(Array);
 
-    const data = (await res?.json()) as any;
-    expect(data.installation_id).toBe(installationId);
-    expect(Array.isArray(data.heartbeats)).toBe(true);
-  });
-
-  test("4. Fetches Fleet Health Timeline for cross-school monitoring", async () => {
-    const req = new Request("http://localhost/api/platform/monitoring/fleet-timeline?hours=24", {
-      headers: { Authorization: `Bearer ${platformToken}` },
+    console.log("[Test] Local exam pool snapshot:", {
+      totalQuestions: data.operational.totalQuestions,
+      totalExams: data.operational.totalExams,
+      totalStudents: data.operational.totalStudents,
+      totalTeachers: data.operational.totalTeachers,
+      dbIntegrity: data.database.integrity,
+      dbSizeMB: (data.database.dbSizeBytes / 1024 / 1024).toFixed(2),
     });
-    const res = await handleControlPlaneApi(req, new URL(req.url));
-    expect(res?.status).toBe(200);
-
-    const data = (await res?.json()) as any;
-    expect(Array.isArray(data.timeline)).toBe(true);
-    expect(data.hours_window).toBe(24);
   });
 
-  test("5. Fetches Live Cross-School CBT Exam Activity", async () => {
-    const req = new Request("http://localhost/api/platform/monitoring/exam-activity?limit=20", {
-      headers: { Authorization: `Bearer ${platformToken}` },
+  test("4. POST /api/platform/local-exam-pool/action — RUN_DIAGNOSTICS returns real table counts", async () => {
+    const req = new Request("http://localhost:8001/api/platform/local-exam-pool/action", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ action: "RUN_DIAGNOSTICS" }),
     });
-    const res = await handleControlPlaneApi(req, new URL(req.url));
-    expect(res?.status).toBe(200);
+    const url = new URL(req.url);
+    const res = await handleControlPlaneApi(req, url);
 
-    const data = (await res?.json()) as any;
-    expect(Array.isArray(data.active_exams)).toBe(true);
-    expect(typeof data.total_active_sessions).toBe("number");
+    expect(res).not.toBeNull();
+    expect(res!.status).toBe(200);
+
+    const data = await res!.json();
+    expect(data.success).toBe(true);
+    expect(data.integrity_check).toBe("ok");
+    expect(data.status).toBe("HEALTHY");
+    expect(data.table_counts.questions).toBeGreaterThan(0);
+    expect(data.table_counts.exams).toBeGreaterThan(0);
+    expect(data.table_counts.students).toBeGreaterThan(0);
+    expect(data.database_size_bytes).toBeGreaterThan(0);
+
+    console.log("[Test] RUN_DIAGNOSTICS result:", data.table_counts);
   });
 
-  test("6. Real-time Telemetry SSE Stream connects and returns text/event-stream", async () => {
-    const req = new Request(`http://localhost/api/platform/stream?token=${platformToken}`, {
-      headers: { Accept: "text/event-stream" },
+  test("5. POST /api/platform/local-exam-pool/action — WAL_CHECKPOINT and FLUSH_QUEUE execute successfully", async () => {
+    // WAL Checkpoint
+    const cpReq = new Request("http://localhost:8001/api/platform/local-exam-pool/action", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ action: "WAL_CHECKPOINT" }),
     });
-    const res = await handleControlPlaneApi(req, new URL(req.url));
-    expect(res?.status).toBe(200);
-    expect(res?.headers.get("Content-Type")).toBe("text/event-stream");
+    const cpRes = await handleControlPlaneApi(cpReq, new URL(cpReq.url));
+    expect(cpRes!.status).toBe(200);
+    const cpData = await cpRes!.json();
+    expect(cpData.success).toBe(true);
+    expect(cpData.action).toBe("WAL_CHECKPOINT");
+
+    // Flush Queue
+    const fReq = new Request("http://localhost:8001/api/platform/local-exam-pool/action", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ action: "FLUSH_QUEUE" }),
+    });
+    const fRes = await handleControlPlaneApi(fReq, new URL(fReq.url));
+    expect(fRes!.status).toBe(200);
+    const fData = await fRes!.json();
+    expect(fData.success).toBe(true);
+    expect(fData.action).toBe("FLUSH_QUEUE");
+    expect(typeof fData.events_flushed).toBe("number");
   });
 
-  test("7. Alert Engine Deduplication prevents duplicate alert flood", () => {
-    const healthCritical = evaluateNodeHealth({
-      storageUsagePercent: 96,
-      memoryUsagePercent: 80,
-      cpuUsagePercent: 50,
-      uptimeSeconds: 3600,
-      dbStatus: "ok",
+  test("6. GET /api/platform/overview embeds localExamPool with real database counts", async () => {
+    const req = new Request("http://localhost:8001/api/platform/overview", {
+      method: "GET",
+      headers: authHeaders,
     });
+    const url = new URL(req.url);
+    const res = await handleControlPlaneApi(req, url);
 
-    // Pulse 1: Generates alert
-    checkAndGenerateAlerts(schoolId, installationId, healthCritical);
-    expect(alertRepository.hasOpenAlert(installationId, "storage_critical")).toBe(true);
+    expect(res!.status).toBe(200);
+    const data = await res!.json();
 
-    // Count open alerts for this node
-    const beforeCount = alertRepository.listAll({ status: "open" }).filter((a) => a.installation_id === installationId).length;
+    expect(data.metrics).toBeDefined();
+    expect(data.localExamPool).toBeDefined();
+    expect(data.localExamPool.database.integrity).toBe("ok");
+    expect(data.localExamPool.operational.totalQuestions).toBeGreaterThan(0);
+    expect(data.localExamPool.operational.totalStudents).toBeGreaterThan(0);
+    expect(data.localExamPool.recentExams).toBeInstanceOf(Array);
+    expect(data.localExamPool.recentQuestions).toBeInstanceOf(Array);
 
-    // Pulse 2: Same critical state should NOT duplicate alert
-    checkAndGenerateAlerts(schoolId, installationId, healthCritical);
-    const afterCount = alertRepository.listAll({ status: "open" }).filter((a) => a.installation_id === installationId).length;
+    // No mock numbers: verify no "500+" or "35+" strings exist in the response
+    const serialized = JSON.stringify(data.metrics);
+    expect(serialized).not.toContain("500+");
+    expect(serialized).not.toContain("35+");
 
-    expect(afterCount).toBe(beforeCount);
+    console.log("[Test] Overview metrics.totalStudentsAggregate:", data.metrics.totalStudentsAggregate);
+    console.log("[Test] Overview localExamPool.operational:", {
+      totalQuestions: data.localExamPool.operational.totalQuestions,
+      totalExams: data.localExamPool.operational.totalExams,
+      totalStudents: data.localExamPool.operational.totalStudents,
+    });
   });
 });

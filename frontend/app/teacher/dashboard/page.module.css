@@ -340,6 +340,106 @@
   color: var(--color-text, #0F172A);
 }
 
+/* ── Guardian Inquiries Widget ───────────────────────────── */
+.inquiriesContainer {
+  background: var(--color-surface, #FFFFFF);
+  border: 1px solid var(--color-border, #E2E8F0);
+  border-radius: 12px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.inquiriesHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.inquiryBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #DC2626;
+  color: #FFFFFF;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: 9999px;
+  line-height: 1;
+}
+
+.inquiriesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 0.875rem;
+}
+
+.inquiryCard {
+  background: var(--color-surface-2, #F8FAFC);
+  border: 1px solid var(--color-border, #E2E8F0);
+  border-radius: 8px;
+  padding: 0.875rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: all 120ms ease;
+  text-decoration: none;
+  color: inherit;
+}
+
+.inquiryCard:hover {
+  border-color: var(--color-border-hover, #CBD5E1);
+  background: #FFFFFF;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+.inquiryCardUnread {
+  border-color: #93C5FD;
+  background: #EFF6FF;
+}
+
+.inquiryTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.inquirySender {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text, #0F172A);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.inquiryWard {
+  font-size: 0.6875rem;
+  color: #2563EB;
+  font-weight: 600;
+  background: #DBEAFE;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+}
+
+.inquiryTime {
+  font-size: 0.6875rem;
+  color: var(--color-muted, #64748B);
+}
+
+.inquirySnippet {
+  font-size: 0.75rem;
+  color: var(--color-muted, #64748B);
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* ── Responsive ─────────────────────────────────────────── */
 @media (max-width: 1024px) {
   .statsGrid {

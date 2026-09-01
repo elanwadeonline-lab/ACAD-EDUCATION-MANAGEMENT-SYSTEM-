@@ -12,7 +12,7 @@ export const syncRepository = {
   queuePush(params: {
     installation_id: string;
     school_id: number;
-    payload_type: "feature_flags" | "license" | "config" | "force_update" | "reboot_request";
+    payload_type: "feature_flags" | "license" | "config" | "force_update" | "reboot_request" | "diagnostics";
     payload: Record<string, any>;
     queued_by?: number;
   }): void {
@@ -36,7 +36,7 @@ export const syncRepository = {
    */
   queuePushToAllSchoolNodes(params: {
     school_id: number;
-    payload_type: "feature_flags" | "license" | "config" | "force_update";
+    payload_type: "feature_flags" | "license" | "config" | "force_update" | "diagnostics" | "reboot_request";
     payload: Record<string, any>;
     queued_by?: number;
   }): number {
@@ -73,7 +73,7 @@ export const syncRepository = {
    * Used for fleet-wide software release deployment (CI/CD).
    */
   queuePushToFleet(params: {
-    payload_type: "feature_flags" | "license" | "config" | "force_update";
+    payload_type: "feature_flags" | "license" | "config" | "force_update" | "diagnostics" | "reboot_request";
     payload: Record<string, any>;
     queued_by?: number;
   }): number {

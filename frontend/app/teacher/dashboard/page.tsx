@@ -51,6 +51,25 @@ function TeacherDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // Guardian Inquiries state
+  const [inquiryThreads, setInquiryThreads] = useState<any[]>([]);
+  const [unreadInquiryCount, setUnreadInquiryCount] = useState(0);
+
+  const loadInquiries = useCallback(async () => {
+    try {
+      const res = await api.get<any[]>("/api/teacher/messages/threads");
+      if (Array.isArray(res)) {
+        setInquiryThreads(res);
+        const unread = res.reduce((acc, t) => acc + (Number(t.unread_for_recipient) || 0), 0);
+        setUnreadInquiryCount(unread);
+      }
+    } catch { /* ignore */ }
+  }, []);
+
+  useEffect(() => {
+    loadInquiries();
+  }, [loadInquiries]);
+
   // Report card quick-launch
   const [reportStudents, setReportStudents] = useState<ExamResult[]>([]);
   const [reportLoading, setReportLoading] = useState(false);
@@ -134,10 +153,13 @@ function TeacherDashboard() {
       if (notif?.type === "exam_submitted") {
         loadReportStudents(subjectsRef.current);
       }
+      if (notif?.type === "chat_message" || notif?.type === "notification") {
+        loadInquiries();
+      }
     };
     window.addEventListener("notification_received", handler);
     return () => window.removeEventListener("notification_received", handler);
-  }, [loadReportStudents]);
+  }, [loadReportStudents, loadInquiries]);
 
   const published = useMemo(() => subjects.filter((s) => s.is_published).length, [subjects]);
   const drafts = useMemo(() => subjects.filter((s) => !s.is_published).length, [subjects]);
@@ -157,33 +179,45 @@ function TeacherDashboard() {
         title="Teacher Dashboard"
         subtitle={`Academic Session ${currentSessionName} · ${currentTermName}`}
         actions={
-          isClassTeacher ? (
-            <div style={{ display: "flex", gap: "0.5rem" }}>
-              <Link href="/teacher/class-grading">
-                <Button variant="secondary" size="sm">
-                  Grading Center ({assignedClassName || "Class"})
-                </Button>
-              </Link>
-              <Link href="/teacher/report-card">
-                <Button variant="primary" size="sm">
-                  Report Cards ({assignedClassName || "Class"})
-                </Button>
-              </Link>
-            </div>
-          ) : (
-            <div style={{ display: "flex", gap: "0.5rem" }}>
-              <Link href="/teacher/grading">
-                <Button variant="secondary" size="sm">
-                  Subject Grading
-                </Button>
-              </Link>
-              <Link href="/teacher/results">
-                <Button variant="primary" size="sm">
-                  Exam Results
-                </Button>
-              </Link>
-            </div>
-          )
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            <Link href="/teacher/messages">
+              <Button variant="secondary" size="sm">
+                Guardian Inquiries
+                {unreadInquiryCount > 0 && (
+                  <span className={styles.inquiryBadge} style={{ marginLeft: "0.35rem" }}>
+                    {unreadInquiryCount}
+                  </span>
+                )}
+              </Button>
+            </Link>
+            {isClassTeacher ? (
+              <>
+                <Link href="/teacher/class-grading">
+                  <Button variant="secondary" size="sm">
+                    Grading ({assignedClassName || "Class"})
+                  </Button>
+                </Link>
+                <Link href="/teacher/report-card">
+                  <Button variant="primary" size="sm">
+                    Report Cards
+                  </Button>
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link href="/teacher/grading">
+                  <Button variant="secondary" size="sm">
+                    Subject Grading
+                  </Button>
+                </Link>
+                <Link href="/teacher/results">
+                  <Button variant="primary" size="sm">
+                    Exam Results
+                  </Button>
+                </Link>
+              </>
+            )}
+          </div>
         }
       />
 
@@ -271,6 +305,65 @@ function TeacherDashboard() {
             </Link>
           )}
         </div>
+      </section>
+
+      {/* ── Guardian Inquiries & Parent Communications ──────── */}
+      <section className={styles.inquiriesContainer}>
+        <div className={styles.inquiriesHeader}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <h3 className={styles.sectionTitle} style={{ margin: 0 }}>Guardian Inquiries & Messages</h3>
+            {unreadInquiryCount > 0 && (
+              <span className={styles.inquiryBadge}>
+                {unreadInquiryCount} unread
+              </span>
+            )}
+          </div>
+          <Link href="/teacher/messages" style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--color-primary, #0F172A)", textDecoration: "none" }}>
+            Open Inquiry Desk →
+          </Link>
+        </div>
+
+        {inquiryThreads.length === 0 ? (
+          <div style={{ padding: "1.25rem", textAlign: "center", background: "var(--color-surface-2, #F8FAFC)", borderRadius: "8px", color: "var(--color-muted, #64748B)", fontSize: "0.8125rem" }}>
+            No inquiries received yet. Parent communications for your assigned classes and subjects will appear here in real time.
+          </div>
+        ) : (
+          <div className={styles.inquiriesGrid}>
+            {inquiryThreads.slice(0, 3).map((t) => {
+              const isUnread = Number(t.unread_for_recipient) > 0;
+              return (
+                <Link
+                  key={t.id}
+                  href="/teacher/messages"
+                  className={`${styles.inquiryCard} ${isUnread ? styles.inquiryCardUnread : ""}`}
+                >
+                  <div className={styles.inquiryTop}>
+                    <div className={styles.inquirySender}>
+                      <span>{t.guardian_name || "Guardian"}</span>
+                      {t.student_name && (
+                        <span className={styles.inquiryWard}>
+                          Re: {t.student_name}
+                        </span>
+                      )}
+                    </div>
+                    {isUnread && <span className={styles.inquiryBadge}>New</span>}
+                  </div>
+                  <div className={styles.inquirySnippet}>
+                    {t.last_message || t.subject || "Parent inquiry regarding student academic progress."}
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "0.25rem" }}>
+                    <span className={styles.inquiryTime}>
+                      {t.last_message_at ? new Date(t.last_message_at).toLocaleDateString([], { month: "short", day: "numeric" }) : "Recent"}
+                    </span>
+                    <span style={{ fontSize: "0.6875rem", fontWeight: 600, color: "#2563EB" }}>
+                      Reply →
+                    </span>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </section>
 
       {/* ── Assigned Courses Section ───────────────────────────── */}

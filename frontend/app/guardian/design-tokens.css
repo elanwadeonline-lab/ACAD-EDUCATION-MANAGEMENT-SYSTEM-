@@ -1,13 +1,15 @@
 /* ── ACAD Guardian PWA Mobile Design Tokens ── */
-/* Intentionality • Inter Typography Hierarchy • 8px Rhythm System */
+/* Intentionality • Inter Typography Hierarchy • 8px Rhythm System • Dark Mode */
 
 :root {
-  /* 1. Palette: Neutral Foundation + Primary Brand Blue + Semantic Accents */
+  /* 1. Palette: Light Mode Neutral Foundation + Primary Brand Blue + Semantic Accents */
   --g-bg-app: #F8FAFC;
   --g-bg-canvas: #F1F5F9;
   --g-surface: #FFFFFF;
   --g-surface-subtle: #F8FAFC;
   --g-surface-elevated: #FFFFFF;
+  --g-surface-card: #FFFFFF;
+  --g-surface-glass: rgba(255, 255, 255, 0.88);
 
   --g-border: #E2E8F0;
   --g-border-subtle: #F1F5F9;
@@ -25,6 +27,7 @@
   --g-primary-subtle: #EFF4FF;
   --g-primary-border: #DBEAFE;
   --g-primary-ghost: rgba(22, 90, 246, 0.08);
+  --g-primary-glow: rgba(22, 90, 246, 0.25);
 
   /* Semantic Accents */
   --g-success: #059669;
@@ -42,6 +45,10 @@
   --g-purple: #7C3AED;
   --g-purple-subtle: #F5F3FF;
   --g-purple-border: #DDD6FE;
+
+  --g-info: #0284C7;
+  --g-info-subtle: #F0F9FF;
+  --g-info-border: #BAE6FD;
 
   /* 2. Typography */
   --g-font-display: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
@@ -79,6 +86,62 @@
   --g-ease: cubic-bezier(0.16, 1, 0.3, 1);
   --g-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --g-duration: 180ms;
+}
+
+/* ── Dark Mode Tokens ── */
+[data-theme="dark"],
+.dark {
+  --g-bg-app: #0B1120;
+  --g-bg-canvas: #070D18;
+  --g-surface: #131E33;
+  --g-surface-subtle: #18243C;
+  --g-surface-elevated: #1E2D4A;
+  --g-surface-card: #131E33;
+  --g-surface-glass: rgba(19, 30, 51, 0.88);
+
+  --g-border: #233452;
+  --g-border-subtle: #1B2943;
+  --g-border-focus: #3B82F6;
+
+  --g-text-primary: #F8FAFC;
+  --g-text-secondary: #CBD5E1;
+  --g-text-muted: #94A3B8;
+  --g-text-tertiary: #64748B;
+  --g-text-inverse: #0F172A;
+
+  /* Primary Brand Blue (vibrant for dark surfaces) */
+  --g-primary: #3B82F6;
+  --g-primary-hover: #60A5FA;
+  --g-primary-subtle: rgba(59, 130, 246, 0.15);
+  --g-primary-border: rgba(59, 130, 246, 0.3);
+  --g-primary-ghost: rgba(59, 130, 246, 0.12);
+  --g-primary-glow: rgba(59, 130, 246, 0.35);
+
+  /* Semantic Accents for Dark */
+  --g-success: #10B981;
+  --g-success-subtle: rgba(16, 185, 129, 0.15);
+  --g-success-border: rgba(16, 185, 129, 0.3);
+
+  --g-warning: #F59E0B;
+  --g-warning-subtle: rgba(245, 158, 11, 0.15);
+  --g-warning-border: rgba(245, 158, 11, 0.3);
+
+  --g-danger: #EF4444;
+  --g-danger-subtle: rgba(239, 68, 68, 0.15);
+  --g-danger-border: rgba(239, 68, 68, 0.3);
+
+  --g-purple: #A855F7;
+  --g-purple-subtle: rgba(168, 85, 247, 0.15);
+  --g-purple-border: rgba(168, 85, 247, 0.3);
+
+  --g-info: #38BDF8;
+  --g-info-subtle: rgba(56, 189, 248, 0.15);
+  --g-info-border: rgba(56, 189, 248, 0.3);
+
+  --g-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --g-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+  --g-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
+  --g-shadow-sheet: 0 -10px 30px -5px rgba(0, 0, 0, 0.6);
 }
 
 @media (prefers-reduced-motion: reduce) {

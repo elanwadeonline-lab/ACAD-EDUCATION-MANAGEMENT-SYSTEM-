@@ -1,6 +1,7 @@
-import { describe, it, expect, beforeAll } from "bun:test";
+import { describe, it, expect, beforeAll, afterAll } from "bun:test";
 import { handleControlPlaneApi } from "../control_plane/server";
 import { seedControlPlane } from "../control_plane/database/seed";
+import { controlDb } from "../control_plane/database/client";
 import { createHmac } from "node:crypto";
 
 describe("ACAD Supervisory Control Plane - End-to-End Operational Journey", () => {
@@ -407,5 +408,12 @@ describe("ACAD Supervisory Control Plane - End-to-End Operational Journey", () =
     expect(actions).toContain("CREATE_SCHOOL");
     expect(actions).toContain("PROVISION_INSTALLATION");
     expect(actions).toContain("CONVERT_TRIAL_TO_PAID");
+  });
+
+  afterAll(() => {
+    try {
+      controlDb.run("DELETE FROM schools WHERE school_code != 'ACAD-LOCAL'");
+      controlDb.run("DELETE FROM organizations WHERE slug != 'acad-network'");
+    } catch {}
   });
 });

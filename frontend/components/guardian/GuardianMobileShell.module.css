@@ -180,6 +180,31 @@
   gap: 0.5rem;
 }
 
+.themeToggleBtn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--g-surface, #FFFFFF);
+  border: 1px solid var(--g-border, #E2E8F0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--g-text-secondary, #475569);
+  cursor: pointer;
+  transition: all var(--g-duration, 180ms) var(--g-ease);
+}
+
+.themeToggleBtn:hover {
+  background: var(--g-surface-subtle, #F8FAFC);
+  color: var(--g-text-primary, #0F172A);
+  border-color: #CBD5E1;
+  transform: translateY(-1px);
+}
+
+.themeToggleBtn:active {
+  transform: scale(0.92);
+}
+
 .notifyBtn {
   position: relative;
   width: 34px;

@@ -116,6 +116,8 @@ export const controlApi = {
   createIncident: (data: any) => request("/api/platform/incidents", { method: "POST", body: JSON.stringify(data) }),
   updateIncident: (id: number, data: any) =>
     request(`/api/platform/incidents/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+  resolveIncident: (id: number, data: { root_cause: string; mitigation?: string }) =>
+    request(`/api/platform/incidents/${id}`, { method: "PATCH", body: JSON.stringify({ status: "resolved", ...data }) }),
 
   // Backups, Releases, Audit Logs, Platform Users & Sync Queue
   getBackups: () => request("/api/platform/backups"),
@@ -136,5 +138,14 @@ export const controlApi = {
     request(`/api/platform/installations/${installationId}/heartbeat-history?limit=${limit}`),
   getFleetTimeline: (hours = 24) => request(`/api/platform/monitoring/fleet-timeline?hours=${hours}`),
   getExamActivity: (limit = 50) => request(`/api/platform/monitoring/exam-activity?limit=${limit}`),
+
+  // Host PC Local Exam Pool Live Monitor & Actions
+  getLocalExamPoolLive: () => request("/api/platform/local-exam-pool/live"),
+  runLocalExamPoolAction: (action: "RUN_DIAGNOSTICS" | "TRIGGER_PULSE" | "WAL_CHECKPOINT" | "FLUSH_QUEUE" | "INTEGRITY_CHECK") =>
+    request("/api/platform/local-exam-pool/action", {
+      method: "POST",
+      body: JSON.stringify({ action }),
+    }),
 };
+
 

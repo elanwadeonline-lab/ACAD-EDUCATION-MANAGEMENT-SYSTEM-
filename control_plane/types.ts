@@ -235,6 +235,8 @@ export interface FleetOverviewMetrics {
   criticalInstallations: number;
   totalStudentsAggregate: number;
   totalTeachersAggregate: number;
+  totalQuestionsAggregate?: number;
+  totalExamsAggregate?: number;
   examsConductedToday: number;
   activeExamSessions: number;
   openIncidentsCount: number;
@@ -242,3 +244,4 @@ export interface FleetOverviewMetrics {
   avgHealthScore: number;
   totalConnectedClients: number;
 }
+

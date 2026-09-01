@@ -1,8 +1,11 @@
 import { controlDb } from "../client";
 import type { FleetOverviewMetrics } from "../../types";
+import { installationRepository } from "./installationRepository";
 
 export const healthRepository = {
   getOverviewMetrics(): FleetOverviewMetrics {
+    // Sweep stale nodes to offline before aggregating
+    try { installationRepository.sweepStaleToOffline(); } catch {}
     // ── School counts ────────────────────────────────────────────────────────
     const totalSchools = (controlDb.prepare("SELECT COUNT(*) as c FROM schools").get() as any)?.c || 0;
     const activeSchools = (controlDb.prepare("SELECT COUNT(*) as c FROM schools WHERE status = 'active'").get() as any)?.c || 0;
@@ -78,21 +81,38 @@ export const healthRepository = {
 
     const examsConductedToday = examsConductedTodayFromEvents || examsConductedTodayFromHeartbeats;
 
-    // ── Aggregate student/teacher counts from operational heartbeat data ──────
-    // Real aggregate: sum of max connected_clients reported per installation today
-    const studentRow = controlDb
+    // ── Aggregate student, teacher, question, and exam counts from latest heartbeat data ──
+    const latestHeartbeats = controlDb
       .prepare(`
-        SELECT SUM(max_clients) as total
-        FROM (
-          SELECT installation_id, MAX(connected_clients) as max_clients
+        SELECT h.raw_payload_json, h.connected_clients, h.active_exam_sessions
+        FROM installation_heartbeats h
+        INNER JOIN (
+          SELECT installation_id, MAX(id) as max_id
           FROM installation_heartbeats
-          WHERE timestamp >= datetime('now', '-1 hour')
           GROUP BY installation_id
-        )
+        ) latest ON h.id = latest.max_id
       `)
-      .get() as any;
-    const totalStudentsAggregate = studentRow?.total || 0;
-    const totalTeachersAggregate = Math.round(totalStudentsAggregate * 0.075); // ~1 teacher per 13 students
+      .all() as any[];
+
+    let totalStudentsAggregate = 0;
+    let totalTeachersAggregate = 0;
+    let totalQuestionsAggregate = 0;
+    let totalExamsAggregate = 0;
+
+    for (const row of latestHeartbeats) {
+      if (row.raw_payload_json) {
+        try {
+          const parsed = JSON.parse(row.raw_payload_json);
+          const op = parsed?.operational;
+          if (op) {
+            totalStudentsAggregate += Number(op.totalStudents) || 0;
+            totalTeachersAggregate += Number(op.totalTeachers) || 0;
+            totalQuestionsAggregate += Number(op.totalQuestions) || 0;
+            totalExamsAggregate += Number(op.totalExams) || 0;
+          }
+        } catch {}
+      }
+    }
 
     return {
       totalSchools,
@@ -107,6 +127,8 @@ export const healthRepository = {
       offlineInstallations,
       totalStudentsAggregate,
       totalTeachersAggregate,
+      totalQuestionsAggregate,
+      totalExamsAggregate,
       examsConductedToday,
       activeExamSessions,
       openIncidentsCount,

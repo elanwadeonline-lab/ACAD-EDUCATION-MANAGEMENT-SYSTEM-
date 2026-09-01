@@ -1,5 +1,5 @@
 /**
- * Generates a mock hardware fingerprint for the frontend client.
+ * Generates a browser-derived hardware fingerprint for the frontend client.
  * In a true Native wrapper (like Electron/Tauri), this would access the MAC address and CPU serial.
  * For the browser client, we use a consistent hash based on the User-Agent and Canvas fingerprinting,
  * which provides a stable 'device' identity for the Practice Home tier device registration.

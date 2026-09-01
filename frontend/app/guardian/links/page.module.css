@@ -1,251 +1,311 @@
 /* ── Guardian Links Page Styles ── */
 
 .container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding-bottom: 3rem;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.25rem;
+  width: 100%;
 }
 
-/* ── Page Header ── */
-.headerWrapper {
+.headerRow {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
-  padding-bottom: 0.25rem;
+  gap: 0.5rem;
 }
 
-.headerLeft {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.titleRow {
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
-}
-
-.pageTitle {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--color-text, #0F172A);
-  letter-spacing: -0.025em;
-  margin: 0;
-  line-height: 1.2;
-}
-
-.roleBadge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 0.15rem 0.5rem;
-  border-radius: 6px;
-  background: rgba(99, 102, 241, 0.08);
-  color: #6366F1;
-  border: 1px solid rgba(99, 102, 241, 0.2);
-}
-
-.subtitle {
-  font-size: 0.8125rem;
-  color: var(--color-muted, #64748B);
-  margin: 0;
-}
-
-.headerRight {
+.headerLeftGroup {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  flex-wrap: wrap;
 }
 
-/* ── Command Strip ── */
-.commandStrip {
-  background: var(--color-surface, #FFFFFF);
-  border: 1px solid var(--color-border, #E2E8F0);
-  border-radius: var(--radius-lg, 16px);
-  padding: 1rem 1.25rem;
+.backBtn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--g-surface, #FFFFFF);
+  border: 1px solid var(--g-border, #E2E8F0);
   display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  align-items: center;
+  justify-content: center;
+  color: var(--g-text-primary, #0F172A);
+  cursor: pointer;
+  transition: all var(--g-duration, 180ms) ease;
 }
 
-@media (min-width: 768px) {
-  .commandStrip {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-  }
+.backBtn:hover {
+  background: var(--g-surface-subtle, #F8FAFC);
+  border-color: var(--g-border-focus, #3B82F6);
+}
+
+.pageTitle {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--g-text-primary, #0F172A);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.addLinkBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--g-primary, #165AF6);
+  color: #FFFFFF;
+  border: none;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.45rem 0.85rem;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px var(--g-primary-glow, rgba(22, 90, 246, 0.28));
+  transition: all var(--g-duration, 180ms) ease;
+}
+
+.addLinkBtn:hover {
+  background: var(--g-primary-hover, #1248C8);
+  transform: translateY(-1px);
 }
 
 .tabList {
   display: flex;
-  gap: 1.5rem;
-  border-bottom: 1px solid #F1F5F9;
-  padding-bottom: 0.1rem;
-  overflow-x: auto;
+  gap: 0.4rem;
+  background: var(--g-surface-subtle, #F1F5F9);
+  padding: 0.3rem;
+  border-radius: var(--g-radius-md, 12px);
 }
 
-.tabItem {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--color-muted, #64748B);
-  background: transparent;
+.tabBtn {
+  flex: 1;
+  padding: 0.45rem 0.5rem;
+  border-radius: var(--g-radius-sm, 8px);
   border: none;
-  padding: 0.25rem 0;
+  background: transparent;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--g-text-muted, #64748B);
   cursor: pointer;
-  position: relative;
-  transition: color 150ms ease;
-  white-space: nowrap;
+  transition: all var(--g-duration, 180ms) ease;
+  text-align: center;
 }
 
-.tabItem:hover {
-  color: var(--color-text, #0F172A);
+.tabBtnActive {
+  background: var(--g-surface, #FFFFFF) !important;
+  color: var(--g-primary, #165AF6) !important;
+  font-weight: 700 !important;
+  box-shadow: var(--g-shadow-sm, 0 1px 3px rgba(15, 23, 42, 0.08));
 }
 
-.tabActive {
-  color: var(--color-text, #0F172A);
-}
-
-.tabActive::after {
-  content: "";
-  position: absolute;
-  bottom: -0.1rem;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: var(--color-text, #0F172A);
-  border-radius: 2px 2px 0 0;
-}
-
-.tabCount {
-  margin-left: 0.35rem;
-  font-size: 0.65rem;
-  padding: 0.1rem 0.35rem;
-  background: #F1F5F9;
-  border-radius: 10px;
-  color: #475569;
-}
-
-/* ── Links List ── */
 .linksList {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.85rem;
 }
 
 .linkCard {
-  background: var(--color-surface, #FFFFFF);
-  border: 1px solid var(--color-border, #E2E8F0);
-  border-radius: 12px;
-  padding: 1.25rem;
+  background: var(--g-surface, #FFFFFF);
+  border: 1px solid var(--g-border, #E2E8F0);
+  border-radius: var(--g-radius-lg, 16px);
+  padding: 1rem 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  box-shadow: var(--g-shadow-sm, 0 1px 3px rgba(15, 23, 42, 0.03));
+}
+
+.cardHeaderRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  transition: border-color 150ms ease;
+  gap: 0.5rem;
 }
 
-.linkCard:hover {
-  border-color: #6366F1;
-}
-
-.linkInfo {
+.studentMetaGroup {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  flex: 1;
-  min-width: 0;
+  gap: 0.75rem;
 }
 
-.linkAvatar {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #6366F1 0%, #818CF8 100%);
+.studentAvatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--g-primary, #165AF6) 0%, #0D47C9 100%);
   color: #FFFFFF;
+  font-weight: 800;
+  font-size: 1rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
-  font-size: 1.125rem;
   flex-shrink: 0;
 }
 
-.linkDetails {
-  flex: 1;
-  min-width: 0;
+.studentMetaCol {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
 }
 
-.linkStudentName {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--color-text, #0F172A);
-  margin: 0;
+.studentName {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--g-text-primary, #0F172A);
 }
 
-.linkStudentMeta {
-  font-size: 0.8125rem;
-  color: var(--color-muted, #64748B);
-  margin: 0.125rem 0 0;
-}
-
-.linkRelationship {
+.studentGrade {
   font-size: 0.75rem;
-  color: var(--color-muted-2, #94A3B8);
-  margin: 0.125rem 0 0;
+  color: var(--g-text-muted, #64748B);
 }
 
-.linkStatus {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  line-height: 1;
-}
-
-.statusPending {
-  color: #D97706;
+.statusPill {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
 }
 
 .statusApproved {
-  color: #059669;
+  background: var(--g-success-subtle, #ECFDF5);
+  color: var(--g-success, #059669);
+  border: 1px solid var(--g-success-border, #A7F3D0);
+}
+
+.statusPending {
+  background: var(--g-warning-subtle, #FFFBEB);
+  color: var(--g-warning, #D97706);
+  border: 1px solid var(--g-warning-border, #FDE68A);
 }
 
 .statusRejected {
-  color: #DC2626;
+  background: var(--g-danger-subtle, #FEF2F2);
+  color: var(--g-danger, #DC2626);
+  border: 1px solid var(--g-danger-border, #FECACA);
 }
 
-.statusRevoked {
-  color: #64748B;
+.cardDetailsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+  padding: 0.65rem 0.85rem;
+  background: var(--g-surface-subtle, #F8FAFC);
+  border: 1px solid var(--g-border-subtle, #F1F5F9);
+  border-radius: var(--g-radius-sm, 10px);
+  font-size: 0.75rem;
 }
 
-.statusDot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
+.detailLabel {
+  color: var(--g-text-muted, #64748B);
 }
 
-.statusDotPending {
-  background: #FCD34D;
+.detailVal {
+  font-weight: 600;
+  color: var(--g-text-primary, #0F172A);
 }
 
-.statusDotApproved {
-  background: #10B981;
+.cancelLinkBtn {
+  align-self: flex-end;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--g-danger, #DC2626);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
 }
 
-.statusDotRejected {
-  background: #EF4444;
+.cancelLinkBtn:hover {
+  text-decoration: underline;
+}
+
+/* Modal */
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(8px);
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.modalContent {
+  background: var(--g-surface, #FFFFFF);
+  border: 1px solid var(--g-border, #E2E8F0);
+  border-radius: var(--g-radius-xl, 20px);
+  width: 100%;
+  max-width: 420px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+}
+
+.modalHeader {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--g-border, #E2E8F0);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modalTitle {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--g-text-primary, #0F172A);
+  margin: 0;
+}
+
+.modalBody {
+  padding: 1.25rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.formLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--g-text-secondary, #475569);
+}
+
+.formInput {
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--g-radius-sm, 8px);
+  background: var(--g-surface-subtle, #F8FAFC);
+  border: 1px solid var(--g-border, #E2E8F0);
+  font-size: 0.8125rem;
+  color: var(--g-text-primary, #0F172A);
+  outline: none;
+}
+
+.formInput:focus {
+  border-color: var(--g-primary, #165AF6);
+}
+
+.submitBtn {
+  padding: 0.85rem 1rem;
+  border-radius: var(--g-radius-md, 12px);
+  background: var(--g-primary, #165AF6);
+  color: #FFFFFF;
+  border: none;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 14px var(--g-primary-glow, rgba(22, 90, 246, 0.28));
+  transition: all var(--g-duration, 180ms) ease;
+}
+
+.submitBtn:hover {
+  background: var(--g-primary-hover, #1248C8);
 }

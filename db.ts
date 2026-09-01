@@ -1302,8 +1302,8 @@ export function initializeDatabase(): void {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       guardian_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       recipient_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      student_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      category TEXT NOT NULL DEFAULT 'teacher' CHECK(category IN ('teacher', 'school', 'system')),
+      student_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      category TEXT NOT NULL DEFAULT 'teacher' CHECK(category IN ('teacher', 'school', 'system', 'admin')),
       subject TEXT,
       last_message TEXT,
       last_message_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')),
@@ -1316,6 +1316,21 @@ export function initializeDatabase(): void {
   db.run("CREATE INDEX IF NOT EXISTS idx_gmt_guardian ON guardian_message_threads(guardian_id, last_message_at DESC)");
   db.run("CREATE INDEX IF NOT EXISTS idx_gmt_recipient ON guardian_message_threads(recipient_id, last_message_at DESC)");
   db.run("CREATE INDEX IF NOT EXISTS idx_gmt_student ON guardian_message_threads(student_id)");
+
+  try {
+    const tableSql = (db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='guardian_message_threads'").get() as any)?.sql || "";
+    if (tableSql && !tableSql.includes("'admin'")) {
+      db.transaction(() => {
+        db.run("CREATE TABLE guardian_message_threads_new (id INTEGER PRIMARY KEY AUTOINCREMENT, guardian_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, recipient_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, student_id INTEGER REFERENCES users(id) ON DELETE CASCADE, category TEXT NOT NULL DEFAULT 'teacher' CHECK(category IN ('teacher', 'school', 'system', 'admin')), subject TEXT, last_message TEXT, last_message_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')), unread_for_guardian INTEGER NOT NULL DEFAULT 0, unread_for_recipient INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')), UNIQUE(guardian_id, recipient_id, student_id))");
+        db.run("INSERT INTO guardian_message_threads_new (id, guardian_id, recipient_id, student_id, category, subject, last_message, last_message_at, unread_for_guardian, unread_for_recipient, created_at) SELECT id, guardian_id, recipient_id, student_id, category, subject, last_message, last_message_at, unread_for_guardian, unread_for_recipient, created_at FROM guardian_message_threads");
+        db.run("DROP TABLE guardian_message_threads");
+        db.run("ALTER TABLE guardian_message_threads_new RENAME TO guardian_message_threads");
+        db.run("CREATE INDEX IF NOT EXISTS idx_gmt_guardian ON guardian_message_threads(guardian_id, last_message_at DESC)");
+        db.run("CREATE INDEX IF NOT EXISTS idx_gmt_recipient ON guardian_message_threads(recipient_id, last_message_at DESC)");
+        db.run("CREATE INDEX IF NOT EXISTS idx_gmt_student ON guardian_message_threads(student_id)");
+      })();
+    }
+  } catch {}
 
   // ── v11: Guardian Messages ───────────────────────────────────────────────────
   db.run(`
@@ -2363,7 +2378,7 @@ export const queries = {
       u_student.grade as student_grade
     FROM guardian_message_threads gmt
     JOIN users u_teacher ON u_teacher.id = gmt.recipient_id
-    JOIN users u_student ON u_student.id = gmt.student_id
+    LEFT JOIN users u_student ON u_student.id = gmt.student_id
     WHERE gmt.guardian_id = ?
     ORDER BY gmt.last_message_at DESC
   `),
@@ -2376,7 +2391,7 @@ export const queries = {
       u_student.grade as student_grade
     FROM guardian_message_threads gmt
     JOIN users u_guardian ON u_guardian.id = gmt.guardian_id
-    JOIN users u_student ON u_student.id = gmt.student_id
+    LEFT JOIN users u_student ON u_student.id = gmt.student_id
     WHERE gmt.recipient_id = ?
     ORDER BY gmt.last_message_at DESC
   `),
@@ -2391,7 +2406,7 @@ export const queries = {
     FROM guardian_message_threads gmt
     JOIN users u_guardian ON u_guardian.id = gmt.guardian_id
     JOIN users u_teacher ON u_teacher.id = gmt.recipient_id
-    JOIN users u_student ON u_student.id = gmt.student_id
+    LEFT JOIN users u_student ON u_student.id = gmt.student_id
     WHERE gmt.id = ?
   `),
   findThreadByParticipants: db.prepare(`
@@ -2488,7 +2503,7 @@ export const queries = {
     FROM guardian_message_threads gmt
     JOIN users u ON u.id = gmt.guardian_id
     LEFT JOIN users s ON s.id = gmt.student_id
-    WHERE gmt.category = 'school' OR gmt.recipient_id IN (SELECT id FROM users WHERE role = 'operator')
+    WHERE gmt.category IN ('school', 'admin', 'system') OR gmt.recipient_id IN (SELECT id FROM users WHERE role = 'operator')
     ORDER BY gmt.last_message_at DESC
   `),
 };

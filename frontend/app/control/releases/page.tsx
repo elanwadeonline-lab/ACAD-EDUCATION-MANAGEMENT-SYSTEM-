@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import styles from "../control.module.css";
 import { controlApi } from "../../../lib/controlApi";
+import { Rocket, ShieldCheck, Radio, CheckCircle2 } from "lucide-react";
 
 export default function ControlReleasesPage() {
   const [releases, setReleases] = useState<any[]>([]);
@@ -89,15 +90,55 @@ export default function ControlReleasesPage() {
     }
   };
 
+  const latestRelease = releases[0]?.version || null;
+  const stableCount = releases.filter((r) => r.release_channel === "stable").length;
+  const securityCount = releases.filter((r) => r.is_critical_security === 1).length;
+
   return (
     <div>
-      <div style={{ marginBottom: "1.5rem" }}>
-        <h1 style={{ fontSize: "1.25rem", fontWeight: 800, color: "#FFFFFF" }}>
-          Software Releases &amp; CI/CD Distribution Channels
+      {/* ── Section Header ── */}
+      <div style={{ marginBottom: "1.25rem" }}>
+        <h1 style={{ fontSize: "1.25rem", fontWeight: 800, color: "var(--text-heading)", letterSpacing: "-0.02em" }}>
+          Software Releases &amp; CI/CD Distribution
         </h1>
-        <p style={{ fontSize: "0.8125rem", color: "#64748B", marginTop: "0.2rem" }}>
+        <p style={{ fontSize: "0.8125rem", color: "var(--text-secondary)", marginTop: "0.2rem" }}>
           Manage ACAD versions, canary/beta channels, hotfixes, and deploy over-the-air (OTA) updates to connected school campuses.
         </p>
+      </div>
+
+      {/* ── Summary Metric Cards ── */}
+      <div className={styles.metricGrid} style={{ marginBottom: "1.25rem" }}>
+        <div className={styles.metricCard}>
+          <div className={styles.metricLabel}>Latest Software Version</div>
+          <div className={styles.metricValue} style={{ color: latestRelease ? "var(--accent)" : "var(--text-muted)" }}>
+            {loading ? "—" : latestRelease ? `v${latestRelease}` : "No releases yet"}
+          </div>
+          <div className={styles.metricSubtext}>Production release</div>
+        </div>
+
+        <div className={styles.metricCard}>
+          <div className={styles.metricLabel}>Stable Channel Builds</div>
+          <div className={styles.metricValue} style={{ color: "var(--success)" }}>
+            {loading ? "—" : stableCount}
+          </div>
+          <div className={styles.metricSubtext}>Verified releases</div>
+        </div>
+
+        <div className={styles.metricCard}>
+          <div className={styles.metricLabel}>Security Hotfixes</div>
+          <div className={styles.metricValue} style={{ color: securityCount > 0 ? "var(--danger)" : "var(--text-muted)" }}>
+            {loading ? "—" : securityCount}
+          </div>
+          <div className={styles.metricSubtext}>Critical patch builds</div>
+        </div>
+
+        <div className={styles.metricCard}>
+          <div className={styles.metricLabel}>OTA Distribution</div>
+          <div className={styles.metricValue} style={{ color: "var(--purple)" }}>
+            Active
+          </div>
+          <div className={styles.metricSubtext}>Auto-draining queue</div>
+        </div>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "1.5rem", alignItems: "start" }}>
@@ -105,70 +146,72 @@ export default function ControlReleasesPage() {
         <div className={styles.tableContainer}>
           <div className={styles.tableHeader}>
             <div className={styles.tableTitle}>Published Versions &amp; Deployments</div>
-            <span className={styles.mono} style={{ fontSize: "0.6875rem", color: "#34D399" }}>
+            <span className={styles.mono} style={{ fontSize: "0.6875rem", color: "var(--success)" }}>
               Fleet CI/CD Engine Active
             </span>
           </div>
 
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>Version</th>
-                <th>Channel</th>
-                <th>Release Notes</th>
-                <th>Released At</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
+          <div className={styles.tableResponsive}>
+            <table className={styles.table} style={{ minWidth: "640px" }}>
+              <thead>
                 <tr>
-                  <td colSpan={5} style={{ textAlign: "center", padding: "3rem", color: "#64748B" }}>Loading releases…</td>
+                  <th>Version</th>
+                  <th>Channel</th>
+                  <th>Release Notes</th>
+                  <th>Released At</th>
+                  <th style={{ textAlign: "right", paddingRight: "1.25rem" }}>Action</th>
                 </tr>
-              ) : releases.length === 0 ? (
-                <tr>
-                  <td colSpan={5} style={{ textAlign: "center", padding: "3rem", color: "#64748B" }}>No releases published yet.</td>
-                </tr>
-              ) : (
-                releases.map((rel) => (
-                  <tr key={rel.id}>
-                    <td>
-                      <span className={styles.mono} style={{ fontWeight: 700, color: "#60A5FA" }}>
-                        v{rel.version}
-                      </span>
-                      {rel.is_critical_security === 1 && (
-                        <span
-                          className={styles.statusBadge}
-                          style={{ marginLeft: "0.5rem", background: "rgba(239, 68, 68, 0.15)", color: "#F87171" }}
-                        >
-                          Security Hotfix
-                        </span>
-                      )}
-                    </td>
-                    <td>
-                      <span className={styles.mono} style={{ textTransform: "uppercase" }}>
-                        {rel.release_channel}
-                      </span>
-                    </td>
-                    <td style={{ fontSize: "0.75rem", color: "#CBD5E1", maxWidth: "250px" }}>
-                      {rel.release_notes || "—"}
-                    </td>
-                    <td className={styles.mono}>{new Date(rel.released_at).toLocaleDateString()}</td>
-                    <td>
-                      <button
-                        disabled={broadcastingId === rel.id}
-                        onClick={() => handleBroadcastRelease(rel)}
-                        className={`${styles.btn} ${styles.btnPrimary}`}
-                        style={{ fontSize: "0.6875rem", padding: "0.3rem 0.6rem" }}
-                      >
-                        {broadcastingId === rel.id ? "Broadcasting…" : "Push OTA to Fleet"}
-                      </button>
-                    </td>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan={5} style={{ textAlign: "center", padding: "3rem", color: "var(--text-secondary)" }}>Loading releases…</td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : releases.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} style={{ textAlign: "center", padding: "3rem", color: "var(--text-secondary)" }}>No releases published yet.</td>
+                  </tr>
+                ) : (
+                  releases.map((rel) => (
+                    <tr key={rel.id}>
+                      <td>
+                        <span className={styles.mono} style={{ fontWeight: 700, color: "var(--accent)" }}>
+                          v{rel.version}
+                        </span>
+                        {rel.is_critical_security === 1 && (
+                          <span
+                            className={styles.statusBadge}
+                            style={{ marginLeft: "0.5rem", background: "var(--danger-bg)", color: "var(--danger)" }}
+                          >
+                            Security Hotfix
+                          </span>
+                        )}
+                      </td>
+                      <td>
+                        <span className={styles.mono} style={{ textTransform: "uppercase" }}>
+                          {rel.release_channel}
+                        </span>
+                      </td>
+                      <td style={{ fontSize: "0.75rem", color: "var(--text-primary)", maxWidth: "250px", whiteSpace: "normal" }}>
+                        {rel.release_notes || "—"}
+                      </td>
+                      <td className={styles.mono}>{new Date(rel.released_at).toLocaleDateString()}</td>
+                      <td style={{ textAlign: "right", paddingRight: "1.25rem" }}>
+                        <button
+                          disabled={broadcastingId === rel.id}
+                          onClick={() => handleBroadcastRelease(rel)}
+                          className={`${styles.btn} ${styles.btnPrimary}`}
+                          style={{ fontSize: "0.6875rem", padding: "0.3rem 0.6rem" }}
+                        >
+                          {broadcastingId === rel.id ? "Broadcasting…" : "Push OTA to Fleet"}
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {/* Right: Publish Form */}
@@ -179,7 +222,7 @@ export default function ControlReleasesPage() {
 
           <form onSubmit={handlePublish} style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
             <div>
-              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, color: "#94A3B8", marginBottom: "0.25rem" }}>
+              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "0.25rem" }}>
                 Version Tag
               </label>
               <input
@@ -194,7 +237,7 @@ export default function ControlReleasesPage() {
             </div>
 
             <div>
-              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, color: "#94A3B8", marginBottom: "0.25rem" }}>
+              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "0.25rem" }}>
                 Channel
               </label>
               <select
@@ -210,7 +253,7 @@ export default function ControlReleasesPage() {
             </div>
 
             <div>
-              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, color: "#94A3B8", marginBottom: "0.25rem" }}>
+              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "0.25rem" }}>
                 Package Download URL (Optional)
               </label>
               <input
@@ -224,7 +267,7 @@ export default function ControlReleasesPage() {
             </div>
 
             <div>
-              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, color: "#94A3B8", marginBottom: "0.25rem" }}>
+              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "0.25rem" }}>
                 Changelog / Release Notes
               </label>
               <textarea
@@ -244,7 +287,7 @@ export default function ControlReleasesPage() {
                   checked={isSecurity}
                   onChange={(e) => setIsSecurity(e.target.checked)}
                 />
-                <label htmlFor="securityCheck" style={{ fontSize: "0.75rem", color: "#F87171", cursor: "pointer" }}>
+                <label htmlFor="securityCheck" style={{ fontSize: "0.75rem", color: "var(--danger)", cursor: "pointer" }}>
                   Mark as Critical Security Patch
                 </label>
               </div>
@@ -256,7 +299,7 @@ export default function ControlReleasesPage() {
                   checked={broadcastOnPublish}
                   onChange={(e) => setBroadcastOnPublish(e.target.checked)}
                 />
-                <label htmlFor="broadcastCheck" style={{ fontSize: "0.75rem", color: "#60A5FA", cursor: "pointer" }}>
+                <label htmlFor="broadcastCheck" style={{ fontSize: "0.75rem", color: "var(--accent)", cursor: "pointer" }}>
                   Immediately Push OTA to All Fleet Nodes
                 </label>
               </div>

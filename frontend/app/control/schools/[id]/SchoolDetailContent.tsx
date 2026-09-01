@@ -173,7 +173,7 @@ export default function SchoolDetailContent() {
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-            <h1 style={{ fontSize: "1.375rem", fontWeight: 800, color: "#FFFFFF" }}>{school.name}</h1>
+            <h1 style={{ fontSize: "1.375rem", fontWeight: 800, color: "var(--text-heading)" }}>{school.name}</h1>
             <span
               className={styles.statusBadge}
               style={{
@@ -279,20 +279,20 @@ export default function SchoolDetailContent() {
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", fontSize: "0.8125rem" }}>
                 <div>
-                  <span style={{ color: "#64748B" }}>Primary Admin:</span>{" "}
-                  <strong style={{ color: "#F8FAFC" }}>{school.primary_admin_name || "Unassigned"}</strong>
+                  <span style={{ color: "var(--text-secondary)" }}>Primary Admin:</span>{" "}
+                  <strong style={{ color: "var(--text-heading)" }}>{school.primary_admin_name || "Unassigned"}</strong>
                 </div>
                 <div>
-                  <span style={{ color: "#64748B" }}>Admin Email:</span>{" "}
-                  <span className={styles.mono} style={{ color: "#CBD5E1" }}>{school.primary_admin_email || "N/A"}</span>
+                  <span style={{ color: "var(--text-secondary)" }}>Admin Email:</span>{" "}
+                  <span className={styles.mono} style={{ color: "var(--text-primary)" }}>{school.primary_admin_email || "N/A"}</span>
                 </div>
                 <div>
-                  <span style={{ color: "#64748B" }}>Admin Phone:</span>{" "}
-                  <span className={styles.mono} style={{ color: "#CBD5E1" }}>{school.primary_admin_phone || "N/A"}</span>
+                  <span style={{ color: "var(--text-secondary)" }}>Admin Phone:</span>{" "}
+                  <span className={styles.mono} style={{ color: "var(--text-primary)" }}>{school.primary_admin_phone || "N/A"}</span>
                 </div>
                 <div>
-                  <span style={{ color: "#64748B" }}>Organization:</span>{" "}
-                  <span style={{ color: "#93C5FD" }}>{school.organization_name}</span>
+                  <span style={{ color: "var(--text-secondary)" }}>Organization:</span>{" "}
+                  <span style={{ color: "var(--accent)" }}>{school.organization_name}</span>
                 </div>
               </div>
             </div>
@@ -325,16 +325,16 @@ export default function SchoolDetailContent() {
                     </span>
                   </div>
                   <div>
-                    <span style={{ color: "#64748B" }}>Expiration Date:</span>{" "}
-                    <span className={styles.mono} style={{ color: "#F8FAFC" }}>{new Date(trial.expires_at).toLocaleDateString()}</span>
+                    <span style={{ color: "var(--text-secondary)" }}>Expiration Date:</span>{" "}
+                    <span className={styles.mono} style={{ color: "var(--text-heading)" }}>{new Date(trial.expires_at).toLocaleDateString()}</span>
                   </div>
                   <div>
-                    <span style={{ color: "#64748B" }}>Trial Quota:</span>{" "}
+                    <span style={{ color: "var(--text-secondary)" }}>Trial Quota:</span>{" "}
                     <span className={styles.mono}>{trial.student_limit} students</span>
                   </div>
                 </div>
               ) : (
-                <div style={{ color: "#64748B", fontSize: "0.8125rem" }}>No active trial or license found.</div>
+                <div style={{ color: "var(--text-secondary)", fontSize: "0.8125rem" }}>No active trial or license found.</div>
               )}
             </div>
           </div>
@@ -352,51 +352,53 @@ export default function SchoolDetailContent() {
           </div>
 
           {installations.length === 0 ? (
-            <div style={{ padding: "3rem", textAlign: "center", color: "#64748B" }}>
+            <div style={{ padding: "3rem", textAlign: "center", color: "var(--text-secondary)" }}>
               No installation nodes registered for this campus yet.
             </div>
           ) : (
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>Installation ID</th>
-                  <th>Node ID</th>
-                  <th>Health Status</th>
-                  <th>Version</th>
-                  <th>Local LAN IP</th>
-                  <th>Last Heartbeat</th>
-                </tr>
-              </thead>
-              <tbody>
-                {installations.map((inst: any) => (
-                  <tr key={inst.id}>
-                    <td>
-                      <span className={styles.mono} style={{ fontWeight: 600, color: "#60A5FA" }}>
-                        {inst.installation_id}
-                      </span>
-                    </td>
-                    <td>
-                      <span style={{ fontWeight: 500, color: "#F8FAFC" }}>{inst.node_id}</span>
-                    </td>
-                    <td>
-                      <span className={`${styles.statusBadge} ${inst.health_status === "healthy" ? styles.badgeHealthy : styles.badgeWarning}`}>
-                        <span className={`${styles.statusDot} ${inst.health_status === "healthy" ? styles.dotHealthy : styles.dotWarning}`} />
-                        {inst.health_score}% · {inst.health_status}
-                      </span>
-                    </td>
-                    <td className={styles.mono}>
-                      v{inst.software_version} ({inst.release_channel})
-                    </td>
-                    <td className={styles.mono}>{inst.local_ip || "127.0.0.1"}</td>
-                    <td>
-                      <span className={styles.mono} style={{ fontSize: "0.6875rem", color: "#94A3B8" }}>
-                        {inst.last_heartbeat_at ? new Date(inst.last_heartbeat_at).toLocaleString() : "Never"}
-                      </span>
-                    </td>
+            <div className={styles.tableResponsive}>
+              <table className={styles.table} style={{ minWidth: "800px" }}>
+                <thead>
+                  <tr>
+                    <th>Installation ID</th>
+                    <th>Node ID</th>
+                    <th>Health Status</th>
+                    <th>Version</th>
+                    <th>Local LAN IP</th>
+                    <th>Last Heartbeat</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {installations.map((inst: any) => (
+                    <tr key={inst.id}>
+                      <td>
+                        <span className={styles.mono} style={{ fontWeight: 600, color: "var(--accent)" }}>
+                          {inst.installation_id}
+                        </span>
+                      </td>
+                      <td>
+                        <span style={{ fontWeight: 500, color: "var(--text-heading)" }}>{inst.node_id}</span>
+                      </td>
+                      <td>
+                        <span className={`${styles.statusBadge} ${inst.health_status === "healthy" ? styles.badgeHealthy : styles.badgeWarning}`}>
+                          <span className={`${styles.statusDot} ${inst.health_status === "healthy" ? styles.dotHealthy : styles.dotWarning}`} />
+                          {inst.health_score}% · {inst.health_status}
+                        </span>
+                      </td>
+                      <td className={styles.mono}>
+                        v{inst.software_version} ({inst.release_channel})
+                      </td>
+                      <td className={styles.mono}>{inst.local_ip || "127.0.0.1"}</td>
+                      <td>
+                        <span className={styles.mono} style={{ fontSize: "0.6875rem", color: "var(--text-muted)" }}>
+                          {inst.last_heartbeat_at ? new Date(inst.last_heartbeat_at).toLocaleString() : "Never"}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       )}
@@ -408,23 +410,23 @@ export default function SchoolDetailContent() {
           <div className={styles.metricGrid} style={{ marginBottom: "1.25rem" }}>
             <div className={styles.metricCard}>
               <div className={styles.metricLabel}>Active Connected Clients</div>
-              <div className={styles.metricValue} style={{ color: "#60A5FA" }}>
-                {liveStats?.active_connected_clients ?? (installations[0]?.last_connected_clients || 0)}
+              <div className={styles.metricValue} style={{ color: liveStats?.active_connected_clients != null ? "var(--accent)" : "var(--text-muted)" }}>
+                {liveStats?.active_connected_clients ?? "—"}
               </div>
-              <div className={styles.metricSubtext}>Concurrent LAN users</div>
+              <div className={styles.metricSubtext}>{liveStats?.active_connected_clients != null ? "Concurrent LAN users" : "No telemetry"}</div>
             </div>
 
             <div className={styles.metricCard}>
               <div className={styles.metricLabel}>Live Exam Sessions</div>
-              <div className={styles.metricValue} style={{ color: "#34D399" }}>
-                {liveStats?.active_exam_sessions ?? (installations[0]?.last_active_exam_sessions || 0)}
+              <div className={styles.metricValue} style={{ color: liveStats?.active_exam_sessions != null && liveStats.active_exam_sessions > 0 ? "var(--success)" : "var(--text-muted)" }}>
+                {liveStats?.active_exam_sessions ?? "—"}
               </div>
-              <div className={styles.metricSubtext}>Currently active in hall</div>
+              <div className={styles.metricSubtext}>{liveStats?.active_exam_sessions != null ? "Currently active in hall" : "No telemetry"}</div>
             </div>
 
             <div className={styles.metricCard}>
               <div className={styles.metricLabel}>Exams Today</div>
-              <div className={styles.metricValue} style={{ color: "#A78BFA" }}>
+              <div className={styles.metricValue} style={{ color: "var(--purple)" }}>
                 {liveStats?.exams_conducted_today ?? 0}
               </div>
               <div className={styles.metricSubtext}>Recorded today</div>
@@ -435,7 +437,7 @@ export default function SchoolDetailContent() {
               <div
                 className={styles.metricValue}
                 style={{
-                  color: (school.health_score ?? 100) > 80 ? "#34D399" : (school.health_score ?? 100) > 50 ? "#FBBF24" : "#F87171",
+                  color: (school.health_score ?? 100) > 80 ? "var(--success)" : (school.health_score ?? 100) > 50 ? "var(--warning)" : "var(--danger)",
                 }}
               >
                 {school.health_score ?? 100}%
@@ -447,7 +449,7 @@ export default function SchoolDetailContent() {
           {/* Quick Supervisory Config Push */}
           <div className={styles.tableContainer} style={{ padding: "1rem 1.25rem", marginBottom: "1.25rem", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.75rem" }}>
             <div>
-              <div style={{ fontWeight: 600, color: "#F8FAFC", fontSize: "0.875rem" }}>Supervisory Control &amp; Config Push</div>
+              <div style={{ fontWeight: 600, color: "var(--text-heading)", fontSize: "0.875rem" }}>Supervisory Control &amp; Config Push</div>
               <div style={{ fontSize: "0.75rem", color: "#64748B" }}>Push instant updates down to local campus nodes via the encrypted bidirectional queue.</div>
             </div>
             <div style={{ display: "flex", gap: "0.5rem" }}>
@@ -503,54 +505,56 @@ export default function SchoolDetailContent() {
             </div>
 
             {telemetryHistory.length === 0 ? (
-              <div style={{ padding: "2.5rem", textAlign: "center", color: "#64748B", fontSize: "0.8125rem" }}>
+              <div style={{ padding: "2.5rem", textAlign: "center", color: "var(--text-secondary)", fontSize: "0.8125rem" }}>
                 Awaiting initial heartbeat telemetry from campus node agent.
               </div>
             ) : (
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th>Timestamp</th>
-                    <th>Node</th>
-                    <th>CPU</th>
-                    <th>Memory</th>
-                    <th>Disk</th>
-                    <th>Clients / Exams</th>
-                    <th>DB Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {telemetryHistory.slice(0, 15).map((hb: any) => (
-                    <tr key={hb.id}>
-                      <td className={styles.mono} style={{ fontSize: "0.75rem", color: "#94A3B8" }}>
-                        {new Date(hb.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
-                      </td>
-                      <td style={{ fontWeight: 600, color: "#60A5FA", fontSize: "0.8125rem" }}>
-                        {hb.node_id || "NODE-PRIMARY"}
-                      </td>
-                      <td className={styles.mono} style={{ color: (hb.cpu_usage || 0) > 80 ? "#F87171" : "#34D399" }}>
-                        {Math.round(hb.cpu_usage || 0)}%
-                      </td>
-                      <td className={styles.mono} style={{ color: (hb.memory_usage || 0) > 80 ? "#F87171" : "#34D399" }}>
-                        {Math.round(hb.memory_usage || 0)}%
-                      </td>
-                      <td className={styles.mono} style={{ color: (hb.storage_usage || 0) > 85 ? "#F87171" : "#94A3B8" }}>
-                        {Math.round(hb.storage_usage || 0)}%
-                      </td>
-                      <td>
-                        <span className={styles.mono} style={{ fontSize: "0.75rem", color: "#CBD5E1" }}>
-                          {hb.connected_clients ?? 0} clients · {hb.active_exam_sessions ?? 0} exams
-                        </span>
-                      </td>
-                      <td>
-                        <span className={`${styles.statusBadge} ${hb.db_status === "healthy" || !hb.db_status ? styles.badgeHealthy : styles.badgeCritical}`}>
-                          {hb.db_status || "healthy"}
-                        </span>
-                      </td>
+              <div className={styles.tableResponsive}>
+                <table className={styles.table} style={{ minWidth: "820px" }}>
+                  <thead>
+                    <tr>
+                      <th>Timestamp</th>
+                      <th>Node</th>
+                      <th>CPU</th>
+                      <th>Memory</th>
+                      <th>Disk</th>
+                      <th>Clients / Exams</th>
+                      <th>DB Status</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {telemetryHistory.slice(0, 15).map((hb: any) => (
+                      <tr key={hb.id}>
+                        <td className={styles.mono} style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                          {new Date(hb.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                        </td>
+                        <td style={{ fontWeight: 600, color: "var(--accent)", fontSize: "0.8125rem" }}>
+                          {hb.node_id || "NODE-PRIMARY"}
+                        </td>
+                        <td className={styles.mono} style={{ color: (hb.cpu_usage || 0) > 80 ? "var(--danger)" : "var(--success)" }}>
+                          {Math.round(hb.cpu_usage || 0)}%
+                        </td>
+                        <td className={styles.mono} style={{ color: (hb.memory_usage || 0) > 80 ? "var(--danger)" : "var(--success)" }}>
+                          {Math.round(hb.memory_usage || 0)}%
+                        </td>
+                        <td className={styles.mono} style={{ color: (hb.storage_usage || 0) > 85 ? "var(--danger)" : "var(--text-muted)" }}>
+                          {Math.round(hb.storage_usage || 0)}%
+                        </td>
+                        <td>
+                          <span className={styles.mono} style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>
+                            {hb.connected_clients ?? 0} clients · {hb.active_exam_sessions ?? 0} exams
+                          </span>
+                        </td>
+                        <td>
+                          <span className={`${styles.statusBadge} ${hb.db_status === "healthy" || !hb.db_status ? styles.badgeHealthy : styles.badgeCritical}`}>
+                            {hb.db_status || "healthy"}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
 
@@ -643,23 +647,24 @@ export default function SchoolDetailContent() {
             </form>
 
             {provisionResult && (
-              <div style={{ background: "#070A10", border: "1px solid rgba(255, 255, 255, 0.1)", borderRadius: "8px", padding: "1.25rem" }}>
-                <div style={{ fontSize: "0.8125rem", fontWeight: 700, color: "#34D399", marginBottom: "0.5rem" }}>
+              <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--border-panel)", borderRadius: "8px", padding: "1.25rem" }}>
+                <div style={{ fontSize: "0.8125rem", fontWeight: 700, color: "var(--success)", marginBottom: "0.5rem" }}>
                   Installation Node Provisioned Successfully
                 </div>
-                <div style={{ fontSize: "0.75rem", color: "#F87171", marginBottom: "0.75rem" }}>
+                <div style={{ fontSize: "0.75rem", color: "var(--danger)", marginBottom: "0.75rem" }}>
                   Important: Copy the secret key now. It is never displayed again!
                 </div>
 
                 <pre
                   className={styles.mono}
                   style={{
-                    background: "#03060C",
+                    background: "var(--bg-input)",
                     padding: "1rem",
                     borderRadius: "6px",
-                    color: "#60A5FA",
+                    color: "var(--accent)",
                     fontSize: "0.75rem",
                     overflowX: "auto",
+                    border: "1px solid var(--border-input)",
                   }}
                 >
                   {JSON.stringify(
@@ -684,62 +689,64 @@ export default function SchoolDetailContent() {
           <div className={styles.tableHeader}>
             <div className={styles.tableTitle}>Modular Feature Flags & Controls</div>
           </div>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>Module</th>
-                <th>Category</th>
-                <th>Status</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {[
-                { key: "cbt_exam", name: "Offline CBT Examination Engine", cat: "Core CBT" },
-                { key: "question_bank", name: "Offline Question Bank Management", cat: "Core CBT" },
-                { key: "grading_center", name: "Flexible 70/30 Grading Policies", cat: "Academic" },
-                { key: "report_cards", name: "Report Card Computation & Printing", cat: "Academic" },
-                { key: "timetables", name: "Automated Timetable Generation", cat: "Academic" },
-                { key: "guardian_portal", name: "Guardian Observation Portal", cat: "Portals" },
-                { key: "attendance_tracker", name: "Student Attendance & Roll Call", cat: "Operations" },
-                { key: "fee_management", name: "School Fee Billing & Ledger", cat: "Commercial" },
-                { key: "offline_assignments", name: "Offline Homework & Assignments", cat: "Learning" },
-                { key: "ai_learning_engine", name: "AI Question Generator & Analytics", cat: "Advanced" },
-              ].map((m) => {
-                const isEnabled = Boolean(flagToggles[m.key]);
-                return (
-                  <tr key={m.key}>
-                    <td>
-                      <div style={{ fontWeight: 600, color: "#F8FAFC" }}>{m.name}</div>
-                      <div className={styles.mono} style={{ color: "#64748B" }}>{m.key}</div>
-                    </td>
-                    <td>
-                      <span style={{ fontSize: "0.75rem", color: "#94A3B8" }}>{m.cat}</span>
-                    </td>
-                    <td>
-                      <span
-                        className={styles.statusBadge}
-                        style={{
-                          background: isEnabled ? "rgba(16, 185, 129, 0.15)" : "rgba(100, 116, 139, 0.15)",
-                          color: isEnabled ? "#34D399" : "#64748B",
-                        }}
-                      >
-                        {isEnabled ? "Enabled" : "Disabled"}
-                      </span>
-                    </td>
-                    <td>
-                      <button
-                        onClick={() => handleFlagChange(m.key, isEnabled)}
-                        className={`${styles.btn} ${isEnabled ? styles.btnDanger : styles.btnPrimary}`}
-                      >
-                        {isEnabled ? "Disable" : "Enable"}
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <div className={styles.tableResponsive}>
+            <table className={styles.table} style={{ minWidth: "600px" }}>
+              <thead>
+                <tr>
+                  <th>Module</th>
+                  <th>Category</th>
+                  <th>Status</th>
+                  <th style={{ textAlign: "right", paddingRight: "1.25rem" }}>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  { key: "cbt_exam", name: "Offline CBT Examination Engine", cat: "Core CBT" },
+                  { key: "question_bank", name: "Offline Question Bank Management", cat: "Core CBT" },
+                  { key: "grading_center", name: "Flexible 70/30 Grading Policies", cat: "Academic" },
+                  { key: "report_cards", name: "Report Card Computation & Printing", cat: "Academic" },
+                  { key: "timetables", name: "Automated Timetable Generation", cat: "Academic" },
+                  { key: "guardian_portal", name: "Guardian Observation Portal", cat: "Portals" },
+                  { key: "attendance_tracker", name: "Student Attendance & Roll Call", cat: "Operations" },
+                  { key: "fee_management", name: "School Fee Billing & Ledger", cat: "Commercial" },
+                  { key: "offline_assignments", name: "Offline Homework & Assignments", cat: "Learning" },
+                  { key: "ai_learning_engine", name: "AI Question Generator & Analytics", cat: "Advanced" },
+                ].map((m) => {
+                  const isEnabled = Boolean(flagToggles[m.key]);
+                  return (
+                    <tr key={m.key}>
+                      <td>
+                        <div style={{ fontWeight: 600, color: "var(--text-heading)" }}>{m.name}</div>
+                        <div className={styles.mono} style={{ color: "var(--text-muted)" }}>{m.key}</div>
+                      </td>
+                      <td>
+                        <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>{m.cat}</span>
+                      </td>
+                      <td>
+                        <span
+                          className={styles.statusBadge}
+                          style={{
+                            background: isEnabled ? "var(--success-bg)" : "var(--bg-hover)",
+                            color: isEnabled ? "var(--success)" : "var(--text-muted)",
+                          }}
+                        >
+                          {isEnabled ? "Enabled" : "Disabled"}
+                        </span>
+                      </td>
+                      <td style={{ textAlign: "right", paddingRight: "1.25rem" }}>
+                        <button
+                          onClick={() => handleFlagChange(m.key, isEnabled)}
+                          className={`${styles.btn} ${isEnabled ? styles.btnDanger : styles.btnPrimary}`}
+                        >
+                          {isEnabled ? "Disable" : "Enable"}
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
@@ -750,36 +757,38 @@ export default function SchoolDetailContent() {
             <div className={styles.tableTitle}>Automated Backup Telemetry</div>
           </div>
           {backups.length === 0 ? (
-            <div style={{ padding: "3rem", textAlign: "center", color: "#64748B" }}>
+            <div style={{ padding: "3rem", textAlign: "center", color: "var(--text-secondary)" }}>
               No backup records reported by local nodes yet.
             </div>
           ) : (
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>Timestamp</th>
-                  <th>Destination</th>
-                  <th>Size</th>
-                  <th>Duration</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {backups.map((b: any) => (
-                  <tr key={b.id}>
-                    <td className={styles.mono}>{new Date(b.timestamp).toLocaleString()}</td>
-                    <td>{b.destination}</td>
-                    <td className={styles.mono}>{(b.backup_size_bytes / (1024 * 1024)).toFixed(2)} MB</td>
-                    <td className={styles.mono}>{b.duration_ms} ms</td>
-                    <td>
-                      <span className={styles.statusBadge} style={{ background: "rgba(16, 185, 129, 0.15)", color: "#34D399" }}>
-                        Verified
-                      </span>
-                    </td>
+            <div className={styles.tableResponsive}>
+              <table className={styles.table} style={{ minWidth: "720px" }}>
+                <thead>
+                  <tr>
+                    <th>Timestamp</th>
+                    <th>Destination</th>
+                    <th>Size</th>
+                    <th>Duration</th>
+                    <th style={{ textAlign: "right", paddingRight: "1.25rem" }}>Status</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {backups.map((b: any) => (
+                    <tr key={b.id}>
+                      <td className={styles.mono}>{new Date(b.timestamp).toLocaleString()}</td>
+                      <td>{b.destination}</td>
+                      <td className={styles.mono}>{(b.backup_size_bytes / (1024 * 1024)).toFixed(2)} MB</td>
+                      <td className={styles.mono}>{b.duration_ms} ms</td>
+                      <td style={{ textAlign: "right", paddingRight: "1.25rem" }}>
+                        <span className={styles.statusBadge} style={{ background: "var(--success-bg)", color: "var(--success)" }}>
+                          Verified
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       )}
@@ -793,39 +802,41 @@ export default function SchoolDetailContent() {
             </div>
 
             {incidents.length === 0 ? (
-              <div style={{ padding: "3rem", textAlign: "center", color: "#64748B" }}>
+              <div style={{ padding: "3rem", textAlign: "center", color: "var(--text-secondary)" }}>
                 No open support incidents for this school.
               </div>
             ) : (
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th>Code</th>
-                    <th>Title & Description</th>
-                    <th>Severity</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {incidents.map((inc: any) => (
-                    <tr key={inc.id}>
-                      <td className={styles.mono} style={{ color: "#60A5FA" }}>{inc.incident_code}</td>
-                      <td>
-                        <div style={{ fontWeight: 600, color: "#F8FAFC" }}>{inc.title}</div>
-                        <div style={{ fontSize: "0.75rem", color: "#94A3B8" }}>{inc.description}</div>
-                      </td>
-                      <td>
-                        <span className={styles.statusBadge} style={{ background: "rgba(245, 158, 11, 0.15)", color: "#FBBF24" }}>
-                          {inc.severity}
-                        </span>
-                      </td>
-                      <td>
-                        <span className={styles.mono} style={{ textTransform: "uppercase" }}>{inc.status}</span>
-                      </td>
+              <div className={styles.tableResponsive}>
+                <table className={styles.table} style={{ minWidth: "680px" }}>
+                  <thead>
+                    <tr>
+                      <th>Code</th>
+                      <th>Title & Description</th>
+                      <th>Severity</th>
+                      <th>Status</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {incidents.map((inc: any) => (
+                      <tr key={inc.id}>
+                        <td className={styles.mono} style={{ color: "var(--accent)" }}>{inc.incident_code}</td>
+                        <td>
+                          <div style={{ fontWeight: 600, color: "var(--text-heading)" }}>{inc.title}</div>
+                          <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)", whiteSpace: "normal" }}>{inc.description}</div>
+                        </td>
+                        <td>
+                          <span className={styles.statusBadge} style={{ background: "var(--warning-bg)", color: "var(--warning)" }}>
+                            {inc.severity}
+                          </span>
+                        </td>
+                        <td>
+                          <span className={styles.mono} style={{ textTransform: "uppercase" }}>{inc.status}</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
 
@@ -835,7 +846,7 @@ export default function SchoolDetailContent() {
             </div>
             <form onSubmit={handleCreateIncident} style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
               <div>
-                <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, color: "#94A3B8", marginBottom: "0.25rem" }}>
+                <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "0.25rem" }}>
                   Incident Title
                 </label>
                 <input
@@ -850,7 +861,7 @@ export default function SchoolDetailContent() {
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, color: "#94A3B8", marginBottom: "0.25rem" }}>
+                <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "0.25rem" }}>
                   Severity
                 </label>
                 <select
@@ -867,7 +878,7 @@ export default function SchoolDetailContent() {
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, color: "#94A3B8", marginBottom: "0.25rem" }}>
+                <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "0.25rem" }}>
                   Description & Context
                 </label>
                 <textarea
@@ -910,8 +921,8 @@ export default function SchoolDetailContent() {
                     alignItems: "center",
                     gap: "0.85rem",
                     padding: "0.75rem 1rem",
-                    background: s.done ? "rgba(16, 185, 129, 0.06)" : "#0B0F19",
-                    border: `1px solid ${s.done ? "rgba(16, 185, 129, 0.2)" : "rgba(255, 255, 255, 0.06)"}`,
+                    background: s.done ? "var(--success-bg)" : "var(--bg-input)",
+                    border: `1px solid ${s.done ? "var(--success)" : "var(--border-panel)"}`,
                     borderRadius: "8px",
                   }}
                 >
@@ -920,8 +931,8 @@ export default function SchoolDetailContent() {
                       width: "22px",
                       height: "22px",
                       borderRadius: "50%",
-                      background: s.done ? "#10B981" : "#1E293B",
-                      color: s.done ? "#FFFFFF" : "#64748B",
+                      background: s.done ? "var(--success)" : "var(--border-input)",
+                      color: s.done ? "#FFFFFF" : "var(--text-secondary)",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
@@ -931,7 +942,7 @@ export default function SchoolDetailContent() {
                   >
                     {s.done ? "✓" : s.step}
                   </div>
-                  <div style={{ fontSize: "0.8125rem", fontWeight: 600, color: s.done ? "#F8FAFC" : "#94A3B8" }}>
+                  <div style={{ fontSize: "0.8125rem", fontWeight: 600, color: s.done ? "var(--text-heading)" : "var(--text-secondary)" }}>
                     {s.title}
                   </div>
                 </div>

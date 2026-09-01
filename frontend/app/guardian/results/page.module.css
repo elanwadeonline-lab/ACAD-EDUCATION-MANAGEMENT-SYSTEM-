@@ -1,0 +1,407 @@
+/* ── Guardian Results & Report Card Styles ── */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  width: 100%;
+}
+
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.headerLeftGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.backBtn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--g-surface, #FFFFFF);
+  border: 1px solid var(--g-border, #E2E8F0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--g-text-primary, #0F172A);
+  cursor: pointer;
+  transition: all var(--g-duration, 180ms) ease;
+}
+
+.backBtn:hover {
+  background: var(--g-surface-subtle, #F8FAFC);
+  border-color: var(--g-border-focus, #3B82F6);
+}
+
+.pageTitle {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--g-text-primary, #0F172A);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+/* ── 1. Overall Summary Banner ── */
+.summaryBanner {
+  background: linear-gradient(135deg, var(--g-primary, #165AF6) 0%, #0D47C9 100%);
+  border-radius: var(--g-radius-xl, 20px);
+  padding: 1.35rem 1.25rem;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 8px 24px -4px var(--g-primary-glow, rgba(22, 90, 246, 0.35));
+}
+
+.summaryLeftCol {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.summaryTermTitle {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  opacity: 0.9;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.summaryBigScore {
+  font-size: 2.25rem;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.summarySubLine {
+  font-size: 0.75rem;
+  opacity: 0.85;
+  margin-top: 0.2rem;
+}
+
+.trophyBadgeBox {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FDE047;
+  flex-shrink: 0;
+}
+
+/* ── 2. Results List Section ── */
+.resultsSection {
+  background: var(--g-surface, #FFFFFF);
+  border: 1px solid var(--g-border, #E2E8F0);
+  border-radius: var(--g-radius-xl, 18px);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  box-shadow: var(--g-shadow-sm, 0 1px 3px rgba(15, 23, 42, 0.03));
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sectionTitle {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--g-text-primary, #0F172A);
+  margin: 0;
+}
+
+.resultTable {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.resultRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 0.9rem;
+  border-radius: var(--g-radius-md, 12px);
+  background: var(--g-surface-subtle, #F8FAFC);
+  border: 1px solid var(--g-border-subtle, #F1F5F9);
+  transition: all var(--g-duration, 180ms) ease;
+}
+
+.resultRow:hover {
+  background: var(--g-surface, #FFFFFF);
+  border-color: var(--g-border, #E2E8F0);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.subjectCol {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.subjectTitle {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--g-text-primary, #0F172A);
+}
+
+.scoreBreakdown {
+  font-size: 0.6875rem;
+  color: var(--g-text-muted, #64748B);
+}
+
+.scoresCol {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.totalScoreNum {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--g-text-primary, #0F172A);
+}
+
+.gradePill {
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+}
+
+.gradeA {
+  background: var(--g-success-subtle, #ECFDF5);
+  color: var(--g-success, #059669);
+  border: 1px solid var(--g-success-border, #A7F3D0);
+}
+
+.gradeB {
+  background: var(--g-primary-subtle, #EFF4FF);
+  color: var(--g-primary, #165AF6);
+  border: 1px solid var(--g-primary-border, #DBEAFE);
+}
+
+.gradeC {
+  background: var(--g-warning-subtle, #FFFBEB);
+  color: var(--g-warning, #D97706);
+  border: 1px solid var(--g-warning-border, #FDE68A);
+}
+
+.pendingRow {
+  opacity: 0.75;
+  border-style: dashed;
+}
+
+.pendingBadge {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--g-text-muted, #64748B);
+  background: var(--g-border, #E2E8F0);
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+}
+
+/* ── 3. Actions Row ── */
+.actionsRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.openModalBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.25rem;
+  border-radius: var(--g-radius-md, 12px);
+  background: var(--g-primary, #165AF6);
+  color: #FFFFFF;
+  border: none;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 14px var(--g-primary-glow, rgba(22, 90, 246, 0.28));
+  transition: all var(--g-duration, 180ms) ease;
+}
+
+.openModalBtn:hover {
+  background: var(--g-primary-hover, #1248C8);
+  transform: translateY(-1px);
+}
+
+.shareBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: var(--g-radius-md, 12px);
+  background: var(--g-surface, #FFFFFF);
+  border: 1px solid var(--g-border, #E2E8F0);
+  color: var(--g-text-primary, #0F172A);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--g-duration, 180ms) ease;
+}
+
+.shareBtn:hover {
+  background: var(--g-surface-subtle, #F8FAFC);
+  border-color: var(--g-border-focus, #3B82F6);
+  color: var(--g-primary, #165AF6);
+}
+
+/* ── 4. Full Broadsheet Modal ── */
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(8px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.modalContent {
+  background: var(--g-surface, #FFFFFF);
+  border: 1px solid var(--g-border, #E2E8F0);
+  border-radius: var(--g-radius-xl, 20px);
+  width: 100%;
+  max-width: 420px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+}
+
+.modalHeader {
+  padding: 1.15rem 1.25rem;
+  border-bottom: 1px solid var(--g-border, #E2E8F0);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modalTitle {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--g-text-primary, #0F172A);
+  margin: 0;
+}
+
+.modalCloseBtn {
+  background: transparent;
+  border: none;
+  color: var(--g-text-muted, #64748B);
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 6px;
+}
+
+.modalBody {
+  padding: 1.25rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+}
+
+.broadsheetCard {
+  background: var(--g-surface-subtle, #F8FAFC);
+  border: 1px solid var(--g-border, #E2E8F0);
+  border-radius: var(--g-radius-md, 12px);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.broadsheetHeader {
+  text-align: center;
+  border-bottom: 1px solid var(--g-border, #E2E8F0);
+  padding-bottom: 0.65rem;
+}
+
+.schoolName {
+  font-size: 0.875rem;
+  font-weight: 800;
+  color: var(--g-text-primary, #0F172A);
+}
+
+.reportTerm {
+  font-size: 0.75rem;
+  color: var(--g-text-muted, #64748B);
+}
+
+.studentMetaGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.4rem;
+  font-size: 0.75rem;
+}
+
+.metaItem {
+  color: var(--g-text-secondary, #475569);
+}
+
+.metaItem strong {
+  color: var(--g-text-primary, #0F172A);
+}
+
+.broadsheetTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.broadsheetTable th {
+  background: var(--g-surface, #FFFFFF);
+  border: 1px solid var(--g-border, #E2E8F0);
+  padding: 0.4rem 0.35rem;
+  text-align: center;
+  font-weight: 700;
+  color: var(--g-text-secondary, #475569);
+}
+
+.broadsheetTable td {
+  border: 1px solid var(--g-border, #E2E8F0);
+  padding: 0.4rem 0.35rem;
+  text-align: center;
+  color: var(--g-text-primary, #0F172A);
+}
+
+.toast {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--g-text-primary, #0F172A);
+  color: var(--g-text-inverse, #FFFFFF);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 0.6rem 1.2rem;
+  border-radius: 999px;
+  z-index: 120;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  white-space: nowrap;
+}

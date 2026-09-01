@@ -256,7 +256,7 @@ export function initializeControlPlaneSchema(): void {
       id              INTEGER PRIMARY KEY AUTOINCREMENT,
       installation_id TEXT NOT NULL,
       school_id       INTEGER NOT NULL,
-      payload_type    TEXT NOT NULL CHECK(payload_type IN ('feature_flags', 'license', 'config', 'force_update', 'reboot_request')),
+      payload_type    TEXT NOT NULL CHECK(payload_type IN ('feature_flags', 'license', 'config', 'force_update', 'reboot_request', 'diagnostics')),
       payload_json    TEXT NOT NULL,
       status          TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'delivered', 'failed')),
       queued_by       INTEGER,
@@ -265,6 +265,34 @@ export function initializeControlPlaneSchema(): void {
       FOREIGN KEY (installation_id) REFERENCES installations(installation_id) ON DELETE CASCADE
     )
   `);
+  // Migrate existing table if it lacks new payload types (older CHECK constraint)
+  try {
+    const sql = (controlDb.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='sync_queue'").get() as any)?.sql || "";
+    if (sql && !sql.includes("'diagnostics'")) {
+      // Rebuild table with expanded CHECK
+      controlDb.run("PRAGMA foreign_keys = OFF");
+      controlDb.run(`
+        CREATE TABLE sync_queue_new (
+          id              INTEGER PRIMARY KEY AUTOINCREMENT,
+          installation_id TEXT NOT NULL,
+          school_id       INTEGER NOT NULL,
+          payload_type    TEXT NOT NULL CHECK(payload_type IN ('feature_flags', 'license', 'config', 'force_update', 'reboot_request', 'diagnostics')),
+          payload_json    TEXT NOT NULL,
+          status          TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'delivered', 'failed')),
+          queued_by       INTEGER,
+          queued_at       TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')),
+          delivered_at    TEXT,
+          FOREIGN KEY (installation_id) REFERENCES installations(installation_id) ON DELETE CASCADE
+        )
+      `);
+      controlDb.run(`INSERT INTO sync_queue_new (id, installation_id, school_id, payload_type, payload_json, status, queued_by, queued_at, delivered_at) SELECT id, installation_id, school_id, payload_type, payload_json, status, queued_by, queued_at, delivered_at FROM sync_queue`);
+      controlDb.run("DROP TABLE sync_queue");
+      controlDb.run("ALTER TABLE sync_queue_new RENAME TO sync_queue");
+      controlDb.run("PRAGMA foreign_keys = ON");
+    }
+  } catch (e) {
+    console.warn("[schema] sync_queue diagnostics migration skipped:", e);
+  }
 
   // Optimized Query Indexes
   controlDb.run("CREATE INDEX IF NOT EXISTS idx_installations_school_id ON installations(school_id)");

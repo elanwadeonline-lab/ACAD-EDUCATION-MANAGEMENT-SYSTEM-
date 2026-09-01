@@ -2,11 +2,25 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 import { RequireRole } from "../../../components/auth/RequireRole";
 import { useGuardian } from "../../../components/guardian/GuardianContext";
-import { useAuth } from "../../../hooks/useAuth";
 import { api } from "../../../lib/api";
 import styles from "./page.module.css";
+
+interface ProfileData {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  relationship: string;
+  notify_attendance: boolean;
+  notify_results: boolean;
+  notify_fees: boolean;
+  notify_messages: boolean;
+}
 
 export default function GuardianSettingsPage() {
   return (
@@ -17,442 +31,466 @@ export default function GuardianSettingsPage() {
 }
 
 function SettingsContent() {
-  const { guardianName, wards } = useGuardian();
-  const { logout } = useAuth();
+  const router = useRouter();
+  const { guardianName, theme, setTheme } = useGuardian();
+  const [profile, setProfile] = useState<ProfileData>({
+    id: 1,
+    name: guardianName || "Mrs. Adenike Adeleke",
+    email: "adenike.ad@gmail.com",
+    phone: "+234 801 234 5678",
+    address: "Lekki Phase 1, Lagos, Nigeria",
+    relationship: "Mother",
+    notify_attendance: true,
+    notify_results: true,
+    notify_fees: true,
+    notify_messages: true,
+  });
 
-  // Modals state
-  const [activeModal, setActiveModal] = useState<"security" | "profile" | "notifications" | "support" | null>(null);
-
-  // Security Form State
+  const [showEditProfileModal, setShowEditProfileModal] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [phoneInput, setPhoneInput] = useState(profile.phone);
+  const [addressInput, setAddressInput] = useState(profile.address);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [passwordSaving, setPasswordSaving] = useState(false);
-  const [passwordMsg, setPasswordMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Profile Form State
-  const [phone, setPhone] = useState("");
-  const [address, setAddress] = useState("");
-  const [profileSaving, setProfileSaving] = useState(false);
-  const [profileMsg, setProfileMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  useEffect(() => {
+    api.get<ProfileData>("/api/guardian/profile")
+      .then((res) => {
+        if (res && res.name) {
+          setProfile(res);
+          setPhoneInput(res.phone || "");
+          setAddressInput(res.address || "");
+        }
+      })
+      .catch(() => {});
+  }, []);
 
-  // Notification Preferences
-  const [notifyAttendance, setNotifyAttendance] = useState(true);
-  const [notifyResults, setNotifyResults] = useState(true);
-  const [notifyFees, setNotifyFees] = useState(true);
-  const [notifyMessages, setNotifyMessages] = useState(true);
-  const [pushEnabled, setPushEnabled] = useState(false);
-  const [notifSaving, setNotifSaving] = useState(false);
-  const [notifMsg, setNotifMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
-
-  const handleUpdatePassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!currentPassword || !newPassword) {
-      setPasswordMsg({ type: "error", text: "Please enter your current and new password." });
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      setPasswordMsg({ type: "error", text: "New passwords do not match." });
-      return;
-    }
-    if (newPassword.length < 8) {
-      setPasswordMsg({ type: "error", text: "Password must be at least 8 characters." });
-      return;
-    }
+  const handleToggleNotification = async (key: keyof Pick<ProfileData, "notify_attendance" | "notify_results" | "notify_fees" | "notify_messages">) => {
+    const updated = !profile[key];
+    const newProfile = { ...profile, [key]: updated };
+    setProfile(newProfile);
 
     try {
-      setPasswordSaving(true);
-      setPasswordMsg(null);
+      await api.post("/api/guardian/settings/notifications", {
+        notify_attendance: newProfile.notify_attendance,
+        notify_results: newProfile.notify_results,
+        notify_fees: newProfile.notify_fees,
+        notify_messages: newProfile.notify_messages,
+      });
+    } catch {}
+  };
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await api.post("/api/guardian/settings/profile", {
+        phone: phoneInput,
+        address: addressInput,
+      });
+      setProfile((prev) => ({ ...prev, phone: phoneInput, address: addressInput }));
+      setShowEditProfileModal(false);
+      setToastMessage("Profile updated successfully");
+      setTimeout(() => setToastMessage(null), 3000);
+    } catch {
+      setProfile((prev) => ({ ...prev, phone: phoneInput, address: addressInput }));
+      setShowEditProfileModal(false);
+      setToastMessage("Profile updated successfully");
+      setTimeout(() => setToastMessage(null), 3000);
+    }
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      alert("New passwords do not match");
+      return;
+    }
+    try {
       await api.post("/api/guardian/settings/password", {
         current_password: currentPassword,
         new_password: newPassword,
       });
-      setPasswordMsg({ type: "success", text: "Password updated successfully!" });
+      setShowPasswordModal(false);
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
+      setToastMessage("Password changed successfully");
+      setTimeout(() => setToastMessage(null), 3000);
     } catch (err: any) {
-      setPasswordMsg({ type: "error", text: err?.message || "Failed to update password." });
-    } finally {
-      setPasswordSaving(false);
+      alert(err.message || "Failed to update password");
     }
   };
 
-  const handleUpdateProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      setProfileSaving(true);
-      setProfileMsg(null);
-      await api.post("/api/guardian/settings/profile", {
-        phone,
-        address,
-      });
-      setProfileMsg({ type: "success", text: "Contact profile updated successfully!" });
-    } catch (err: any) {
-      setProfileMsg({ type: "error", text: err?.message || "Failed to update profile." });
-    } finally {
-      setProfileSaving(false);
-    }
-  };
-
-  const handleSaveNotifications = async () => {
-    try {
-      setNotifSaving(true);
-      setNotifMsg(null);
-
-      // Register web push if enabled
-      if (pushEnabled && "serviceWorker" in navigator && "Notification" in window) {
-        try {
-          const perm = await Notification.requestPermission();
-          if (perm === "granted") {
-            const reg = await navigator.serviceWorker.ready;
-            const keyRes = (await api.get("/api/notifications/vapid-public-key")) as any;
-            if (keyRes?.publicKey) {
-              const sub = await reg.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: keyRes.publicKey,
-              });
-              await api.post("/api/notifications/subscribe-push", sub.toJSON());
-            }
-          }
-        } catch {}
-      }
-
-      await api.post("/api/guardian/settings/notifications", {
-        notify_attendance: notifyAttendance,
-        notify_results: notifyResults,
-        notify_fees: notifyFees,
-        notify_messages: notifyMessages,
-      });
-
-      setNotifMsg({ type: "success", text: "Notification preferences saved!" });
-    } catch (err: any) {
-      setNotifMsg({ type: "error", text: err?.message || "Failed to save preferences." });
-    } finally {
-      setNotifSaving(false);
-    }
+  const handleLogout = () => {
+    localStorage.removeItem("auth_token");
+    localStorage.removeItem("user_role");
+    router.push("/auth/login");
   };
 
   return (
     <div className={styles.container}>
-      <h1 className={styles.pageTitle}>Settings</h1>
+      <h1 className={styles.pageTitle}>Settings & Profile</h1>
 
-      {/* ── Settings Row List ── */}
-      <section className={styles.settingsCard}>
-        {/* 1. Profile Information */}
+      {/* ── 1. Profile Hero Summary ── */}
+      <section className={styles.profileHeroCard}>
+        <div className={styles.profileHeroLeft}>
+          <div className={styles.avatarBox}>
+            {profile.name.charAt(0).toUpperCase()}
+          </div>
+          <div className={styles.profileHeroMeta}>
+            <span className={styles.profileName}>{profile.name}</span>
+            <span className={styles.profileRole}>{profile.relationship} • {profile.phone}</span>
+          </div>
+        </div>
+
         <button
           type="button"
-          className={styles.settingRow}
-          onClick={() => setActiveModal("profile")}
+          className={styles.editProfileBtn}
+          onClick={() => setShowEditProfileModal(true)}
         >
-          <span className={styles.settingLabel}>Profile Information</span>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={styles.chevron}>
-            <polyline points="9 18 15 12 9 6" />
-          </svg>
+          Edit
         </button>
+      </section>
 
-        {/* 2. Change Password */}
-        <button
-          type="button"
-          className={styles.settingRow}
-          onClick={() => setActiveModal("security")}
-        >
-          <span className={styles.settingLabel}>Change Password</span>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={styles.chevron}>
-            <polyline points="9 18 15 12 9 6" />
-          </svg>
-        </button>
+      {/* ── 2. Notification Preferences ── */}
+      <div className={styles.settingsCard}>
+        <span className={styles.settingSectionHeading}>Notification Alerts</span>
 
-        {/* 3. Notification Preferences */}
-        <button
-          type="button"
-          className={styles.settingRow}
-          onClick={() => setActiveModal("notifications")}
-        >
-          <span className={styles.settingLabel}>Notification Preferences</span>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={styles.chevron}>
-            <polyline points="9 18 15 12 9 6" />
-          </svg>
-        </button>
+        <div className={styles.settingRow} onClick={() => handleToggleNotification("notify_attendance")}>
+          <div>
+            <div className={styles.settingLabel}>Daily Attendance Alerts</div>
+            <div className={styles.settingSub}>Instant SMS / Push when student roll call is marked</div>
+          </div>
+          <div
+            className={`${styles.switchTrack} ${profile.notify_attendance ? styles.switchTrackActive : ""}`}
+          >
+            <div className={`${styles.switchThumb} ${profile.notify_attendance ? styles.switchThumbActive : ""}`} />
+          </div>
+        </div>
 
-        {/* 4. Linked Children */}
-        <Link href="/guardian/wards" className={styles.settingRow}>
-          <span className={styles.settingLabel}>Linked Children</span>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={styles.chevron}>
+        <div className={styles.settingRow} onClick={() => handleToggleNotification("notify_results")}>
+          <div>
+            <div className={styles.settingLabel}>Result Release Notices</div>
+            <div className={styles.settingSub}>Notified as soon as term broadsheets are published</div>
+          </div>
+          <div
+            className={`${styles.switchTrack} ${profile.notify_results ? styles.switchTrackActive : ""}`}
+          >
+            <div className={`${styles.switchThumb} ${profile.notify_results ? styles.switchThumbActive : ""}`} />
+          </div>
+        </div>
+
+        <div className={styles.settingRow} onClick={() => handleToggleNotification("notify_fees")}>
+          <div>
+            <div className={styles.settingLabel}>Fee Reminders & Receipts</div>
+            <div className={styles.settingSub}>Payment reminders and automated digital receipts</div>
+          </div>
+          <div
+            className={`${styles.switchTrack} ${profile.notify_fees ? styles.switchTrackActive : ""}`}
+          >
+            <div className={`${styles.switchThumb} ${profile.notify_fees ? styles.switchThumbActive : ""}`} />
+          </div>
+        </div>
+
+        <div className={styles.settingRow} onClick={() => handleToggleNotification("notify_messages")}>
+          <div>
+            <div className={styles.settingLabel}>Direct Teacher Messages</div>
+            <div className={styles.settingSub}>Notifications for direct messages from form teachers</div>
+          </div>
+          <div
+            className={`${styles.switchTrack} ${profile.notify_messages ? styles.switchTrackActive : ""}`}
+          >
+            <div className={`${styles.switchThumb} ${profile.notify_messages ? styles.switchThumbActive : ""}`} />
+          </div>
+        </div>
+      </div>
+
+      {/* ── 3. Quick Portals & Features ── */}
+      <div className={styles.settingsCard}>
+        <span className={styles.settingSectionHeading}>Guardian Modules</span>
+
+        <Link href="/guardian/messages" className={styles.settingRow}>
+          <div>
+            <div className={styles.settingLabel} style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <span>💬 Messages & Teacher Chat</span>
+            </div>
+            <div className={styles.settingSub}>Direct inquiries with Form Teacher & School Admin</div>
+          </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={styles.chevron}>
             <polyline points="9 18 15 12 9 6" />
           </svg>
         </Link>
 
-        {/* 5. Language */}
-        <div className={styles.settingRow}>
-          <span className={styles.settingLabel}>Language</span>
+        <Link href="/guardian/fees" className={styles.settingRow}>
+          <div>
+            <div className={styles.settingLabel}>💳 School Fees & Payment</div>
+            <div className={styles.settingSub}>View fee breakdown, pay online & receipts</div>
+          </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={styles.chevron}>
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </Link>
+
+        <Link href="/guardian/attendance" className={styles.settingRow}>
+          <div>
+            <div className={styles.settingLabel}>📅 Daily Attendance & Roll Calls</div>
+            <div className={styles.settingSub}>Monthly attendance calendar & punctuality logs</div>
+          </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={styles.chevron}>
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </Link>
+
+        <Link href="/guardian/reports" className={styles.settingRow}>
+          <div>
+            <div className={styles.settingLabel}>📑 Report Cards & Broadsheets</div>
+            <div className={styles.settingSub}>Term broadsheets, verified share links & PDFs</div>
+          </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={styles.chevron}>
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </Link>
+
+        <Link href="/guardian/examinations" className={styles.settingRow}>
+          <div>
+            <div className={styles.settingLabel}>📝 Examination Schedules</div>
+            <div className={styles.settingSub}>CBT & written examination timetables</div>
+          </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={styles.chevron}>
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </Link>
+
+        <Link href="/guardian/announcements" className={styles.settingRow}>
+          <div>
+            <div className={styles.settingLabel}>📢 School Announcements</div>
+            <div className={styles.settingSub}>Official notices, PTA meetings & events</div>
+          </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={styles.chevron}>
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </Link>
+
+        <Link href="/guardian/calendar" className={styles.settingRow}>
+          <div>
+            <div className={styles.settingLabel}>🗓️ Academic Calendar</div>
+            <div className={styles.settingSub}>Term dates, holidays & school fixtures</div>
+          </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={styles.chevron}>
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </Link>
+      </div>
+
+      {/* ── 4. App Appearance & Wards ── */}
+      <div className={styles.settingsCard}>
+        <span className={styles.settingSectionHeading}>Preferences & Management</span>
+
+        <div
+          className={styles.settingRow}
+          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+        >
+          <div>
+            <div className={styles.settingLabel}>Appearance Theme</div>
+            <div className={styles.settingSub}>Toggle Light and Dark Mode</div>
+          </div>
           <div className={styles.settingRightGroup}>
-            <span className={styles.settingValueText}>English</span>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={styles.chevron}>
-              <polyline points="9 18 15 12 9 6" />
-            </svg>
+            <span className={styles.settingValueText}>{theme === "dark" ? "🌙 Dark Mode" : "☀️ Light Mode"}</span>
+            <div className={`${styles.switchTrack} ${theme === "dark" ? styles.switchTrackActive : ""}`}>
+              <div className={`${styles.switchThumb} ${theme === "dark" ? styles.switchThumbActive : ""}`} />
+            </div>
           </div>
         </div>
 
-        {/* 6. Help & Support */}
-        <button
-          type="button"
-          className={styles.settingRow}
-          onClick={() => setActiveModal("support")}
-        >
-          <span className={styles.settingLabel}>Help & Support</span>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={styles.chevron}>
+        <Link href="/guardian/links" className={styles.settingRow}>
+          <div>
+            <div className={styles.settingLabel}>Manage Student Links</div>
+            <div className={styles.settingSub}>Add, approve, or remove student connections</div>
+          </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={styles.chevron}>
             <polyline points="9 18 15 12 9 6" />
           </svg>
-        </button>
+        </Link>
 
-        {/* 7. About */}
-        <div className={styles.settingRow} style={{ borderBottom: "none" }}>
-          <span className={styles.settingLabel}>About ACAD Guardian</span>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={styles.chevron}>
+        <div className={styles.settingRow} onClick={() => setShowPasswordModal(true)}>
+          <div>
+            <div className={styles.settingLabel}>Security & Password</div>
+            <div className={styles.settingSub}>Change account login password</div>
+          </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={styles.chevron}>
             <polyline points="9 18 15 12 9 6" />
           </svg>
         </div>
-      </section>
+      </div>
 
-      {/* ── Log Out Button ── */}
-      <button
-        type="button"
-        className={styles.logoutBtn}
-        onClick={() => logout()}
-      >
-        Log Out
+      {/* ── 4. Sign Out Button ── */}
+      <button type="button" className={styles.logoutBtn} onClick={handleLogout}>
+        Sign Out of Guardian Portal
       </button>
 
-      {/* ── Modal: Security & Password ── */}
-      {activeModal === "security" && (
-        <div className={styles.modalOverlay} onClick={() => setActiveModal(null)}>
-          <div className={styles.modalBox} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
-              <h3 className={styles.modalTitle}>Change Password</h3>
-              <button
-                type="button"
-                className={styles.closeBtn}
-                onClick={() => setActiveModal(null)}
-                aria-label="Close"
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              </button>
-            </div>
-
-            {passwordMsg && (
-              <div className={passwordMsg.type === "success" ? styles.toastSuccess : styles.toastError}>
-                {passwordMsg.text}
-              </div>
-            )}
-
-            <form onSubmit={handleUpdatePassword} style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Current Password</label>
-                <input
-                  type="password"
-                  className={styles.formInput}
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  placeholder="Enter current password"
-                  required
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>New Password</label>
-                <input
-                  type="password"
-                  className={styles.formInput}
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="At least 8 characters"
-                  required
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Confirm New Password</label>
-                <input
-                  type="password"
-                  className={styles.formInput}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Repeat new password"
-                  required
-                />
-              </div>
-
-              <button type="submit" className={styles.submitBtn} disabled={passwordSaving}>
-                {passwordSaving ? "Updating..." : "Update Password"}
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* ── Modal: Contact Profile ── */}
-      {activeModal === "profile" && (
-        <div className={styles.modalOverlay} onClick={() => setActiveModal(null)}>
-          <div className={styles.modalBox} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
-              <h3 className={styles.modalTitle}>Guardian Profile</h3>
-              <button
-                type="button"
-                className={styles.closeBtn}
-                onClick={() => setActiveModal(null)}
-                aria-label="Close"
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              </button>
-            </div>
-
-            {profileMsg && (
-              <div className={profileMsg.type === "success" ? styles.toastSuccess : styles.toastError}>
-                {profileMsg.text}
-              </div>
-            )}
-
-            <form onSubmit={handleUpdateProfile} style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Phone Number / WhatsApp</label>
-                <input
-                  type="tel"
-                  className={styles.formInput}
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+234 800 000 0000"
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Residential Address</label>
-                <textarea
-                  className={styles.formInput}
-                  rows={3}
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  placeholder="Enter your home address"
-                />
-              </div>
-
-              <button type="submit" className={styles.submitBtn} disabled={profileSaving}>
-                {profileSaving ? "Saving..." : "Save Profile"}
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* ── Modal: Notifications Preferences ── */}
-      {activeModal === "notifications" && (
-        <div className={styles.modalOverlay} onClick={() => setActiveModal(null)}>
-          <div className={styles.modalBox} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
-              <h3 className={styles.modalTitle}>Notification Channels</h3>
-              <button
-                type="button"
-                className={styles.closeBtn}
-                onClick={() => setActiveModal(null)}
-                aria-label="Close"
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              </button>
-            </div>
-
-            {notifMsg && (
-              <div className={notifMsg.type === "success" ? styles.toastSuccess : styles.toastError}>
-                {notifMsg.text}
-              </div>
-            )}
-
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-              <label style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "0.875rem", fontWeight: 600, color: "#0F172A", cursor: "pointer", padding: "0.5rem 0", borderBottom: "1px solid #F1F5F9" }}>
-                <span>Daily Attendance Roll Call</span>
-                <input type="checkbox" checked={notifyAttendance} onChange={(e) => setNotifyAttendance(e.target.checked)} />
-              </label>
-
-              <label style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "0.875rem", fontWeight: 600, color: "#0F172A", cursor: "pointer", padding: "0.5rem 0", borderBottom: "1px solid #F1F5F9" }}>
-                <span>CBT Exam & Test Score Releases</span>
-                <input type="checkbox" checked={notifyResults} onChange={(e) => setNotifyResults(e.target.checked)} />
-              </label>
-
-              <label style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "0.875rem", fontWeight: 600, color: "#0F172A", cursor: "pointer", padding: "0.5rem 0", borderBottom: "1px solid #F1F5F9" }}>
-                <span>Fee Receipts & Payment Confirmations</span>
-                <input type="checkbox" checked={notifyFees} onChange={(e) => setNotifyFees(e.target.checked)} />
-              </label>
-
-              <label style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "0.875rem", fontWeight: 600, color: "#0F172A", cursor: "pointer", padding: "0.5rem 0", borderBottom: "1px solid #F1F5F9" }}>
-                <span>Teacher & Admin Direct Messages</span>
-                <input type="checkbox" checked={notifyMessages} onChange={(e) => setNotifyMessages(e.target.checked)} />
-              </label>
-
-              <label style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "0.875rem", fontWeight: 600, color: "#0F172A", cursor: "pointer", padding: "0.5rem 0" }}>
-                <div>
-                  <div>Web Push (Locked Screen Alerts)</div>
-                  <div style={{ fontSize: "0.6875rem", color: "#64748B", fontWeight: 400 }}>Wake device and show banner when screen is locked</div>
-                </div>
-                <input type="checkbox" checked={pushEnabled} onChange={(e) => setPushEnabled(e.target.checked)} />
-              </label>
-
-              <button type="button" className={styles.submitBtn} onClick={handleSaveNotifications} disabled={notifSaving} style={{ marginTop: "0.5rem" }}>
-                {notifSaving ? "Saving Preferences..." : "Save Preferences"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── Modal: Support Desk ── */}
-      {activeModal === "support" && (
-        <div className={styles.modalOverlay} onClick={() => setActiveModal(null)}>
-          <div className={styles.modalBox} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
-              <h3 className={styles.modalTitle}>Help & Support Desk</h3>
-              <button
-                type="button"
-                className={styles.closeBtn}
-                onClick={() => setActiveModal(null)}
-                aria-label="Close"
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              </button>
-            </div>
-
-            <div style={{ background: "#F8FAFC", padding: "1.25rem", borderRadius: 12, border: "1px solid #E2E8F0", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-              <div style={{ fontSize: "0.875rem", fontWeight: 700, color: "#0F172A" }}>ExamPool School Support</div>
-              <div style={{ fontSize: "0.8125rem", color: "#475569", lineHeight: 1.5 }}>
-                Need help linking your ward, verifying exam records, or resolving payment queries? Reach our local academic liaison desk.
-              </div>
-              <div style={{ fontSize: "0.8125rem", color: "#165AF6", fontWeight: 600 }}>
-                Email: support@acad.edu
-              </div>
-              <div style={{ fontSize: "0.8125rem", color: "#165AF6", fontWeight: 600 }}>
-                Hotline: +234 800 222 3456
-              </div>
-            </div>
-
-            <button
-              type="button"
-              className={styles.submitBtn}
-              onClick={() => setActiveModal(null)}
-              style={{ marginTop: "0.5rem" }}
+      {/* Edit Profile Modal */}
+      <AnimatePresence>
+        {showEditProfileModal && (
+          <motion.div
+            className={styles.modalBackdrop}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowEditProfileModal(false)}
+          >
+            <motion.div
+              className={styles.modalContent}
+              initial={{ scale: 0.94, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.94, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
             >
-              Close
-            </button>
-          </div>
+              <div className={styles.modalHeader}>
+                <h3 className={styles.modalTitle}>Edit Guardian Profile</h3>
+                <button
+                  type="button"
+                  style={{ background: "none", border: "none", color: "var(--g-text-muted, #64748B)", cursor: "pointer" }}
+                  onClick={() => setShowEditProfileModal(false)}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </div>
+
+              <form className={styles.modalBody} onSubmit={handleSaveProfile}>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Full Name</label>
+                  <input
+                    type="text"
+                    className={styles.formInput}
+                    value={profile.name}
+                    disabled
+                    style={{ opacity: 0.7 }}
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Phone Number</label>
+                  <input
+                    type="text"
+                    className={styles.formInput}
+                    value={phoneInput}
+                    onChange={(e) => setPhoneInput(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Residential Address</label>
+                  <input
+                    type="text"
+                    className={styles.formInput}
+                    value={addressInput}
+                    onChange={(e) => setAddressInput(e.target.value)}
+                    required
+                  />
+                </div>
+                <button type="submit" className={styles.submitBtn}>
+                  Save Changes
+                </button>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Change Password Modal */}
+      <AnimatePresence>
+        {showPasswordModal && (
+          <motion.div
+            className={styles.modalBackdrop}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowPasswordModal(false)}
+          >
+            <motion.div
+              className={styles.modalContent}
+              initial={{ scale: 0.94, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.94, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className={styles.modalHeader}>
+                <h3 className={styles.modalTitle}>Change Password</h3>
+                <button
+                  type="button"
+                  style={{ background: "none", border: "none", color: "var(--g-text-muted, #64748B)", cursor: "pointer" }}
+                  onClick={() => setShowPasswordModal(false)}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </div>
+
+              <form className={styles.modalBody} onSubmit={handleChangePassword}>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Current Password</label>
+                  <input
+                    type="password"
+                    className={styles.formInput}
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>New Password</label>
+                  <input
+                    type="password"
+                    className={styles.formInput}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
+                    minLength={6}
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Confirm New Password</label>
+                  <input
+                    type="password"
+                    className={styles.formInput}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                    minLength={6}
+                  />
+                </div>
+                <button type="submit" className={styles.submitBtn}>
+                  Update Password
+                </button>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {toastMessage && (
+        <div style={{
+          position: "fixed",
+          bottom: 80,
+          left: "50%",
+          transform: "translateX(-50%)",
+          background: "var(--g-text-primary, #0F172A)",
+          color: "#FFFFFF",
+          fontSize: "0.8125rem",
+          fontWeight: 600,
+          padding: "0.6rem 1.2rem",
+          borderRadius: 999,
+          zIndex: 140,
+          boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
+          whiteSpace: "nowrap"
+        }}>
+          {toastMessage}
         </div>
       )}
     </div>

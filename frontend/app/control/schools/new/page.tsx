@@ -93,9 +93,9 @@ export default function NewSchoolProvisionPage() {
         </Link>
       </div>
 
-      <div style={{ background: "#0F172A", border: "1px solid #1E293B", borderRadius: "12px", padding: "2rem" }}>
+      <div style={{ background: "var(--bg-panel-1)", border: "1px solid var(--border-panel)", borderRadius: "12px", padding: "2rem", boxShadow: "var(--shadow-card)" }}>
         <div style={{ marginBottom: "1.5rem" }}>
-          <h1 style={{ fontSize: "1.25rem", fontWeight: 800, color: "#FFFFFF" }}>Provision New School Campus</h1>
+          <h1 style={{ fontSize: "1.25rem", fontWeight: 800, color: "var(--text-heading)" }}>Provision New School Campus</h1>
           <p style={{ fontSize: "0.8125rem", color: "#64748B", marginTop: "0.2rem" }}>
             Register a new institution, generate deployment parameters, and initiate free trial.
           </p>
@@ -111,7 +111,7 @@ export default function NewSchoolProvisionPage() {
           {/* ── Organization Selection ── */}
           <div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.35rem" }}>
-              <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "#94A3B8" }}>
+              <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--text-secondary)" }}>
                 Educational Organization / Group
               </label>
               <button
@@ -153,7 +153,7 @@ export default function NewSchoolProvisionPage() {
           {/* ── School Details ── */}
           <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "1rem" }}>
             <div>
-              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, color: "#94A3B8", marginBottom: "0.35rem" }}>
+              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "0.35rem" }}>
                 School Name
               </label>
               <input
@@ -168,7 +168,7 @@ export default function NewSchoolProvisionPage() {
             </div>
 
             <div>
-              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, color: "#94A3B8", marginBottom: "0.35rem" }}>
+              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "0.35rem" }}>
                 School Code
               </label>
               <input
@@ -200,7 +200,7 @@ export default function NewSchoolProvisionPage() {
           {/* ── Primary Administrator Contacts ── */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
             <div>
-              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, color: "#94A3B8", marginBottom: "0.35rem" }}>
+              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "0.35rem" }}>
                 Primary Admin Name
               </label>
               <input
@@ -214,7 +214,7 @@ export default function NewSchoolProvisionPage() {
             </div>
 
             <div>
-              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, color: "#94A3B8", marginBottom: "0.35rem" }}>
+              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "0.35rem" }}>
                 Admin Email
               </label>
               <input
@@ -231,7 +231,7 @@ export default function NewSchoolProvisionPage() {
           {/* ── Initial Trial Allocation ── */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
             <div>
-              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, color: "#94A3B8", marginBottom: "0.35rem" }}>
+              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "0.35rem" }}>
                 Trial Duration (Days)
               </label>
               <input
@@ -244,7 +244,7 @@ export default function NewSchoolProvisionPage() {
             </div>
 
             <div>
-              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, color: "#94A3B8", marginBottom: "0.35rem" }}>
+              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "0.35rem" }}>
                 Student Quota Limit
               </label>
               <input

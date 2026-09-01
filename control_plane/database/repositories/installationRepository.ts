@@ -3,6 +3,7 @@ import type { Installation, HealthStatus, ReleaseChannel } from "../../types";
 
 export const installationRepository = {
   listAll(filters?: { schoolId?: number; healthStatus?: string }): Installation[] {
+    this.sweepStaleToOffline();
     let query = `
       SELECT 
         i.*,
@@ -178,25 +179,72 @@ export const installationRepository = {
   },
 
   /**
+   * Marks installations with stale heartbeats as offline.
+   * Called before any list/overview read and by periodic sweeper.
+   * Generates a `node_offline` alert for each newly-offlined node.
+   */
+  sweepStaleToOffline(): number {
+    const stale = controlDb
+      .prepare(`
+        SELECT id, school_id, installation_id, node_id, last_heartbeat_at
+        FROM installations
+        WHERE is_revoked = 0
+          AND health_status != 'offline'
+          AND last_heartbeat_at IS NOT NULL
+          AND last_heartbeat_at < datetime('now', '-30 minutes')
+      `)
+      .all() as any[];
+    if (stale.length === 0) return 0;
+    const update = controlDb.prepare(
+      `UPDATE installations SET health_status = 'offline', health_score = 0 WHERE id = ?`
+    );
+    const alertCheck = controlDb.prepare(
+      `SELECT id FROM alerts WHERE installation_id = ? AND alert_type = 'node_offline' AND status IN ('open','acknowledged') LIMIT 1`
+    );
+    const alertInsert = controlDb.prepare(
+      `INSERT INTO alerts (school_id, installation_id, alert_type, severity, title, details, status) VALUES (?, ?, 'node_offline', 'critical', 'Node Offline — Heartbeat Timeout', ?, 'open')`
+    );
+    let count = 0;
+    controlDb.transaction(() => {
+      for (const inst of stale) {
+        update.run(inst.id);
+        if (!alertCheck.get(inst.installation_id)) {
+          alertInsert.run(
+            inst.school_id,
+            inst.installation_id,
+            `Node ${inst.node_id} (${inst.installation_id}) has not reported a heartbeat since ${inst.last_heartbeat_at}. Marked offline after 30m timeout.`
+          );
+        }
+        count++;
+      }
+    })();
+    if (count > 0) console.warn(`[Health] Swept ${count} stale node(s) to offline`);
+    return count;
+  },
+
+  /**
    * Returns fleet-wide health timeline (one row per 5-minute window).
    * Used for the monitoring timeline chart.
    */
   getFleetTimeline(hoursBack = 24): any[] {
+    const safeHours = Math.max(1, Math.min(168, Math.floor(Number(hoursBack) || 24)));
     return controlDb
       .prepare(
         `SELECT
-           strftime('%Y-%m-%dT%H:%M:00Z', timestamp, 'unixepoch') as window_start,
-           COUNT(DISTINCT installation_id)                          as reporting_nodes,
-           AVG(cpu_usage)                                           as avg_cpu,
-           AVG(memory_usage)                                        as avg_memory,
-           SUM(active_exam_sessions)                                as total_exams,
-           SUM(connected_clients)                                   as total_clients
+           strftime('%Y-%m-%dT%H:%M:00Z', timestamp) as window_start,
+           COUNT(DISTINCT installation_id)            as reporting_nodes,
+           AVG(cpu_usage)                             as avg_cpu,
+           AVG(memory_usage)                          as avg_memory,
+           SUM(active_exam_sessions)                  as total_exams,
+           SUM(connected_clients)                     as total_clients,
+           ROUND(MAX(0, 100 - (AVG(COALESCE(cpu_usage, 0)) * 0.5 + AVG(COALESCE(memory_usage, 0)) * 0.5))) as avg_health,
+           COUNT(*)                                   as heartbeat_count
          FROM installation_heartbeats
-         WHERE timestamp >= datetime('now', '-${hoursBack} hours')
-         GROUP BY strftime('%Y-%m-%dT%H:%M:00Z', timestamp, 'unixepoch')
+         WHERE timestamp >= datetime('now', ?)
+         GROUP BY strftime('%Y-%m-%dT%H:%M:00Z', timestamp)
          ORDER BY window_start ASC
          LIMIT 500`
       )
-      .all() as any[];
+      .all(`-${safeHours} hours`) as any[];
   },
 };

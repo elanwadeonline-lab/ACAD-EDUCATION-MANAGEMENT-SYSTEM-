@@ -86,6 +86,43 @@ function TeacherMessagesContent() {
     }
   }, [messages]);
 
+  // Real-time SSE live message listener inside teacher chat
+  useEffect(() => {
+    let es: EventSource | null = null;
+    try {
+      es = new EventSource("/api/notifications/stream");
+      es.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data && data.type === "chat_message") {
+            loadThreads();
+            // If the message is for the currently open active thread, append it immediately!
+            if (activeThread && (Number(data.thread_id) === Number(activeThread.id))) {
+              const incomingMsg: Message = {
+                id: Number(data.message_id || Date.now()),
+                sender_id: Number(data.sender_id || 0),
+                sender_role: (data.sender_role || "guardian") as any,
+                sender_name: data.sender_name || "Guardian",
+                text: data.text || data.message || "",
+                created_at: data.created_at || new Date().toISOString(),
+              };
+              setMessages((prev) => {
+                if (prev.some((m) => m.id === incomingMsg.id || (m.text === incomingMsg.text && m.sender_role === incomingMsg.sender_role))) {
+                  return prev;
+                }
+                return [...prev, incomingMsg];
+              });
+            }
+          }
+        } catch {}
+      };
+    } catch {}
+
+    return () => {
+      if (es) es.close();
+    };
+  }, [activeThread]);
+
   const handleSendReply = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newReply.trim() || !activeThread || sending) return;

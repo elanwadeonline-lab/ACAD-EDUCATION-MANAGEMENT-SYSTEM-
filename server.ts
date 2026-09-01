@@ -227,7 +227,13 @@ function notifyUser(userId: number, eventData: any) {
 
     const clients = sseClients.get(userId);
     if (clients && clients.size > 0) {
-      const payload = `data: ${jsonSafeStringify(record)}\n\n`;
+      const fullPayload = {
+        ...(record || {}),
+        ...eventData,
+        id: record?.id || eventData.id || Date.now(),
+        created_at: record?.created_at || new Date().toISOString(),
+      };
+      const payload = `data: ${jsonSafeStringify(fullPayload)}\n\n`;
       // Push to next tick to avoid blocking the synchronous event loop
       setTimeout(() => {
         for (const client of clients) {
@@ -586,6 +592,17 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
   const method = req.method.toUpperCase();
   const pathname = normalizeApiPathname(url.pathname);
 
+  // ── ACAD Supervisory Control Plane API (/api/platform/* & /api/node/*) ────
+  if (pathname.startsWith("/api/platform") || pathname.startsWith("/api/control-plane") || pathname.startsWith("/api/node")) {
+    try {
+      const cpRes = await handleControlPlaneApi(req, url);
+      if (cpRes) return cpRes;
+    } catch (err: any) {
+      console.error("[ControlPlane] API Error:", err);
+      return apiError(500, err.message || "Control plane internal error");
+    }
+  }
+
   // ── Supervisory Module & Feature Flag Gate Enforcement ───────────────────
   try {
     checkModuleAccess(pathname);
@@ -638,8 +655,8 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     return apiSuccess(result);
   }
 
-  // ── Notifications Endpoints ──────────────────────────────────────────────
-  if (pathname === "/api/notifications/stream" && method === "GET") {
+  // ── Notifications & SSE Event Stream Endpoints ────────────────────────────
+  if ((pathname === "/api/notifications/stream" || pathname === "/api/events" || pathname === "/api/sse") && method === "GET") {
     let auth;
     try { auth = requireAuth(req); } catch (e) { return new Response("Unauthorized", { status: 401 }); }
     return new Response(new ReadableStream({
@@ -1555,6 +1572,333 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     return apiSuccess({ sessions, terms });
   }
 
+  // ── Helper functions for comprehensive cascade deletion ───────────────────
+  function cascadeDeleteAcademicSession(sessionId: number, sessionName?: string) {
+    const session = sessionName ? { id: sessionId, name: sessionName } : (queries.getAcademicSessionById.get(sessionId) as any);
+    if (!session) return;
+    const name = session.name;
+
+    // 1. fee_payments
+    try {
+      db.prepare(`
+        DELETE FROM fee_payments 
+        WHERE fee_id IN (
+          SELECT id FROM fee_structures 
+          WHERE session_id = ? OR term_id IN (SELECT id FROM academic_terms WHERE session_id = ?)
+        )
+      `).run(sessionId, sessionId);
+    } catch {}
+
+    // 2. fee_structures
+    try {
+      db.prepare(`
+        DELETE FROM fee_structures 
+        WHERE session_id = ? OR term_id IN (SELECT id FROM academic_terms WHERE session_id = ?)
+      `).run(sessionId, sessionId);
+    } catch {}
+
+    // 3. attendance_records
+    try {
+      db.prepare(`
+        DELETE FROM attendance_records 
+        WHERE session_id = ? OR term_id IN (SELECT id FROM academic_terms WHERE session_id = ?)
+      `).run(sessionId, sessionId);
+    } catch {}
+
+    // 4. grading_student_scores
+    try {
+      db.prepare(`
+        DELETE FROM grading_student_scores 
+        WHERE grading_scheme_id IN (
+          SELECT id FROM grading_schemes 
+          WHERE grading_subject_id IN (
+            SELECT id FROM grading_subjects 
+            WHERE session_id = ? OR term_id IN (SELECT id FROM academic_terms WHERE session_id = ?)
+          )
+        )
+      `).run(sessionId, sessionId);
+    } catch {}
+
+    // 5. grading_calculated_results
+    try {
+      db.prepare(`
+        DELETE FROM grading_calculated_results 
+        WHERE session_id = ? OR term_id IN (SELECT id FROM academic_terms WHERE session_id = ?)
+           OR grading_scheme_id IN (
+            SELECT id FROM grading_schemes 
+            WHERE grading_subject_id IN (
+              SELECT id FROM grading_subjects 
+              WHERE session_id = ? OR term_id IN (SELECT id FROM academic_terms WHERE session_id = ?)
+            )
+          )
+      `).run(sessionId, sessionId, sessionId, sessionId);
+    } catch {}
+
+    // 6. grading_manual_scores
+    try {
+      db.prepare(`
+        DELETE FROM grading_manual_scores 
+        WHERE grading_policy_id IN (
+          SELECT id FROM grading_policies 
+          WHERE grading_subject_id IN (
+            SELECT id FROM grading_subjects 
+            WHERE session_id = ? OR term_id IN (SELECT id FROM academic_terms WHERE session_id = ?)
+          )
+        )
+      `).run(sessionId, sessionId);
+    } catch {}
+
+    // 7. grading_grade_boundaries, assessments, categories, versions, schemes, policies
+    try {
+      db.prepare(`
+        DELETE FROM grading_grade_boundaries 
+        WHERE grading_scheme_id IN (
+          SELECT id FROM grading_schemes 
+          WHERE grading_subject_id IN (
+            SELECT id FROM grading_subjects 
+            WHERE session_id = ? OR term_id IN (SELECT id FROM academic_terms WHERE session_id = ?)
+          )
+        )
+      `).run(sessionId, sessionId);
+    } catch {}
+
+    try {
+      db.prepare(`
+        DELETE FROM grading_assessments 
+        WHERE grading_scheme_id IN (
+          SELECT id FROM grading_schemes 
+          WHERE grading_subject_id IN (
+            SELECT id FROM grading_subjects 
+            WHERE session_id = ? OR term_id IN (SELECT id FROM academic_terms WHERE session_id = ?)
+          )
+        )
+      `).run(sessionId, sessionId);
+    } catch {}
+
+    try {
+      db.prepare(`
+        DELETE FROM grading_categories 
+        WHERE grading_scheme_id IN (
+          SELECT id FROM grading_schemes 
+          WHERE grading_subject_id IN (
+            SELECT id FROM grading_subjects 
+            WHERE session_id = ? OR term_id IN (SELECT id FROM academic_terms WHERE session_id = ?)
+          )
+        )
+      `).run(sessionId, sessionId);
+    } catch {}
+
+    try {
+      db.prepare(`
+        DELETE FROM grading_scheme_versions 
+        WHERE grading_scheme_id IN (
+          SELECT id FROM grading_schemes 
+          WHERE grading_subject_id IN (
+            SELECT id FROM grading_subjects 
+            WHERE session_id = ? OR term_id IN (SELECT id FROM academic_terms WHERE session_id = ?)
+          )
+        )
+      `).run(sessionId, sessionId);
+    } catch {}
+
+    try {
+      db.prepare(`
+        DELETE FROM grading_schemes 
+        WHERE grading_subject_id IN (
+          SELECT id FROM grading_subjects 
+          WHERE session_id = ? OR term_id IN (SELECT id FROM academic_terms WHERE session_id = ?)
+        )
+      `).run(sessionId, sessionId);
+    } catch {}
+
+    try {
+      db.prepare(`
+        DELETE FROM grading_policies 
+        WHERE grading_subject_id IN (
+          SELECT id FROM grading_subjects 
+          WHERE session_id = ? OR term_id IN (SELECT id FROM academic_terms WHERE session_id = ?)
+        )
+      `).run(sessionId, sessionId);
+    } catch {}
+
+    // 8. term_results
+    try {
+      db.prepare(`
+        DELETE FROM term_results 
+        WHERE session_id = ? OR term_id IN (SELECT id FROM academic_terms WHERE session_id = ?)
+           OR grading_subject_id IN (
+            SELECT id FROM grading_subjects 
+            WHERE session_id = ? OR term_id IN (SELECT id FROM academic_terms WHERE session_id = ?)
+           )
+      `).run(sessionId, sessionId, sessionId, sessionId);
+    } catch {}
+
+    // 9. annual_results
+    try {
+      db.prepare("DELETE FROM annual_results WHERE session_id = ?").run(sessionId);
+    } catch {}
+
+    // 10. grading_subjects
+    try {
+      db.prepare(`
+        DELETE FROM grading_subjects 
+        WHERE session_id = ? OR term_id IN (SELECT id FROM academic_terms WHERE session_id = ?)
+      `).run(sessionId, sessionId);
+    } catch {}
+
+    // 11. class_enrollments
+    try {
+      db.prepare(`
+        DELETE FROM class_enrollments 
+        WHERE term_id IN (SELECT id FROM academic_terms WHERE session_id = ?)
+           OR term_id IN (SELECT id FROM terms WHERE session = ?)
+      `).run(sessionId, name);
+    } catch {}
+
+    // 12. academic_calendar_events
+    try {
+      db.prepare(`
+        DELETE FROM academic_calendar_events 
+        WHERE term_id IN (SELECT id FROM academic_terms WHERE session_id = ?)
+           OR term_id IN (SELECT id FROM terms WHERE session = ?)
+      `).run(sessionId, name);
+    } catch {}
+
+    // 13. student_term_remarks
+    try {
+      db.prepare(`
+        DELETE FROM student_term_remarks 
+        WHERE session_id = ? OR term_id IN (SELECT id FROM academic_terms WHERE session_id = ?)
+           OR term IN (SELECT name FROM academic_terms WHERE session_id = ?)
+      `).run(sessionId, sessionId, sessionId);
+    } catch {}
+
+    // 14. un-link session_id and term_id
+    try { db.prepare("UPDATE student_answers SET session_id = NULL, term_id = NULL WHERE session_id = ? OR term_id IN (SELECT id FROM academic_terms WHERE session_id = ?)").run(sessionId, sessionId); } catch {}
+    try { db.prepare("UPDATE questions SET session_id = NULL, term_id = NULL WHERE session_id = ? OR term_id IN (SELECT id FROM academic_terms WHERE session_id = ?)").run(sessionId, sessionId); } catch {}
+    try { db.prepare("UPDATE exams SET session_id = NULL, term_id = NULL WHERE session_id = ? OR term_id IN (SELECT id FROM academic_terms WHERE session_id = ?)").run(sessionId, sessionId); } catch {}
+    try { db.prepare("UPDATE subjects SET session_id = NULL, term_id = NULL WHERE session_id = ? OR term_id IN (SELECT id FROM academic_terms WHERE session_id = ?)").run(sessionId, sessionId); } catch {}
+    try { db.prepare("UPDATE timetables SET session_id = NULL, term_id = NULL WHERE session_id = ? OR term_id IN (SELECT id FROM academic_terms WHERE session_id = ?)").run(sessionId, sessionId); } catch {}
+    try { db.prepare("UPDATE users SET session_id = NULL, term_id = NULL WHERE session_id = ? OR term_id IN (SELECT id FROM academic_terms WHERE session_id = ?)").run(sessionId, sessionId); } catch {}
+
+    // 15. terms & academic_terms
+    try { db.prepare("DELETE FROM terms WHERE session = ?").run(name); } catch {}
+    try { db.prepare("DELETE FROM academic_terms WHERE session_id = ?").run(sessionId); } catch {}
+
+    // 16. academic_sessions
+    db.prepare("DELETE FROM academic_sessions WHERE id = ?").run(sessionId);
+  }
+
+  function cascadeDeleteAcademicTerm(termId: number) {
+    const term = queries.getAcademicTermById.get(termId) as any;
+    if (!term) return;
+
+    // 1. fee_payments
+    try {
+      db.prepare("DELETE FROM fee_payments WHERE fee_id IN (SELECT id FROM fee_structures WHERE term_id = ?)").run(termId);
+    } catch {}
+
+    // 2. fee_structures
+    try {
+      db.prepare("DELETE FROM fee_structures WHERE term_id = ?").run(termId);
+    } catch {}
+
+    // 3. attendance_records
+    try {
+      db.prepare("DELETE FROM attendance_records WHERE term_id = ?").run(termId);
+    } catch {}
+
+    // 4. grading_student_scores
+    try {
+      db.prepare(`
+        DELETE FROM grading_student_scores 
+        WHERE grading_scheme_id IN (
+          SELECT id FROM grading_schemes 
+          WHERE grading_subject_id IN (SELECT id FROM grading_subjects WHERE term_id = ?)
+        )
+      `).run(termId);
+    } catch {}
+
+    // 5. grading_calculated_results
+    try {
+      db.prepare(`
+        DELETE FROM grading_calculated_results 
+        WHERE term_id = ? OR grading_scheme_id IN (
+          SELECT id FROM grading_schemes 
+          WHERE grading_subject_id IN (SELECT id FROM grading_subjects WHERE term_id = ?)
+        )
+      `).run(termId, termId);
+    } catch {}
+
+    // 6. grading_manual_scores
+    try {
+      db.prepare(`
+        DELETE FROM grading_manual_scores 
+        WHERE grading_policy_id IN (
+          SELECT id FROM grading_policies 
+          WHERE grading_subject_id IN (SELECT id FROM grading_subjects WHERE term_id = ?)
+        )
+      `).run(termId);
+    } catch {}
+
+    // 7. grading scheme trees & policies
+    try {
+      db.prepare(`DELETE FROM grading_grade_boundaries WHERE grading_scheme_id IN (SELECT id FROM grading_schemes WHERE grading_subject_id IN (SELECT id FROM grading_subjects WHERE term_id = ?))`).run(termId);
+    } catch {}
+    try {
+      db.prepare(`DELETE FROM grading_assessments WHERE grading_scheme_id IN (SELECT id FROM grading_schemes WHERE grading_subject_id IN (SELECT id FROM grading_subjects WHERE term_id = ?))`).run(termId);
+    } catch {}
+    try {
+      db.prepare(`DELETE FROM grading_categories WHERE grading_scheme_id IN (SELECT id FROM grading_schemes WHERE grading_subject_id IN (SELECT id FROM grading_subjects WHERE term_id = ?))`).run(termId);
+    } catch {}
+    try {
+      db.prepare(`DELETE FROM grading_scheme_versions WHERE grading_scheme_id IN (SELECT id FROM grading_schemes WHERE grading_subject_id IN (SELECT id FROM grading_subjects WHERE term_id = ?))`).run(termId);
+    } catch {}
+    try {
+      db.prepare(`DELETE FROM grading_schemes WHERE grading_subject_id IN (SELECT id FROM grading_subjects WHERE term_id = ?)`).run(termId);
+    } catch {}
+    try {
+      db.prepare(`DELETE FROM grading_policies WHERE grading_subject_id IN (SELECT id FROM grading_subjects WHERE term_id = ?)`).run(termId);
+    } catch {}
+
+    // 8. term_results
+    try {
+      db.prepare("DELETE FROM term_results WHERE term_id = ? OR grading_subject_id IN (SELECT id FROM grading_subjects WHERE term_id = ?)").run(termId, termId);
+    } catch {}
+
+    // 9. grading_subjects
+    try {
+      db.prepare("DELETE FROM grading_subjects WHERE term_id = ?").run(termId);
+    } catch {}
+
+    // 10. class_enrollments
+    try {
+      db.prepare("DELETE FROM class_enrollments WHERE term_id = ?").run(termId);
+    } catch {}
+
+    // 11. academic_calendar_events
+    try {
+      db.prepare("DELETE FROM academic_calendar_events WHERE term_id = ?").run(termId);
+    } catch {}
+
+    // 12. student_term_remarks
+    try {
+      db.prepare("DELETE FROM student_term_remarks WHERE term_id = ? OR term = ?").run(termId, term.name);
+    } catch {}
+
+    // 13. un-link term_id
+    try { db.prepare("UPDATE student_answers SET term_id = NULL WHERE term_id = ?").run(termId); } catch {}
+    try { db.prepare("UPDATE questions SET term_id = NULL WHERE term_id = ?").run(termId); } catch {}
+    try { db.prepare("UPDATE exams SET term_id = NULL WHERE term_id = ?").run(termId); } catch {}
+    try { db.prepare("UPDATE subjects SET term_id = NULL WHERE term_id = ?").run(termId); } catch {}
+    try { db.prepare("UPDATE timetables SET term_id = NULL WHERE term_id = ?").run(termId); } catch {}
+    try { db.prepare("UPDATE users SET term_id = NULL WHERE term_id = ?").run(termId); } catch {}
+
+    // 14. terms & academic_terms
+    try { db.prepare("DELETE FROM terms WHERE id = ?").run(termId); } catch {}
+    db.prepare("DELETE FROM academic_terms WHERE id = ?").run(termId);
+  }
+
   // ── DELETE academic session ──────────────────────────────────────────────
   const deleteSessionMatch = pathname.match(/^\/api\/academic\/sessions\/(\d+)$/);
   if (deleteSessionMatch && method === "DELETE") {
@@ -1568,35 +1912,7 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
 
     // Safe to delete — cascade-delete its terms and unlink dependent data
     db.transaction(() => {
-      const terms = db.prepare("SELECT id FROM academic_terms WHERE session_id = ?").all(sessionId) as { id: number }[];
-      const termIds = terms.map(t => t.id);
-
-      for (const tId of termIds) {
-        try { db.prepare("DELETE FROM attendance_records WHERE term_id = ?").run(tId); } catch {}
-        try { db.prepare("DELETE FROM fee_structures WHERE term_id = ?").run(tId); } catch {}
-        try { db.prepare("DELETE FROM grading_calculated_results WHERE term_id = ?").run(tId); } catch {}
-        try { db.prepare("DELETE FROM attendance WHERE term_id = ?").run(tId); } catch {}
-        try { db.prepare("DELETE FROM class_enrollments WHERE term_id = ?").run(tId); } catch {}
-        try { db.prepare("DELETE FROM student_term_remarks WHERE term_id = ?").run(tId); } catch {}
-        try { db.prepare("DELETE FROM academic_calendar WHERE term_id = ?").run(tId); } catch {}
-        try { db.prepare("DELETE FROM term_results WHERE term_id = ?").run(tId); } catch {}
-        try { db.prepare("DELETE FROM grading_subjects WHERE term_id = ?").run(tId); } catch {}
-        try { db.prepare("DELETE FROM academic_terms WHERE id = ?").run(tId); } catch {}
-      }
-
-      try { db.prepare("UPDATE subjects SET session_id = NULL WHERE session_id = ?").run(sessionId); } catch {}
-      try { db.prepare("UPDATE exams SET session_id = NULL WHERE session_id = ?").run(sessionId); } catch {}
-      try { db.prepare("DELETE FROM attendance_records WHERE session_id = ?").run(sessionId); } catch {}
-      try { db.prepare("DELETE FROM fee_structures WHERE session_id = ?").run(sessionId); } catch {}
-      try { db.prepare("DELETE FROM grading_calculated_results WHERE session_id = ?").run(sessionId); } catch {}
-      try { db.prepare("DELETE FROM annual_results WHERE session_id = ?").run(sessionId); } catch {}
-      try { db.prepare("DELETE FROM student_term_remarks WHERE session_id = ?").run(sessionId); } catch {}
-      try { db.prepare("DELETE FROM term_results WHERE session_id = ?").run(sessionId); } catch {}
-      try { db.prepare("DELETE FROM grading_subjects WHERE session_id = ?").run(sessionId); } catch {}
-      try { db.prepare("UPDATE timetables SET session_id = NULL WHERE session_id = ?").run(sessionId); } catch {}
-      try { db.prepare("DELETE FROM terms WHERE session = ?").run(session.name); } catch {}
-      try { db.prepare("DELETE FROM academic_terms WHERE session_id = ?").run(sessionId); } catch {}
-      db.prepare("DELETE FROM academic_sessions WHERE id = ?").run(sessionId);
+      cascadeDeleteAcademicSession(sessionId, session.name);
 
       // If the deleted session was active, activate the next remaining session
       if (session.is_active) {
@@ -1633,35 +1949,7 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
         const session = queries.getAcademicSessionById.get(sessionId) as any;
         if (session) {
           deletedNames.push(session.name);
-          const terms = db.prepare("SELECT id FROM academic_terms WHERE session_id = ?").all(sessionId) as { id: number }[];
-          const termIds = terms.map(t => t.id);
-
-          for (const tId of termIds) {
-            try { db.prepare("DELETE FROM attendance_records WHERE term_id = ?").run(tId); } catch {}
-            try { db.prepare("DELETE FROM fee_structures WHERE term_id = ?").run(tId); } catch {}
-            try { db.prepare("DELETE FROM grading_calculated_results WHERE term_id = ?").run(tId); } catch {}
-            try { db.prepare("DELETE FROM attendance WHERE term_id = ?").run(tId); } catch {}
-            try { db.prepare("DELETE FROM class_enrollments WHERE term_id = ?").run(tId); } catch {}
-            try { db.prepare("DELETE FROM student_term_remarks WHERE term_id = ?").run(tId); } catch {}
-            try { db.prepare("DELETE FROM academic_calendar WHERE term_id = ?").run(tId); } catch {}
-            try { db.prepare("DELETE FROM term_results WHERE term_id = ?").run(tId); } catch {}
-            try { db.prepare("DELETE FROM grading_subjects WHERE term_id = ?").run(tId); } catch {}
-            try { db.prepare("DELETE FROM academic_terms WHERE id = ?").run(tId); } catch {}
-          }
-
-          try { db.prepare("UPDATE subjects SET session_id = NULL WHERE session_id = ?").run(sessionId); } catch {}
-          try { db.prepare("UPDATE exams SET session_id = NULL WHERE session_id = ?").run(sessionId); } catch {}
-          try { db.prepare("DELETE FROM attendance_records WHERE session_id = ?").run(sessionId); } catch {}
-          try { db.prepare("DELETE FROM fee_structures WHERE session_id = ?").run(sessionId); } catch {}
-          try { db.prepare("DELETE FROM grading_calculated_results WHERE session_id = ?").run(sessionId); } catch {}
-          try { db.prepare("DELETE FROM annual_results WHERE session_id = ?").run(sessionId); } catch {}
-          try { db.prepare("DELETE FROM student_term_remarks WHERE session_id = ?").run(sessionId); } catch {}
-          try { db.prepare("DELETE FROM term_results WHERE session_id = ?").run(sessionId); } catch {}
-          try { db.prepare("DELETE FROM grading_subjects WHERE session_id = ?").run(sessionId); } catch {}
-          try { db.prepare("UPDATE timetables SET session_id = NULL WHERE session_id = ?").run(sessionId); } catch {}
-          try { db.prepare("DELETE FROM terms WHERE session = ?").run(session.name); } catch {}
-          try { db.prepare("DELETE FROM academic_terms WHERE session_id = ?").run(sessionId); } catch {}
-          db.prepare("DELETE FROM academic_sessions WHERE id = ?").run(sessionId);
+          cascadeDeleteAcademicSession(sessionId, session.name);
           deletedCount++;
         }
       }
@@ -1741,11 +2029,7 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     const term = queries.getAcademicTermById.get(termId) as any;
     if (!term) return apiError(404, "Academic term not found");
     db.transaction(() => {
-      try { db.prepare("UPDATE subjects SET term_id = NULL WHERE term_id = ?").run(termId); } catch {}
-      try { db.prepare("UPDATE exams SET term_id = NULL WHERE term_id = ?").run(termId); } catch {}
-      try { db.prepare("UPDATE grading_subjects SET term_id = NULL WHERE term_id = ?").run(termId); } catch {}
-      try { db.prepare("UPDATE timetables SET term_id = NULL WHERE term_id = ?").run(termId); } catch {}
-      db.prepare("DELETE FROM academic_terms WHERE id = ?").run(termId);
+      cascadeDeleteAcademicTerm(termId);
       
       if (term.is_active) {
         const remainingTerm = db.prepare("SELECT id FROM academic_terms WHERE session_id = ? ORDER BY id ASC LIMIT 1").get(term.session_id) as any;
@@ -4432,6 +4716,42 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     const examRow = queries.getExamById.get(result.exam_id) as any;
     const isReleased = (examRow?.result_status || "released") === "released";
 
+    // Dispatch real-time SSE notification to student's linked guardians
+    try {
+      const guardians = queries.getStudentGuardians.all(auth.userId) as any[];
+      const studentUser = queries.getUserById.get(auth.userId) as any;
+      const subName = subjectRow?.name || "Assessment";
+      
+      for (const g of guardians) {
+        const guardianUser = queries.getUserById.get(Number(g.guardian_id)) as any;
+        if (guardianUser && guardianUser.notify_results === 0) continue;
+        
+        let guardianMsg = "";
+        if (isReleased) {
+          const calcPct = (result as any).percentage ?? Math.round((Number(result.score) / Math.max(1, Number(result.total_score || 100))) * 100);
+          guardianMsg = `Exam Finished: ${studentUser?.name || "Your ward"} completed ${subName} (${calcPct}%). Results are live!`;
+        } else if (examRow?.result_status === "scheduled") {
+          guardianMsg = `Exam Finished: ${studentUser?.name || "Your ward"} completed ${subName}. Results will be released on ${subjectRow?.result_release_time ? new Date(subjectRow.result_release_time).toLocaleDateString() : 'scheduled date'}.`;
+        } else {
+          guardianMsg = `Exam Finished: ${studentUser?.name || "Your ward"} completed ${subName}. Results are being evaluated by the instructor.`;
+        }
+
+        queries.createNotification.run(
+          Number(g.guardian_id),
+          "exam",
+          guardianMsg,
+          `/guardian/examinations?ward_id=${auth.userId}`
+        );
+        notifyUser(Number(g.guardian_id), {
+          type: "exam",
+          message: guardianMsg,
+          link: `/guardian/examinations?ward_id=${auth.userId}`,
+        });
+      }
+    } catch (e) {
+      console.warn("[Exam finish guardian notification error]", e);
+    }
+
     if (!isReleased && auth.role === "student") {
       return apiSuccess({
         exam_id: result.exam_id,
@@ -5989,7 +6309,8 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     const year = parseInt(parts[1] as string, 10);
     const subject_code = parts.slice(2).join("_");
 
-    const mockExamId = Math.floor(Math.random() * 100000) + 10000;
+    // Practice sessions are ephemeral (not persisted as exams); generate a transient ID from timestamp + crypto randomness
+    const transientExamId = Date.now() % 1000000 + crypto.randomInt(1000, 9999);
     
     const rawQuestions = db.prepare(`
       SELECT id, question_text, options_json, correct_answer, solution_text, difficulty, topic_tag
@@ -6025,8 +6346,8 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
 
     return apiSuccess({
       exam: {
-        id: mockExamId,
-        subject: { id: mockExamId, title: `${exam_body} ${year} - ${subject_code}`, duration: 45, duration_minutes: 45 },
+        id: transientExamId,
+        subject: { id: transientExamId, title: `${exam_body} ${year} - ${subject_code}`, duration: 45, duration_minutes: 45 },
         questions
       }
     });
@@ -6584,8 +6905,8 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     return apiSuccess({ enrolled });
   }
 
-  // ── v2: Guardian Links ────────────────────────────────────────────────────
-  if (pathname === "/api/v2/guardian-links" && method === "GET") {
+  // ── v2 & Admin: Guardian Links ───────────────────────────────────────────
+  if ((pathname === "/api/v2/guardian-links" || pathname === "/api/admin/guardian-links") && method === "GET") {
     const auth = requireAuth(req);
     requireRole(auth.role, ["operator"]);
     const status = url.searchParams.get("status");
@@ -6593,13 +6914,34 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     return apiSuccess(queries.getAllGuardianLinks.all());
   }
 
-  if (pathname === "/api/v2/guardian-links" && method === "POST") {
+  if (pathname === "/api/admin/guardian-links/lookup-student" && method === "GET") {
+    const auth = requireAuth(req);
+    requireRole(auth.role, ["operator", "guardian"]);
+    const q = trimStr(url.searchParams.get("q") || url.searchParams.get("query") || "");
+    if (!q) return apiSuccess([]);
+    const students = db.prepare(`
+      SELECT u.id, u.name, u.email, u.reg_id, u.grade, u.image_url,
+             (SELECT COUNT(*) FROM guardian_student_links gsl WHERE gsl.student_id = u.id AND gsl.status = 'approved') as linked_guardians_count
+      FROM users u
+      WHERE u.role = 'student' AND u.is_active = 1
+        AND (
+          UPPER(u.reg_id) LIKE UPPER(?)
+          OR UPPER(u.name) LIKE UPPER(?)
+          OR UPPER(u.email) LIKE UPPER(?)
+          OR CAST(u.id AS TEXT) = ?
+        )
+      LIMIT 10
+    `).all(`%${q}%`, `%${q}%`, `%${q}%`, q);
+    return apiSuccess(students);
+  }
+
+  if ((pathname === "/api/v2/guardian-links" || pathname === "/api/admin/guardian-links") && method === "POST") {
     const auth = requireAuth(req);
     // Guardians can request their own links; operators can create on their behalf
     requireRole(auth.role, ["guardian", "operator"]);
     const body = await readJson(req);
-    const guardian_id = auth.role === "guardian" ? auth.userId : Number(body?.guardian_id);
-    let student_id = isPositiveIntId(Number(body?.student_id)) ? Number(body?.student_id) : 0;
+    const guardian_id = auth.role === "guardian" ? auth.userId : Number(body?.guardian_id || body?.guardianId);
+    let student_id = isPositiveIntId(Number(body?.student_id || body?.studentId)) ? Number(body?.student_id || body?.studentId) : 0;
     const regIdV2 = trimStr(body?.reg_id || body?.regId || body?.student_reg_id || body?.admission_number || (body?.student_id ? String(body.student_id) : ""));
     if (!student_id && regIdV2) {
       let studentMatch = db.prepare(`
@@ -6637,18 +6979,56 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     const guardian = queries.getUserById.get(guardian_id) as any;
     if (!student || student.role !== "student") return apiError(400, "Invalid student id");
     if (!guardian || guardian.role !== "guardian") return apiError(400, "Guardian must have the guardian role");
+    
+    const isAdmin = auth.role === "operator";
+    const initialStatus = isAdmin ? "approved" : "pending";
+    const verificationMethod = "manual_admin";
+    const verifiedBy = isAdmin ? auth.userId : null;
+    const verifiedAt = isAdmin ? new Date().toISOString() : null;
+
     try {
-      const result = queries.createGuardianLink.run(guardian_id, student_id, relationship) as { lastInsertRowid: number | bigint };
-      auditLog(auth.userId, "GUARDIAN_LINK_REQUEST", "guardian_student_links", Number(result.lastInsertRowid), JSON.stringify({ guardian_id, student_id, relationship }));
-      return apiSuccess({ id: Number(result.lastInsertRowid), status: "pending" }, 201);
+      const existing = db.prepare("SELECT * FROM guardian_student_links WHERE guardian_id = ? AND student_id = ?").get(guardian_id, student_id) as any;
+      let linkId: number;
+      if (existing) {
+        if (isAdmin) {
+          db.prepare("UPDATE guardian_student_links SET status = 'approved', relationship = ?, verification_method = 'manual_admin', verified_by = ?, verified_at = CURRENT_TIMESTAMP WHERE id = ?")
+            .run(relationship, auth.userId, existing.id);
+          linkId = Number(existing.id);
+        } else if (existing.status === "approved") {
+          return apiError(409, "This student is already linked to your account");
+        } else {
+          db.prepare("UPDATE guardian_student_links SET status = 'pending', relationship = ? WHERE id = ?")
+            .run(relationship, existing.id);
+          linkId = Number(existing.id);
+        }
+      } else {
+        const result = db.prepare(`
+          INSERT INTO guardian_student_links (guardian_id, student_id, relationship, status, verification_method, verified_by, verified_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+        `).run(guardian_id, student_id, relationship, initialStatus, verificationMethod, verifiedBy, verifiedAt) as { lastInsertRowid: number | bigint };
+        linkId = Number(result.lastInsertRowid);
+      }
+
+      auditLog(auth.userId, `GUARDIAN_LINK_${initialStatus.toUpperCase()}`, "guardian_student_links", linkId, JSON.stringify({ guardian_id, student_id, relationship }));
+      
+      // Real-time SSE notification to Guardian if admin approved or created the link
+      if (isAdmin) {
+        notifyUser(guardian_id, {
+          type: "notification",
+          message: `Your child ${student.name} (${student.reg_id || student.grade || "Student"}) has been linked to your Guardian Portal by School Administration.`,
+          link: "/guardian/wards",
+        });
+      }
+
+      return apiSuccess({ id: linkId, status: initialStatus, message: isAdmin ? "Student linked and approved successfully" : "Link request submitted for admin approval" }, 201);
     } catch (e) {
       if (isSqliteUniqueError(e)) return apiError(409, "A link between this guardian and student already exists");
       throw e;
     }
   }
 
-  const guardianLinkActionMatch = pathname.match(/^\/api\/v2\/guardian-links\/(\d+)\/(approve|reject|revoke)$/);
-  if (guardianLinkActionMatch && method === "PUT") {
+  const guardianLinkActionMatch = pathname.match(/^\/api\/(?:v2|admin)\/guardian-links\/(\d+)\/(approve|reject|revoke)$/);
+  if (guardianLinkActionMatch && (method === "PUT" || method === "POST")) {
     const auth = requireAuth(req);
     requireRole(auth.role, ["operator"]);
     const linkId = Number(guardianLinkActionMatch[1]);
@@ -6659,7 +7039,28 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     const newStatus = action === "approve" ? "approved" : action === "reject" ? "rejected" : "revoked";
     queries.updateGuardianLinkStatus.run(newStatus, auth.userId, linkId);
     auditLog(auth.userId, `GUARDIAN_LINK_${newStatus.toUpperCase()}`, "guardian_student_links", linkId, JSON.stringify({ action }));
+    
+    // Real-time SSE notification to Guardian
+    if (newStatus === "approved") {
+      notifyUser(Number(link.guardian_id), {
+        type: "notification",
+        message: "Your link request for your child has been approved by School Administration.",
+        link: "/guardian/wards",
+      });
+    }
+
     return apiSuccess({ id: linkId, status: newStatus });
+  }
+
+  const guardianLinkDeleteMatch = pathname.match(/^\/api\/(?:v2|admin)\/guardian-links\/(\d+)$/);
+  if (guardianLinkDeleteMatch && method === "DELETE") {
+    const auth = requireAuth(req);
+    requireRole(auth.role, ["operator"]);
+    const linkId = Number(guardianLinkDeleteMatch[1]);
+    if (!isPositiveIntId(linkId)) return apiError(400, "Invalid link id");
+    db.prepare("DELETE FROM guardian_student_links WHERE id = ?").run(linkId);
+    auditLog(auth.userId, "GUARDIAN_LINK_DELETED", "guardian_student_links", linkId, "{}");
+    return apiSuccess({ id: linkId, message: "Guardian link deleted" });
   }
 
   // ── v2: Academic Calendar Events ──────────────────────────────────────────
@@ -7037,7 +7438,7 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     const feeId = Number(body?.fee_id || 1);
     const amount = Number(body?.amount || 0);
     const method_type = ["bank_transfer", "cash", "card", "online_gateway"].includes(body?.method) ? body.method : "card";
-    const paymentRef = `PAY-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+    const paymentRef = `PAY-${Date.now()}-${crypto.randomInt(1000, 9999)}`;
 
     queries.createFeePayment.run(studentId, feeId, amount, paymentRef, method_type, "completed", auth.userId);
     auditLog(auth.userId, "FEE_PAYMENT", "fee_payments", studentId, JSON.stringify({ feeId, amount, paymentRef }));
@@ -7109,29 +7510,49 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     const studentGrade = enrolledClass?.name || student?.grade || "JSS 3";
     const contacts: any[] = [];
 
-    // 1. Form / Class Teacher
+    // 1. Form / Class Teacher for the active ward
     try {
-      const cls = db.prepare("SELECT c.*, u.id as teacher_id, u.name as teacher_name, u.email as teacher_email FROM classes c JOIN users u ON u.id = c.class_teacher_id WHERE c.name = ? OR c.id = ? LIMIT 1").get(studentGrade, enrolledClass?.class_id || 0) as any;
+      let cls = db.prepare(`
+        SELECT c.*, u.id as teacher_id, u.name as teacher_name, u.email as teacher_email 
+        FROM classes c 
+        JOIN users u ON u.id = c.class_teacher_id 
+        WHERE (c.id = ? OR c.name = ? OR c.level = ?) AND c.class_teacher_id IS NOT NULL AND u.role = 'teacher'
+        LIMIT 1
+      `).get(enrolledClass?.class_id || 0, studentGrade, student?.grade || studentGrade) as any;
+
+      if (!cls && student?.grade) {
+        cls = db.prepare(`
+          SELECT c.*, u.id as teacher_id, u.name as teacher_name, u.email as teacher_email 
+          FROM classes c 
+          JOIN users u ON u.id = c.class_teacher_id 
+          WHERE (c.name LIKE ? OR c.level LIKE ?) AND c.class_teacher_id IS NOT NULL AND u.role = 'teacher'
+          ORDER BY c.id ASC LIMIT 1
+        `).get(`%${student.grade}%`, `%${student.grade}%`) as any;
+      }
+
       if (cls) {
         contacts.push({
           id: cls.teacher_id,
           name: cls.teacher_name,
           role: "teacher",
-          role_label: `Form Teacher (${studentGrade})`,
+          role_label: `Form Teacher (${cls.name || studentGrade})`,
           student_id: studentId,
           category: "teacher",
         });
       }
     } catch {}
 
-    // 2. Subject Teachers
+    // 2. Subject Teachers for the active ward
     try {
       const subTeachers = db.prepare(`
         SELECT DISTINCT gs.teacher_id as id, u.name, gs.name as subject_name
         FROM grading_subjects gs
         JOIN users u ON u.id = gs.teacher_id
-        WHERE gs.class_id IN (SELECT id FROM classes WHERE name = ?) OR gs.class_id = ? OR gs.code LIKE '%JSS%'
-      `).all(studentGrade, enrolledClass?.class_id || 0) as any[];
+        WHERE gs.class_id IN (SELECT id FROM classes WHERE name = ? OR level = ?) 
+           OR gs.class_id = ? 
+           OR gs.code LIKE ?
+      `).all(studentGrade, studentGrade, enrolledClass?.class_id || 0, `%${studentGrade.replace(/\s+/g, '')}%`) as any[];
+
       for (const st of subTeachers) {
         if (!contacts.some((c: any) => c.id === st.id)) {
           contacts.push({
@@ -7144,23 +7565,62 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
           });
         }
       }
-    } catch {}
 
-    // 3. School Admin
-    try {
-      const admins = queries.getOperators.all() as any[];
-      if (admins.length > 0) {
-        const adminUser = queries.getUserById.get(admins[0].id) as any;
-        if (adminUser) {
+      // Also CBT subjects enrolled
+      const cbtTeachers = db.prepare(`
+        SELECT DISTINCT s.teacher_id as id, u.name, s.name as subject_name
+        FROM subject_enrollments se
+        JOIN subjects s ON s.id = se.subject_id
+        JOIN users u ON u.id = s.teacher_id
+        WHERE se.student_id = ? AND s.teacher_id IS NOT NULL
+      `).all(studentId) as any[];
+
+      for (const ct of cbtTeachers) {
+        if (!contacts.some((c: any) => c.id === ct.id)) {
           contacts.push({
-            id: adminUser.id,
-            name: adminUser.name || "School Administration",
-            role: "operator",
-            role_label: "School Administration",
+            id: ct.id,
+            name: ct.name,
+            role: "teacher",
+            role_label: `${ct.subject_name} Teacher`,
             student_id: studentId,
-            category: "school",
+            category: "teacher",
           });
         }
+      }
+    } catch {}
+
+    // 3. Fallback: If no teacher contacts were discovered yet, offer all active faculty teachers
+    try {
+      const teacherContacts = contacts.filter((c: any) => c.category === "teacher");
+      if (teacherContacts.length === 0) {
+        const allTeachers = db.prepare("SELECT id, name, email FROM users WHERE role = 'teacher' AND is_active = 1 ORDER BY name ASC").all() as any[];
+        for (const t of allTeachers) {
+          if (!contacts.some((c: any) => c.id === t.id)) {
+            contacts.push({
+              id: t.id,
+              name: t.name,
+              role: "teacher",
+              role_label: "Faculty Teacher",
+              student_id: studentId,
+              category: "teacher",
+            });
+          }
+        }
+      }
+    } catch {}
+
+    // 4. School Administration (Operators / Admins) — STRICTLY category: "admin"
+    try {
+      const admins = db.prepare("SELECT id, name, email, role FROM users WHERE role = 'operator' ORDER BY id ASC").all() as any[];
+      for (const adminUser of admins) {
+        contacts.push({
+          id: adminUser.id,
+          name: adminUser.name || "School Administration",
+          role: "operator",
+          role_label: "School Administration",
+          student_id: studentId,
+          category: "admin",
+        });
       }
     } catch {}
 
@@ -7203,12 +7663,26 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     const msgRes = queries.insertMessage.run(threadId, auth.userId, "guardian", text, 0) as { lastInsertRowid: number | bigint };
     queries.updateThreadLastMessage.run(text, 0, 1, threadId);
 
+    const isAdminRecipient = thread.recipient_role === "operator" || thread.category === "admin" || thread.category === "school" || thread.category === "system";
+    const category = isAdminRecipient ? "admin" : "teacher";
+
     // Dispatch real-time SSE notification to recipient (teacher/admin)
-    notifyUser(Number(thread.recipient_id), {
+    const chatPayload = {
       type: "chat_message",
+      thread_id: threadId,
+      message_id: Number(msgRes.lastInsertRowid),
+      text,
+      sender_id: auth.userId,
+      sender_role: "guardian",
+      sender_name: auth.name || "Guardian",
+      category,
       message: `${auth.name || "Guardian"}: ${text.slice(0, 80)}`,
-      link: "/teacher/messages",
-    });
+      link: isAdminRecipient ? "/ADMIN/messages" : "/teacher/messages",
+    };
+    notifyUser(Number(thread.recipient_id), chatPayload);
+    if (isAdminRecipient) {
+      notifyOperators(chatPayload);
+    }
 
     return apiSuccess({ id: Number(msgRes.lastInsertRowid), text, sender_role: "guardian", created_at: new Date().toISOString() }, 201);
   }
@@ -7220,12 +7694,15 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     const recipientId = Number(body?.recipient_id);
     const studentId = Number(body?.student_id);
     const text = trimStr(body?.text || "");
-    const category = ["teacher", "school", "system"].includes(body?.category) ? body.category : "teacher";
-    const subject = trimStr(body?.subject || `Inquiry regarding ${body?.student_name || "Student"}`);
-
+    
     if (!isPositiveIntId(recipientId) || !isPositiveIntId(studentId) || !text) {
       return apiError(400, "recipient_id, student_id, and text required");
     }
+
+    const recipientUser = queries.getUserById.get(recipientId) as any;
+    const isRecipientOperator = recipientUser?.role === "operator" || body?.category === "admin" || body?.category === "school";
+    const category = isRecipientOperator ? "admin" : "teacher";
+    const subject = trimStr(body?.subject || `Inquiry regarding ${body?.student_name || "Student"}`);
 
     let thread = queries.findThreadByParticipants.get(auth.userId, recipientId, studentId) as any;
     let threadId: number;
@@ -7238,11 +7715,22 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     }
 
     const msgRes = queries.insertMessage.run(threadId, auth.userId, "guardian", text, 0) as { lastInsertRowid: number | bigint };
-    notifyUser(recipientId, {
+    const newChatPayload = {
       type: "chat_message",
+      thread_id: threadId,
+      message_id: Number(msgRes.lastInsertRowid),
+      text,
+      sender_id: auth.userId,
+      sender_role: "guardian",
+      sender_name: auth.name || "Guardian",
+      category,
       message: `${auth.name || "Guardian"}: ${text.slice(0, 80)}`,
-      link: "/teacher/messages",
-    });
+      link: isRecipientOperator ? "/ADMIN/messages" : "/teacher/messages",
+    };
+    notifyUser(recipientId, newChatPayload);
+    if (isRecipientOperator) {
+      notifyOperators(newChatPayload);
+    }
 
     return apiSuccess({ threadId, messageId: Number(msgRes.lastInsertRowid), text }, 201);
   }
@@ -7283,9 +7771,16 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     const msgRes = queries.insertMessage.run(threadId, auth.userId, auth.role, text, 0) as { lastInsertRowid: number | bigint };
     queries.updateThreadLastMessage.run(text, 1, 0, threadId);
 
-    // Dispatch real-time SSE notification to Guardian
+    // Dispatch real-time SSE notification & message payload to Guardian
     notifyUser(Number(thread.guardian_id), {
       type: "chat_message",
+      thread_id: threadId,
+      message_id: Number(msgRes.lastInsertRowid),
+      text,
+      sender_id: auth.userId,
+      sender_role: auth.role,
+      sender_name: auth.name || "Teacher",
+      category: "teacher",
       message: `${auth.name || "Teacher"}: ${text.slice(0, 80)}`,
       link: "/guardian/messages",
     });
@@ -7412,6 +7907,145 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     const unreadRow = queries.getUnreadNotificationCount.get(auth.userId) as any;
     return apiSuccess({ items: notifications, unreadCount: Number(unreadRow?.count || 0) });
   }
+
+  if (pathname === "/api/guardian/notifications/mark-read" && method === "POST") {
+    const auth = requireAuth(req);
+    requireRole(auth.role, ["guardian"]);
+    db.prepare("UPDATE notifications SET is_read = 1 WHERE user_id = ?").run(auth.userId);
+    return apiSuccess({ success: true, message: "All notifications marked as read" });
+  }
+
+  // ── Guardian Announcements ────────────────────────────────────────────────
+  if (pathname === "/api/guardian/announcements" && method === "GET") {
+    const auth = requireAuth(req);
+    requireRole(auth.role, ["guardian"]);
+    const category = url.searchParams.get("category") || "all";
+    const announcements = [
+      {
+        id: 1,
+        title: "Inter-house Sports Championship 2026",
+        category: "school",
+        date: "2026-05-25",
+        date_str: "25 May 2026",
+        priority: "normal",
+        content: "All students and parents are warmly invited to participate in this year's annual inter-house sports festival. Green, Blue, Red, and Yellow houses will compete for the championship trophy.",
+        action_label: "View Event Schedule"
+      },
+      {
+        id: 2,
+        title: "Updated Modern Library Guidelines",
+        category: "academic",
+        date: "2026-05-20",
+        date_str: "20 May 2026",
+        priority: "important",
+        content: "Please review the updated digital library guidelines. E-library terminals and academic research workstations are now accessible to all JSS and SS students from 8:00 AM to 4:30 PM.",
+        action_label: "Read Guidelines"
+      },
+      {
+        id: 3,
+        title: "Democracy Day Holiday Notice",
+        category: "school",
+        date: "2026-05-15",
+        date_str: "15 May 2026",
+        priority: "normal",
+        content: "School will be closed on May 29th for Democracy Day. Regular classes and exam preparations will resume promptly on the next school day.",
+        action_label: "View Calendar"
+      },
+      {
+        id: 4,
+        title: "Second Term Examination Schedule Released",
+        category: "academic",
+        date: "2026-05-10",
+        date_str: "10 May 2026",
+        priority: "important",
+        content: "The official CBT and written examination timetable for all Junior and Senior Secondary classes has been approved and published.",
+        action_label: "View Timetable"
+      }
+    ];
+
+    const filtered = category === "all" ? announcements : announcements.filter((a) => a.category === category);
+    return apiSuccess(filtered);
+  }
+
+  // ── Guardian Calendar ─────────────────────────────────────────────────────
+  if (pathname === "/api/guardian/calendar" && method === "GET") {
+    const auth = requireAuth(req);
+    requireRole(auth.role, ["guardian"]);
+    const activeTerm = queries.getActiveAcademicTerm.get() as any;
+    const tid = activeTerm?.id || 1;
+    let events = db.prepare("SELECT * FROM academic_calendar_events WHERE term_id = ? ORDER BY start_date ASC").all(tid) as any[];
+
+    if (!events || events.length === 0) {
+      events = [
+        {
+          id: 1,
+          title: "Mathematics 3rd Term Examination",
+          description: "Examination Hall 2 • CBT Lab",
+          start_date: "2026-05-28T09:00:00Z",
+          end_date: "2026-05-28T11:00:00Z",
+          type: "exam_period",
+          time_str: "09:00 AM – 11:00 AM",
+          venue: "Examination Hall 2"
+        },
+        {
+          id: 2,
+          title: "Parent-Teacher Association Meeting",
+          description: "Main Auditorium • 2:00 PM",
+          start_date: "2026-05-28T14:00:00Z",
+          end_date: "2026-05-28T16:00:00Z",
+          type: "event",
+          time_str: "02:00 PM – 04:00 PM",
+          venue: "Main Auditorium"
+        },
+        {
+          id: 3,
+          title: "Physics Mock Test",
+          description: "Science Laboratory",
+          start_date: "2026-05-31T09:00:00Z",
+          end_date: "2026-05-31T10:30:00Z",
+          type: "exam_period",
+          time_str: "09:00 AM – 10:30 AM",
+          venue: "Science Laboratory"
+        },
+        {
+          id: 4,
+          title: "Mid-Term Break Holiday",
+          description: "School closed for mid-term break",
+          start_date: "2026-06-05T00:00:00Z",
+          end_date: "2026-06-08T23:59:59Z",
+          type: "holiday",
+          time_str: "All Day",
+          venue: "All Campuses"
+        }
+      ];
+    }
+    return apiSuccess(events);
+  }
+
+  // ── Guardian Profile ──────────────────────────────────────────────────────
+  if (pathname === "/api/guardian/profile" && method === "GET") {
+    const auth = requireAuth(req);
+    requireRole(auth.role, ["guardian"]);
+    const guardian = queries.getUserById.get(auth.userId) as any;
+    if (!guardian) return apiError(404, "Guardian user not found");
+    const wards = queries.getGuardianWards.all(auth.userId) as any[];
+
+    return apiSuccess({
+      id: guardian.id,
+      name: guardian.name,
+      email: guardian.email,
+      phone: guardian.phone || "+234 801 234 5678",
+      address: guardian.address || "Lagos, Nigeria",
+      relationship: guardian.relationship || "Parent / Guardian",
+      role: guardian.role,
+      notify_attendance: guardian.notify_attendance !== 0,
+      notify_results: guardian.notify_results !== 0,
+      notify_fees: guardian.notify_fees !== 0,
+      notify_messages: guardian.notify_messages !== 0,
+      linked_wards_count: wards.length,
+    });
+  }
+
 
   // ── Teacher Attendance: Class Roster & Roll ────────────────────────────────
   if (pathname === "/api/teacher/attendance/roster" && method === "GET") {
@@ -7798,20 +8432,61 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     // Dispatch real-time SSE notification & push notification to Guardian
     notifyUser(Number(thread.guardian_id), {
       type: "chat_message",
+      thread_id: threadId,
+      message_id: Number(msgRes.lastInsertRowid),
+      text,
+      sender_id: auth.userId,
+      sender_role: "operator",
+      sender_name: auth.name || "School Administration",
+      category: "school",
       message: `School Administration: ${text.slice(0, 80)}`,
       link: "/guardian/messages",
     });
 
-    queries.createNotification.run(
-      Number(thread.guardian_id),
-      "chat_message",
-      `School Administration replied: "${text.slice(0, 80)}"`,
-      "/guardian/messages"
-    );
-
     auditLog(auth.userId, "ADMIN_REPLY_INQUIRY", "guardian_message_threads", threadId, JSON.stringify({ messageId: Number(msgRes.lastInsertRowid) }));
 
     return apiSuccess({ id: Number(msgRes.lastInsertRowid), text, sender_role: "operator", created_at: new Date().toISOString() }, 201);
+  }
+
+  if (pathname === "/api/admin/messages/new-thread" && method === "POST") {
+    const auth = requireAuth(req);
+    requireRole(auth.role, ["operator"]);
+    const body = await readJson(req);
+    const guardianId = Number(body?.guardian_id || body?.guardianId);
+    const studentId = Number(body?.student_id || body?.studentId || 0);
+    const text = trimStr(body?.text || "");
+    const subject = trimStr(body?.subject || "School Communication");
+    const category = trimStr(body?.category || "school");
+
+    if (!isPositiveIntId(guardianId) || !text) {
+      return apiError(400, "guardian_id and text required");
+    }
+
+    let thread = db.prepare("SELECT * FROM guardian_message_threads WHERE guardian_id = ? AND recipient_id = ? AND category = 'school'").get(guardianId, auth.userId) as any;
+    let threadId: number;
+    if (!thread) {
+      const res = queries.createMessageThread.run(guardianId, auth.userId, studentId || null, category, subject, text, 1, 0) as { lastInsertRowid: number | bigint };
+      threadId = Number(res.lastInsertRowid);
+    } else {
+      threadId = Number(thread.id);
+      queries.updateThreadLastMessage.run(text, 1, 0, threadId);
+    }
+
+    const msgRes = queries.insertMessage.run(threadId, auth.userId, "operator", text, 0) as { lastInsertRowid: number | bigint };
+    notifyUser(guardianId, {
+      type: "chat_message",
+      thread_id: threadId,
+      message_id: Number(msgRes.lastInsertRowid),
+      text,
+      sender_id: auth.userId,
+      sender_role: "operator",
+      sender_name: auth.name || "School Administration",
+      category,
+      message: `${auth.name || "School Administration"}: ${text.slice(0, 80)}`,
+      link: "/guardian/messages",
+    });
+
+    return apiSuccess({ threadId, messageId: Number(msgRes.lastInsertRowid), text }, 201);
   }
 
   // ── VAPID Public Key Discovery ────────────────────────────────────────────

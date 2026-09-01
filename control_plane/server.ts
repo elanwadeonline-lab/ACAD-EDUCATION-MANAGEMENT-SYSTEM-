@@ -21,6 +21,12 @@ import { generateLicenseKey, PLAN_CONFIGS } from "./services/licenseEngine";
 import { controlDb } from "./database/client";
 import { verifyPassword, hashPassword } from "../auth";
 import { randomBytes, createHash } from "node:crypto";
+import { sampleSystemMetrics, sampleDatabaseMetrics, sampleOperationalMetrics } from "../node_agent/metrics";
+import { sendHeartbeat, flushTelemetryEvents } from "../node_agent/heartbeat";
+import { getOrCreateNodeIdentity } from "../node_agent/identity";
+import { Database } from "bun:sqlite";
+import { EXAMPOOL_DB_PATH } from "../db";
+import fs from "fs";
 
 function apiJson(data: any, status = 200, headers: Record<string, string> = {}): Response {
   return new Response(JSON.stringify(data), {
@@ -39,6 +45,93 @@ async function readJson(req: Request): Promise<any> {
   } catch {
     return null;
   }
+}
+
+function getLocalExamPoolSnapshot() {
+  const identity = getOrCreateNodeIdentity();
+  const system = sampleSystemMetrics();
+  const database = sampleDatabaseMetrics();
+  const operational = sampleOperationalMetrics();
+
+  let recentQuestions: any[] = [];
+  let recentExams: any[] = [];
+  let recentAttempts: any[] = [];
+  let termInfo: any = null;
+  let activeCustomUrl = "exampool.com";
+
+  if (fs.existsSync(EXAMPOOL_DB_PATH)) {
+    const localDb = new Database(EXAMPOOL_DB_PATH, { readonly: true });
+    try {
+      try {
+        recentQuestions = localDb
+          .prepare(`
+            SELECT q.id, q.text, q.type, q.created_at, s.name as subject_name 
+            FROM questions q
+            LEFT JOIN subjects s ON q.subject_id = s.id
+            ORDER BY q.id DESC LIMIT 5
+          `)
+          .all();
+      } catch {}
+
+      try {
+        recentExams = localDb
+          .prepare(`
+            SELECT e.id, e.title, e.duration_minutes, e.is_active, e.created_at,
+                   (SELECT COUNT(*) FROM question_map WHERE exam_id = e.id) as question_count
+            FROM exams e
+            ORDER BY e.id DESC LIMIT 8
+          `)
+          .all();
+      } catch {}
+
+      try {
+        recentAttempts = localDb
+          .prepare(`
+            SELECT a.id, a.exam_id, a.student_id, a.score, a.total_questions, a.status, a.submitted_at,
+                   e.title as exam_title, u.name as student_name
+            FROM exam_attempts a
+            LEFT JOIN exams e ON a.exam_id = e.id
+            LEFT JOIN users u ON a.student_id = u.id
+            ORDER BY a.id DESC LIMIT 8
+          `)
+          .all();
+      } catch {}
+
+      try {
+        const urlRow = localDb.prepare("SELECT value FROM settings WHERE key = 'CUSTOM_URL'").get() as any;
+        if (urlRow?.value) activeCustomUrl = urlRow.value;
+        const termRow = localDb.prepare("SELECT * FROM academic_terms WHERE is_active = 1").get() as any;
+        if (termRow) termInfo = termRow;
+      } catch {}
+    } finally {
+      localDb.close();
+    }
+  }
+
+  const latestHeartbeat = controlDb
+    .prepare(`
+      SELECT * FROM installation_heartbeats 
+      WHERE installation_id = ? 
+      ORDER BY id DESC LIMIT 1
+    `)
+    .get(identity.installationId) as any;
+
+  const pendingSync = syncRepository.getPendingForInstallation(identity.installationId);
+
+  return {
+    identity,
+    system,
+    database,
+    operational,
+    recentQuestions,
+    recentExams,
+    recentAttempts,
+    termInfo,
+    activeCustomUrl,
+    latestHeartbeat: latestHeartbeat || null,
+    pendingSyncCount: pendingSync.length,
+    timestamp: new Date().toISOString(),
+  };
 }
 
 /**
@@ -158,6 +251,14 @@ export async function handleControlPlaneApi(req: Request, url: URL): Promise<Res
 
     // Check automated alarms
     checkAndGenerateAlerts(installation.school_id, installation.installation_id, health);
+    // Auto-resolve offline alert when node has recovered (real lifecycle)
+    if (health.status !== "offline") {
+      controlDb
+        .prepare(
+          "UPDATE alerts SET status='resolved', resolved_at=strftime('%Y-%m-%dT%H:%M:%SZ','now') WHERE installation_id=? AND alert_type='node_offline' AND status IN ('open','acknowledged')"
+        )
+        .run(installation.installation_id);
+    }
 
     const flags = featureFlagRepository.getFlagsForSchool(installation.school_id);
     const license = licenseRepository.findBySchoolId(installation.school_id);
@@ -306,18 +407,106 @@ export async function handleControlPlaneApi(req: Request, url: URL): Promise<Res
     return apiError(401, err.message || "Platform authentication required");
   }
 
+  // ── Host System & Live Exam Pool Monitor Endpoint ───────────────────────────
+  if (pathname === "/api/platform/local-exam-pool/live" && method === "GET") {
+    const snapshot = getLocalExamPoolSnapshot();
+    return apiJson(snapshot);
+  }
+
+  if (pathname === "/api/platform/local-exam-pool/action" && method === "POST") {
+    requirePlatformRole(auth.role, ["owner", "admin", "ops_engineer"]);
+    const body = await readJson(req);
+    const action = body?.action || "RUN_DIAGNOSTICS";
+
+    let result: any = {};
+    if (action === "RUN_DIAGNOSTICS" || action === "INTEGRITY_CHECK") {
+      const localDb = new Database(EXAMPOOL_DB_PATH, { readonly: true });
+      try {
+        const integrity = localDb.prepare("PRAGMA integrity_check").get() as any;
+        const qCount = (localDb.prepare("SELECT COUNT(*) as c FROM questions").get() as any)?.c || 0;
+        const exCount = (localDb.prepare("SELECT COUNT(*) as c FROM exams").get() as any)?.c || 0;
+        const stCount = (localDb.prepare("SELECT COUNT(*) as c FROM users WHERE role = 'student'").get() as any)?.c || 0;
+        const tcCount = (localDb.prepare("SELECT COUNT(*) as c FROM users WHERE role = 'teacher'").get() as any)?.c || 0;
+        const attCount = (localDb.prepare("SELECT COUNT(*) as c FROM exam_attempts").get() as any)?.c || 0;
+        
+        result = {
+          action: "RUN_DIAGNOSTICS",
+          integrity_check: integrity?.integrity_check || "ok",
+          table_counts: {
+            questions: qCount,
+            exams: exCount,
+            students: stCount,
+            teachers: tcCount,
+            attempts: attCount,
+          },
+          database_size_bytes: fs.existsSync(EXAMPOOL_DB_PATH) ? fs.statSync(EXAMPOOL_DB_PATH).size : 0,
+          wal_size_bytes: fs.existsSync(`${EXAMPOOL_DB_PATH}-wal`) ? fs.statSync(`${EXAMPOOL_DB_PATH}-wal`).size : 0,
+          status: integrity?.integrity_check === "ok" ? "HEALTHY" : "DEGRADED",
+          timestamp: new Date().toISOString(),
+          message: "Full host system diagnostic check completed successfully.",
+        };
+      } finally {
+        localDb.close();
+      }
+    } else if (action === "TRIGGER_PULSE") {
+      await sendHeartbeat();
+      await flushTelemetryEvents();
+      result = {
+        action: "TRIGGER_PULSE",
+        message: "Node heartbeat pulse and telemetry buffer flushed immediately.",
+        timestamp: new Date().toISOString(),
+      };
+    } else if (action === "WAL_CHECKPOINT") {
+      const localDb = new Database(EXAMPOOL_DB_PATH);
+      try {
+        localDb.run("PRAGMA wal_checkpoint(TRUNCATE)");
+        result = {
+          action: "WAL_CHECKPOINT",
+          message: "SQLite WAL checkpoint (TRUNCATE) executed successfully.",
+          wal_size_bytes: fs.existsSync(`${EXAMPOOL_DB_PATH}-wal`) ? fs.statSync(`${EXAMPOOL_DB_PATH}-wal`).size : 0,
+          timestamp: new Date().toISOString(),
+        };
+      } finally {
+        localDb.close();
+      }
+    } else if (action === "FLUSH_QUEUE") {
+      const count = await flushTelemetryEvents();
+      result = {
+        action: "FLUSH_QUEUE",
+        events_flushed: count,
+        message: `Flushed ${count} buffered telemetry events to supervisory control.`,
+        timestamp: new Date().toISOString(),
+      };
+    } else {
+      return apiError(400, `Unknown action: ${action}`);
+    }
+
+    auditRepository.record({
+      actor_id: auth.platformUserId,
+      actor_email: auth.email,
+      action: `LOCAL_EXAM_POOL_${action}`,
+      target_type: "local_node",
+      target_id: "NODE-LOCAL",
+      details: result,
+    });
+
+    return apiJson({ success: true, ...result });
+  }
+
   // ── 1. Overview Command Center ──────────────────────────────────────────────
   if (pathname === "/api/platform/overview" && method === "GET") {
     const metrics = healthRepository.getOverviewMetrics();
     const liveEvents = telemetryRepository.getLiveEventStream(10);
     const activeAlerts = alertRepository.listAll({ status: "open" });
     const expiringTrials = trialRepository.listAll({ status: "active" }).filter((t) => (t.days_remaining ?? 99) <= 7);
+    const localExamPool = getLocalExamPoolSnapshot();
 
     return apiJson({
       metrics,
       liveEvents,
       activeAlerts: activeAlerts.slice(0, 5),
       expiringTrials: expiringTrials.slice(0, 5),
+      localExamPool,
     });
   }
 
@@ -631,7 +820,7 @@ export async function handleControlPlaneApi(req: Request, url: URL): Promise<Res
     const installationId = pushConfigMatch[1];
     const body = await readJson(req);
     const payloadType = body?.payload_type || "config";
-    const allowedTypes = ["feature_flags", "license", "config", "force_update", "reboot_request"];
+    const allowedTypes = ["feature_flags", "license", "config", "force_update", "reboot_request", "diagnostics"];
     if (!allowedTypes.includes(payloadType)) return apiError(400, `Invalid payload_type. Must be one of: ${allowedTypes.join(", ")}`);
 
     const installation = installationRepository.findByInstallationId(installationId);
@@ -871,6 +1060,25 @@ export async function handleControlPlaneApi(req: Request, url: URL): Promise<Res
 
     if (!flagKey) return apiError(400, "flag_key required");
     featureFlagRepository.setFlag(schoolId, flagKey, isEnabled, auth.platformUserId);
+
+    // Immediately persist to local campus settings for instantaneous zero-delay enforcement
+    try {
+      if (fs.existsSync(EXAMPOOL_DB_PATH)) {
+        const localDb = new Database(EXAMPOOL_DB_PATH);
+        try {
+          localDb.run("CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT, updated_at TEXT)");
+          localDb.prepare(`
+            INSERT INTO settings (key, value, updated_at)
+            VALUES (?, ?, strftime('%Y-%m-%dT%H:%M:%SZ','now'))
+            ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at
+          `).run(`feature_flag_${flagKey}`, String(isEnabled));
+        } finally {
+          localDb.close();
+        }
+      }
+    } catch (e) {
+      console.warn("[ControlPlane] Could not immediately sync flag to local db:", e);
+    }
 
     auditRepository.record({
       actor_id: auth.platformUserId,

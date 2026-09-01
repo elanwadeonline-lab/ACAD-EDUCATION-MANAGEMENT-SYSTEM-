@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import styles from "../control.module.css";
 import { controlApi } from "../../../lib/controlApi";
+import { RefreshCw, Plus, CheckCircle2, Clock } from "lucide-react";
 
 export default function ControlSyncQueuePage() {
   const [queueData, setQueueData] = useState<any>(null);
@@ -18,15 +19,18 @@ export default function ControlSyncQueuePage() {
   const [selectedPayloadType, setSelectedPayloadType] = useState("feature_flags");
   const [pushing, setPushing] = useState(false);
 
+  const [error, setError] = useState("");
   const loadData = async () => {
     try {
+      setError("");
       const [qRes, sRes] = await Promise.all([
         controlApi.getSyncQueue(),
         controlApi.getSchools(),
       ]);
       setQueueData(qRes);
       setSchools(sRes.schools || []);
-    } catch (err) {
+    } catch (err: any) {
+      setError(err.message || "Unable to load sync queue.");
       console.error("Failed to load sync queue:", err);
     } finally {
       setLoading(false);
@@ -57,6 +61,17 @@ export default function ControlSyncQueuePage() {
   const queueList = queueData?.queue || [];
   const pendingCount = queueData?.pending_count || 0;
   const deliveredCount = queueList.filter((item: any) => item.status === "delivered").length;
+  // Real average delivery latency from delivered items (queued_at → delivered_at)
+  const avgLatency = (() => {
+    const delivered = queueList.filter((i: any) => i.status === "delivered" && i.queued_at && i.delivered_at);
+    if (delivered.length === 0) return null;
+    const totalMs = delivered.reduce((acc: number, i: any) => acc + (new Date(i.delivered_at).getTime() - new Date(i.queued_at).getTime()), 0);
+    const avgMs = totalMs / delivered.length;
+    if (avgMs < 1000) return `${Math.round(avgMs)}ms`;
+    if (avgMs < 60000) return `${Math.round(avgMs / 1000)}s`;
+    if (avgMs < 3600000) return `${Math.round(avgMs / 60000)}m`;
+    return `${(avgMs / 3600000).toFixed(1)}h`;
+  })();
 
   const filteredQueue = queueList.filter((item: any) => {
     if (filterStatus !== "all" && item.status !== filterStatus) return false;
@@ -74,25 +89,27 @@ export default function ControlSyncQueuePage() {
   return (
     <div>
       {/* ── Header ── */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1.5rem", flexWrap: "wrap", gap: "1rem" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1.25rem", flexWrap: "wrap", gap: "1rem" }}>
         <div>
-          <h1 style={{ fontSize: "1.25rem", fontWeight: 800, color: "#FFFFFF" }}>Bidirectional Config Sync Queue</h1>
-          <p style={{ fontSize: "0.8125rem", color: "#64748B", marginTop: "0.2rem" }}>
+          <h1 style={{ fontSize: "1.25rem", fontWeight: 800, color: "var(--text-heading)", letterSpacing: "-0.02em" }}>
+            Bidirectional Config Sync Queue
+          </h1>
+          <p style={{ fontSize: "0.8125rem", color: "var(--text-secondary)", marginTop: "0.2rem" }}>
             Supervisory downlink queue delivering configuration, feature flags, and license updates to school nodes.
           </p>
         </div>
         <div style={{ display: "flex", gap: "0.75rem" }}>
           <button onClick={() => setShowPushModal(true)} className={`${styles.btn} ${styles.btnPrimary}`}>
-            + Enqueue Config Push
+            <Plus size={14} /> Enqueue Config Push
           </button>
         </div>
       </div>
 
       {/* ── Summary Metric Cards ── */}
-      <div className={styles.metricGrid} style={{ marginBottom: "1.5rem" }}>
+      <div className={styles.metricGrid} style={{ marginBottom: "1.25rem" }}>
         <div className={styles.metricCard}>
           <div className={styles.metricLabel}>Pending Delivery</div>
-          <div className={styles.metricValue} style={{ color: pendingCount > 0 ? "#FBBF24" : "#34D399" }}>
+          <div className={styles.metricValue} style={{ color: pendingCount > 0 ? "var(--warning)" : "var(--success)" }}>
             {loading ? "—" : pendingCount}
           </div>
           <div className={styles.metricSubtext}>Awaiting next node pulse</div>
@@ -100,18 +117,26 @@ export default function ControlSyncQueuePage() {
 
         <div className={styles.metricCard}>
           <div className={styles.metricLabel}>Delivered (Recent)</div>
-          <div className={styles.metricValue} style={{ color: "#34D399" }}>
+          <div className={styles.metricValue} style={{ color: "var(--success)" }}>
             {loading ? "—" : deliveredCount}
           </div>
           <div className={styles.metricSubtext}>Confirmed acknowledged</div>
         </div>
 
         <div className={styles.metricCard}>
-          <div className={styles.metricLabel}>Total Sync Operations</div>
-          <div className={styles.metricValue} style={{ color: "#60A5FA" }}>
+          <div className={styles.metricLabel}>Total Operations</div>
+          <div className={styles.metricValue} style={{ color: "var(--accent)" }}>
             {loading ? "—" : queueList.length}
           </div>
           <div className={styles.metricSubtext}>Logged across fleet</div>
+        </div>
+
+        <div className={styles.metricCard}>
+          <div className={styles.metricLabel}>Avg Delivery Latency</div>
+          <div className={styles.metricValue} style={{ color: pendingCount > 5 ? "var(--warning)" : "var(--purple)" }}>
+            {loading ? "—" : avgLatency ?? "Unknown"}
+          </div>
+          <div className={styles.metricSubtext}>{avgLatency ? "Queued → delivered" : "No delivered samples yet"}</div>
         </div>
       </div>
 
@@ -140,121 +165,130 @@ export default function ControlSyncQueuePage() {
         />
       </div>
 
+      {error && (
+        <div style={{ background: "var(--danger-bg)", border: "1px solid var(--danger)", borderRadius: "8px", padding: "0.75rem 1rem", color: "var(--danger-text)", fontSize: "0.8125rem", marginBottom: "1rem", display: "flex", justifyContent: "space-between" }}>
+          {error}
+          <button onClick={loadData} style={{ background: "#fff", border: "1px solid var(--danger)", borderRadius: 6, padding: "0.2rem 0.6rem", fontSize: "0.75rem", cursor: "pointer" }}>Retry</button>
+        </div>
+      )}
+
       {/* ── Queue Table ── */}
       <div className={styles.tableContainer}>
         <div className={styles.tableHeader}>
           <div className={styles.tableTitle}>Downlink Delivery Log</div>
-          <span className={styles.mono} style={{ fontSize: "0.6875rem", color: "#64748B" }}>
+          <span className={styles.mono} style={{ fontSize: "0.6875rem", color: "var(--text-muted)" }}>
             Auto-polling every 8s
           </span>
         </div>
 
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>Campus</th>
-              <th>Target Node</th>
-              <th>Payload Type</th>
-              <th>Payload Content</th>
-              <th>Status</th>
-              <th>Queued At</th>
-              <th>Delivered At</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
+        <div className={styles.tableResponsive}>
+          <table className={styles.table} style={{ minWidth: "920px" }}>
+            <thead>
               <tr>
-                <td colSpan={7} style={{ textAlign: "center", padding: "3rem", color: "#64748B" }}>Loading sync queue…</td>
+                <th>Campus</th>
+                <th>Target Node</th>
+                <th>Payload Type</th>
+                <th>Payload Content</th>
+                <th>Status</th>
+                <th>Queued At</th>
+                <th>Delivered At</th>
               </tr>
-            ) : filteredQueue.length === 0 ? (
-              <tr>
-                <td colSpan={7} style={{ textAlign: "center", padding: "3rem", color: "#64748B" }}>
-                  No sync queue items found matching filter.
-                </td>
-              </tr>
-            ) : (
-              filteredQueue.map((item: any) => (
-                <tr key={item.id}>
-                  <td>
-                    <Link href={`/control/schools/${item.school_id}`} style={{ fontWeight: 600, color: "#F8FAFC", textDecoration: "none", fontSize: "0.8125rem" }}>
-                      {item.school_name || `School #${item.school_id}`}
-                    </Link>
-                    <div className={styles.mono} style={{ color: "#64748B", fontSize: "0.6875rem" }}>
-                      {item.school_code || "—"}
-                    </div>
-                  </td>
-                  <td>
-                    <span className={styles.mono} style={{ fontWeight: 600, color: "#60A5FA", fontSize: "0.8125rem" }}>
-                      {item.node_id || "NODE-PRIMARY"}
-                    </span>
-                    <div className={styles.mono} style={{ fontSize: "0.625rem", color: "#334155" }}>
-                      {item.installation_id}
-                    </div>
-                  </td>
-                  <td>
-                    <span
-                      className={styles.statusBadge}
-                      style={{
-                        background:
-                          item.payload_type === "feature_flags"
-                            ? "rgba(59, 130, 246, 0.12)"
-                            : item.payload_type === "license"
-                            ? "rgba(16, 185, 129, 0.12)"
-                            : "rgba(168, 85, 247, 0.12)",
-                        color:
-                          item.payload_type === "feature_flags"
-                            ? "#60A5FA"
-                            : item.payload_type === "license"
-                            ? "#34D399"
-                            : "#C084FC",
-                        fontFamily: "'JetBrains Mono', monospace",
-                        fontSize: "0.6875rem",
-                      }}
-                    >
-                      {item.payload_type}
-                    </span>
-                  </td>
-                  <td>
-                    <div
-                      className={styles.mono}
-                      style={{
-                        maxWidth: "280px",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                        fontSize: "0.6875rem",
-                        color: "#94A3B8",
-                      }}
-                      title={item.payload_json}
-                    >
-                      {item.payload_json}
-                    </div>
-                  </td>
-                  <td>
-                    <span
-                      className={`${styles.statusBadge} ${
-                        item.status === "delivered" ? styles.badgeHealthy : styles.badgeWarning
-                      }`}
-                    >
-                      <span
-                        className={`${styles.statusDot} ${
-                          item.status === "delivered" ? styles.dotHealthy : styles.dotWarning
-                        }`}
-                      />
-                      {item.status}
-                    </span>
-                  </td>
-                  <td className={styles.mono} style={{ fontSize: "0.6875rem", color: "#94A3B8" }}>
-                    {item.queued_at ? new Date(item.queued_at).toLocaleString() : "—"}
-                  </td>
-                  <td className={styles.mono} style={{ fontSize: "0.6875rem", color: item.delivered_at ? "#34D399" : "#64748B" }}>
-                    {item.delivered_at ? new Date(item.delivered_at).toLocaleString() : "Pending"}
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan={7} style={{ textAlign: "center", padding: "3rem", color: "var(--text-secondary)" }}>Loading sync queue…</td>
+                </tr>
+              ) : filteredQueue.length === 0 ? (
+                <tr>
+                  <td colSpan={7} style={{ textAlign: "center", padding: "3rem", color: "var(--text-secondary)" }}>
+                    No sync queue items found matching filter.
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                filteredQueue.map((item: any) => (
+                  <tr key={item.id}>
+                    <td>
+                      <Link href={`/control/schools/${item.school_id}`} style={{ fontWeight: 600, color: "var(--text-heading)", textDecoration: "none", fontSize: "0.8125rem" }}>
+                        {item.school_name || `School #${item.school_id}`}
+                      </Link>
+                      <div className={styles.mono} style={{ color: "var(--text-muted)", fontSize: "0.6875rem" }}>
+                        {item.school_code || "—"}
+                      </div>
+                    </td>
+                    <td>
+                      <span className={styles.mono} style={{ fontWeight: 600, color: "var(--accent)", fontSize: "0.8125rem" }}>
+                        {item.node_id || "NODE-PRIMARY"}
+                      </span>
+                      <div className={styles.mono} style={{ fontSize: "0.625rem", color: "var(--text-muted)" }}>
+                        {item.installation_id}
+                      </div>
+                    </td>
+                    <td>
+                      <span
+                        className={styles.statusBadge}
+                        style={{
+                          background:
+                            item.payload_type === "feature_flags"
+                              ? "var(--accent-bg)"
+                              : item.payload_type === "license"
+                              ? "var(--success-bg)"
+                              : "var(--purple-bg)",
+                          color:
+                            item.payload_type === "feature_flags"
+                              ? "var(--accent)"
+                              : item.payload_type === "license"
+                              ? "var(--success)"
+                              : "var(--purple)",
+                          fontFamily: "'JetBrains Mono', monospace",
+                          fontSize: "0.6875rem",
+                        }}
+                      >
+                        {item.payload_type}
+                      </span>
+                    </td>
+                    <td>
+                      <div
+                        className={styles.mono}
+                        style={{
+                          maxWidth: "280px",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                          fontSize: "0.6875rem",
+                          color: "var(--text-secondary)",
+                        }}
+                        title={item.payload_json}
+                      >
+                        {item.payload_json}
+                      </div>
+                    </td>
+                    <td>
+                      <span
+                        className={`${styles.statusBadge} ${
+                          item.status === "delivered" ? styles.badgeHealthy : styles.badgeWarning
+                        }`}
+                      >
+                        <span
+                          className={`${styles.statusDot} ${
+                            item.status === "delivered" ? styles.dotHealthy : styles.dotWarning
+                          }`}
+                        />
+                        {item.status}
+                      </span>
+                    </td>
+                    <td className={styles.mono} style={{ fontSize: "0.6875rem", color: "var(--text-muted)" }}>
+                      {item.queued_at ? new Date(item.queued_at).toLocaleString() : "—"}
+                    </td>
+                    <td className={styles.mono} style={{ fontSize: "0.6875rem", color: item.delivered_at ? "var(--success)" : "var(--text-muted)" }}>
+                      {item.delivered_at ? new Date(item.delivered_at).toLocaleString() : "Pending"}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* ── Enqueue Modal ── */}
@@ -273,24 +307,25 @@ export default function ControlSyncQueuePage() {
         >
           <div
             style={{
-              background: "#0B101B",
-              border: "1px solid rgba(255, 255, 255, 0.1)",
+              background: "var(--bg-panel-1)",
+              border: "1px solid var(--border-panel)",
               borderRadius: "12px",
               padding: "1.75rem",
               width: "100%",
               maxWidth: "480px",
+              boxShadow: "var(--shadow-drawer)",
             }}
           >
-            <h2 style={{ fontSize: "1.125rem", fontWeight: 700, color: "#FFFFFF", marginBottom: "0.5rem" }}>
+            <h2 style={{ fontSize: "1.125rem", fontWeight: 700, color: "var(--text-heading)", marginBottom: "0.5rem" }}>
               Enqueue Downlink Config Push
             </h2>
-            <p style={{ fontSize: "0.8125rem", color: "#64748B", marginBottom: "1.25rem" }}>
+            <p style={{ fontSize: "0.8125rem", color: "var(--text-secondary)", marginBottom: "1.25rem" }}>
               Target all nodes of a campus. Payloads are picked up securely by the node agent on its next pulse.
             </p>
 
             <form onSubmit={handlePushSubmit}>
               <div style={{ marginBottom: "1rem" }}>
-                <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, color: "#94A3B8", marginBottom: "0.4rem" }}>
+                <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "0.4rem" }}>
                   Target Campus
                 </label>
                 <select
@@ -309,7 +344,7 @@ export default function ControlSyncQueuePage() {
               </div>
 
               <div style={{ marginBottom: "1.5rem" }}>
-                <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, color: "#94A3B8", marginBottom: "0.4rem" }}>
+                <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "0.4rem" }}>
                   Payload Type
                 </label>
                 <select
@@ -318,7 +353,7 @@ export default function ControlSyncQueuePage() {
                   className={styles.input}
                 >
                   <option value="feature_flags">Feature Flags (Sync all active toggles)</option>
-                  <option value="license">License Entitlements (Refresh quota & modules)</option>
+                  <option value="license">License Entitlements (Refresh quota &amp; modules)</option>
                   <option value="config">General Config Refresh</option>
                   <option value="force_update">Force Software Update</option>
                   <option value="reboot_request">Graceful Node Restart</option>

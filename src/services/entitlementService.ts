@@ -25,25 +25,25 @@ export const MODULE_ROUTE_MAP: Array<{
   requiredMinPlan: string;
 }> = [
   {
-    pattern: /^\/api\/(grading|class-grading|terms\/\d+\/results|annual-results|remarks|manual-scores)/i,
+    pattern: /^\/api\/(grading|class-grading|terms\/\d+\/results|annual-results|remarks|manual-scores|teacher\/grading|teacher\/class-grading)/i,
     moduleKey: "grading_center",
     moduleName: "Grading Center & Score Processing",
     requiredMinPlan: "trial",
   },
   {
-    pattern: /^\/api\/report-cards/i,
+    pattern: /^\/api\/(report-cards|teacher\/report-card|student\/report-card)/i,
     moduleKey: "report_cards",
     moduleName: "Report Card & Transcript Generator",
     requiredMinPlan: "trial",
   },
   {
-    pattern: /^\/api\/(exams|exam-attempts|kiosk)/i,
+    pattern: /^\/api\/(exams|exam-attempts|kiosk|student\/exam)/i,
     moduleKey: "cbt_exam",
     moduleName: "CBT Computer-Based Examination Engine",
     requiredMinPlan: "trial",
   },
   {
-    pattern: /^\/api\/(questions|content-bank)/i,
+    pattern: /^\/api\/(questions|content-bank|teacher\/questions)/i,
     moduleKey: "question_bank",
     moduleName: "Institutional Question Bank & Item Repository",
     requiredMinPlan: "trial",
@@ -55,25 +55,25 @@ export const MODULE_ROUTE_MAP: Array<{
     requiredMinPlan: "starter",
   },
   {
-    pattern: /^\/api\/(guardian|v2\/guardian-links)/i,
+    pattern: /^\/api\/(guardian|v2\/guardian-links|admin\/guardian-links|admin\/messages|teacher\/messages)/i,
     moduleKey: "guardian_portal",
     moduleName: "Guardian & Ward Supervision Portal",
-    requiredMinPlan: "standard",
+    requiredMinPlan: "enterprise",
   },
   {
-    pattern: /^\/api\/attendance/i,
+    pattern: /^\/api\/(attendance|teacher\/attendance)/i,
     moduleKey: "attendance_tracker",
     moduleName: "Attendance Tracking & Roll Call",
     requiredMinPlan: "standard",
   },
   {
-    pattern: /^\/api\/fees/i,
+    pattern: /^\/api\/(fees|teacher\/fees)/i,
     moduleKey: "fee_management",
     moduleName: "Fee & Financial Billing Management",
     requiredMinPlan: "enterprise",
   },
   {
-    pattern: /^\/api\/(offline-assignments|assignments)/i,
+    pattern: /^\/api\/(offline-assignments|assignments|teacher\/assignments|student\/offline-assignments)/i,
     moduleKey: "offline_assignments",
     moduleName: "Offline Homework & Assignment Sync",
     requiredMinPlan: "enterprise",
@@ -154,16 +154,16 @@ export function getCampusEntitlements(): CampusEntitlements {
   const isExpired = licenseStatus === "expired" || (validUntil ? new Date(validUntil).getTime() < Date.now() : false);
 
   const modules: Record<string, boolean> = {
-    cbt_exam: getSetting("feature_flag_cbt_exam", "true") === "true",
-    question_bank: getSetting("feature_flag_question_bank", "true") === "true",
-    grading_center: getSetting("feature_flag_grading_center", "true") === "true",
-    report_cards: getSetting("feature_flag_report_cards", "true") === "true",
-    timetables: getSetting("feature_flag_timetables", "true") === "true",
-    guardian_portal: getSetting("feature_flag_guardian_portal", "true") === "true",
-    attendance_tracker: getSetting("feature_flag_attendance_tracker", "true") === "true",
-    fee_management: getSetting("feature_flag_fee_management", "false") === "true",
-    offline_assignments: getSetting("feature_flag_offline_assignments", "false") === "true",
-    ai_learning_engine: getSetting("feature_flag_ai_learning_engine", "false") === "true",
+    cbt_exam: getSetting("feature_flag_cbt_exam", "true") !== "false",
+    question_bank: getSetting("feature_flag_question_bank", "true") !== "false",
+    grading_center: getSetting("feature_flag_grading_center", "true") !== "false",
+    report_cards: getSetting("feature_flag_report_cards", "true") !== "false",
+    timetables: getSetting("feature_flag_timetables", "true") !== "false",
+    guardian_portal: getSetting("feature_flag_guardian_portal", "true") !== "false",
+    attendance_tracker: getSetting("feature_flag_attendance_tracker", "true") !== "false",
+    fee_management: getSetting("feature_flag_fee_management", "true") !== "false",
+    offline_assignments: getSetting("feature_flag_offline_assignments", "true") !== "false",
+    ai_learning_engine: getSetting("feature_flag_ai_learning_engine", "true") !== "false",
   };
 
   return {

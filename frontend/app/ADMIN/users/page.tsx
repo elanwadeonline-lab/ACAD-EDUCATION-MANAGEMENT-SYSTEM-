@@ -49,7 +49,10 @@ function UsersContent() {
   const [toast, setToast] = useState<Toast>(null);
 
   const [gradeLevels, setGradeLevels] = useState<any[]>([]);
-  const [modal, setModal] = useState<"operator" | "user" | "guardian" | null>(null);
+  const [modal, setModal] = useState<"operator" | "user" | "guardian" | "link_ward" | null>(null);
+  const [linkWardForm, setLinkWardForm] = useState<{ guardian_id: number; student_reg_id: string; relationship: string }>({ guardian_id: 0, student_reg_id: "", relationship: "Parent" });
+  const [studentPreview, setStudentPreview] = useState<any | null>(null);
+  const [searchingStudent, setSearchingStudent] = useState(false);
   const [form, setForm] = useState<any>({
     name: "",
     email: "",
@@ -169,45 +172,60 @@ function UsersContent() {
 
   const handleCreateUser = async (e: FormEvent) => {
     e.preventDefault();
-    if (!form.name || !form.email || !form.password) {
-      showToast("error", "Please fill in all required fields.");
-      return;
-    }
     setSaving(true);
     try {
-      if (modal === "operator") {
-        await api.createOperator({ name: form.name, email: form.email, password: form.password });
-        showToast("success", `Operator "${form.name}" created successfully.`);
-      } else if (modal === "guardian") {
-        await api.register({
-          name: form.name,
-          email: form.email,
-          password: form.password,
-          role: "guardian",
-          phone: form.phone || undefined,
-          relationship: form.relationship || "Parent",
-          address: form.address || undefined,
-          student_reg_id: form.student_reg_id ? form.student_reg_id.trim() : undefined,
+      if (modal === "link_ward") {
+        if (!linkWardForm.guardian_id || !linkWardForm.student_reg_id.trim()) {
+          showToast("error", "Please select a guardian and enter a valid student registration number.");
+          return;
+        }
+        await api.adminCreateGuardianLink({
+          guardian_id: Number(linkWardForm.guardian_id),
+          reg_id: linkWardForm.student_reg_id.trim(),
+          relationship: linkWardForm.relationship || "Parent",
         });
-        showToast("success", `Guardian account "${form.name}" created successfully.`);
+        showToast("success", "Student ward linked to guardian account successfully.");
       } else {
-        await api.register({
-          name: form.name,
-          email: form.email,
-          password: form.password,
-          role: form.role,
-          grade_level_id:
-            form.role === "student" ? Number(form.grade_level_id) || undefined : undefined,
-          dob: form.role === "student" ? form.dob || undefined : undefined,
-          phone: form.role === "teacher" ? form.phone || undefined : undefined,
-        });
-        showToast("success", `User "${form.name}" created successfully.`);
+        if (!form.name || !form.email || !form.password) {
+          showToast("error", "Please fill in all required fields.");
+          return;
+        }
+        if (modal === "operator") {
+          await api.createOperator({ name: form.name, email: form.email, password: form.password });
+          showToast("success", `Operator "${form.name}" created successfully.`);
+        } else if (modal === "guardian") {
+          await api.register({
+            name: form.name,
+            email: form.email,
+            password: form.password,
+            role: "guardian",
+            phone: form.phone || undefined,
+            relationship: form.relationship || "Parent",
+            address: form.address || undefined,
+            student_reg_id: form.student_reg_id ? form.student_reg_id.trim() : undefined,
+          });
+          showToast("success", `Guardian account "${form.name}" created successfully.`);
+        } else {
+          await api.register({
+            name: form.name,
+            email: form.email,
+            password: form.password,
+            role: form.role,
+            grade_level_id:
+              form.role === "student" ? Number(form.grade_level_id) || undefined : undefined,
+            dob: form.role === "student" ? form.dob || undefined : undefined,
+            phone: form.role === "teacher" ? form.phone || undefined : undefined,
+          });
+          showToast("success", `User "${form.name}" created successfully.`);
+        }
       }
       setModal(null);
       setForm({ name: "", email: "", password: "", role: "student", grade_level_id: "", dob: "", phone: "", relationship: "Parent", student_reg_id: "", address: "" });
+      setLinkWardForm({ guardian_id: 0, student_reg_id: "", relationship: "Parent" });
+      setStudentPreview(null);
       await refresh();
     } catch (err) {
-      showToast("error", err instanceof Error ? err.message : "Creation failed");
+      showToast("error", err instanceof Error ? err.message : "Operation failed");
     } finally {
       setSaving(false);
     }
@@ -289,6 +307,23 @@ function UsersContent() {
               }}
             >
               + New Guardian
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              leftIcon={<UsersIcon width="14" height="14" />}
+              onClick={() => {
+                const firstGuardian = users.find((u) => u.role === "guardian");
+                setLinkWardForm({
+                  guardian_id: firstGuardian ? firstGuardian.id : 0,
+                  student_reg_id: "",
+                  relationship: "Parent",
+                });
+                setStudentPreview(null);
+                setModal("link_ward");
+              }}
+            >
+              + Link Ward
             </Button>
             <Button
               variant="outline"
@@ -977,6 +1012,138 @@ function UsersContent() {
               loading={resetting}
             >
               Update Password
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* ── MODAL: LINK WARD TO GUARDIAN ── */}
+      <Modal
+        open={modal === "link_ward"}
+        onClose={() => setModal(null)}
+        title="Link Student Ward to Guardian"
+      >
+        <form onSubmit={handleCreateUser} className={styles.modalForm}>
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>
+              Select Guardian Account <span className={styles.requiredAsterisk}>*</span>
+            </label>
+            <select
+              className={styles.formSelect}
+              value={linkWardForm.guardian_id}
+              onChange={(e) => setLinkWardForm({ ...linkWardForm, guardian_id: Number(e.target.value) })}
+              required
+            >
+              <option value="">-- Choose a Guardian --</option>
+              {users.filter(u => u.role === "guardian").map(g => (
+                <option key={g.id} value={g.id}>
+                  {g.name} ({g.email || g.phone || `ID: ${g.id}`})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>
+              Student Registration / Admission No. <span className={styles.requiredAsterisk}>*</span>
+            </label>
+            <input
+              type="text"
+              className={styles.formInput}
+              placeholder="e.g. REG-2026-0001 or student name"
+              value={linkWardForm.student_reg_id}
+              onChange={async (e) => {
+                const val = e.target.value;
+                setLinkWardForm({ ...linkWardForm, student_reg_id: val });
+                if (val.trim().length >= 2) {
+                  try {
+                    setSearchingStudent(true);
+                    const res = await api.lookupStudentForLink(val.trim());
+                    if (Array.isArray(res) && res.length > 0) {
+                      setStudentPreview(res[0]);
+                    } else {
+                      setStudentPreview(null);
+                    }
+                  } catch {
+                    setStudentPreview(null);
+                  } finally {
+                    setSearchingStudent(false);
+                  }
+                } else {
+                  setStudentPreview(null);
+                }
+              }}
+              required
+            />
+            {searchingStudent && (
+              <span style={{ fontSize: "0.75rem", color: "#64748B", marginTop: "0.25rem", display: "block" }}>
+                Searching student directory…
+              </span>
+            )}
+            {studentPreview && (
+              <div style={{
+                marginTop: "0.5rem",
+                padding: "0.6rem 0.8rem",
+                borderRadius: "6px",
+                background: "rgba(22, 90, 246, 0.08)",
+                border: "1px solid rgba(22, 90, 246, 0.2)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between"
+              }}>
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: "0.875rem", color: "#0F172A" }}>
+                    {studentPreview.name}
+                  </div>
+                  <div style={{ fontSize: "0.75rem", color: "#64748B" }}>
+                    Reg: {studentPreview.reg_id} • Grade: {studentPreview.grade || "Unassigned"}
+                  </div>
+                </div>
+                <span style={{
+                  fontSize: "0.75rem",
+                  fontWeight: 600,
+                  color: "#059669",
+                  background: "#DCFCE7",
+                  padding: "0.2rem 0.5rem",
+                  borderRadius: "4px"
+                }}>
+                  Verified Match
+                </span>
+              </div>
+            )}
+          </div>
+
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>Relationship to Student</label>
+            <select
+              className={styles.formSelect}
+              value={linkWardForm.relationship}
+              onChange={(e) => setLinkWardForm({ ...linkWardForm, relationship: e.target.value })}
+            >
+              <option value="Parent">Parent</option>
+              <option value="Father">Father</option>
+              <option value="Mother">Mother</option>
+              <option value="Legal Guardian">Legal Guardian</option>
+              <option value="Sponsor">Sponsor</option>
+              <option value="Uncle/Aunt">Uncle / Aunt</option>
+              <option value="Elder Sibling">Elder Sibling</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div className={styles.modalFooter}>
+            <Button type="button" variant="outline" size="md" onClick={() => setModal(null)}>
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              size="md"
+              leftIcon={<CheckIcon width="16" height="16" />}
+              loading={saving}
+              disabled={!linkWardForm.guardian_id || !linkWardForm.student_reg_id.trim()}
+            >
+              Link Ward
             </Button>
           </div>
         </form>

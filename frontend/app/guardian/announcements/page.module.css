@@ -1,0 +1,221 @@
+/* ── Announcements Mobile Screen Styles ── */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  width: 100%;
+}
+
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.headerLeftGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.backBtn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--g-surface, #FFFFFF);
+  border: 1px solid var(--g-border, #E2E8F0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--g-text-primary, #0F172A);
+  cursor: pointer;
+  transition: all var(--g-duration, 180ms) ease;
+}
+
+.backBtn:hover {
+  background: var(--g-surface-subtle, #F8FAFC);
+  border-color: var(--g-border-focus, #3B82F6);
+}
+
+.pageTitle {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--g-text-primary, #0F172A);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.tabList {
+  display: flex;
+  gap: 0.4rem;
+  background: var(--g-surface-subtle, #F1F5F9);
+  padding: 0.3rem;
+  border-radius: var(--g-radius-md, 12px);
+}
+
+.tabBtn {
+  flex: 1;
+  padding: 0.45rem 0.5rem;
+  border-radius: var(--g-radius-sm, 8px);
+  border: none;
+  background: transparent;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--g-text-muted, #64748B);
+  cursor: pointer;
+  transition: all var(--g-duration, 180ms) ease;
+  text-align: center;
+}
+
+.tabBtnActive {
+  background: var(--g-surface, #FFFFFF) !important;
+  color: var(--g-primary, #165AF6) !important;
+  font-weight: 700 !important;
+  box-shadow: var(--g-shadow-sm, 0 1px 3px rgba(15, 23, 42, 0.08));
+}
+
+.cardList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.announcementCard {
+  background: var(--g-surface, #FFFFFF);
+  border: 1px solid var(--g-border, #E2E8F0);
+  border-radius: var(--g-radius-lg, 16px);
+  padding: 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  box-shadow: var(--g-shadow-sm, 0 1px 3px rgba(15, 23, 42, 0.03));
+  cursor: pointer;
+  transition: all var(--g-duration, 180ms) ease;
+}
+
+.announcementCard:hover {
+  border-color: var(--g-border-focus, #3B82F6);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.cardTopRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.categoryPill {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+}
+
+.catSchool {
+  background: var(--g-primary-subtle, #EFF4FF);
+  color: var(--g-primary, #165AF6);
+  border: 1px solid var(--g-primary-border, #DBEAFE);
+}
+
+.catAcademic {
+  background: var(--g-purple-subtle, #F5F3FF);
+  color: var(--g-purple, #7C3AED);
+  border: 1px solid var(--g-purple-border, #DDD6FE);
+}
+
+.dateStr {
+  font-size: 0.75rem;
+  color: var(--g-text-muted, #64748B);
+}
+
+.cardHeading {
+  font-size: 0.9375rem;
+  font-weight: 800;
+  color: var(--g-text-primary, #0F172A);
+  margin: 0;
+  line-height: 1.35;
+}
+
+.cardTeaser {
+  font-size: 0.8125rem;
+  color: var(--g-text-secondary, #475569);
+  line-height: 1.45;
+  margin: 0;
+}
+
+.readMoreLink {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--g-primary, #165AF6);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+}
+
+/* Reader Modal */
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(8px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.modalContent {
+  background: var(--g-surface, #FFFFFF);
+  border: 1px solid var(--g-border, #E2E8F0);
+  border-radius: var(--g-radius-xl, 20px);
+  width: 100%;
+  max-width: 440px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+}
+
+.modalHeader {
+  padding: 1.15rem 1.25rem;
+  border-bottom: 1px solid var(--g-border, #E2E8F0);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modalTitle {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--g-text-primary, #0F172A);
+  margin: 0;
+}
+
+.modalCloseBtn {
+  background: transparent;
+  border: none;
+  color: var(--g-text-muted, #64748B);
+  cursor: pointer;
+  padding: 0.25rem;
+}
+
+.modalBody {
+  padding: 1.25rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.modalFullText {
+  font-size: 0.875rem;
+  color: var(--g-text-secondary, #334155);
+  line-height: 1.6;
+  white-space: pre-wrap;
+}

@@ -1,8 +1,10 @@
 import { controlDb } from "../client";
 import type { School, SchoolStatus } from "../../types";
+import { installationRepository } from "./installationRepository";
 
 export const schoolRepository = {
   listAll(filters?: { status?: string; search?: string }): School[] {
+    try { installationRepository.sweepStaleToOffline(); } catch {}
     let query = `
       SELECT 
         s.*,
@@ -47,10 +49,11 @@ export const schoolRepository = {
         }
       }
 
+      const resolvedStatus = sc.health_status || "unknown";
       return {
         ...sc,
-        health_status: sc.health_status || "unknown",
-        health_score: sc.health_score ?? 100,
+        health_status: resolvedStatus,
+        health_score: resolvedStatus === "unknown" ? null : (sc.health_score ?? null),
         active_trial: trial || null,
         active_license: license || null,
       };
@@ -58,6 +61,7 @@ export const schoolRepository = {
   },
 
   findById(id: number): School | null {
+    try { installationRepository.sweepStaleToOffline(); } catch {}
     const query = `
       SELECT 
         s.*,
@@ -87,10 +91,11 @@ export const schoolRepository = {
       }
     }
 
+    const resolvedStatus2 = sc.health_status || "unknown";
     return {
       ...sc,
-      health_status: sc.health_status || "unknown",
-      health_score: sc.health_score ?? 100,
+      health_status: resolvedStatus2,
+      health_score: resolvedStatus2 === "unknown" ? null : (sc.health_score ?? null),
       active_trial: trial || null,
       active_license: license || null,
     };

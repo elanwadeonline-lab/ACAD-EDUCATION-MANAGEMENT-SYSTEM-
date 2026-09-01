@@ -139,10 +139,21 @@ export const api = {
   getAcademicStats: (sessionId?: number, termId?: number) => fetchWithAuth<any>(`/api/academic/stats${buildAcademicQuery(sessionId, termId)}`),
   
   // Guardian Link Management APIs (Admin)
-  getGuardianLinkRequests: (status?: string) => fetchWithAuth<any[]>(status ? `/api/v2/guardian-links?status=${status}` : "/api/v2/guardian-links"),
-  approveGuardianLink: (linkId: number) => fetchWithAuth<{ id: number; status: string }>(`/api/v2/guardian-links/${linkId}/approve`, { method: "PUT" }),
-  rejectGuardianLink: (linkId: number) => fetchWithAuth<{ id: number; status: string }>(`/api/v2/guardian-links/${linkId}/reject`, { method: "PUT" }),
-  revokeGuardianLink: (linkId: number) => fetchWithAuth<{ id: number; status: string }>(`/api/v2/guardian-links/${linkId}/revoke`, { method: "PUT" }),
+  getGuardianLinkRequests: (status?: string) => fetchWithAuth<any[]>(status ? `/api/admin/guardian-links?status=${status}` : "/api/admin/guardian-links"),
+  approveGuardianLink: (linkId: number) => fetchWithAuth<{ id: number; status: string }>(`/api/admin/guardian-links/${linkId}/approve`, { method: "PUT" }),
+  rejectGuardianLink: (linkId: number) => fetchWithAuth<{ id: number; status: string }>(`/api/admin/guardian-links/${linkId}/reject`, { method: "PUT" }),
+  revokeGuardianLink: (linkId: number) => fetchWithAuth<{ id: number; status: string }>(`/api/admin/guardian-links/${linkId}/revoke`, { method: "PUT" }),
+  deleteGuardianLink: (linkId: number) => fetchWithAuth<{ id: number; message: string }>(`/api/admin/guardian-links/${linkId}`, { method: "DELETE" }),
+  lookupStudentForLink: (query: string) => fetchWithAuth<any[]>(`/api/admin/guardian-links/lookup-student?q=${encodeURIComponent(query)}`),
+  adminCreateGuardianLink: (data: { guardian_id: number; reg_id?: string; student_id?: number; relationship?: string }) =>
+    fetchWithAuth<any>("/api/admin/guardian-links", { method: "POST", body: JSON.stringify(data) }),
+
+  // Admin Inquiry & Messaging APIs
+  getAdminMessageThreads: () => fetchWithAuth<any[]>("/api/admin/messages/threads"),
+  getAdminMessageThread: (threadId: number) => fetchWithAuth<{ thread: any; messages: any[] }>(`/api/admin/messages/threads/${threadId}`),
+  sendAdminMessageReply: (threadId: number, text: string) => fetchWithAuth<any>(`/api/admin/messages/threads/${threadId}`, { method: "POST", body: JSON.stringify({ text }) }),
+  createAdminMessageThread: (data: { guardian_id: number; student_id?: number; text: string; subject?: string; category?: string }) =>
+    fetchWithAuth<any>("/api/admin/messages/new-thread", { method: "POST", body: JSON.stringify(data) }),
   
   // v8: Grading System APIs
   getGradingConfig: () => fetchWithAuth<any>("/api/grading/config"),
@@ -428,17 +439,54 @@ export const api = {
   /** Publish or schedule subject results */
   publishResults: (data: { subject_id: number; action: "publish_now" | "schedule" | "hold"; release_time?: string | null }) =>
     fetchWithAuth<any>("/api/teacher/results/publish", { method: "POST", body: JSON.stringify(data) }),
-  /** Get admin inquiry message threads */
-  getAdminMessageThreads: () => fetchWithAuth<any[]>("/api/admin/messages/threads"),
-  /** Get specific admin inquiry message thread */
-  getAdminMessageThread: (id: number) => fetchWithAuth<{ thread: any; messages: any[] }>(`/api/admin/messages/threads/${id}`),
-  /** Send reply to guardian from admin */
-  sendAdminMessageReply: (id: number, text: string) =>
-    fetchWithAuth<any>(`/api/admin/messages/threads/${id}`, { method: "POST", body: JSON.stringify({ text }) }),
   /** Get user notifications */
   getNotifications: () => fetchWithAuth<{ items: any[] }>("/api/notifications"),
   /** Mark all notifications as read */
   markNotificationsRead: () => fetchWithAuth<any>("/api/notifications/read", { method: "PUT" }),
+  /** Guardian PWA Endpoints */
+  getGuardianWards: () => fetchWithAuth<{ wards: any[]; stats?: any }>("/api/guardian/wards"),
+  getGuardianStats: () => fetchWithAuth<any>("/api/guardian/stats"),
+  getGuardianWardPerformance: (wardId: number) => fetchWithAuth<any>(`/api/guardian/wards/${wardId}/performance`),
+  getGuardianWardAttendance: (wardId: number) => fetchWithAuth<{ summary: any; calendar: any[] }>(`/api/guardian/wards/${wardId}/attendance`),
+  getGuardianWardFees: (wardId: number) => fetchWithAuth<{ structures: any[]; payments: any[] }>(`/api/guardian/wards/${wardId}/fees`),
+  payGuardianWardFees: (wardId: number, data: { fee_id: number; amount: number; method?: string }) =>
+    fetchWithAuth<any>(`/api/guardian/wards/${wardId}/fees/pay`, { method: "POST", body: JSON.stringify(data) }),
+  getGuardianWardResults: (wardId: number, termId?: number) =>
+    fetchWithAuth<any[]>(`/api/guardian/wards/${wardId}/results${termId ? `?term_id=${termId}` : ""}`),
+  getGuardianWardReportCard: (wardId: number) =>
+    fetchWithAuth<{ results: any[]; remarks: any[] }>(`/api/guardian/wards/${wardId}/report-card`),
+  getGuardianWardExams: (wardId: number, limit?: number) =>
+    fetchWithAuth<any[]>(`/api/guardian/wards/${wardId}/exams${limit ? `?limit=${limit}` : ""}`),
+  getGuardianWardShareToken: (wardId: number) =>
+    fetchWithAuth<{ token: string; share_url: string }>(`/api/guardian/wards/${wardId}/share-token`),
+  verifyGuardianShareToken: (token: string) =>
+    fetchWithAuth<any>(`/api/guardian/verify-share-token?token=${encodeURIComponent(token)}`),
+  getGuardianMessageContacts: (wardId?: number) =>
+    fetchWithAuth<any[]>(`/api/guardian/messages/contacts${wardId ? `?ward_id=${wardId}` : ""}`),
+  getGuardianMessageThreads: () => fetchWithAuth<any[]>("/api/guardian/messages/threads"),
+  getGuardianMessageThread: (threadId: number) =>
+    fetchWithAuth<{ thread: any; messages: any[] }>(`/api/guardian/messages/threads/${threadId}`),
+  sendGuardianMessage: (threadId: number, text: string) =>
+    fetchWithAuth<any>(`/api/guardian/messages/threads/${threadId}`, { method: "POST", body: JSON.stringify({ text }) }),
+  createGuardianMessageThread: (data: { recipient_id: number; student_id: number; text: string; category?: string; subject?: string }) =>
+    fetchWithAuth<any>("/api/guardian/messages/new-thread", { method: "POST", body: JSON.stringify(data) }),
+  getGuardianNotifications: () => fetchWithAuth<{ items: any[]; unreadCount: number }>("/api/guardian/notifications"),
+  markGuardianNotificationsRead: () => fetchWithAuth<any>("/api/guardian/notifications/mark-read", { method: "POST" }),
+  getGuardianAnnouncements: (category?: string) =>
+    fetchWithAuth<any[]>(`/api/guardian/announcements${category ? `?category=${category}` : ""}`),
+  getGuardianCalendar: () => fetchWithAuth<any[]>("/api/guardian/calendar"),
+  getGuardianProfile: () => fetchWithAuth<any>("/api/guardian/profile"),
+  updateGuardianProfile: (data: { phone?: string; address?: string }) =>
+    fetchWithAuth<any>("/api/guardian/settings/profile", { method: "POST", body: JSON.stringify(data) }),
+  updateGuardianPassword: (data: { current_password: string; new_password: string }) =>
+    fetchWithAuth<any>("/api/guardian/settings/password", { method: "POST", body: JSON.stringify(data) }),
+  updateGuardianNotifications: (data: { notify_attendance?: number | boolean; notify_results?: number | boolean; notify_fees?: number | boolean; notify_messages?: number | boolean }) =>
+    fetchWithAuth<any>("/api/guardian/settings/notifications", { method: "POST", body: JSON.stringify(data) }),
+  getGuardianLinks: () => fetchWithAuth<any[]>("/api/guardian/links"),
+  createGuardianLink: (data: { reg_id?: string; student_id?: number; relationship?: string }) =>
+    fetchWithAuth<any>("/api/guardian/links", { method: "POST", body: JSON.stringify(data) }),
+  cancelGuardianLink: (linkId: number) => fetchWithAuth<any>(`/api/guardian/links/${linkId}`, { method: "DELETE" }),
+
   /** Generic GET request helper */
   get: <T = any>(url: string) => fetchWithAuth<T>(url),
   /** Generic POST request helper */

@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import styles from "../control.module.css";
 import { controlApi } from "../../../lib/controlApi";
+import { SlidersHorizontal, ToggleLeft, Layers } from "lucide-react";
 
 const ALL_MODULES = [
   { key: "cbt_exam", name: "Offline CBT Examination Engine", cat: "Core CBT", critical: true },
@@ -30,7 +31,13 @@ export default function ControlFeatureFlagsPage() {
 
   useEffect(() => {
     controlApi.getSchools()
-      .then((res) => { setSchools(res.schools || []); })
+      .then((res) => {
+        const list = res.schools || [];
+        setSchools(list);
+        if (list.length > 0 && !selectedSchoolId) {
+          setSelectedSchoolId(list[0].id);
+        }
+      })
       .catch((err: any) => setError(err.message || "Failed to load schools."))
       .finally(() => setLoading(false));
   }, []);
@@ -57,7 +64,7 @@ export default function ControlFeatureFlagsPage() {
     setFlagToggles((prev) => ({ ...prev, [flagKey]: newVal }));
     try {
       await controlApi.setFeatureFlag(selectedSchoolId, flagKey, newVal);
-      setPendingSync(true); // Mark that we need to sync to node
+      setPendingSync(true);
       setSuccessMsg(`${flagKey} ${newVal ? "enabled" : "disabled"}`);
       setTimeout(() => setSuccessMsg(""), 3000);
     } catch (err: any) {
@@ -84,22 +91,17 @@ export default function ControlFeatureFlagsPage() {
   );
 
   const selectedSchool = schools.find((s) => s.id === selectedSchoolId);
-
-  // Group modules by category
-  const byCategory: Record<string, typeof ALL_MODULES> = {};
-  for (const m of ALL_MODULES) {
-    if (!byCategory[m.cat]) byCategory[m.cat] = [];
-    byCategory[m.cat].push(m);
-  }
-
   const enabledCount = Object.values(flagToggles).filter(Boolean).length;
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1.5rem" }}>
+      {/* ── Section Header ── */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1.25rem", flexWrap: "wrap", gap: "1rem" }}>
         <div>
-          <h1 style={{ fontSize: "1.25rem", fontWeight: 800, color: "#FFFFFF" }}>Modular Feature Flags</h1>
-          <p style={{ fontSize: "0.8125rem", color: "#64748B", marginTop: "0.2rem" }}>
+          <h1 style={{ fontSize: "1.25rem", fontWeight: 800, color: "var(--text-heading)", letterSpacing: "-0.02em" }}>
+            Modular Feature Flags
+          </h1>
+          <p style={{ fontSize: "0.8125rem", color: "var(--text-secondary)", marginTop: "0.2rem" }}>
             Per-school capability controls. Changes are queued to the node and applied on the next heartbeat cycle.
           </p>
         </div>
@@ -110,14 +112,49 @@ export default function ControlFeatureFlagsPage() {
         )}
       </div>
 
+      {/* ── Summary Metric Cards ── */}
+      <div className={styles.metricGrid} style={{ marginBottom: "1.25rem" }}>
+        <div className={styles.metricCard}>
+          <div className={styles.metricLabel}>Total Modular Features</div>
+          <div className={styles.metricValue} style={{ color: "var(--accent)" }}>
+            {ALL_MODULES.length}
+          </div>
+          <div className={styles.metricSubtext}>Available micro-modules</div>
+        </div>
+
+        <div className={styles.metricCard}>
+          <div className={styles.metricLabel}>Active on Selected Campus</div>
+          <div className={styles.metricValue} style={{ color: "var(--success)" }}>
+            {flagsLoading ? "—" : `${enabledCount} / ${ALL_MODULES.length}`}
+          </div>
+          <div className={styles.metricSubtext}>{selectedSchool?.name || "Selected campus"}</div>
+        </div>
+
+        <div className={styles.metricCard}>
+          <div className={styles.metricLabel}>Fleet Sync State</div>
+          <div className={styles.metricValue} style={{ color: pendingSync ? "var(--warning)" : "var(--success)" }}>
+            {pendingSync ? "Unsynced" : "Synced"}
+          </div>
+          <div className={styles.metricSubtext}>{pendingSync ? "Push queued" : "All nodes in sync"}</div>
+        </div>
+
+        <div className={styles.metricCard}>
+          <div className={styles.metricLabel}>Core Modules</div>
+          <div className={styles.metricValue} style={{ color: "var(--purple)" }}>
+            2 Locked
+          </div>
+          <div className={styles.metricSubtext}>CBT Exam &amp; Pool Bank</div>
+        </div>
+      </div>
+
       {error && (
-        <div style={{ background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.3)", borderRadius: "8px", padding: "0.75rem 1rem", color: "#F87171", fontSize: "0.8125rem", marginBottom: "1rem", display: "flex", justifyContent: "space-between" }}>
+        <div style={{ background: "var(--danger-bg)", border: "1px solid var(--danger)", borderRadius: "8px", padding: "0.75rem 1rem", color: "var(--danger-text)", fontSize: "0.8125rem", marginBottom: "1rem", display: "flex", justifyContent: "space-between" }}>
           {error}
-          <button onClick={() => setError("")} style={{ background: "none", border: "none", color: "#F87171", cursor: "pointer" }}>✕</button>
+          <button onClick={() => setError("")} style={{ background: "none", border: "none", color: "var(--danger-text)", cursor: "pointer" }}>✕</button>
         </div>
       )}
       {successMsg && (
-        <div style={{ background: "rgba(16, 185, 129, 0.1)", border: "1px solid rgba(16, 185, 129, 0.3)", borderRadius: "8px", padding: "0.75rem 1rem", color: "#34D399", fontSize: "0.8125rem", marginBottom: "1rem" }}>
+        <div style={{ background: "var(--success-bg)", border: "1px solid var(--success)", borderRadius: "8px", padding: "0.75rem 1rem", color: "var(--success-text)", fontSize: "0.8125rem", marginBottom: "1rem" }}>
           {successMsg}
         </div>
       )}
@@ -125,7 +162,7 @@ export default function ControlFeatureFlagsPage() {
       <div style={{ display: "grid", gridTemplateColumns: "280px 1fr", gap: "1.25rem" }}>
         {/* ── School Selector Sidebar ── */}
         <div className={styles.tableContainer} style={{ padding: "1rem" }}>
-          <div style={{ fontSize: "0.6875rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#64748B", marginBottom: "0.75rem" }}>
+          <div style={{ fontSize: "0.6875rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-secondary)", marginBottom: "0.75rem" }}>
             Select Campus
           </div>
           <input
@@ -137,7 +174,7 @@ export default function ControlFeatureFlagsPage() {
             style={{ width: "100%", marginBottom: "0.75rem", fontSize: "0.8125rem" }}
           />
           {loading ? (
-            <div style={{ color: "#64748B", fontSize: "0.75rem", textAlign: "center", padding: "1rem" }}>Loading schools…</div>
+            <div style={{ color: "var(--text-secondary)", fontSize: "0.75rem", textAlign: "center", padding: "1rem" }}>Loading schools…</div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", maxHeight: "480px", overflowY: "auto" }}>
               {filteredSchools.map((s) => (
@@ -148,20 +185,20 @@ export default function ControlFeatureFlagsPage() {
                     textAlign: "left",
                     padding: "0.65rem 0.75rem",
                     borderRadius: "6px",
-                    border: `1px solid ${selectedSchoolId === s.id ? "rgba(59, 130, 246, 0.4)" : "transparent"}`,
-                    background: selectedSchoolId === s.id ? "rgba(59, 130, 246, 0.1)" : "transparent",
+                    border: `1px solid ${selectedSchoolId === s.id ? "var(--accent)" : "transparent"}`,
+                    background: selectedSchoolId === s.id ? "var(--accent-bg)" : "transparent",
                     cursor: "pointer",
                     transition: "all 0.12s ease",
                   }}
                 >
-                  <div style={{ fontWeight: 600, color: selectedSchoolId === s.id ? "#93C5FD" : "#E2E8F0", fontSize: "0.8125rem" }}>
+                  <div style={{ fontWeight: 600, color: selectedSchoolId === s.id ? "var(--accent)" : "var(--text-heading)", fontSize: "0.8125rem" }}>
                     {s.name}
                   </div>
-                  <div className={styles.mono} style={{ color: "#64748B", fontSize: "0.6875rem" }}>{s.school_code}</div>
+                  <div className={styles.mono} style={{ color: "var(--text-muted)", fontSize: "0.6875rem" }}>{s.school_code}</div>
                 </button>
               ))}
               {filteredSchools.length === 0 && (
-                <div style={{ color: "#64748B", fontSize: "0.75rem", textAlign: "center", padding: "1rem" }}>No schools match.</div>
+                <div style={{ color: "var(--text-secondary)", fontSize: "0.75rem", textAlign: "center", padding: "1rem" }}>No schools match.</div>
               )}
             </div>
           )}
@@ -170,11 +207,11 @@ export default function ControlFeatureFlagsPage() {
         {/* ── Flag Matrix ── */}
         <div>
           {!selectedSchoolId ? (
-            <div className={styles.tableContainer} style={{ padding: "4rem", textAlign: "center", color: "#64748B" }}>
+            <div className={styles.tableContainer} style={{ padding: "4rem", textAlign: "center", color: "var(--text-secondary)" }}>
               Select a campus from the left panel to manage its feature flags.
             </div>
           ) : flagsLoading ? (
-            <div className={styles.tableContainer} style={{ padding: "4rem", textAlign: "center", color: "#64748B" }}>
+            <div className={styles.tableContainer} style={{ padding: "4rem", textAlign: "center", color: "var(--text-secondary)" }}>
               Loading flags for {selectedSchool?.name}…
             </div>
           ) : (
@@ -182,13 +219,13 @@ export default function ControlFeatureFlagsPage() {
               <div className={styles.tableHeader}>
                 <div>
                   <div className={styles.tableTitle}>{selectedSchool?.name}</div>
-                  <div className={styles.mono} style={{ color: "#64748B", fontSize: "0.6875rem" }}>
+                  <div className={styles.mono} style={{ color: "var(--text-muted)", fontSize: "0.6875rem" }}>
                     {enabledCount} of {ALL_MODULES.length} modules enabled
                   </div>
                 </div>
                 <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
                   {pendingSync && (
-                    <span className={styles.statusBadge} style={{ background: "rgba(245, 158, 11, 0.15)", color: "#FBBF24", fontSize: "0.6875rem" }}>
+                    <span className={styles.statusBadge} style={{ background: "var(--warning-bg)", color: "var(--warning)", fontSize: "0.6875rem" }}>
                       Pending node sync
                     </span>
                   )}
@@ -202,57 +239,57 @@ export default function ControlFeatureFlagsPage() {
                   </button>
                 </div>
               </div>
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th>Module</th>
-                    <th>Category</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {ALL_MODULES.map((m) => {
-                    const isEnabled = Boolean(flagToggles[m.key]);
-                    return (
-                      <tr key={m.key}>
-                        <td>
-                          <div style={{ fontWeight: 600, color: "#F8FAFC", fontSize: "0.8125rem" }}>{m.name}</div>
-                          <div className={styles.mono} style={{ color: "#64748B", fontSize: "0.6875rem" }}>{m.key}</div>
-                        </td>
-                        <td>
-                          <span style={{ fontSize: "0.75rem", color: "#94A3B8" }}>{m.cat}</span>
-                          {m.critical && (
-                            <span className={styles.statusBadge} style={{ marginLeft: "0.4rem", background: "rgba(239, 68, 68, 0.1)", color: "#F87171", fontSize: "0.6rem" }}>
-                              Core
+              <div className={styles.tableResponsive}>
+                <table className={styles.table} style={{ minWidth: "600px" }}>
+                  <thead>
+                    <tr>
+                      <th>Module</th>
+                      <th>Category</th>
+                      <th>Status</th>
+                      <th style={{ textAlign: "right", paddingRight: "1.25rem" }}>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {ALL_MODULES.map((m) => {
+                      const isEnabled = Boolean(flagToggles[m.key]);
+                      return (
+                        <tr key={m.key}>
+                          <td>
+                            <div style={{ fontWeight: 600, color: "var(--text-heading)", fontSize: "0.8125rem" }}>{m.name}</div>
+                            <div className={styles.mono} style={{ color: "var(--text-muted)", fontSize: "0.6875rem" }}>{m.key}</div>
+                          </td>
+                          <td>
+                            <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>{m.cat}</span>
+                            {m.critical && (
+                              <span className={styles.statusBadge} style={{ marginLeft: "0.4rem", background: "var(--danger-bg)", color: "var(--danger)", fontSize: "0.6rem" }}>
+                                Core
+                              </span>
+                            )}
+                          </td>
+                          <td>
+                            <span className={styles.statusBadge} style={{
+                              background: isEnabled ? "var(--success-bg)" : "var(--bg-hover)",
+                              color: isEnabled ? "var(--success)" : "var(--text-muted)",
+                            }}>
+                              <span className={`${styles.statusDot} ${isEnabled ? styles.dotHealthy : styles.dotOffline}`} />
+                              {isEnabled ? "Enabled" : "Disabled"}
                             </span>
-                          )}
-                        </td>
-                        <td>
-                          <span className={styles.statusBadge} style={{
-                            background: isEnabled ? "rgba(16, 185, 129, 0.15)" : "rgba(100, 116, 139, 0.15)",
-                            color: isEnabled ? "#34D399" : "#64748B",
-                          }}>
-                            <span className={`${styles.statusDot} ${isEnabled ? styles.dotHealthy : styles.dotOffline}`} />
-                            {isEnabled ? "Enabled" : "Disabled"}
-                          </span>
-                        </td>
-                        <td>
-                          <button
-                            onClick={() => handleToggle(m.key, isEnabled)}
-                            className={`${styles.btn} ${isEnabled ? styles.btnDanger : styles.btnPrimary}`}
-                            style={{ fontSize: "0.75rem" }}
-                            disabled={m.critical && isEnabled}
-                            title={m.critical && isEnabled ? "Core modules cannot be disabled" : undefined}
-                          >
-                            {isEnabled ? "Disable" : "Enable"}
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                          </td>
+                          <td style={{ textAlign: "right", paddingRight: "1.25rem" }}>
+                            <button
+                              onClick={() => handleToggle(m.key, isEnabled)}
+                              className={`${styles.btn} ${isEnabled ? styles.btnDanger : styles.btnPrimary}`}
+                              style={{ fontSize: "0.6875rem" }}
+                            >
+                              {isEnabled ? "Disable" : "Enable"}
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </div>

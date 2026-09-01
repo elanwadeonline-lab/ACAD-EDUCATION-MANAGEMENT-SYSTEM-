@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "../control.module.css";
 import { controlApi } from "../../../lib/controlApi";
+import { ShieldCheck } from "lucide-react";
 
 export default function ControlLoginPage() {
   const router = useRouter();
@@ -37,36 +38,39 @@ export default function ControlLoginPage() {
       style={{
         alignItems: "center",
         justifyContent: "center",
-        background: "radial-gradient(ellipse at top, #131E35 0%, #0B0F17 100%)",
+        background: "var(--bg-app)",
+        minHeight: "100vh",
       }}
     >
       <div
         style={{
           width: "100%",
           maxWidth: "400px",
-          background: "#0F172A",
-          border: "1px solid #1E293B",
+          background: "var(--bg-panel-1)",
+          border: "1px solid var(--border-panel)",
           borderRadius: "12px",
           padding: "2rem",
-          boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
+          boxShadow: "var(--shadow-drawer)",
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.5rem" }}>
-          <div className={styles.brandLogo} style={{ width: "34px", height: "34px", fontSize: "1rem" }}>
-            ⚡
+          <div className={styles.brandLogo} style={{ width: "36px", height: "36px" }}>
+            <ShieldCheck size={20} />
           </div>
           <div>
-            <div style={{ fontWeight: 800, fontSize: "1.125rem", color: "#FFFFFF" }}>ACAD MISSION CONTROL</div>
-            <div style={{ fontSize: "0.75rem", color: "#64748B" }}>Supervisory Control Plane</div>
+            <div style={{ fontWeight: 800, fontSize: "1.125rem", color: "var(--text-heading)", letterSpacing: "-0.02em" }}>
+              ACAD MISSION CONTROL
+            </div>
+            <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>Supervisory Control Plane</div>
           </div>
         </div>
 
         {error && (
           <div
             style={{
-              background: "rgba(239, 68, 68, 0.12)",
-              border: "1px solid rgba(239, 68, 68, 0.3)",
-              color: "#F87171",
+              background: "var(--danger-bg)",
+              border: "1px solid var(--danger)",
+              color: "var(--danger-text)",
               padding: "0.65rem 0.85rem",
               borderRadius: "6px",
               fontSize: "0.75rem",
@@ -79,7 +83,7 @@ export default function ControlLoginPage() {
 
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           <div>
-            <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, color: "#94A3B8", marginBottom: "0.35rem" }}>
+            <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "0.35rem" }}>
               Staff Email Address
             </label>
             <input
@@ -93,7 +97,7 @@ export default function ControlLoginPage() {
           </div>
 
           <div>
-            <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, color: "#94A3B8", marginBottom: "0.35rem" }}>
+            <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "0.35rem" }}>
               Password
             </label>
             <input
@@ -116,8 +120,8 @@ export default function ControlLoginPage() {
           </button>
         </form>
 
-        <div style={{ marginTop: "1.5rem", paddingTop: "1rem", borderTop: "1px solid #1E293B", textAlign: "center" }}>
-          <span style={{ fontSize: "0.6875rem", color: "#64748B" }}>
+        <div style={{ marginTop: "1.5rem", paddingTop: "1rem", borderTop: "1px solid var(--border-panel)", textAlign: "center" }}>
+          <span style={{ fontSize: "0.6875rem", color: "var(--text-muted)" }}>
             Restricted access for ACAD platform operators and engineers.
           </span>
         </div>

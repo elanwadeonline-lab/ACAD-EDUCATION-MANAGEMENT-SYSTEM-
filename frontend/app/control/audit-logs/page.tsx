@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import styles from "../control.module.css";
 import { controlApi } from "../../../lib/controlApi";
+import { ShieldCheck, History, UserCheck, Terminal } from "lucide-react";
 
 const ACTION_TYPES = [
   "ALL",
@@ -46,32 +47,74 @@ export default function ControlAuditLogsPage() {
     return true;
   });
 
+  const uniqueActors = new Set(logs.map((l) => l.actor_email)).size;
+  const configMutations = logs.filter((l) => ["SET_FEATURE_FLAG", "PUSH_CONFIG", "PUSH_CONFIG_ALL_NODES"].includes(l.action)).length;
+  const provisioningEvents = logs.filter((l) => ["CREATE_SCHOOL", "PROVISION_INSTALLATION", "CONVERT_TRIAL_TO_PAID"].includes(l.action)).length;
+
   const actionColors: Record<string, string> = {
-    PLATFORM_LOGIN: "#60A5FA",
-    CREATE_SCHOOL: "#34D399",
-    CREATE_ORGANIZATION: "#34D399",
-    PROVISION_INSTALLATION: "#A78BFA",
-    REVOKE_INSTALLATION: "#F87171",
-    PUSH_CONFIG: "#FBBF24",
-    PUSH_CONFIG_ALL_NODES: "#FBBF24",
-    CONVERT_TRIAL_TO_PAID: "#34D399",
-    EXTEND_TRIAL: "#60A5FA",
-    SET_FEATURE_FLAG: "#A78BFA",
-    UPDATE_SCHOOL: "#60A5FA",
-    DELETE_SESSION: "#F87171",
+    PLATFORM_LOGIN: "var(--accent)",
+    CREATE_SCHOOL: "var(--success)",
+    CREATE_ORGANIZATION: "var(--success)",
+    PROVISION_INSTALLATION: "var(--purple)",
+    REVOKE_INSTALLATION: "var(--danger)",
+    PUSH_CONFIG: "var(--warning)",
+    PUSH_CONFIG_ALL_NODES: "var(--warning)",
+    CONVERT_TRIAL_TO_PAID: "var(--success)",
+    EXTEND_TRIAL: "var(--accent)",
+    SET_FEATURE_FLAG: "var(--purple)",
+    UPDATE_SCHOOL: "var(--accent)",
+    DELETE_SESSION: "var(--danger)",
   };
 
   return (
     <div>
-      <div style={{ marginBottom: "1.5rem" }}>
-        <h1 style={{ fontSize: "1.25rem", fontWeight: 800, color: "#FFFFFF" }}>Platform Audit Trail</h1>
-        <p style={{ fontSize: "0.8125rem", color: "#64748B", marginTop: "0.2rem" }}>
+      {/* ── Section Header ── */}
+      <div style={{ marginBottom: "1.25rem" }}>
+        <h1 style={{ fontSize: "1.25rem", fontWeight: 800, color: "var(--text-heading)", letterSpacing: "-0.02em" }}>
+          Platform Audit Trail
+        </h1>
+        <p style={{ fontSize: "0.8125rem", color: "var(--text-secondary)", marginTop: "0.2rem" }}>
           Tamper-evident, append-only log of all operator actions. {filtered.length} of {logs.length} entries shown.
         </p>
       </div>
 
+      {/* ── Summary Metric Cards ── */}
+      <div className={styles.metricGrid} style={{ marginBottom: "1.25rem" }}>
+        <div className={styles.metricCard}>
+          <div className={styles.metricLabel}>Total Audit Entries</div>
+          <div className={styles.metricValue} style={{ color: "var(--accent)" }}>
+            {loading ? "—" : logs.length}
+          </div>
+          <div className={styles.metricSubtext}>Immutable security events</div>
+        </div>
+
+        <div className={styles.metricCard}>
+          <div className={styles.metricLabel}>Active Operators</div>
+          <div className={styles.metricValue} style={{ color: "var(--success)" }}>
+            {loading ? "—" : uniqueActors}
+          </div>
+          <div className={styles.metricSubtext}>Authenticated platform staff</div>
+        </div>
+
+        <div className={styles.metricCard}>
+          <div className={styles.metricLabel}>Config Mutations</div>
+          <div className={styles.metricValue} style={{ color: "var(--warning)" }}>
+            {loading ? "—" : configMutations}
+          </div>
+          <div className={styles.metricSubtext}>Downlink flags &amp; pushes</div>
+        </div>
+
+        <div className={styles.metricCard}>
+          <div className={styles.metricLabel}>Provisioning Actions</div>
+          <div className={styles.metricValue} style={{ color: "var(--purple)" }}>
+            {loading ? "—" : provisioningEvents}
+          </div>
+          <div className={styles.metricSubtext}>Schools &amp; nodes created</div>
+        </div>
+      </div>
+
       {error && (
-        <div style={{ background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.3)", borderRadius: "8px", padding: "0.75rem 1rem", color: "#F87171", fontSize: "0.8125rem", marginBottom: "1rem" }}>
+        <div style={{ background: "var(--danger-bg)", border: "1px solid var(--danger)", borderRadius: "8px", padding: "0.75rem 1rem", color: "var(--danger-text)", fontSize: "0.8125rem", marginBottom: "1rem" }}>
           {error}
         </div>
       )}
@@ -80,7 +123,7 @@ export default function ControlAuditLogsPage() {
       <div className={styles.tableContainer} style={{ padding: "0.85rem 1.15rem", marginBottom: "1rem" }}>
         <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", alignItems: "center" }}>
           <div style={{ flex: "1 1 160px" }}>
-            <label style={{ display: "block", fontSize: "0.6875rem", fontWeight: 600, color: "#64748B", marginBottom: "0.2rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+            <label style={{ display: "block", fontSize: "0.6875rem", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "0.2rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
               Action Type
             </label>
             <select
@@ -95,7 +138,7 @@ export default function ControlAuditLogsPage() {
             </select>
           </div>
           <div style={{ flex: "1 1 200px" }}>
-            <label style={{ display: "block", fontSize: "0.6875rem", fontWeight: 600, color: "#64748B", marginBottom: "0.2rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+            <label style={{ display: "block", fontSize: "0.6875rem", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "0.2rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
               Actor Email
             </label>
             <input
@@ -108,7 +151,7 @@ export default function ControlAuditLogsPage() {
             />
           </div>
           <div style={{ flex: "0 0 auto" }}>
-            <label style={{ display: "block", fontSize: "0.6875rem", fontWeight: 600, color: "#64748B", marginBottom: "0.2rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+            <label style={{ display: "block", fontSize: "0.6875rem", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "0.2rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
               From Date
             </label>
             <input
@@ -120,7 +163,7 @@ export default function ControlAuditLogsPage() {
             />
           </div>
           <div style={{ flex: "0 0 auto" }}>
-            <label style={{ display: "block", fontSize: "0.6875rem", fontWeight: 600, color: "#64748B", marginBottom: "0.2rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+            <label style={{ display: "block", fontSize: "0.6875rem", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "0.2rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
               To Date
             </label>
             <input
@@ -145,79 +188,86 @@ export default function ControlAuditLogsPage() {
         </div>
       </div>
 
+      {/* Audit Logs Table */}
       <div className={styles.tableContainer}>
         {loading ? (
-          <div style={{ padding: "3rem", textAlign: "center", color: "#64748B" }}>Loading audit trail…</div>
+          <div style={{ padding: "3rem", textAlign: "center", color: "var(--text-secondary)" }}>Loading audit trail…</div>
         ) : filtered.length === 0 ? (
-          <div style={{ padding: "3rem", textAlign: "center", color: "#64748B", fontSize: "0.8125rem" }}>
+          <div style={{ padding: "3rem", textAlign: "center", color: "var(--text-secondary)", fontSize: "0.8125rem" }}>
             No audit log entries match the current filters.
           </div>
         ) : (
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>Timestamp</th>
-                <th>Actor</th>
-                <th>Action</th>
-                <th>Target</th>
-                <th>Details</th>
-                <th>Client IP</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((log) => (
-                <tr key={log.id}>
-                  <td>
-                    <span className={styles.mono} style={{ fontSize: "0.6875rem", color: "#94A3B8" }}>
-                      {new Date(log.created_at).toLocaleString()}
-                    </span>
-                  </td>
-                  <td>
-                    <div className={styles.mono} style={{ color: "#CBD5E1", fontSize: "0.75rem" }}>{log.actor_email}</div>
-                  </td>
-                  <td>
-                    <span className={styles.statusBadge} style={{
-                      background: `${actionColors[log.action] ?? "#60A5FA"}18`,
-                      color: actionColors[log.action] ?? "#60A5FA",
-                      fontSize: "0.6875rem",
-                    }}>
-                      {log.action.replace(/_/g, " ")}
-                    </span>
-                  </td>
-                  <td>
-                    <div style={{ fontSize: "0.75rem" }}>
-                      <span style={{ color: "#94A3B8" }}>{log.target_type}</span>
-                      <span className={styles.mono} style={{ color: "#64748B", marginLeft: "0.35rem" }}>#{log.target_id}</span>
-                    </div>
-                  </td>
-                  <td>
-                    {log.details_json && log.details_json !== "null" ? (
-                      <details style={{ cursor: "pointer" }}>
-                        <summary style={{ fontSize: "0.6875rem", color: "#64748B", cursor: "pointer" }}>View details</summary>
-                        <pre style={{
-                          fontSize: "0.6875rem",
-                          color: "#CBD5E1",
-                          background: "#070A10",
-                          padding: "0.5rem",
-                          borderRadius: "4px",
-                          marginTop: "0.25rem",
-                          overflowX: "auto",
-                          maxWidth: "280px",
-                        }}>
-                          {JSON.stringify(JSON.parse(log.details_json), null, 2)}
-                        </pre>
-                      </details>
-                    ) : (
-                      <span style={{ color: "#334155", fontSize: "0.6875rem" }}>—</span>
-                    )}
-                  </td>
-                  <td>
-                    <span className={styles.mono} style={{ fontSize: "0.6875rem", color: "#64748B" }}>{log.ip_address || "—"}</span>
-                  </td>
+          <div className={styles.tableResponsive}>
+            <table className={styles.table} style={{ minWidth: "860px" }}>
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>Actor</th>
+                  <th>Action</th>
+                  <th>Target</th>
+                  <th>Details</th>
+                  <th>Client IP</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filtered.map((log) => (
+                  <tr key={log.id}>
+                    <td>
+                      <span className={styles.mono} style={{ fontSize: "0.6875rem", color: "var(--text-muted)" }}>
+                        {new Date(log.created_at).toLocaleString()}
+                      </span>
+                    </td>
+                    <td>
+                      <div className={styles.mono} style={{ color: "var(--text-primary)", fontSize: "0.75rem", fontWeight: 500 }}>{log.actor_email}</div>
+                    </td>
+                    <td>
+                      <span className={styles.statusBadge} style={{
+                        background: "var(--bg-elevated)",
+                        color: actionColors[log.action] ?? "var(--accent)",
+                        border: `1px solid ${actionColors[log.action] ?? "var(--accent)"}33`,
+                        fontSize: "0.6875rem",
+                      }}>
+                        {log.action.replace(/_/g, " ")}
+                      </span>
+                    </td>
+                    <td>
+                      <div style={{ fontSize: "0.75rem" }}>
+                        <span style={{ color: "var(--text-secondary)" }}>{log.target_type}</span>
+                        <span className={styles.mono} style={{ color: "var(--text-muted)", marginLeft: "0.35rem" }}>#{log.target_id}</span>
+                      </div>
+                    </td>
+                    <td>
+                      {log.details_json && log.details_json !== "null" ? (
+                        <details style={{ cursor: "pointer" }}>
+                          <summary style={{ fontSize: "0.6875rem", color: "var(--accent)", cursor: "pointer" }}>View details</summary>
+                          <pre style={{
+                            fontSize: "0.6875rem",
+                            color: "var(--text-primary)",
+                            background: "var(--bg-input)",
+                            padding: "0.5rem",
+                            borderRadius: "4px",
+                            marginTop: "0.25rem",
+                            overflowX: "auto",
+                            maxWidth: "280px",
+                            border: "1px solid var(--border-input)",
+                          }}>
+                            {JSON.stringify(JSON.parse(log.details_json), null, 2)}
+                          </pre>
+                        </details>
+                      ) : (
+                        <span style={{ fontSize: "0.6875rem", color: "var(--text-muted)" }}>—</span>
+                      )}
+                    </td>
+                    <td>
+                      <span className={styles.mono} style={{ fontSize: "0.6875rem", color: "var(--text-muted)" }}>
+                        {log.ip_address || "127.0.0.1"}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

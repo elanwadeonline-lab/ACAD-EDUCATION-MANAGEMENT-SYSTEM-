@@ -11,12 +11,38 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.headerLeftGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.backBtn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--g-surface, #FFFFFF);
+  border: 1px solid var(--g-border, #E2E8F0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--g-text-primary, #0F172A);
+  cursor: pointer;
+  transition: all var(--g-duration, 180ms) ease;
+}
+
+.backBtn:hover {
+  background: var(--g-surface-subtle, #F8FAFC);
+  border-color: var(--g-border-focus, #3B82F6);
 }
 
 .pageTitle {
   font-size: 1.25rem;
   font-weight: 800;
-  color: #0F172A;
+  color: var(--g-text-primary, #0F172A);
   margin: 0;
   letter-spacing: -0.02em;
 }
@@ -24,30 +50,30 @@
 .tabList {
   display: flex;
   gap: 0.4rem;
-  background: #F1F5F9;
-  padding: 0.25rem;
-  border-radius: 12px;
+  background: var(--g-surface-subtle, #F1F5F9);
+  padding: 0.3rem;
+  border-radius: var(--g-radius-md, 12px);
 }
 
 .tabBtn {
   flex: 1;
-  padding: 0.4rem 0.5rem;
-  border-radius: 9px;
+  padding: 0.45rem 0.5rem;
+  border-radius: var(--g-radius-sm, 8px);
   border: none;
   background: transparent;
   font-size: 0.75rem;
   font-weight: 600;
-  color: #64748B;
+  color: var(--g-text-muted, #64748B);
   cursor: pointer;
-  transition: all 140ms ease;
+  transition: all var(--g-duration, 180ms) ease;
   text-align: center;
 }
 
 .tabBtnActive {
-  background: #FFFFFF !important;
-  color: #0F172A !important;
+  background: var(--g-surface, #FFFFFF) !important;
+  color: var(--g-primary, #165AF6) !important;
   font-weight: 700 !important;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+  box-shadow: var(--g-shadow-sm, 0 1px 3px rgba(15, 23, 42, 0.08));
 }
 
 .examList {
@@ -57,14 +83,21 @@
 }
 
 .examCard {
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  border-radius: 16px;
+  background: var(--g-surface, #FFFFFF);
+  border: 1px solid var(--g-border, #E2E8F0);
+  border-radius: var(--g-radius-lg, 16px);
   padding: 1.15rem;
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+  box-shadow: var(--g-shadow-sm, 0 1px 3px rgba(15, 23, 42, 0.03));
+  cursor: pointer;
+  transition: all var(--g-duration, 180ms) ease;
+}
+
+.examCard:hover {
+  border-color: var(--g-border-focus, #3B82F6);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
 }
 
 .cardMainRow {
@@ -74,10 +107,10 @@
 }
 
 .dateBox {
-  width: 46px;
-  height: 52px;
-  background: #EFF4FF;
-  border: 1px solid #DBEAFE;
+  width: 48px;
+  height: 54px;
+  background: var(--g-primary-subtle, #EFF4FF);
+  border: 1px solid var(--g-primary-border, #DBEAFE);
   border-radius: 12px;
   display: flex;
   flex-direction: column;
@@ -88,22 +121,23 @@
 
 .dateMonth {
   font-size: 0.5625rem;
-  font-weight: 700;
-  color: #165AF6;
+  font-weight: 800;
+  color: var(--g-primary, #165AF6);
   text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .dateDay {
-  font-size: 1.0625rem;
+  font-size: 1.125rem;
   font-weight: 800;
-  color: #0F172A;
+  color: var(--g-text-primary, #0F172A);
   line-height: 1;
 }
 
 .dateWeekday {
   font-size: 0.5625rem;
   font-weight: 600;
-  color: #64748B;
+  color: var(--g-text-muted, #64748B);
   text-transform: uppercase;
 }
 
@@ -117,6 +151,7 @@
 .examTitleLine {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.45rem;
   flex-wrap: wrap;
 }
@@ -124,7 +159,7 @@
 .examTitle {
   font-size: 0.875rem;
   font-weight: 700;
-  color: #0F172A;
+  color: var(--g-text-primary, #0F172A);
 }
 
 .statusPill {
@@ -134,40 +169,118 @@
   gap: 0.25rem;
   font-size: 0.625rem;
   font-weight: 700;
-  padding: 0.15rem 0.5rem;
+  padding: 0.2rem 0.55rem;
   border-radius: 999px;
   line-height: 1;
 }
 
 .statusLive {
-  background: #ECFDF5;
-  color: #059669;
-  border: 1px solid #A7F3D0;
+  background: var(--g-success-subtle, #ECFDF5);
+  color: var(--g-success, #059669);
+  border: 1px solid var(--g-success-border, #A7F3D0);
 }
 
 .statusUpcoming {
-  background: #EFF4FF;
-  color: #165AF6;
-  border: 1px solid #DBEAFE;
+  background: var(--g-primary-subtle, #EFF4FF);
+  color: var(--g-primary, #165AF6);
+  border: 1px solid var(--g-primary-border, #DBEAFE);
 }
 
 .statusCompleted {
-  background: #F1F5F9;
-  color: #64748B;
-  border: 1px solid #E2E8F0;
+  background: var(--g-surface-subtle, #F1F5F9);
+  color: var(--g-text-muted, #64748B);
+  border: 1px solid var(--g-border, #E2E8F0);
 }
 
 .timeAndVenue {
   font-size: 0.75rem;
-  color: #64748B;
+  color: var(--g-text-muted, #64748B);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
 }
 
 .instructionsBox {
-  padding: 0.65rem 0.75rem;
-  background: #F8FAFC;
-  border-radius: 10px;
   font-size: 0.75rem;
-  color: #475569;
-  line-height: 1.4;
-  border: 1px solid #F1F5F9;
+  color: var(--g-text-secondary, #475569);
+  background: var(--g-surface-subtle, #F8FAFC);
+  border-left: 3px solid var(--g-primary, #165AF6);
+  padding: 0.5rem 0.75rem;
+  border-radius: 0 8px 8px 0;
+}
+
+/* Modal Bottom Sheet */
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(8px);
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.sheetContent {
+  background: var(--g-surface, #FFFFFF);
+  border-top: 1px solid var(--g-border, #E2E8F0);
+  border-radius: 24px 24px 0 0;
+  width: 100%;
+  max-width: 440px;
+  padding: 1.5rem 1.25rem 2rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+  box-shadow: var(--g-shadow-sheet, 0 -10px 30px rgba(0, 0, 0, 0.2));
+}
+
+.sheetHandle {
+  width: 36px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--g-border, #E2E8F0);
+  margin: 0 auto;
+}
+
+.sheetHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sheetTitle {
+  font-size: 1.0625rem;
+  font-weight: 800;
+  color: var(--g-text-primary, #0F172A);
+  margin: 0;
+}
+
+.sheetDetailsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.65rem;
+  background: var(--g-surface-subtle, #F8FAFC);
+  border: 1px solid var(--g-border, #E2E8F0);
+  border-radius: 14px;
+  padding: 0.9rem;
+}
+
+.gridItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.gridLabel {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--g-text-muted, #64748B);
+  text-transform: uppercase;
+}
+
+.gridVal {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--g-text-primary, #0F172A);
 }

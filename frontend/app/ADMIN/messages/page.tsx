@@ -122,9 +122,25 @@ function AdminMessagesContent() {
         try {
           const data = JSON.parse(event.data);
           if (data?.type === "chat_message") {
+            showToast(`💬 ${data.message || `New message from ${data.sender_name || "Guardian"}`}`);
             loadThreads();
-            if (selectedThreadId) {
-              loadMessages(selectedThreadId);
+            if (selectedThreadId && Number(data.thread_id) === Number(selectedThreadId)) {
+              const incomingMsg: Message = {
+                id: Number(data.message_id || Date.now()),
+                thread_id: Number(data.thread_id),
+                sender_id: Number(data.sender_id || 0),
+                sender_role: data.sender_role || "guardian",
+                sender_name: data.sender_name || "Guardian",
+                text: data.text || data.message || "",
+                is_read: 1,
+                created_at: data.created_at || new Date().toISOString(),
+              };
+              setMessages((prev) => {
+                if (prev.some((m) => m.id === incomingMsg.id || (m.text === incomingMsg.text && m.sender_role === incomingMsg.sender_role))) {
+                  return prev;
+                }
+                return [...prev, incomingMsg];
+              });
             }
           }
         } catch {}
@@ -134,7 +150,7 @@ function AdminMessagesContent() {
     return () => {
       if (es) es.close();
     };
-  }, [loadThreads, loadMessages, selectedThreadId]);
+  }, [loadThreads, selectedThreadId]);
 
   const handleSendReply = async (e?: React.FormEvent, customText?: string) => {
     if (e) e.preventDefault();

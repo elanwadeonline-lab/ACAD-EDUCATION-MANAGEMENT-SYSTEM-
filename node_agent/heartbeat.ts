@@ -22,20 +22,32 @@ export function buildHeartbeatPayload(version = "5.3.0"): any {
     system: {
       cpuUsagePercent: system.cpuUsagePercent,
       memoryUsagePercent: system.memoryUsagePercent,
+      freeMemoryBytes: system.freeMemoryBytes,
+      totalMemoryBytes: system.totalMemoryBytes,
       storageUsagePercent: system.storageUsagePercent,
       uptimeSeconds: system.uptimeSeconds,
       localIp: system.localIp,
+      hostname: system.hostname,
+      serverPort: system.serverPort,
     },
     database: {
       status: database.status,
       dbSizeBytes: database.dbSizeBytes,
       walSizeBytes: database.walSizeBytes,
+      integrity: database.integrity,
+      dbPath: database.dbPath,
     },
     operational: {
       connectedClients: operational.connectedClients,
       activeExamSessions: operational.activeExamSessions,
+      totalQuestions: operational.totalQuestions,
+      totalSubjects: operational.totalSubjects,
+      totalExams: operational.totalExams,
+      totalAttempts: operational.totalAttempts,
+      totalClasses: operational.totalClasses,
       totalStudents: operational.totalStudents,
       totalTeachers: operational.totalTeachers,
+      totalGuardians: operational.totalGuardians,
       bufferedEventsCount: queueSize,
       lastBackupHoursAgo: operational.lastBackupHoursAgo,
     },
@@ -279,6 +291,33 @@ export async function applyConfigPayload(type: string, payload: any): Promise<vo
       case "reboot_request": {
         telemetryQueue.enqueue("REBOOT_REQUESTED", "warning", { source: "control_plane" });
         console.log("[Sync] Reboot request received from Control Plane.");
+        break;
+      }
+
+      case "diagnostics":
+      case "RUN_DIAGNOSTICS": {
+        const check = localDb.prepare("PRAGMA integrity_check").get() as any;
+        const qCount = (localDb.prepare("SELECT COUNT(*) as c FROM questions").get() as any)?.c || 0;
+        const exCount = (localDb.prepare("SELECT COUNT(*) as c FROM exams").get() as any)?.c || 0;
+        telemetryQueue.enqueue("DIAGNOSTICS_COMPLETED", "info", {
+          integrity: check?.integrity_check || "ok",
+          total_questions: qCount,
+          total_exams: exCount,
+          timestamp: new Date().toISOString(),
+        });
+        console.log("[Node Agent] Diagnostics executed successfully:", check);
+        break;
+      }
+
+      case "wal_checkpoint":
+      case "CHECKPOINT_DB": {
+        try {
+          localDb.run("PRAGMA wal_checkpoint(TRUNCATE)");
+          telemetryQueue.enqueue("WAL_CHECKPOINT_COMPLETED", "info", { timestamp: new Date().toISOString() });
+          console.log("[Node Agent] Database WAL checkpoint completed.");
+        } catch (e) {
+          console.error("[Node Agent] WAL checkpoint error:", e);
+        }
         break;
       }
 

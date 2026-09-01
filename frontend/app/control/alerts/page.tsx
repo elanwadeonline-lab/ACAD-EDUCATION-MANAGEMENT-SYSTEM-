@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import styles from "../control.module.css";
 import { controlApi } from "../../../lib/controlApi";
+import { AlertOctagon, CheckCircle2, ShieldAlert } from "lucide-react";
 
 type SeverityFilter = "all" | "critical" | "high" | "warning";
 const SEVERITY_TABS: SeverityFilter[] = ["all", "critical", "high", "warning"];
@@ -59,33 +60,73 @@ export default function ControlAlertsPage() {
   const filtered = filter === "all" ? alerts : alerts.filter((a) => a.severity === filter);
   const openCount = alerts.filter((a) => a.status === "open").length;
   const criticalCount = alerts.filter((a) => a.severity === "critical" && a.status !== "resolved").length;
+  const highCount = alerts.filter((a) => a.severity === "high" && a.status !== "resolved").length;
+  const resolvedCount = alerts.filter((a) => a.status === "resolved").length;
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1.5rem" }}>
+      {/* ── Section Header ── */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1.25rem", flexWrap: "wrap", gap: "1rem" }}>
         <div>
-          <h1 style={{ fontSize: "1.25rem", fontWeight: 800, color: "#FFFFFF" }}>Automated Fleet Alarms</h1>
-          <p style={{ fontSize: "0.8125rem", color: "#64748B", marginTop: "0.2rem" }}>
+          <h1 style={{ fontSize: "1.25rem", fontWeight: 800, color: "var(--text-heading)", letterSpacing: "-0.02em" }}>
+            Automated Fleet Alarms
+          </h1>
+          <p style={{ fontSize: "0.8125rem", color: "var(--text-secondary)", marginTop: "0.2rem" }}>
             Threshold violations, storage exhaustion, backup anomalies, and node offline alarms. Auto-refreshes every 15s.
           </p>
         </div>
         <div style={{ display: "flex", gap: "0.5rem" }}>
           {criticalCount > 0 && (
-            <span className={styles.statusBadge} style={{ background: "rgba(239, 68, 68, 0.15)", color: "#F87171" }}>
+            <span className={styles.statusBadge} style={{ background: "var(--danger-bg)", color: "var(--danger)" }}>
               <span className={`${styles.statusDot} ${styles.dotCritical}`} />
               {criticalCount} Critical
             </span>
           )}
-          <span className={styles.statusBadge} style={{ background: "rgba(255,255,255,0.06)", color: "#94A3B8" }}>
+          <span className={styles.statusBadge} style={{ background: "var(--bg-elevated)", color: "var(--text-secondary)" }}>
             {openCount} Open
           </span>
         </div>
       </div>
 
+      {/* ── Summary Metric Cards ── */}
+      <div className={styles.metricGrid} style={{ marginBottom: "1.25rem" }}>
+        <div className={styles.metricCard}>
+          <div className={styles.metricLabel}>Total Alarms Logged</div>
+          <div className={styles.metricValue} style={{ color: "var(--accent)" }}>
+            {loading ? "—" : alerts.length}
+          </div>
+          <div className={styles.metricSubtext}>Historical fleet events</div>
+        </div>
+
+        <div className={styles.metricCard}>
+          <div className={styles.metricLabel}>Critical Alarms</div>
+          <div className={styles.metricValue} style={{ color: criticalCount > 0 ? "var(--danger)" : "var(--text-muted)" }}>
+            {loading ? "—" : criticalCount}
+          </div>
+          <div className={styles.metricSubtext}>Immediate operator action</div>
+        </div>
+
+        <div className={styles.metricCard}>
+          <div className={styles.metricLabel}>High &amp; Warnings</div>
+          <div className={styles.metricValue} style={{ color: highCount > 0 ? "var(--warning)" : "var(--text-muted)" }}>
+            {loading ? "—" : highCount}
+          </div>
+          <div className={styles.metricSubtext}>Elevated resource utilization</div>
+        </div>
+
+        <div className={styles.metricCard}>
+          <div className={styles.metricLabel}>Resolved Alarms</div>
+          <div className={styles.metricValue} style={{ color: "var(--success)" }}>
+            {loading ? "—" : resolvedCount}
+          </div>
+          <div className={styles.metricSubtext}>Mitigated issues</div>
+        </div>
+      </div>
+
       {error && (
-        <div style={{ background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.3)", borderRadius: "8px", padding: "0.75rem 1rem", color: "#F87171", fontSize: "0.8125rem", marginBottom: "1rem", display: "flex", justifyContent: "space-between" }}>
+        <div style={{ background: "var(--danger-bg)", border: "1px solid var(--danger)", borderRadius: "8px", padding: "0.75rem 1rem", color: "var(--danger-text)", fontSize: "0.8125rem", marginBottom: "1rem", display: "flex", justifyContent: "space-between" }}>
           {error}
-          <button onClick={() => setError("")} style={{ background: "none", border: "none", color: "#F87171", cursor: "pointer" }}>✕</button>
+          <button onClick={() => setError("")} style={{ background: "none", border: "none", color: "var(--danger-text)", cursor: "pointer" }}>✕</button>
         </div>
       )}
 
@@ -105,95 +146,101 @@ export default function ControlAlertsPage() {
         })}
       </div>
 
+      {/* Alerts Table Matrix */}
       <div className={styles.tableContainer}>
         {loading ? (
-          <div style={{ padding: "3rem", textAlign: "center", color: "#64748B" }}>Loading alert center…</div>
+          <div style={{ padding: "3rem", textAlign: "center", color: "var(--text-secondary)" }}>Loading alert center…</div>
         ) : filtered.length === 0 ? (
-          <div style={{ padding: "3rem", textAlign: "center", color: "#34D399", fontSize: "0.8125rem" }}>
+          <div style={{ padding: "3rem", textAlign: "center", color: "var(--success)", fontSize: "0.8125rem" }}>
             All systems operational — no active alarms matching this filter.
           </div>
         ) : (
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>Severity</th>
-                <th>Campus</th>
-                <th>Alert Title &amp; Details</th>
-                <th>Status</th>
-                <th>Triggered At</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((alt) => (
-                <tr key={alt.id} style={{ opacity: alt.status === "resolved" ? 0.5 : 1 }}>
-                  <td>
-                    <span className={`${styles.statusBadge} ${
-                      alt.severity === "critical" ? styles.badgeCritical
-                        : alt.severity === "high" ? styles.badgeDegraded
-                        : styles.badgeWarning
-                    }`}>
-                      {alt.severity === "critical" && <span className={`${styles.statusDot} ${styles.dotCritical}`} />}
-                      {alt.severity}
-                    </span>
-                  </td>
-                  <td>
-                    <Link href={`/control/schools/${alt.school_id}`} style={{ fontWeight: 600, color: "#F8FAFC", textDecoration: "none" }}>
-                      {alt.school_name}
-                    </Link>
-                    <div className={styles.mono} style={{ color: "#64748B", fontSize: "0.6875rem" }}>{alt.school_code}</div>
-                  </td>
-                  <td>
-                    <div style={{ fontWeight: 600, color: "#F8FAFC", fontSize: "0.8125rem" }}>{alt.title}</div>
-                    <div style={{ fontSize: "0.75rem", color: "#94A3B8" }}>{alt.details}</div>
-                  </td>
-                  <td>
-                    <span className={styles.mono} style={{
-                      textTransform: "uppercase",
-                      fontSize: "0.6875rem",
-                      color: alt.status === "open" ? "#FBBF24" : alt.status === "acknowledged" ? "#60A5FA" : "#34D399",
-                    }}>
-                      {alt.status}
-                    </span>
-                  </td>
-                  <td className={styles.mono} style={{ fontSize: "0.6875rem", color: "#94A3B8" }}>
-                    {new Date(alt.created_at).toLocaleString()}
-                  </td>
-                  <td>
-                    {alt.status !== "resolved" && (
-                      <div style={{ display: "flex", gap: "0.4rem" }}>
-                        {alt.status === "open" && (
+          <div className={styles.tableResponsive}>
+            <table className={styles.table} style={{ minWidth: "860px" }}>
+              <thead>
+                <tr>
+                  <th>Severity</th>
+                  <th>Campus</th>
+                  <th>Alert Title &amp; Details</th>
+                  <th>Status</th>
+                  <th>Triggered At</th>
+                  <th style={{ textAlign: "right", paddingRight: "1.25rem" }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((alt) => (
+                  <tr key={alt.id} style={{ opacity: alt.status === "resolved" ? 0.5 : 1 }}>
+                    <td>
+                      <span className={`${styles.statusBadge} ${
+                        alt.severity === "critical" ? styles.badgeCritical
+                          : alt.severity === "high" ? styles.badgeDegraded
+                          : styles.badgeWarning
+                      }`}>
+                        {alt.severity === "critical" && <span className={`${styles.statusDot} ${styles.dotCritical}`} />}
+                        {alt.severity}
+                      </span>
+                    </td>
+                    <td>
+                      <Link href={`/control/schools/${alt.school_id}`} style={{ fontWeight: 600, color: "var(--text-heading)", textDecoration: "none" }}>
+                        {alt.school_name}
+                      </Link>
+                      <div className={styles.mono} style={{ color: "var(--text-muted)", fontSize: "0.6875rem" }}>{alt.school_code}</div>
+                    </td>
+                    <td>
+                      <div style={{ fontWeight: 600, color: "var(--text-heading)", fontSize: "0.8125rem" }}>{alt.title}</div>
+                      <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>{alt.details}</div>
+                    </td>
+                    <td>
+                      <span className={styles.mono} style={{
+                        textTransform: "uppercase",
+                        fontSize: "0.6875rem",
+                        color: alt.status === "open" ? "var(--warning)" : alt.status === "acknowledged" ? "var(--accent)" : "var(--success)",
+                      }}>
+                        {alt.status}
+                      </span>
+                    </td>
+                    <td className={styles.mono} style={{ fontSize: "0.6875rem", color: "var(--text-muted)" }}>
+                      {new Date(alt.created_at).toLocaleString()}
+                    </td>
+                    <td style={{ textAlign: "right", paddingRight: "1.25rem" }}>
+                      {alt.status !== "resolved" && (
+                        <div style={{ display: "inline-flex", gap: "0.4rem", justifyContent: "flex-end" }}>
+                          {alt.status === "open" && (
+                            <button
+                              onClick={() => handleAck(alt.id)}
+                              disabled={actionLoading === alt.id}
+                              className={`${styles.btn} ${styles.btnSecondary}`}
+                              style={{ fontSize: "0.6875rem" }}
+                            >
+                              {actionLoading === alt.id ? "…" : "Ack"}
+                            </button>
+                          )}
                           <button
-                            onClick={() => handleAck(alt.id)}
+                            onClick={() => handleResolve(alt.id)}
                             disabled={actionLoading === alt.id}
+                            className={`${styles.btn} ${styles.btnPrimary}`}
+                            style={{ fontSize: "0.6875rem" }}
+                          >
+                            {actionLoading === alt.id ? "…" : "Resolve"}
+                          </button>
+                          <Link
+                            href={`/control/schools/${alt.school_id}`}
                             className={`${styles.btn} ${styles.btnSecondary}`}
                             style={{ fontSize: "0.6875rem" }}
                           >
-                            {actionLoading === alt.id ? "…" : "Ack"}
-                          </button>
-                        )}
-                        <button
-                          onClick={() => handleResolve(alt.id)}
-                          disabled={actionLoading === alt.id}
-                          className={`${styles.btn} ${styles.btnPrimary}`}
-                          style={{ fontSize: "0.6875rem" }}
-                        >
-                          {actionLoading === alt.id ? "…" : "Resolve"}
-                        </button>
-                        <Link
-                          href={`/control/schools/${alt.school_id}`}
-                          className={`${styles.btn} ${styles.btnSecondary}`}
-                          style={{ fontSize: "0.6875rem" }}
-                        >
-                          Investigate
-                        </Link>
-                      </div>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                            Investigate
+                          </Link>
+                        </div>
+                      )}
+                      {alt.status === "resolved" && (
+                        <span className={styles.mono} style={{ fontSize: "0.6875rem", color: "var(--success)" }}>Mitigated</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>
