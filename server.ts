@@ -28,8 +28,6 @@ import {
 } from "./validation";
 import { createAuthorizationService } from "./src/services/authorization.service";
 import { cacheService, CacheKeys } from "./src/services/cache.service";
-import { handleControlPlaneApi } from "./control_plane/server";
-import { seedControlPlane } from "./control_plane/database/seed";
 import {
   checkModuleAccess,
   getCampusEntitlements,
@@ -40,7 +38,6 @@ import {
 import { startNodeAgent } from "./node_agent/agent";
 
 const authz = createAuthorizationService(db, queries);
-seedControlPlane().catch((err) => console.error("Control plane seed error:", err));
 
 // Auto-start ACAD Node Telemetry & Sync Daemon in background
 if (Bun.env.DISABLE_NODE_AGENT !== "true" && Bun.env.NODE_ENV !== "test") {
@@ -591,17 +588,6 @@ function normalizeApiPathname(raw: string): string {
 async function handleApi(req: Request, url: URL): Promise<Response> {
   const method = req.method.toUpperCase();
   const pathname = normalizeApiPathname(url.pathname);
-
-  // ── ACAD Supervisory Control Plane API (/api/platform/* & /api/node/*) ────
-  if (pathname.startsWith("/api/platform") || pathname.startsWith("/api/control-plane") || pathname.startsWith("/api/node")) {
-    try {
-      const cpRes = await handleControlPlaneApi(req, url);
-      if (cpRes) return cpRes;
-    } catch (err: any) {
-      console.error("[ControlPlane] API Error:", err);
-      return apiError(500, err.message || "Control plane internal error");
-    }
-  }
 
   // ── Supervisory Module & Feature Flag Gate Enforcement ───────────────────
   try {
@@ -8507,10 +8493,6 @@ const server = serve({
     if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders });
     const url = new URL(req.url);
     try {
-      if (url.pathname.startsWith("/api/platform") || url.pathname.startsWith("/api/node")) {
-        const cpRes = await handleControlPlaneApi(req, url);
-        if (cpRes) return cpRes;
-      }
       if (url.pathname.startsWith("/api/") || url.pathname === "/api") return await handleApi(req, url);
       return await serveStatic(url.pathname);
     } catch (error) {

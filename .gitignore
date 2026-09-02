@@ -55,3 +55,6 @@ license.json
 
 # Windows
 Thumbs.db
+
+# Standalone Supervisory Control Platform (Independent Repository)
+acad-control/
