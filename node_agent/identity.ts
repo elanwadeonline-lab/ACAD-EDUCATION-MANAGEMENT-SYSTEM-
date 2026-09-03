@@ -11,6 +11,8 @@ export interface NodeIdentity {
 
 const IDENTITY_FILE_PATH = path.join(import.meta.dir, "..", "node_identity.json");
 
+export const DEFAULT_CLOUD_ENDPOINT = "https://acad-controll.onrender.com";
+
 export function getCloudEndpointFromEnv(): string {
   const env =
     Bun.env.ACAD_CLOUD_ENDPOINT ||
@@ -26,6 +28,7 @@ export function getCloudEndpointFromEnv(): string {
  */
 export function getOrCreateNodeIdentity(): NodeIdentity {
   const envEndpoint = getCloudEndpointFromEnv();
+  const fallbackEndpoint = DEFAULT_CLOUD_ENDPOINT;
 
   // 1. Check environment variables first
   const envInstallId = Bun.env.ACAD_INSTALLATION_ID;
@@ -37,7 +40,7 @@ export function getOrCreateNodeIdentity(): NodeIdentity {
       installationId: envInstallId,
       nodeId: envNodeId,
       secretKey: envSecretKey,
-      cloudEndpoint: envEndpoint || "http://localhost:8002",
+      cloudEndpoint: envEndpoint || fallbackEndpoint,
     };
   }
 
@@ -49,6 +52,8 @@ export function getOrCreateNodeIdentity(): NodeIdentity {
       if (parsed.installationId && parsed.secretKey) {
         if (envEndpoint) {
           parsed.cloudEndpoint = envEndpoint;
+        } else if (!parsed.cloudEndpoint || parsed.cloudEndpoint.includes("localhost:8001")) {
+          parsed.cloudEndpoint = fallbackEndpoint;
         }
         return parsed;
       }
@@ -62,7 +67,7 @@ export function getOrCreateNodeIdentity(): NodeIdentity {
     installationId: `INST-DEV-${randomBytes(3).toString("hex").toUpperCase()}`,
     nodeId: "NODE-LOCAL-01",
     secretKey: `node_sec_${randomBytes(16).toString("hex")}`,
-    cloudEndpoint: envEndpoint || "http://localhost:8002",
+    cloudEndpoint: envEndpoint || fallbackEndpoint,
   };
 
   try {
