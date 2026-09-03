@@ -11,14 +11,25 @@ export interface NodeIdentity {
 
 const IDENTITY_FILE_PATH = path.join(import.meta.dir, "..", "node_identity.json");
 
+export function getCloudEndpointFromEnv(): string {
+  const env =
+    Bun.env.ACAD_CLOUD_ENDPOINT ||
+    Bun.env.CONTROL_API_URL ||
+    Bun.env.SUPERVISORY_URL ||
+    Bun.env.NEXT_PUBLIC_CONTROL_API_URL ||
+    "";
+  return env.replace(/\/+$/, "");
+}
+
 /**
  * Loads or initializes the machine identity for this local ACAD installation.
  */
 export function getOrCreateNodeIdentity(): NodeIdentity {
+  const envEndpoint = getCloudEndpointFromEnv();
+
   // 1. Check environment variables first
   const envInstallId = Bun.env.ACAD_INSTALLATION_ID;
   const envSecretKey = Bun.env.ACAD_INSTALLATION_SECRET;
-  const envEndpoint = Bun.env.ACAD_CLOUD_ENDPOINT || "http://localhost:8001";
   const envNodeId = Bun.env.ACAD_NODE_ID || "NODE-PRIMARY";
 
   if (envInstallId && envSecretKey) {
@@ -26,7 +37,7 @@ export function getOrCreateNodeIdentity(): NodeIdentity {
       installationId: envInstallId,
       nodeId: envNodeId,
       secretKey: envSecretKey,
-      cloudEndpoint: envEndpoint,
+      cloudEndpoint: envEndpoint || "http://localhost:8002",
     };
   }
 
@@ -36,6 +47,9 @@ export function getOrCreateNodeIdentity(): NodeIdentity {
       const raw = fs.readFileSync(IDENTITY_FILE_PATH, "utf8");
       const parsed = JSON.parse(raw);
       if (parsed.installationId && parsed.secretKey) {
+        if (envEndpoint) {
+          parsed.cloudEndpoint = envEndpoint;
+        }
         return parsed;
       }
     } catch {
@@ -48,7 +62,7 @@ export function getOrCreateNodeIdentity(): NodeIdentity {
     installationId: `INST-DEV-${randomBytes(3).toString("hex").toUpperCase()}`,
     nodeId: "NODE-LOCAL-01",
     secretKey: `node_sec_${randomBytes(16).toString("hex")}`,
-    cloudEndpoint: envEndpoint,
+    cloudEndpoint: envEndpoint || "http://localhost:8002",
   };
 
   try {
@@ -58,4 +72,19 @@ export function getOrCreateNodeIdentity(): NodeIdentity {
   }
 
   return identity;
+}
+
+/**
+ * Updates the cloudEndpoint in node_identity.json
+ */
+export function setCloudEndpoint(url: string): NodeIdentity {
+  const current = getOrCreateNodeIdentity();
+  current.cloudEndpoint = url.replace(/\/+$/, "");
+  try {
+    fs.writeFileSync(IDENTITY_FILE_PATH, JSON.stringify(current, null, 2), "utf8");
+    console.log(`✅ [Node Agent] Updated cloud supervisory endpoint to: ${current.cloudEndpoint}`);
+  } catch (err) {
+    console.error("⚠️ [Node Agent] Failed to save updated endpoint to node_identity.json:", err);
+  }
+  return current;
 }

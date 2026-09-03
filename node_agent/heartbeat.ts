@@ -69,6 +69,8 @@ function buildNodeHeaders(
   return {
     "Content-Type": "application/json",
     "X-ACAD-Installation-Id": identity.installationId,
+    "X-ACAD-Node-Id": identity.nodeId,
+    "X-ACAD-Node-Secret": identity.secretKey,
     "X-ACAD-Timestamp": String(timestamp),
     "X-ACAD-Signature": signature,
   };
@@ -101,11 +103,15 @@ export async function sendHeartbeat(): Promise<boolean> {
           await applyConfigPayload("latest_release", data.supervisory.latest_release);
         }
       }
+      console.log(`💚 [Node Agent] Cloud heartbeat acknowledged by ${identity.cloudEndpoint} (Health: ${data?.health_score ?? 100}%)`);
       return true;
     }
 
+    const errText = await res.text().catch(() => "");
+    console.warn(`⚠️ [Node Agent] Cloud heartbeat rejected (${res.status}): ${errText}`);
     return false;
-  } catch {
+  } catch (err: any) {
+    console.warn(`⚠️ [Node Agent] Cloud heartbeat connection failed to ${identity.cloudEndpoint}: ${err.message || err}`);
     return false;
   }
 }
@@ -118,14 +124,24 @@ export async function flushTelemetryEvents(): Promise<number> {
   const rawBody = JSON.stringify({ events: batch });
 
   try {
-    const res = await fetch(`${identity.cloudEndpoint}/api/node/events`, {
+    let res = await fetch(`${identity.cloudEndpoint}/api/node/events`, {
       method: "POST",
       headers: buildNodeHeaders(identity, rawBody),
       body: rawBody,
       signal: AbortSignal.timeout(6000),
-    });
+    }).catch(() => null);
 
-    if (res.ok) {
+    // Fallback to /api/node/telemetry if /api/node/events is not supported
+    if (!res || !res.ok) {
+      res = await fetch(`${identity.cloudEndpoint}/api/node/telemetry`, {
+        method: "POST",
+        headers: buildNodeHeaders(identity, rawBody),
+        body: rawBody,
+        signal: AbortSignal.timeout(6000),
+      }).catch(() => null);
+    }
+
+    if (res && res.ok) {
       telemetryQueue.markAcknowledged(batch.map((b) => b.id));
       return batch.length;
     }
@@ -165,12 +181,13 @@ export async function fetchAndApplySyncQueue(): Promise<void> {
 
     if (!res.ok) return;
 
-    const data = await res.json() as { pending: Array<{ id: number; payload_type: string; payload: any }>; count: number };
-    if (!data.pending || data.count === 0) return;
+    const data = (await res.json()) as any;
+    const items = data?.items || data?.pending || [];
+    if (!Array.isArray(items) || items.length === 0) return;
 
     const deliveredIds: number[] = [];
 
-    for (const item of data.pending) {
+    for (const item of items) {
       try {
         await applyConfigPayload(item.payload_type, item.payload);
         deliveredIds.push(item.id);
@@ -182,12 +199,22 @@ export async function fetchAndApplySyncQueue(): Promise<void> {
     // Acknowledge delivered items
     if (deliveredIds.length > 0) {
       const ackBody = JSON.stringify({ ids: deliveredIds });
-      await fetch(`${identity.cloudEndpoint}/api/node/sync-ack`, {
+      let ackRes = await fetch(`${identity.cloudEndpoint}/api/node/sync-ack`, {
         method: "POST",
         headers: buildNodeHeaders(identity, ackBody),
         body: ackBody,
         signal: AbortSignal.timeout(5000),
-      });
+      }).catch(() => null);
+
+      if (!ackRes || !ackRes.ok) {
+        ackRes = await fetch(`${identity.cloudEndpoint}/api/node/confirm-sync`, {
+          method: "POST",
+          headers: buildNodeHeaders(identity, ackBody),
+          body: ackBody,
+          signal: AbortSignal.timeout(5000),
+        }).catch(() => null);
+      }
+
       console.log(`[Sync] Applied and acknowledged ${deliveredIds.length} config items.`);
     }
   } catch {
@@ -295,14 +322,19 @@ export async function applyConfigPayload(type: string, payload: any): Promise<vo
       }
 
       case "diagnostics":
-      case "RUN_DIAGNOSTICS": {
+      case "RUN_DIAGNOSTICS":
+      case "INTEGRITY_CHECK": {
         const check = localDb.prepare("PRAGMA integrity_check").get() as any;
         const qCount = (localDb.prepare("SELECT COUNT(*) as c FROM questions").get() as any)?.c || 0;
         const exCount = (localDb.prepare("SELECT COUNT(*) as c FROM exams").get() as any)?.c || 0;
+        const stCount = (localDb.prepare("SELECT COUNT(*) as c FROM users WHERE role = 'student'").get() as any)?.c || 0;
+        const tcCount = (localDb.prepare("SELECT COUNT(*) as c FROM users WHERE role = 'teacher'").get() as any)?.c || 0;
         telemetryQueue.enqueue("DIAGNOSTICS_COMPLETED", "info", {
           integrity: check?.integrity_check || "ok",
           total_questions: qCount,
           total_exams: exCount,
+          total_students: stCount,
+          total_teachers: tcCount,
           timestamp: new Date().toISOString(),
         });
         console.log("[Node Agent] Diagnostics executed successfully:", check);
@@ -318,6 +350,19 @@ export async function applyConfigPayload(type: string, payload: any): Promise<vo
         } catch (e) {
           console.error("[Node Agent] WAL checkpoint error:", e);
         }
+        break;
+      }
+
+      case "TRIGGER_PULSE": {
+        sendHeartbeat().catch(() => {});
+        flushTelemetryEvents().catch(() => {});
+        console.log("[Node Agent] Immediate heartbeat pulse triggered by Control Plane.");
+        break;
+      }
+
+      case "FLUSH_QUEUE": {
+        flushTelemetryEvents().catch(() => {});
+        console.log("[Node Agent] Telemetry queue flush triggered by Control Plane.");
         break;
       }
 
