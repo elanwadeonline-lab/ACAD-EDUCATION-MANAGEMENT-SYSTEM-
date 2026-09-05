@@ -16,6 +16,10 @@ type Notification = {
 };
 
 const TYPE_META: Record<string, { label: string; icon: React.ReactNode }> = {
+  exam: {
+    label: "Assessment",
+    icon: <BookIcon width="16" height="16" />,
+  },
   exam_submitted: {
     label: "Exam Submission",
     icon: <CheckCircleIcon width="16" height="16" />,
@@ -23,6 +27,18 @@ const TYPE_META: Record<string, { label: string; icon: React.ReactNode }> = {
   subject_published: {
     label: "Questions Published",
     icon: <BookIcon width="16" height="16" />,
+  },
+  results: {
+    label: "Results",
+    icon: <DocumentIcon width="16" height="16" />,
+  },
+  result_released: {
+    label: "Results Released",
+    icon: <DocumentIcon width="16" height="16" />,
+  },
+  attendance: {
+    label: "Attendance",
+    icon: <CheckCircleIcon width="16" height="16" />,
   },
   remark_added: {
     label: "Broadsheet Remark",
@@ -88,10 +104,11 @@ export function NotificationsPage() {
   const loadNotifications = async (silent = false) => {
     try {
       if (!silent) setLoading(true);
-      const res = await fetchWithAuth("/api/notifications");
-      setNotifications(res?.items || []);
+      const res = await fetchWithAuth<any>("/api/notifications");
+      const items = res?.items || (Array.isArray(res?.data?.items) ? res.data.items : []);
+      setNotifications(items);
       if (!silent) {
-        await fetchWithAuth("/api/notifications/read", { method: "PUT" });
+        await fetchWithAuth("/api/notifications/read", { method: "PUT" }).catch(() => {});
       }
     } catch {
       // Silently fail

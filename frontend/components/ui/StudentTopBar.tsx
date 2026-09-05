@@ -2,61 +2,164 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "../../hooks/useAuth";
+import { fetchWithAuth, API_BASE } from "../../lib/api";
 import { DigitalClock } from "./DigitalClock";
 import { AcadBrandIcon } from "../icons/Icons";
 import styles from "./StudentTopBar.module.css";
 
+type StudentNotification = {
+  id: number;
+  type: string;
+  message: string;
+  link: string | null;
+  is_read: number;
+  created_at: string;
+};
+
+function timeAgo(dateStr: string): string {
+  if (!dateStr) return "Just now";
+  const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+  if (diff < 15) return "Just now";
+  if (diff < 60) return `${diff}s ago`;
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return new Date(dateStr).toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
+}
+
+function getNotificationIcon(type: string): string {
+  switch (type) {
+    case "exam":
+    case "subject_published":
+      return "📝";
+    case "exam_submitted":
+      return "✅";
+    case "results":
+    case "result_released":
+      return "📊";
+    case "attendance":
+      return "📅";
+    case "remark_added":
+      return "💬";
+    default:
+      return "📢";
+  }
+}
+
 export function StudentTopBar() {
   const { user, logout } = useAuth();
+  const router = useRouter();
   const pathname = usePathname() || "";
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [notifyMenuOpen, setNotifyMenuOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<StudentNotification[]>([]);
   const menuRef = useRef<HTMLDivElement>(null);
   const notifyRef = useRef<HTMLDivElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   const loadNotifications = async () => {
     try {
-      const res = await fetch("/api/notifications", { credentials: "include" });
-      if (res.ok) {
-        const data = await res.json();
-        const items = data?.items || [];
-        setNotifications(items.slice(0, 6));
-        setUnreadCount(items.filter((i: any) => !i.is_read).length);
+      const res = await fetchWithAuth<any>("/api/notifications", {}, { redirectOn401: false });
+      if (res) {
+        const items: StudentNotification[] = res.items || (Array.isArray(res.data?.items) ? res.data.items : []);
+        setNotifications(items.slice(0, 8));
+        const unread = typeof res.unreadCount === "number"
+          ? res.unreadCount
+          : items.filter((i) => !i.is_read).length;
+        setUnreadCount(unread);
       }
-    } catch {}
+    } catch {
+      // Background poll failure is non-blocking
+    }
   };
 
   useEffect(() => {
     loadNotifications();
-    const interval = setInterval(loadNotifications, 5000);
+    const pollInterval = setInterval(loadNotifications, 10000);
 
-    let eventSource: EventSource | null = null;
-    try {
-      eventSource = new EventSource("/api/notifications/stream", { withCredentials: true });
-      eventSource.onmessage = (event) => {
-        try {
-          const item = JSON.parse(event.data);
-          if (item && item.message) {
-            setNotifications((prev) => [item, ...prev.filter((p) => p.id !== item.id)].slice(0, 6));
-            setUnreadCount((c) => c + 1);
-            window.dispatchEvent(new CustomEvent("notification_received", { detail: item }));
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    let reconnectAttempts = 0;
+    const MAX_RECONNECT_ATTEMPTS = 10;
+    const BASE_DELAY_MS = 1000;
+    const MAX_DELAY_MS = 30000;
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const connectSSE = async () => {
+      try {
+        const response = await fetch(`${API_BASE}/api/notifications/stream`, {
+          credentials: "include",
+          signal: controller.signal,
+        });
+
+        if (!response.ok || !response.body) {
+          if (!controller.signal.aborted && reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+            const delay = Math.min(MAX_DELAY_MS, BASE_DELAY_MS * Math.pow(2, reconnectAttempts));
+            reconnectAttempts++;
+            reconnectTimer = setTimeout(connectSSE, delay);
           }
-        } catch {}
-      };
-      eventSource.onerror = () => {
-        // Silently handled — interval fallback continues polling
-      };
-    } catch {}
+          return;
+        }
+
+        reconnectAttempts = 0;
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder("utf-8");
+        let buffer = "";
+
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const parts = buffer.split("\n\n");
+          buffer = parts.pop() ?? "";
+
+          for (const part of parts) {
+            const dataLine = part.split("\n").find((l) => l.startsWith("data: "));
+            if (!dataLine) continue;
+
+            const rawJson = dataLine.slice(6).trim();
+            if (!rawJson || rawJson === ": keepalive") continue;
+
+            try {
+              const payload = JSON.parse(rawJson);
+              if (payload?.id || payload?.message) {
+                setUnreadCount((prev) => prev + 1);
+                setNotifications((prev) => [payload as StudentNotification, ...prev.filter((p) => p.id !== payload.id)].slice(0, 8));
+                window.dispatchEvent(
+                  new CustomEvent("notification_received", { detail: payload })
+                );
+              }
+            } catch {
+              // Parse error ignored
+            }
+          }
+        }
+
+        if (!controller.signal.aborted && reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+          const delay = Math.min(MAX_DELAY_MS, BASE_DELAY_MS * Math.pow(2, reconnectAttempts));
+          reconnectAttempts++;
+          reconnectTimer = setTimeout(connectSSE, delay);
+        }
+      } catch (err: any) {
+        if (err.name === "AbortError") return;
+        if (!controller.signal.aborted && reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+          const delay = Math.min(MAX_DELAY_MS, BASE_DELAY_MS * Math.pow(2, reconnectAttempts));
+          reconnectAttempts++;
+          reconnectTimer = setTimeout(connectSSE, delay);
+        }
+      }
+    };
+
+    connectSSE();
 
     const handler = (e: any) => {
       const detail = e.detail;
       if (detail && detail.id) {
-        setNotifications((prev) => [detail, ...prev.filter((p) => p.id !== detail.id)].slice(0, 6));
-        setUnreadCount((c) => c + 1);
+        setNotifications((prev) => [detail, ...prev.filter((p) => p.id !== detail.id)].slice(0, 8));
       } else {
         loadNotifications();
       }
@@ -64,17 +167,32 @@ export function StudentTopBar() {
     window.addEventListener("notification_received", handler);
 
     return () => {
-      clearInterval(interval);
-      if (eventSource) eventSource.close();
+      clearInterval(pollInterval);
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      controller.abort();
       window.removeEventListener("notification_received", handler);
     };
   }, []);
 
+  const handleItemClick = async (n: StudentNotification) => {
+    setNotifyMenuOpen(false);
+    if (!n.is_read) {
+      setNotifications((prev) => prev.map((item) => (item.id === n.id ? { ...item, is_read: 1 } : item)));
+      setUnreadCount((prev) => Math.max(0, prev - 1));
+      try {
+        await fetchWithAuth(`/api/notifications/${n.id}/read`, { method: "PUT" }, { redirectOn401: false });
+      } catch {}
+    }
+    if (n.link) {
+      router.push(n.link);
+    }
+  };
+
   const handleMarkAllRead = async () => {
+    setUnreadCount(0);
+    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: 1 })));
     try {
-      await fetch("/api/notifications/read", { method: "PUT", credentials: "include" });
-      setUnreadCount(0);
-      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: 1 })));
+      await fetchWithAuth("/api/notifications/read", { method: "PUT" }, { redirectOn401: false });
     } catch {}
   };
 
@@ -126,7 +244,11 @@ export function StudentTopBar() {
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
                 <path d="M13.73 21a2 2 0 0 1-3.46 0" />
               </svg>
-              {unreadCount > 0 && <span className={styles.notifyBadge}>{unreadCount}</span>}
+              {unreadCount > 0 && (
+                <span className={styles.notifyBadge}>
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              )}
             </button>
 
             {notifyMenuOpen && (
@@ -145,28 +267,35 @@ export function StudentTopBar() {
                 </div>
                 <div className={styles.notifyList}>
                   {notifications.length === 0 ? (
-                    <div style={{ padding: "1.5rem 1rem", textAlign: "center", color: "#64748B", fontSize: "0.75rem" }}>
-                      No new notifications
+                    <div className={styles.notifyEmpty}>
+                      No academic notifications yet
                     </div>
                   ) : (
-                    notifications.map((n) => (
-                      <Link
-                        key={n.id}
-                        href={n.link || "/student/notifications"}
-                        className={styles.notifyItem}
-                        onClick={() => setNotifyMenuOpen(false)}
-                      >
-                        <div className={styles.notifyIconBox}>
-                          {n.type === "results" ? "📊" : n.type === "exam" ? "📝" : "📢"}
+                    notifications.map((n) => {
+                      const isUnread = !n.is_read;
+                      return (
+                        <div
+                          key={n.id}
+                          className={`${styles.notifyItem} ${isUnread ? styles.notifyItemUnread : ""}`}
+                          onClick={() => handleItemClick(n)}
+                        >
+                          <div className={styles.notifyIconBox}>
+                            {getNotificationIcon(n.type)}
+                          </div>
+                          <div className={styles.notifyItemContent}>
+                            <span className={`${styles.notifyItemText} ${isUnread ? styles.notifyItemTextBold : ""}`}>
+                              {n.message}
+                            </span>
+                            <div className={styles.notifyItemFooter}>
+                              <span className={styles.notifyItemTime}>
+                                {timeAgo(n.created_at)}
+                              </span>
+                              {isUnread && <span className={styles.notifyUnreadDot} />}
+                            </div>
+                          </div>
                         </div>
-                        <div className={styles.notifyItemContent}>
-                          <span className={styles.notifyItemText}>{n.message}</span>
-                          <span className={styles.notifyItemTime}>
-                            {n.created_at ? new Date(n.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "Recent"}
-                          </span>
-                        </div>
-                      </Link>
-                    ))
+                      );
+                    })
                   )}
                 </div>
                 <div style={{ padding: "0.5rem", borderTop: "1px solid var(--color-border, #E2E8F0)", textAlign: "center" }}>

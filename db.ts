@@ -1855,6 +1855,7 @@ export const queries = {
   getNotifications: db.prepare("SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 50"),
   createNotification: db.prepare("INSERT INTO notifications (user_id, type, message, link) VALUES (?, ?, ?, ?) RETURNING *"),
   markNotificationsRead: db.prepare("UPDATE notifications SET is_read = 1 WHERE user_id = ? AND is_read = 0"),
+  markNotificationRead: db.prepare("UPDATE notifications SET is_read = 1 WHERE id = ? AND user_id = ?"),
   getUnreadNotificationCount: db.prepare("SELECT COUNT(*) as count FROM notifications WHERE user_id = ? AND is_read = 0"),
 
   // ── v4.1 Kiosk & License ──────────────────────────────────────────────────

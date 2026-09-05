@@ -710,6 +710,14 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     queries.markNotificationsRead.run(auth.userId);
     return apiMessage("Marked all as read");
   }
+
+  const singleNotifReadMatch = pathname.match(/^\/api\/notifications\/(\d+)\/read$/);
+  if (singleNotifReadMatch && method === "PUT") {
+    const auth = requireAuth(req);
+    const notifId = Number(singleNotifReadMatch[1]);
+    queries.markNotificationRead.run(notifId, auth.userId);
+    return apiMessage("Marked as read");
+  }
   
   // ── Exam Sync Stream (Secure Timer) ──────────────────────────────────────
   const examStreamMatch = pathname.match(/^\/api\/exams\/(\d+)\/stream$/);
@@ -984,6 +992,14 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
         const enrollStmt = db.prepare("INSERT OR IGNORE INTO subject_enrollments (subject_id, student_id, enrolled_by) VALUES (?, ?, ?)");
         for (const subj of matchingSubjects) {
           enrollStmt.run(subj.id, newUserId, actorId);
+          const sInfo = queries.getSubjectById.get(subj.id) as any;
+          if (sInfo) {
+            notifyUser(newUserId, {
+              type: "exam",
+              message: `You have been enrolled in ${sInfo.name} (${sInfo.code}).`,
+              link: "/student/dashboard",
+            });
+          }
         }
       } catch (err) {
         console.warn("[Register] Auto-enrollment error:", err);
@@ -3683,6 +3699,38 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
         message: `A teacher has published ${trimStr(body.code) || subject.code} (Questions are ready)`,
         link: `/ADMIN/subjects`
       });
+      try {
+        const enrolledStudents = db.prepare(
+          "SELECT DISTINCT student_id FROM subject_enrollments WHERE subject_id = ?"
+        ).all(subjectId) as Array<{ student_id: number }>;
+        for (const st of enrolledStudents) {
+          notifyUser(st.student_id, {
+            type: "exam",
+            message: `Assessment Ready: Questions for ${subject.name} (${subject.code}) are now live.`,
+            link: "/student/dashboard",
+          });
+        }
+      } catch (err) {
+        console.warn("[subjects] Failed to notify enrolled students of publication:", err);
+      }
+    }
+
+    if (body.exam_datetime !== undefined && trimStr(body.exam_datetime) !== subject.exam_datetime && trimStr(body.exam_datetime) !== "2099-01-01T00:00") {
+      try {
+        const enrolledStudents = db.prepare(
+          "SELECT DISTINCT student_id FROM subject_enrollments WHERE subject_id = ?"
+        ).all(subjectId) as Array<{ student_id: number }>;
+        const formattedDate = new Date(trimStr(body.exam_datetime)).toLocaleString([], { dateStyle: "medium", timeStyle: "short" });
+        for (const st of enrolledStudents) {
+          notifyUser(st.student_id, {
+            type: "exam",
+            message: `Assessment Scheduled: ${subject.name} (${subject.code}) is set for ${formattedDate}.`,
+            link: "/student/dashboard",
+          });
+        }
+      } catch (err) {
+        console.warn("[subjects] Failed to notify enrolled students of schedule:", err);
+      }
     }
 
     if (auth.role === "operator" && nextTeacherId !== sqlInt(subject.teacher_id)) {
@@ -3731,6 +3779,25 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
       nextTimetablePublished,
       subjectId,
     );
+
+    if (nextExamDatetime && nextExamDatetime !== subject.exam_datetime && nextExamDatetime !== "2099-01-01T00:00") {
+      try {
+        const enrolledStudents = db.prepare(
+          "SELECT DISTINCT student_id FROM subject_enrollments WHERE subject_id = ?"
+        ).all(subjectId) as Array<{ student_id: number }>;
+        const formattedDate = new Date(nextExamDatetime).toLocaleString([], { dateStyle: "medium", timeStyle: "short" });
+        for (const st of enrolledStudents) {
+          notifyUser(st.student_id, {
+            type: "exam",
+            message: `Assessment Scheduled: ${subject.name} (${subject.code}) is set for ${formattedDate}.`,
+            link: "/student/dashboard",
+          });
+        }
+      } catch (err) {
+        console.warn("[subjects] Failed to notify enrolled students of schedule update:", err);
+      }
+    }
+
     auditLog(auth.userId, "SUBJECT_SCHEDULE_UPDATE", "subject", subjectId, JSON.stringify({
       exam_datetime: nextExamDatetime, duration: nextDuration, window_duration: nextWindow, is_timetable_published: nextTimetablePublished,
     }));
@@ -3988,6 +4055,14 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
         queries.enrollStudent.run(subjectId, st.id, auth.userId);
       }
     })();
+
+    for (const st of targetStudents) {
+      notifyUser(st.id, {
+        type: "exam",
+        message: `You have been enrolled in ${subject.name} (${subject.code}).`,
+        link: "/student/dashboard",
+      });
+    }
     
     auditLog(auth.userId, "STUDENT_BULK_ENROLL", "subject_enrollment", subjectId, JSON.stringify({ grade, enrolled_count: targetStudents.length }));
     return apiSuccess({ success: true, count: targetStudents.length, message: `Enrolled ${targetStudents.length} student(s) into subject.` });
@@ -4039,6 +4114,13 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
           }
         }
       })();
+      for (const sid of studentIds) {
+        notifyUser(Number(sid), {
+          type: "exam",
+          message: `You have been enrolled in ${subject.name} (${subject.code}).`,
+          link: "/student/dashboard",
+        });
+      }
     } catch (err) {
       return apiError(500, "Bulk enrollment failed");
     }
@@ -4668,8 +4750,16 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
 
     auditLog(auth.userId, "EXAM_SUBMIT", "exam", result.exam_id, JSON.stringify({ score: result.score, total: result.total_score }));
     
-    // Notify the owning teacher in real-time via SSE
     const subjectRow = queries.getSubjectById.get(result.subject_id) as any;
+
+    // Notify candidate that submission was recorded
+    notifyUser(auth.userId, {
+      type: "exam_submitted",
+      message: `Assessment Submitted: Your exam for ${subjectRow?.name || "Subject"} (${subjectRow?.code || ""}) was submitted successfully. Score: ${result.score}/${result.total_score}`,
+      link: "/student/results",
+    });
+
+    // Notify the owning teacher in real-time via SSE
     if (subjectRow?.teacher_id) {
       const student = queries.getUserById.get(auth.userId) as any;
       const teacherRole = (queries.getUserById.get(sqlInt(subjectRow.teacher_id)) as any)?.role;
@@ -4970,15 +5060,9 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     const completedStudents = db.prepare("SELECT DISTINCT student_id FROM subject_enrollments WHERE subject_id = ? UNION SELECT DISTINCT student_id FROM exams WHERE subject_id = ?").all(subjectId, subjectId) as Array<{ student_id: number }>;
     for (const s of completedStudents) {
       try {
-        queries.createNotification.run(
-          s.student_id,
-          "result_released",
-          `Results have been published for ${subject.name} (${subject.code}). Check your student results to view your score and review.`,
-          `/student/results`
-        );
         notifyUser(s.student_id, {
           type: "result_released",
-          message: `Results published for ${subject.name} (${subject.code})`,
+          message: `Results have been published for ${subject.name} (${subject.code}). Check your student results to view your score and review.`,
           link: `/student/results`
         });
 
@@ -4988,15 +5072,9 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
           const guardianUser = queries.getUserById.get(Number(g.guardian_id)) as any;
           if (guardianUser && guardianUser.notify_results === 0) continue;
 
-          queries.createNotification.run(
-            Number(g.guardian_id),
-            "result_released",
-            `Results published: ${subject.name} (${subject.code}) results are now available for your ward.`,
-            `/guardian/performance`
-          );
           notifyUser(Number(g.guardian_id), {
             type: "result_released",
-            message: `Results published for ${subject.name} (${subject.code})`,
+            message: `Results published: ${subject.name} (${subject.code}) results are now available for your ward.`,
             link: `/guardian/performance`
           });
         }
@@ -8128,25 +8206,24 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
       queries.upsertAttendanceRecord.run(studentId, tid, sid, date, status, remarks, auth.userId);
       savedCount++;
 
-      // Dispatch alert to student's guardians
+      // Dispatch alert to student and student's guardians
       try {
-        const guardians = queries.getStudentGuardians.all(studentId) as any[];
         const studentObj = queries.getUserById.get(studentId) as any;
         const studentName = studentObj?.name || "Your ward";
-        
+
+        // Real-time notification to student
+        notifyUser(studentId, {
+          type: "attendance",
+          message: `Daily Roll Call: You were marked ${status.toUpperCase()} on ${date}.${remarks ? ` Note: "${remarks}"` : ""}`,
+          link: "/student/dashboard",
+        });
+
+        const guardians = queries.getStudentGuardians.all(studentId) as any[];
         for (const g of guardians) {
           const guardianUser = queries.getUserById.get(Number(g.guardian_id)) as any;
           if (guardianUser && guardianUser.notify_attendance === 0) continue;
 
           const notifMsg = `Daily Roll Call: ${studentName} was marked ${status.toUpperCase()} in class on ${date}.${remarks ? ` Note: "${remarks}"` : ""}`;
-          
-          queries.createNotification.run(
-            Number(g.guardian_id),
-            "attendance",
-            notifMsg,
-            "/guardian/attendance"
-          );
-
           notifyUser(Number(g.guardian_id), {
             type: "attendance",
             message: notifMsg,
@@ -8155,7 +8232,7 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
           alertsSent++;
         }
       } catch (err) {
-        console.warn("[attendance] Failed to notify guardian for student:", studentId, err);
+        console.warn("[attendance] Failed to notify student/guardian:", studentId, err);
       }
     }
 

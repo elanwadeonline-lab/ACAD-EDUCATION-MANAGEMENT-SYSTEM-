@@ -168,6 +168,16 @@
   flex-direction: column;
   max-height: 260px;
   overflow-y: auto;
+  max-height: 280px;
+}
+
+.notifyList::-webkit-scrollbar {
+  width: 4px;
+}
+
+.notifyList::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 4px;
 }
 
 .notifyItem {
@@ -178,15 +188,25 @@
   border-bottom: 1px solid #F8FAFC;
   transition: background 140ms ease;
   text-decoration: none;
+  cursor: pointer;
+  position: relative;
 }
 
 .notifyItem:hover {
   background: #F8FAFC;
 }
 
+.notifyItemUnread {
+  background: rgba(22, 90, 246, 0.04);
+}
+
+.notifyItemUnread:hover {
+  background: rgba(22, 90, 246, 0.08);
+}
+
 .notifyIconBox {
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   border-radius: 8px;
   background: #EFF4FF;
   color: #165AF6;
@@ -194,20 +214,35 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
 }
 
 .notifyItemContent {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  gap: 0.2rem;
+  min-width: 0;
+  flex: 1;
 }
 
 .notifyItemText {
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 500;
   color: #1E293B;
   line-height: 1.35;
+  word-break: break-word;
+}
+
+.notifyItemTextBold {
+  font-weight: 700;
+  color: #0F172A;
+}
+
+.notifyItemFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
 }
 
 .notifyItemTime {
@@ -215,8 +250,16 @@
   color: #94A3B8;
 }
 
+.notifyUnreadDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #165AF6;
+  flex-shrink: 0;
+}
+
 .notifyEmpty {
-  padding: 1.5rem 1rem;
+  padding: 1.75rem 1rem;
   text-align: center;
   color: #94A3B8;
   font-size: 0.75rem;

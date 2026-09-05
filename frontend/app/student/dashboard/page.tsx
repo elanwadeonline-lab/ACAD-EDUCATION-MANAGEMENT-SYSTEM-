@@ -133,11 +133,19 @@ function DashboardContent() {
     }, 15000);
     const clockInterval = setInterval(() => setCurrentTime(Date.now() + timeOffsetRef.current), 1000);
 
+    const onNotif = () => {
+      if (mounted) {
+        fetchData(abortController.signal, false);
+      }
+    };
+    window.addEventListener("notification_received", onNotif);
+
     return () => {
       mounted = false;
       abortController.abort();
       clearInterval(interval);
       clearInterval(clockInterval);
+      window.removeEventListener("notification_received", onNotif);
     };
   }, [selectedSession?.id, selectedTerm?.id]);
 
