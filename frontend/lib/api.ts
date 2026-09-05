@@ -119,6 +119,28 @@ function buildAcademicQuery(sessionId?: number, termId?: number): string {
 }
 
 export const api = {
+  get: <T = any>(url: string) => fetchWithAuth<T>(url),
+  post: <T = any>(url: string, body?: any) =>
+    fetchWithAuth<T>(url, {
+      method: "POST",
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    }),
+  put: <T = any>(url: string, body?: any) =>
+    fetchWithAuth<T>(url, {
+      method: "PUT",
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    }),
+  delete: <T = any>(url: string) => fetchWithAuth<T>(url, { method: "DELETE" }),
+
+  // Teacher Attendance and Messages
+  getTeacherAttendanceRoster: (date: string, classId?: number | null) =>
+    fetchWithAuth<any>(`/api/teacher/attendance/roster?date=${encodeURIComponent(date)}${classId ? `&class_id=${classId}` : ""}`),
+  saveTeacherAttendanceBatch: (data: { class_id: number; date: string; records: any[] }) =>
+    fetchWithAuth<any>("/api/teacher/attendance/batch", { method: "POST", body: JSON.stringify(data) }),
+  getTeacherMessageThreads: () => fetchWithAuth<any[]>("/api/teacher/messages/threads"),
+  sendTeacherMessageReply: (threadId: number, text: string) =>
+    fetchWithAuth<any>(`/api/teacher/messages/threads/${threadId}`, { method: "POST", body: JSON.stringify({ text }) }),
+
   setup: (data: any) => fetchWithAuth<any>("/api/setup", { method: "POST", body: JSON.stringify(data) }),
   register: (data: any) => fetchWithAuth<any>("/api/auth/register", { method: "POST", body: JSON.stringify(data) }),
   login: (data: any) => fetchWithAuth<any>("/api/auth/login", { method: "POST", body: JSON.stringify(data) }, { redirectOn401: false }),
@@ -486,11 +508,5 @@ export const api = {
   createGuardianLink: (data: { reg_id?: string; student_id?: number; relationship?: string }) =>
     fetchWithAuth<any>("/api/guardian/links", { method: "POST", body: JSON.stringify(data) }),
   cancelGuardianLink: (linkId: number) => fetchWithAuth<any>(`/api/guardian/links/${linkId}`, { method: "DELETE" }),
-
-  /** Generic GET request helper */
-  get: <T = any>(url: string) => fetchWithAuth<T>(url),
-  /** Generic POST request helper */
-  post: <T = any>(url: string, data?: any) => fetchWithAuth<T>(url, { method: "POST", body: data ? JSON.stringify(data) : undefined }),
-  /** Generic DELETE request helper */
-  delete: <T = any>(url: string) => fetchWithAuth<T>(url, { method: "DELETE" }),
 };
+

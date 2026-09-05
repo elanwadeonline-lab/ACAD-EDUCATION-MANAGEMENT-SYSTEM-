@@ -46,6 +46,45 @@ function parseOptions(value: string): string[] {
   }
 }
 
+function renderFormattedContent(text: string) {
+  if (!text) return null;
+  const imageRegex = /!\[([^\]]*)\]\(([^)]+)\)/g;
+  const parts: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = imageRegex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(
+        <span key={lastIndex} style={{ whiteSpace: "pre-wrap" }}>
+          {text.substring(lastIndex, match.index)}
+        </span>
+      );
+    }
+    const altText = match[1] || "Question diagram";
+    const srcUrl = match[2];
+    parts.push(
+      <img
+        key={match.index}
+        src={srcUrl}
+        alt={altText}
+        className={styles.inlineQuestionImg}
+      />
+    );
+    lastIndex = match.index + match[0].length;
+  }
+
+  if (lastIndex < text.length) {
+    parts.push(
+      <span key={lastIndex} style={{ whiteSpace: "pre-wrap" }}>
+        {text.substring(lastIndex)}
+      </span>
+    );
+  }
+
+  return parts;
+}
+
 const OPTION_LABELS = ["A", "B", "C", "D"];
 type EditorMode = "list" | "create" | "edit";
 type ImageInputMode = "url" | "upload";
@@ -95,6 +134,12 @@ function QuestionsContent() {
   const [attachedFileUrl, setAttachedFileUrl] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const docInputRef = useRef<HTMLInputElement>(null);
+  const stemImageInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const [editorTab, setEditorTab] = useState<"edit" | "preview">("edit");
+  const [uploadingStemImage, setUploadingStemImage] = useState(false);
+  const [uploadingDiagram, setUploadingDiagram] = useState(false);
 
   const [subjDatetime, setSubjDatetime] = useState("");
   const [subjDuration, setSubjDuration] = useState(60);
@@ -188,23 +233,72 @@ function QuestionsContent() {
     setMarks(1);
     setIsFileUpload(false);
     setAttachedFileUrl("");
+    setEditorTab("edit");
+    setUploadingStemImage(false);
+    setUploadingDiagram(false);
   }
 
-  const handleFileSelect = (file: File) => {
+  const insertTextAtCursor = useCallback((before: string, after: string = "", defaultVal: string = "") => {
+    const el = textareaRef.current;
+    if (!el) {
+      setQuestionText((prev) => prev + before + defaultVal + after);
+      return;
+    }
+    const start = el.selectionStart;
+    const end = el.selectionEnd;
+    const currentVal = el.value;
+    const selectedText = currentVal.substring(start, end) || defaultVal;
+    const replacement = before + selectedText + after;
+    const nextVal = currentVal.substring(0, start) + replacement + currentVal.substring(end);
+    setQuestionText(nextVal);
+
+    setTimeout(() => {
+      el.focus();
+      const newPos = start + before.length + selectedText.length;
+      el.setSelectionRange(newPos, newPos);
+    }, 0);
+  }, []);
+
+  const handleStemImageUpload = async (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      showToast("error", "Please select an image file (PNG, JPG, GIF, WebP).");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      showToast("error", "Image must be smaller than 10MB.");
+      return;
+    }
+    try {
+      setUploadingStemImage(true);
+      const { url } = await api.uploadFile(file);
+      insertTextAtCursor(`\n![Question Figure](${url})\n`, "", "");
+      showToast("success", "Image uploaded and inserted into question text.");
+    } catch (err) {
+      showToast("error", err instanceof Error ? err.message : "Failed to upload image.");
+    } finally {
+      setUploadingStemImage(false);
+    }
+  };
+
+  const handleFileSelect = async (file: File) => {
     if (!file.type.startsWith("image/")) {
       showToast("error", "Please select an image file (JPG, PNG, GIF, WebP).");
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      showToast("error", "Image must be smaller than 5MB.");
+    if (file.size > 10 * 1024 * 1024) {
+      showToast("error", "Image must be smaller than 10MB.");
       return;
     }
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const result = e.target?.result as string;
-      setImageUrl(result);
-    };
-    reader.readAsDataURL(file);
+    try {
+      setUploadingDiagram(true);
+      const { url } = await api.uploadFile(file);
+      setImageUrl(url);
+      showToast("success", "Diagram uploaded.");
+    } catch (err) {
+      showToast("error", err instanceof Error ? err.message : "Failed to upload diagram.");
+    } finally {
+      setUploadingDiagram(false);
+    }
   };
 
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -250,7 +344,7 @@ function QuestionsContent() {
     setEditing(q);
     setQuestionText(q.question_text ?? "");
     setImageUrl(q.image_url ?? "");
-    setImageMode(q.image_url?.startsWith("data:") ? "upload" : "url");
+    setImageMode(q.image_url ? (q.image_url.startsWith("http") ? "url" : "upload") : "url");
     setQuestionType(q.question_type ?? "objective");
     setTeacherAnswer(q.teacher_answer ?? "");
     setExplanation(q.explanation ?? "");
@@ -260,6 +354,7 @@ function QuestionsContent() {
     setMarks(Number(q.marks ?? 1));
     setIsFileUpload(q.is_file_upload === 1);
     setAttachedFileUrl(q.attached_file_url ?? "");
+    setEditorTab("edit");
     setEditorMode("edit");
   };
 
@@ -440,17 +535,225 @@ function QuestionsContent() {
           {/* Main Question Stem Editor */}
           <div className={styles.editorMain}>
             <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Question Text / Stem *</label>
-              <textarea
-                className={styles.richTextarea}
-                placeholder="Type the question stem clearly. Ensure unambiguous phrasing for candidates…"
-                value={questionText}
-                onChange={(e) => setQuestionText(e.target.value)}
-                autoFocus
-              />
-              <div style={{ fontSize: "0.6875rem", color: "var(--color-muted)", alignSelf: "flex-end" }}>
-                {questionText.length} characters
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.35rem" }}>
+                <label className={styles.formLabel}>Question Text / Stem *</label>
+                <div style={{ display: "flex", gap: "0.35rem" }}>
+                  <button
+                    type="button"
+                    className={`${styles.toolbarBtn} ${editorTab === "edit" ? styles.toolbarBtnActive : ""}`}
+                    onClick={() => setEditorTab("edit")}
+                  >
+                    Edit Mode
+                  </button>
+                  <button
+                    type="button"
+                    className={`${styles.toolbarBtn} ${editorTab === "preview" ? styles.toolbarBtnActive : ""}`}
+                    onClick={() => setEditorTab("preview")}
+                  >
+                    Candidate Preview
+                  </button>
+                </div>
               </div>
+
+              {/* Rich Editor Toolbar */}
+              <div className={styles.editorToolbar}>
+                <input
+                  type="file"
+                  ref={stemImageInputRef}
+                  accept="image/*"
+                  style={{ display: "none" }}
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) handleStemImageUpload(f);
+                    e.target.value = "";
+                  }}
+                />
+                <button
+                  type="button"
+                  className={styles.toolbarBtnPrimary}
+                  onClick={() => stemImageInputRef.current?.click()}
+                  disabled={uploadingStemImage}
+                  title="Upload and insert image at cursor"
+                >
+                  {uploadingStemImage ? "Uploading..." : "📷 Insert Image"}
+                </button>
+                <div className={styles.toolbarSeparator} />
+                <button
+                  type="button"
+                  className={styles.toolbarBtn}
+                  onClick={() => insertTextAtCursor("**", "**", "bold text")}
+                  title="Bold"
+                >
+                  <strong>B</strong>
+                </button>
+                <button
+                  type="button"
+                  className={styles.toolbarBtn}
+                  onClick={() => insertTextAtCursor("*", "*", "italic text")}
+                  title="Italic"
+                >
+                  <em>I</em>
+                </button>
+                <button
+                  type="button"
+                  className={styles.toolbarBtn}
+                  onClick={() => insertTextAtCursor("`", "`", "code")}
+                  title="Code / Monospace"
+                >
+                  {"</>"}
+                </button>
+                <div className={styles.toolbarSeparator} />
+                <button
+                  type="button"
+                  className={styles.toolbarBtn}
+                  onClick={() => insertTextAtCursor("²")}
+                  title="Superscript Squared (²)"
+                >
+                  x²
+                </button>
+                <button
+                  type="button"
+                  className={styles.toolbarBtn}
+                  onClick={() => insertTextAtCursor("₂")}
+                  title="Subscript 2 (₂)"
+                >
+                  x₂
+                </button>
+                <button
+                  type="button"
+                  className={styles.toolbarBtn}
+                  onClick={() => insertTextAtCursor("√(" , ")", "x")}
+                  title="Square Root (√)"
+                >
+                  √
+                </button>
+                <button
+                  type="button"
+                  className={styles.toolbarBtn}
+                  onClick={() => insertTextAtCursor("π")}
+                  title="Pi (π)"
+                >
+                  π
+                </button>
+                <button
+                  type="button"
+                  className={styles.toolbarBtn}
+                  onClick={() => insertTextAtCursor("±")}
+                  title="Plus-Minus (±)"
+                >
+                  ±
+                </button>
+                <button
+                  type="button"
+                  className={styles.toolbarBtn}
+                  onClick={() => insertTextAtCursor("°")}
+                  title="Degree (°)"
+                >
+                  °
+                </button>
+                <button
+                  type="button"
+                  className={styles.toolbarBtn}
+                  onClick={() => insertTextAtCursor("θ")}
+                  title="Theta (θ)"
+                >
+                  θ
+                </button>
+              </div>
+
+              {editorTab === "edit" ? (
+                <>
+                  <textarea
+                    ref={textareaRef}
+                    className={styles.richTextarea}
+                    placeholder="Type the question stem clearly. Ensure unambiguous phrasing for candidates. Use the toolbar above to format text or insert figures/images…"
+                    value={questionText}
+                    onChange={(e) => setQuestionText(e.target.value)}
+                    autoFocus
+                  />
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "0.25rem" }}>
+                    <span style={{ fontSize: "0.6875rem", color: "var(--color-muted)" }}>
+                      Tip: You can insert images anywhere in the question text using "Insert Image".
+                    </span>
+                    <span style={{ fontSize: "0.6875rem", color: "var(--color-muted)" }}>
+                      {questionText.length} characters
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <div className={styles.candidatePreviewBox}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem", paddingBottom: "0.5rem", borderBottom: "1px solid var(--color-border)" }}>
+                    <span style={{ fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--color-primary, #4F46E5)" }}>
+                      Candidate View Simulation
+                    </span>
+                    <span style={{ fontSize: "0.75rem", color: "var(--color-muted)", fontFamily: "var(--font-mono, monospace)" }}>
+                      {marks} {marks === 1 ? "Mark" : "Marks"}
+                    </span>
+                  </div>
+
+                  <div className={styles.previewStemText}>
+                    {questionText ? renderFormattedContent(questionText) : <span style={{ color: "var(--color-muted)", fontStyle: "italic" }}>No question text entered yet.</span>}
+                  </div>
+
+                  {imageUrl && (
+                    <div style={{ marginTop: "0.75rem" }}>
+                      <img src={imageUrl} alt="Question Diagram" className={styles.qImage} />
+                    </div>
+                  )}
+
+                  {questionType === "objective" && (
+                    <div className={styles.previewOptionsList}>
+                      {options.map((opt, i) => (
+                        <div
+                          key={i}
+                          className={`${styles.previewOptionItem} ${correctAnswer === i ? styles.previewOptionCorrect : ""}`}
+                        >
+                          <span className={styles.optionKey}>{OPTION_LABELS[i]}</span>
+                          <span style={{ flex: 1 }}>{opt || <span style={{ color: "var(--color-muted)", fontStyle: "italic" }}>Empty Option {OPTION_LABELS[i]}</span>}</span>
+                          {correctAnswer === i && (
+                            <span style={{ fontSize: "0.6875rem", fontWeight: 700, color: "#166534" }}>
+                              ✓ Correct Key
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {questionType === "true_false" && (
+                    <div className={styles.previewOptionsList}>
+                      {["True", "False"].map((tf, i) => (
+                        <div
+                          key={i}
+                          className={`${styles.previewOptionItem} ${correctAnswer === i ? styles.previewOptionCorrect : ""}`}
+                        >
+                          <span className={styles.optionKey}>{i === 0 ? "T" : "F"}</span>
+                          <span style={{ flex: 1 }}>{tf}</span>
+                          {correctAnswer === i && (
+                            <span style={{ fontSize: "0.6875rem", fontWeight: 700, color: "#166534" }}>
+                              ✓ Correct Key
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {questionType === "essay" && (
+                    <div style={{ marginTop: "0.75rem", padding: "0.75rem", background: "var(--color-surface-2)", borderRadius: "6px", fontSize: "0.75rem" }}>
+                      <div style={{ fontWeight: 600, color: "var(--color-text)", marginBottom: "0.25rem" }}>Candidate Essay Response Area:</div>
+                      <div style={{ padding: "0.5rem", border: "1px dashed var(--color-border)", borderRadius: "4px", background: "#FFFFFF", color: "var(--color-muted)" }}>
+                        [Candidate will type rich text essay response or attach PDF document]
+                      </div>
+                      {teacherAnswer && (
+                        <div style={{ marginTop: "0.5rem", color: "var(--color-text)" }}>
+                          <strong>Grading Rubric:</strong> {teacherAnswer}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Image / Diagram Attachment */}
@@ -526,18 +829,22 @@ function QuestionsContent() {
                     onDrop={handleDrop}
                   >
                     <div style={{ fontSize: "0.8125rem", fontWeight: 600, color: "var(--color-text)" }}>
-                      {imageUrl?.startsWith("data:") ? "Image loaded — click to replace" : "Click to browse image or drag and drop"}
+                      {uploadingDiagram
+                        ? "Uploading diagram..."
+                        : imageUrl
+                        ? "Diagram loaded — click to replace"
+                        : "Click to browse image or drag and drop"}
                     </div>
-                    <div style={{ fontSize: "0.6875rem", color: "var(--color-muted)" }}>PNG, JPG, WebP · Max 5MB</div>
+                    <div style={{ fontSize: "0.6875rem", color: "var(--color-muted)" }}>PNG, JPG, WebP · Max 10MB</div>
                   </div>
-                  {imageUrl?.startsWith("data:") && (
+                  {imageUrl && (
                     <Button
                       variant="secondary"
                       size="xs"
                       onClick={() => setImageUrl("")}
                       style={{ alignSelf: "flex-start", marginTop: "0.35rem" }}
                     >
-                      Remove Image
+                      Remove Diagram
                     </Button>
                   )}
                 </>
@@ -902,7 +1209,7 @@ function QuestionsContent() {
                     <img src={q.image_url} alt={`Diagram ${idx + 1}`} className={styles.qImage} />
                   )}
 
-                  <p className={styles.qText}>{q.question_text}</p>
+                  <div className={styles.qText}>{renderFormattedContent(q.question_text)}</div>
 
                   {q.question_type !== "essay" ? (
                     <div className={styles.optionsGrid}>

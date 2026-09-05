@@ -11,16 +11,28 @@ async function main() {
 
   const argEndpoint = process.argv[2];
   if (argEndpoint) {
-    setCloudEndpoint(argEndpoint);
+    if (argEndpoint.includes("<") || argEndpoint.includes(">")) {
+      console.error("❌ Error: You entered the example placeholder '<your-render-app>'!");
+      console.log("👉 You need to replace '<your-render-app>' with your real Render service URL.");
+      console.log("   Example: https://acad-control-api.onrender.com or your custom domain.\n");
+      return;
+    }
+    try {
+      new URL(argEndpoint);
+      setCloudEndpoint(argEndpoint);
+    } catch {
+      console.error(`❌ Error: "${argEndpoint}" is not a valid URL!`);
+      return;
+    }
   }
 
   const identity = getOrCreateNodeIdentity();
   let endpoint = identity.cloudEndpoint?.replace(/\/+$/, "");
 
-  if (!endpoint || endpoint.includes("localhost:8001")) {
-    console.warn("⚠️  Target cloud endpoint is currently pointing to localhost:8001 (local school app)!");
-    console.log("👉 Pass your Render URL as an argument or set ACAD_CLOUD_ENDPOINT in .env:");
-    console.log("   bun run scripts/test_cloud_connection.ts https://<your-render-service>.onrender.com\n");
+  if (!endpoint || endpoint.includes("localhost:8001") || endpoint.includes("<")) {
+    console.warn("⚠️  No valid cloud supervisory endpoint configured!");
+    console.log("👉 Copy your backend Web Service URL from your Render dashboard, then run:");
+    console.log("   bun run scripts/test_cloud_connection.ts https://YOUR-ACTUAL-APP.onrender.com\n");
     return;
   }
 

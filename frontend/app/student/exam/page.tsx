@@ -28,6 +28,53 @@ import styles from "./page.module.css";
 
 type Mode = "loading" | "starting" | "in-progress" | "submitting" | "completed" | "error";
 
+function renderFormattedContent(text: string) {
+  if (!text) return null;
+  const imageRegex = /!\[([^\]]*)\]\(([^)]+)\)/g;
+  const parts: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = imageRegex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(
+        <span key={lastIndex} style={{ whiteSpace: "pre-wrap" }}>
+          {text.substring(lastIndex, match.index)}
+        </span>
+      );
+    }
+    const altText = match[1] || "Question diagram";
+    const srcUrl = match[2];
+    parts.push(
+      <img
+        key={match.index}
+        src={srcUrl}
+        alt={altText}
+        style={{
+          display: "block",
+          margin: "0.75rem 0",
+          maxWidth: "100%",
+          maxHeight: "360px",
+          borderRadius: "8px",
+          objectFit: "contain",
+          border: "1px solid #E2E8F0",
+        }}
+      />
+    );
+    lastIndex = match.index + match[0].length;
+  }
+
+  if (lastIndex < text.length) {
+    parts.push(
+      <span key={lastIndex} style={{ whiteSpace: "pre-wrap" }}>
+        {text.substring(lastIndex)}
+      </span>
+    );
+  }
+
+  return parts;
+}
+
 export default function StudentExamPage() {
   return (
     <RequireRole role="student">
@@ -1417,7 +1464,7 @@ function ExamContent() {
                 )}
 
                 <div className={styles.questionTextContent}>
-                  <p className={styles.questionPrompt}>{current.question_text}</p>
+                  <div className={styles.questionPrompt}>{renderFormattedContent(current.question_text)}</div>
 
                   {/* Options / Answer Input */}
                   {current.question_type === "essay" ? (

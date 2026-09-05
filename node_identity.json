@@ -2,5 +2,5 @@
   "installationId": "INST-DEV-35C16C",
   "nodeId": "NODE-LOCAL-01",
   "secretKey": "node_sec_ce5cae0c341658d52cdd57cffb3d1a6e",
-  "cloudEndpoint": "http://localhost:8001"
+  "cloudEndpoint": "https://acad-controll.onrender.com"
 }

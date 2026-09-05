@@ -497,6 +497,23 @@ async function serveStatic(urlPath: string, req?: Request): Promise<Response> {
     return new Response(null, { status: 301, headers: { Location: lowerPath + urlPath.slice(pathname.length) } });
   }
 
+  // ── Uploaded static files (/uploads/...) ──────────────────
+  if (pathname.startsWith("/uploads/")) {
+    const filename = path.basename(pathname);
+    const publicUploadDir = path.join(process.cwd(), "frontend", "public", "uploads");
+    const targetFile = path.join(publicUploadDir, filename);
+    const bunFile = Bun.file(targetFile);
+    if (await bunFile.exists()) {
+      return new Response(bunFile, {
+        headers: {
+          ...corsHeaders,
+          "Content-Type": getMimeType(targetFile),
+          "Cache-Control": "public, max-age=31536000, immutable",
+        },
+      });
+    }
+  }
+
   const rel = pathname.replace(/^\/+/, "").replace(/\/+$/, "");
   const candidates: string[] = [];
 
@@ -1909,12 +1926,47 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
           if (firstTerm) {
             db.prepare("UPDATE academic_terms SET is_active = 1 WHERE id = ?").run(firstTerm.id);
           }
+        } else {
+          const year = new Date().getFullYear();
+          const defaultName = `${year}/${year + 1}`;
+          const res = db.prepare("INSERT INTO academic_sessions (name, is_active, status) VALUES (?, 1, 'active')").run(defaultName);
+          const newSessionId = Number(res.lastInsertRowid);
+          db.prepare("INSERT INTO academic_terms (session_id, name, is_active, status) VALUES (?, 'First Term', 1, 'active')").run(newSessionId);
+          db.prepare("INSERT INTO academic_terms (session_id, name, is_active, status) VALUES (?, 'Second Term', 0, 'archived')").run(newSessionId);
+          db.prepare("INSERT INTO academic_terms (session_id, name, is_active, status) VALUES (?, 'Third Term', 0, 'archived')").run(newSessionId);
         }
       }
     })();
 
     auditLog(auth.userId, "DELETE_SESSION", "academic_sessions", sessionId, JSON.stringify({ name: session.name }));
     return apiSuccess({ success: true, message: `Academic session "${session.name}" deleted successfully.` });
+  }
+
+  // ── DELETE academic term ─────────────────────────────────────────────────
+  const deleteTermMatch = pathname.match(/^\/api\/academic\/terms\/(\d+)$/);
+  if (deleteTermMatch && method === "DELETE") {
+    const auth = requireAuth(req);
+    requireRole(auth.role, ["operator"]);
+    const termId = Number(deleteTermMatch[1]);
+    if (!isPositiveIntId(termId)) return apiError(400, "Invalid term id");
+
+    const term = queries.getAcademicTermById.get(termId) as any;
+    if (!term) return apiError(404, "Academic term not found");
+
+    db.transaction(() => {
+      cascadeDeleteAcademicTerm(termId);
+
+      // If the deleted term was active, activate the first remaining term in this session
+      if (term.is_active) {
+        const remainingTerm = db.prepare("SELECT id FROM academic_terms WHERE session_id = ? ORDER BY id ASC LIMIT 1").get(term.session_id) as any;
+        if (remainingTerm) {
+          db.prepare("UPDATE academic_terms SET is_active = 1 WHERE id = ?").run(remainingTerm.id);
+        }
+      }
+    })();
+
+    auditLog(auth.userId, "DELETE_TERM", "academic_terms", termId, JSON.stringify({ name: term.name, session_id: term.session_id }));
+    return apiSuccess({ success: true, message: `Academic term "${term.name}" deleted successfully.` });
   }
 
   // ── BULK DELETE academic sessions ─────────────────────────────────────────
@@ -2002,31 +2054,6 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     } catch (err: any) {
       return apiError(400, err.message || "Failed to create term");
     }
-  }
-
-  // ── DELETE academic term ──────────────────────────────────────────────────
-  const deleteTermMatch = pathname.match(/^\/api\/academic\/terms\/(\d+)$/);
-  if (deleteTermMatch && method === "DELETE") {
-    const auth = requireAuth(req);
-    requireRole(auth.role, ["operator"]);
-    const termId = Number(deleteTermMatch[1]);
-    if (!isPositiveIntId(termId)) return apiError(400, "Invalid term id");
-
-    const term = queries.getAcademicTermById.get(termId) as any;
-    if (!term) return apiError(404, "Academic term not found");
-    db.transaction(() => {
-      cascadeDeleteAcademicTerm(termId);
-      
-      if (term.is_active) {
-        const remainingTerm = db.prepare("SELECT id FROM academic_terms WHERE session_id = ? ORDER BY id ASC LIMIT 1").get(term.session_id) as any;
-        if (remainingTerm) {
-          db.prepare("UPDATE academic_terms SET is_active = 1 WHERE id = ?").run(remainingTerm.id);
-        }
-      }
-    })();
-
-    auditLog(auth.userId, "DELETE_TERM", "academic_terms", termId, JSON.stringify({ name: term.name }));
-    return apiSuccess({ success: true, message: `Term "${term.name}" deleted successfully.` });
   }
 
   if (method === "POST" && pathname === "/api/academic/activate-session") {
@@ -3984,11 +4011,12 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
 
   if (subjectStudentsMatch && method === "POST") {
     const auth = requireAuth(req);
-    requireRole(auth.role, ["operator"]);
+    requireRole(auth.role, ["operator", "teacher"]);
     const subjectId = Number(subjectStudentsMatch[1]);
     if (!isPositiveIntId(subjectId)) return apiError(400, "Invalid subject id");
     const subject = queries.getSubjectById.get(subjectId) as any;
     if (!subject) return apiError(404, "Subject not found");
+    if (auth.role === "teacher" && !sameUserId(subject.teacher_id, auth.userId)) return apiError(403, "Not authorized");
     const body = await readJson(req);
     
     const studentIdsRaw = Array.isArray(body?.student_ids) ? body.student_ids : 
@@ -4022,10 +4050,13 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
   const subjectStudentDeleteMatch = pathname.match(/^\/api\/subjects\/(\d+)\/students\/(\d+)$/);
   if (subjectStudentDeleteMatch && method === "DELETE") {
     const auth = requireAuth(req);
-    requireRole(auth.role, ["operator"]);
+    requireRole(auth.role, ["operator", "teacher"]);
     const subjectId  = Number(subjectStudentDeleteMatch[1]);
     const studentId  = Number(subjectStudentDeleteMatch[2]);
     if (!isPositiveIntId(subjectId) || !isPositiveIntId(studentId)) return apiError(400, "Invalid ids");
+    const subject = queries.getSubjectById.get(subjectId) as any;
+    if (!subject) return apiError(404, "Subject not found");
+    if (auth.role === "teacher" && !sameUserId(subject.teacher_id, auth.userId)) return apiError(403, "Not authorized");
     // Block unenroll if student has a completed exam — data integrity
     const hasCompletedExam = db.prepare(
       "SELECT id FROM exams WHERE student_id = ? AND subject_id = ? AND status = 'completed' LIMIT 1"
@@ -5052,38 +5083,6 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     });
   }
 
-  // ── Bulk-enroll all students in a grade into a subject ────────────────────
-  const bulkEnrollMatch = pathname.match(/^\/api\/subjects\/(\d+)\/students\/bulk$/);
-  if (bulkEnrollMatch && method === "POST") {
-    const auth      = requireAuth(req);
-    requireRole(auth.role, ["operator"]);
-    const subjectId = Number(bulkEnrollMatch[1]);
-    if (!isPositiveIntId(subjectId)) return apiError(400, "Invalid subject id");
-    const subject = queries.getSubjectById.get(subjectId) as any;
-    if (!subject) return apiError(404, "Subject not found");
-    const body = await readJson(req);
-    const grade = trimStr(body?.grade);
-    if (!grade) return apiError(400, "grade is required");
-
-    // Fetch all active students in that grade
-    const students = queries.getStudentsByGrade.all(grade) as Array<{ id: number }>;
-
-    if (students.length === 0) return apiError(404, "No active students found in that grade");
-
-    const enrollTx = db.transaction(() => {
-      let count = 0;
-      for (const s of students) {
-        const result = queries.enrollStudent.run(subjectId, s.id, auth.userId) as { changes: number };
-        count += sqlInt(result.changes);
-      }
-      return count;
-    });
-    const enrolled = enrollTx();
-    auditLog(auth.userId, "BULK_ENROLL", "subject_enrollment", subjectId,
-      JSON.stringify({ grade, enrolled, total_in_grade: students.length }));
-    return apiSuccess({ enrolled, total_in_grade: students.length, grade });
-  }
-
   // ── Change password ───────────────────────────────────────────────────────
 
   if (method === "POST" && pathname === "/api/auth/change-password") {
@@ -5826,6 +5825,16 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
       const fullPath = path.join(uploadDir, filename);
       
       await Bun.write(fullPath, buffer);
+
+      // Also mirror to static dist if build directory exists
+      try {
+        const currentDist = resolveStaticDistDir();
+        if (existsSync(currentDist)) {
+          const distUploadDir = path.join(currentDist, "uploads");
+          if (!existsSync(distUploadDir)) fs.mkdirSync(distUploadDir, { recursive: true });
+          await Bun.write(path.join(distUploadDir, filename), buffer);
+        }
+      } catch {}
       
       auditLog(auth.userId, "FILE_UPLOAD", "system", null, JSON.stringify({ filename }));
       return apiSuccess({ url: `/uploads/${filename}` });

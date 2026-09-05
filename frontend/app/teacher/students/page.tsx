@@ -6,8 +6,11 @@ import { RequireRole } from "../../../components/auth/RequireRole";
 import { ReviewModal } from "../../../components/teacher/ReviewModal";
 import { useAcademic } from "../../../components/context/AcademicContext";
 import { api } from "../../../lib/api";
-import type { EnrolledStudent, Subject } from "../../../lib/types";
+import type { EnrolledStudent, Subject, User } from "../../../lib/types";
 import { scorePct, letterGrade } from "../../../lib/gradeUtils";
+import dynamic from "next/dynamic";
+const Modal = dynamic(() => import("../../../components/ui/Modal").then((mod) => mod.Modal), { ssr: false });
+import { ConfirmDialog } from "../../../components/ui/ConfirmDialog";
 import {
   PageHeader,
   FilterBar,
@@ -20,6 +23,7 @@ import {
   CheckCircleIcon,
   ClockIcon,
   BookIcon,
+  PlusIcon,
 } from "../../../components/icons/Icons";
 import styles from "./page.module.css";
 
@@ -52,9 +56,70 @@ function StudentRoster() {
   const [reviewData, setReviewData] = useState<any | null>(null);
   const [reviewLoading, setReviewLoading] = useState(false);
 
+  // Enrollment modal state
+  const [enrollModalOpen, setEnrollModalOpen] = useState(false);
+  const [enrollMode, setEnrollMode] = useState<"cohort" | "individual">("cohort");
+  const [selectedCohort, setSelectedCohort] = useState("JSS 1");
+  const [allStudents, setAllStudents] = useState<User[]>([]);
+  const [studentSearch, setStudentSearch] = useState("");
+  const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null);
+  const [enrollSubmitting, setEnrollSubmitting] = useState(false);
+  const [unenrollTarget, setUnenrollTarget] = useState<EnrolledStudent | null>(null);
+  const [unenrollLoading, setUnenrollLoading] = useState(false);
+
   const showToast = (type: "success" | "error", text: string) => {
     setToast({ type, text });
     setTimeout(() => setToast(null), 3500);
+  };
+
+  const loadAllStudents = useCallback(async () => {
+    try {
+      const data = (await api.getStudents()) as User[];
+      setAllStudents(data || []);
+    } catch {
+      // Ignore
+    }
+  }, []);
+
+  const handleEnroll = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedSubjectId) return;
+    setEnrollSubmitting(true);
+    try {
+      if (enrollMode === "cohort") {
+        const res = await api.bulkEnrollByGrade(selectedSubjectId, selectedCohort);
+        showToast("success", res?.message || `Enrolled students from cohort ${selectedCohort}.`);
+      } else {
+        if (!selectedStudentId) {
+          showToast("error", "Please select a student to enroll.");
+          return;
+        }
+        await api.enrollStudent(selectedSubjectId, selectedStudentId);
+        showToast("success", "Student enrolled successfully.");
+      }
+      setEnrollModalOpen(false);
+      setSelectedStudentId(null);
+      await loadStudents(selectedSubjectId);
+    } catch (err) {
+      showToast("error", err instanceof Error ? err.message : "Failed to enroll student(s).");
+    } finally {
+      setEnrollSubmitting(false);
+    }
+  };
+
+  const handleUnenroll = async () => {
+    if (!unenrollTarget || !selectedSubjectId) return;
+    setUnenrollLoading(true);
+    try {
+      await api.unenrollStudent(selectedSubjectId, unenrollTarget.id);
+      showToast("success", `${unenrollTarget.name} removed from course.`);
+      setUnenrollTarget(null);
+      await loadStudents(selectedSubjectId);
+    } catch (err) {
+      showToast("error", err instanceof Error ? err.message : "Failed to unenroll student.");
+    } finally {
+      setUnenrollLoading(false);
+    }
   };
 
   const loadStudents = useCallback(async (sid: number, signal?: AbortSignal) => {
@@ -200,15 +265,27 @@ function StudentRoster() {
       key: "actions",
       header: "Action",
       align: "right",
-      width: "140px",
+      width: "180px",
       render: (st) => {
         const isCompleted = st.exam_status === "completed";
-        return isCompleted ? (
-          <Button variant="secondary" size="xs" onClick={() => openReview(st)}>
-            Review Submission
-          </Button>
-        ) : (
-          <span style={{ fontSize: "0.75rem", color: "var(--color-muted)" }}>—</span>
+        return (
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.4rem" }}>
+            {isCompleted ? (
+              <Button variant="secondary" size="xs" onClick={() => openReview(st)}>
+                Review Submission
+              </Button>
+            ) : (
+              <Button
+                variant="ghost"
+                size="xs"
+                onClick={() => setUnenrollTarget(st)}
+                title="Remove candidate from course"
+                style={{ color: "var(--color-danger, #DC2626)" }}
+              >
+                Remove
+              </Button>
+            )}
+          </div>
         );
       },
     },
@@ -228,7 +305,7 @@ function StudentRoster() {
         title="Student Directory"
         subtitle={`Session ${currentSessionName} · ${currentTermName}`}
         actions={
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
             <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--color-muted)" }}>Course:</label>
             <select
               value={selectedSubjectId}
@@ -248,6 +325,18 @@ function StudentRoster() {
                 </option>
               ))}
             </select>
+            <Button
+              variant="primary"
+              size="sm"
+              leftIcon={<PlusIcon width="13" height="13" />}
+              onClick={() => {
+                setEnrollModalOpen(true);
+                loadAllStudents();
+              }}
+              disabled={!selectedSubjectId}
+            >
+              Enroll Students
+            </Button>
           </div>
         }
       />
@@ -339,6 +428,169 @@ function StudentRoster() {
           }}
         />
       )}
+
+      {/* Enroll Students Modal */}
+      <Modal open={enrollModalOpen} onClose={() => setEnrollModalOpen(false)} size="md">
+        <form onSubmit={handleEnroll} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <div>
+            <div style={{ fontSize: "1.125rem", fontWeight: 600, color: "var(--color-text)" }}>
+              Enroll Students — {activeSubject?.name} ({activeSubject?.code})
+            </div>
+            <div style={{ fontSize: "0.8125rem", color: "var(--color-muted)", marginTop: "0.25rem" }}>
+              Add candidates individually or bulk enroll an entire cohort into this subject roster.
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: "0.5rem", borderBottom: "1px solid var(--color-border)", paddingBottom: "0.5rem" }}>
+            <button
+              type="button"
+              onClick={() => setEnrollMode("cohort")}
+              style={{
+                padding: "0.35rem 0.75rem",
+                borderRadius: "6px",
+                fontSize: "0.8125rem",
+                fontWeight: 600,
+                border: "1px solid var(--color-border)",
+                background: enrollMode === "cohort" ? "var(--color-primary, #0F172A)" : "#FFFFFF",
+                color: enrollMode === "cohort" ? "#FFFFFF" : "var(--color-text)",
+                cursor: "pointer",
+              }}
+            >
+              By Class / Cohort
+            </button>
+            <button
+              type="button"
+              onClick={() => setEnrollMode("individual")}
+              style={{
+                padding: "0.35rem 0.75rem",
+                borderRadius: "6px",
+                fontSize: "0.8125rem",
+                fontWeight: 600,
+                border: "1px solid var(--color-border)",
+                background: enrollMode === "individual" ? "var(--color-primary, #0F172A)" : "#FFFFFF",
+                color: enrollMode === "individual" ? "#FFFFFF" : "var(--color-text)",
+                cursor: "pointer",
+              }}
+            >
+              Individual Student
+            </button>
+          </div>
+
+          {enrollMode === "cohort" ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+              <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--color-text)" }}>
+                Select Cohort / Class Level:
+              </label>
+              <select
+                value={selectedCohort}
+                onChange={(e) => setSelectedCohort(e.target.value)}
+                style={{
+                  padding: "0.5rem 0.75rem",
+                  borderRadius: "6px",
+                  border: "1px solid var(--color-border)",
+                  fontSize: "0.875rem",
+                }}
+              >
+                <option value="JSS 1">JSS 1</option>
+                <option value="JSS 2">JSS 2</option>
+                <option value="JSS 3">JSS 3</option>
+                <option value="SSS 1">SSS 1</option>
+                <option value="SSS 2">SSS 2</option>
+                <option value="SSS 3">SSS 3</option>
+                <option value="All Cohorts">All Cohorts / All Students</option>
+              </select>
+              <span style={{ fontSize: "0.75rem", color: "var(--color-muted)" }}>
+                This will automatically enroll all active candidates in {selectedCohort} who are not already enrolled.
+              </span>
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+              <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--color-text)" }}>
+                Search & Select Candidate:
+              </label>
+              <input
+                type="text"
+                placeholder="Search by name, email, or reg ID..."
+                value={studentSearch}
+                onChange={(e) => setStudentSearch(e.target.value)}
+                style={{
+                  padding: "0.45rem 0.75rem",
+                  borderRadius: "6px",
+                  border: "1px solid var(--color-border)",
+                  fontSize: "0.8125rem",
+                }}
+              />
+              <div
+                style={{
+                  maxHeight: "220px",
+                  overflowY: "auto",
+                  border: "1px solid var(--color-border)",
+                  borderRadius: "6px",
+                  padding: "0.25rem",
+                }}
+              >
+                {allStudents
+                  .filter((s) => {
+                    const enrolledIds = new Set(students.map((e) => e.id));
+                    if (enrolledIds.has(s.id)) return false;
+                    const q = studentSearch.toLowerCase();
+                    if (!q) return true;
+                    return (
+                      s.name?.toLowerCase().includes(q) ||
+                      s.email?.toLowerCase().includes(q) ||
+                      s.reg_id?.toLowerCase().includes(q)
+                    );
+                  })
+                  .map((s) => (
+                    <div
+                      key={s.id}
+                      onClick={() => setSelectedStudentId(s.id)}
+                      style={{
+                        padding: "0.45rem 0.65rem",
+                        borderRadius: "4px",
+                        background: selectedStudentId === s.id ? "var(--color-surface-2, #F1F5F9)" : "transparent",
+                        border: selectedStudentId === s.id ? "1px solid var(--color-border)" : "1px solid transparent",
+                        cursor: "pointer",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontSize: "0.8125rem", fontWeight: 600, color: "var(--color-text)" }}>{s.name}</div>
+                        <div style={{ fontSize: "0.6875rem", color: "var(--color-muted)" }}>{s.reg_id || s.email} · {s.grade || "General"}</div>
+                      </div>
+                      {selectedStudentId === s.id && (
+                        <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--color-primary, #4F46E5)" }}>Selected</span>
+                      )}
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
+
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem", paddingTop: "0.75rem", borderTop: "1px solid var(--color-border)" }}>
+            <Button variant="secondary" size="sm" type="button" onClick={() => setEnrollModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="primary" size="sm" type="submit" loading={enrollSubmitting}>
+              {enrollMode === "cohort" ? `Enroll ${selectedCohort}` : "Enroll Selected Student"}
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Unenroll Confirm Dialog */}
+      <ConfirmDialog
+        open={Boolean(unenrollTarget)}
+        title="Remove Candidate from Course"
+        message={`Are you sure you want to unenroll ${unenrollTarget?.name || "this student"} from ${activeSubject?.name}? They will no longer see this exam on their dashboard.`}
+        confirmLabel="Remove Student"
+        variant="danger"
+        loading={unenrollLoading}
+        onConfirm={handleUnenroll}
+        onClose={() => setUnenrollTarget(null)}
+      />
     </div>
   );
 }
