@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "id": "base-toast",
+  "family": "base",
+  "license": "MIT",
+  "kind": "component",
+  "registryDependencies": [
+    "base-theme",
+    "base-button"
+  ],
+  "dependencies": {
+    "lucide-react-native": "^1.61.0",
+    "react-native-gesture-handler": "~2.32.0",
+    "react-native-reanimated": "4.5.1",
+    "react-native-svg": "15.15.4",
+    "react-native-worklets": "0.10.1"
+  }
+}

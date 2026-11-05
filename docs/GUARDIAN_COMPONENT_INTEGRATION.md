@@ -31,3 +31,20 @@ Native Animation Base is advertised MIT with no login; retain the license copied
 The supplied reference pack contains flattened screenshots, not original family portraits or school photography. Keep approved API image URLs and initials fallbacks; preserve the canonical ACQAD logo. No generated icons. Do not imply photographs in screenshots were recovered or licensed. Optional onboarding image remains a school-configured URL.
 
 Capture rendered Expo web previews after integration and compare their hierarchy against the supplied screenshots. Browser rendering is not an Android/iOS emulator test; report this distinction. Preserve real API request/error/empty states and child-context reset behavior throughout.
+
+## Base source integration
+
+Imported with Native Animation CLI 0.4.2 on SDK 57. Each `src/components/base-*/` directory retains its upstream LICENSE, README and `nativeanimation.manifest.json`. Manifests specify Reanimated 4.5.1 and Worklets 0.10.1; copied README compatibility paragraphs describe the latest SDK 58 release, so the manifest and CLI's selected SDK 57 release are the relevant dependency evidence.
+
+Rendered components:
+
+- `GuardianEntry`: Base Sign In Block, with genuine auth callbacks, no provider buttons, no verification step, and school-server accessory. Added optional brand/accessory/remember visibility props to the permitted source. Recovery links explain the school-office process.
+- `GuardianPreferences`: Base Settings Block with school-backed notification rows and Base Switch. Added source slots to omit unsupported language, appearance and account-deletion sections. No demo profile or default preferences are presented as school data.
+- `Updates`: Base List Detail Block with persisted notices/calendar events, search, category chips and details. Added source `readOnly` mode to remove and guard all local create/edit/delete paths.
+- `NativeUI.Page`, `Row`, `Feedback`: Base Header, Base List Row and Base Skeleton.
+- `SegmentedControl`: controlled Base Tabs. Spring indicator and text use ACQAD amber/white; upstream reduced-motion handling retained.
+- Record details: Base Sheet with safe-area bottom inset, explicit close control and scrollable content. Added shrinking content wrapper to avoid long records overflowing the sheet.
+
+Source fixes during integration: moved Base List Row's activation spread before explicit accessibility handlers and removed duplicate ARIA fields in Base Toggle Group. This resolves TypeScript duplicate-prop errors while preserving assistive activation. The Geist font package supplies regular/medium/semibold weights; Lucide was updated for React 19 compatibility.
+
+The account-gated Shimmer Skeleton and paid catalog examples are not represented as integrated. The free MIT Base Skeleton provides real loading feedback without requiring an account or a purchase.

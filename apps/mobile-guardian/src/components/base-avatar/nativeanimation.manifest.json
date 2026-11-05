@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "id": "base-avatar",
+  "family": "base",
+  "license": "MIT",
+  "kind": "component",
+  "registryDependencies": [
+    "base-theme"
+  ],
+  "dependencies": {
+    "react-native-gesture-handler": "~2.32.0",
+    "react-native-reanimated": "4.5.1",
+    "react-native-worklets": "0.10.1"
+  }
+}

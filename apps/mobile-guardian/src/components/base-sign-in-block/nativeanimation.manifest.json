@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "base-sign-in-block",
+  "family": "base",
+  "license": "MIT",
+  "kind": "block",
+  "registryDependencies": [
+    "base-alert",
+    "base-button",
+    "base-checkbox",
+    "base-header",
+    "base-input",
+    "base-input-otp",
+    "base-separator",
+    "base-theme"
+  ],
+  "dependencies": {
+    "react-native-reanimated": "4.5.1",
+    "react-native-worklets": "0.10.1"
+  }
+}

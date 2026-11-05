@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "id": "base-settings-block",
+  "family": "base",
+  "license": "MIT",
+  "kind": "block",
+  "registryDependencies": [
+    "base-alert",
+    "base-avatar",
+    "base-button",
+    "base-dialog",
+    "base-header",
+    "base-list-row",
+    "base-select",
+    "base-skeleton",
+    "base-switch",
+    "base-theme",
+    "base-toggle-group"
+  ],
+  "dependencies": {
+    "react-native-reanimated": "4.5.1",
+    "react-native-worklets": "0.10.1"
+  }
+}

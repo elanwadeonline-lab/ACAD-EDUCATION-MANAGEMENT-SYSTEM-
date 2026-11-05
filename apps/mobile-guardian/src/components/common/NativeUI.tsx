@@ -1,9 +1,20 @@
 import React,{useEffect,useState,useCallback} from 'react';
-import {View,Text,Pressable,StyleSheet,ScrollView,ActivityIndicator,Image,RefreshControl} from 'react-native';
+import {Text,Pressable,StyleSheet,ScrollView,RefreshControl,type TextInputProps} from 'react-native';
+import {Box as View} from '../ui/box';
+import {Button as GluestackButton,ButtonText} from '../ui/button';
+import {Avatar as GluestackAvatar,AvatarFallbackText,AvatarImage} from '../ui/avatar';
+import {Badge,BadgeText} from '../ui/badge';
+import {Input,InputField} from '../ui/input';
+import {Link,LinkText} from '../ui/link';
+import {Toast,ToastTitle,useToast} from '../ui/toast';
+export {Card} from '../ui/card';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {ChevronLeft,ChevronRight,RefreshCw} from 'lucide-react-native';
 import {Colors as C} from '../../theme/tokens';
 import {API_BASE_URL,requestData} from '../../api/client';
+import {BaseSkeleton} from '../base-skeleton';
+import {BaseHeader} from '../base-header';
+import {BaseListRow} from '../base-list-row';
 
 export function useRemote<T>(path:string|null,identity:string|number=''){
   const [data,setData]=useState<T|null>(null),[error,setError]=useState(''),[loading,setLoading]=useState(!!path),[revision,setRevision]=useState(0);
@@ -14,27 +25,31 @@ export function useRemote<T>(path:string|null,identity:string|number=''){
   return {data,error,loading,reload:useCallback(()=>setRevision(n=>n+1),[])};
 }
 export function Button({label,onPress,disabled=false,quiet=false}:{label:string;onPress:()=>void;disabled?:boolean;quiet?:boolean}){
-  return <Pressable accessibilityRole="button" accessibilityState={{disabled}} disabled={disabled} onPress={onPress} style={({pressed})=>[ui.button,quiet&&ui.quiet,disabled&&{opacity:.45},pressed&&{opacity:.8}]}><Text style={[ui.buttonText,quiet&&{color:C.primary}]}>{label}</Text></Pressable>;
+  return <GluestackButton accessibilityLabel={label} isDisabled={disabled} variant={quiet?'outline':'default'} onPress={onPress} style={[ui.button,quiet&&ui.quiet]}><ButtonText style={[ui.buttonText,quiet&&{color:C.primary}]}>{label}</ButtonText></GluestackButton>;
+}
+export function SchoolInput({style,...props}:TextInputProps){return <Input isDisabled={props.editable===false} style={{borderRadius:12,minHeight:48,backgroundColor:C.card,borderColor:C.cardBorder}}><InputField {...props} style={[{fontSize:16,color:C.ink,fontFamily:'Geist_400Regular',minHeight:46},style,{borderWidth:0,backgroundColor:'transparent'}]}/></Input>;}
+export function useNotice(){
+  const toast=useToast();
+  return (message:string)=>toast.show({placement:'top',duration:3000,render:({id})=><Toast nativeID={`guardian-toast-${id}`} action="success" style={{margin:16,borderRadius:14,backgroundColor:C.card,borderColor:C.cardBorder,borderWidth:1,padding:16}}><ToastTitle style={{color:C.ink,fontFamily:'Geist_500Medium',fontSize:14}}>{message}</ToastTitle></Toast>});
 }
 export function Feedback({loading,error,onRetry,empty}:{loading?:boolean;error?:string;onRetry?:()=>void;empty?:string}){
-  if(loading)return <View style={ui.feedback} accessibilityLiveRegion="polite"><ActivityIndicator color={C.primary}/><Text style={ui.muted}>Loading school records…</Text></View>;
+  if(loading)return <View style={{gap:12,paddingVertical:16}} accessibilityLiveRegion="polite" accessibilityLabel="Loading school records"><BaseSkeleton width="72%" height={18}/><BaseSkeleton width="100%" height={64} radius={14}/><BaseSkeleton width="88%" height={16}/><Text style={ui.small}>Loading school records…</Text></View>;
   if(error)return <View style={ui.feedback} accessibilityRole="alert"><Text style={ui.muted}>{error}</Text>{onRetry&&<Button label="Try again" onPress={onRetry} quiet/>}</View>;
   return empty?<View style={ui.feedback}><Text style={ui.muted}>{empty}</Text></View>:null;
 }
 export function Page({title,children,onBack,right,refreshing,onRefresh}:{title?:string;children:React.ReactNode;onBack?:()=>void;right?:React.ReactNode;refreshing?:boolean;onRefresh?:()=>void}){
-  return <SafeAreaView edges={['top','left','right']} style={ui.safe}>{title&&<View style={ui.header}>{onBack&&<Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={onBack} style={ui.iconButton}><ChevronLeft color={C.ink} size={23}/></Pressable>}<Text style={ui.pageTitle}>{title}</Text>{right}</View>}<ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={ui.content} refreshControl={onRefresh?<RefreshControl refreshing={!!refreshing} onRefresh={onRefresh} tintColor={C.primary}/>:undefined}>{children}</ScrollView></SafeAreaView>;
+  return <SafeAreaView edges={['top','left','right']} style={ui.safe}>{title&&<BaseHeader title={title} onBack={onBack} actions={right} align="left"/>}<ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={ui.content} refreshControl={onRefresh?<RefreshControl refreshing={!!refreshing} onRefresh={onRefresh} tintColor={C.primary}/>:undefined}>{children}</ScrollView></SafeAreaView>;
 }
-export function Section({title,action,onPress}:{title:string;action?:string;onPress?:()=>void}){return <View style={ui.section}><Text style={ui.sectionTitle}>{title}</Text>{action&&<Pressable onPress={onPress} accessibilityRole="button" style={{paddingVertical:8}}><Text style={ui.actionText}>{action}</Text></Pressable>}</View>;}
+export function Section({title,action,onPress}:{title:string;action?:string;onPress?:()=>void}){return <View style={ui.section}><Text style={ui.sectionTitle}>{title}</Text>{action&&<Link onPress={onPress} accessibilityLabel={action} style={{minHeight:44,justifyContent:'center'}}><LinkText style={ui.actionText}>{action}</LinkText></Link>}</View>;}
 export function Avatar({name,uri,size=44}:{name:string;uri?:string;size?:number}){
   const [failed,setFailed]=useState(false);useEffect(()=>setFailed(false),[uri]);
   const url=uri&&(uri.startsWith('/')?API_BASE_URL+uri:uri);
-  return <View style={[ui.avatar,{width:size,height:size,borderRadius:size/2}]}>{url&&!failed?<Image source={{uri:url}} accessibilityLabel={`${name} profile photograph`} onError={()=>setFailed(true)} style={{width:size,height:size,borderRadius:size/2}}/>:<Text style={{color:C.primary,fontWeight:'700',fontSize:size*.32}}>{name.trim().split(/\s+/).slice(0,2).map(n=>n[0]).join('')}</Text>}</View>;
+  return <GluestackAvatar accessibilityLabel={name} style={[ui.avatar,{width:size,height:size,borderRadius:size/2}]}><AvatarFallbackText style={{color:C.primary,fontWeight:'700',fontSize:size*.32}}>{name}</AvatarFallbackText>{url&&!failed&&<AvatarImage source={{uri:url}} accessibilityLabel={`${name} profile photograph`} onError={()=>setFailed(true)} style={{width:size,height:size,borderRadius:size/2}}/>}</GluestackAvatar>;
 }
 export function Row({title,detail,icon,onPress,right}:{title:string;detail?:string;icon?:React.ReactNode;onPress?:()=>void;right?:React.ReactNode}){
-  const body=<>{icon&&<View style={ui.rowIcon}>{icon}</View>}<View style={{flex:1,gap:4}}><Text style={ui.rowTitle}>{title}</Text>{detail&&<Text style={ui.small}>{detail}</Text>}</View>{right}{onPress&&<ChevronRight size={17} color={C.muted}/>}</>;
-  return onPress?<Pressable style={ui.row} onPress={onPress} accessibilityRole="button">{body}</Pressable>:<View style={ui.row}>{body}</View>;
+  return <BaseListRow title={title} description={detail} leading={icon?<View style={ui.rowIcon}>{icon}</View>:undefined} trailing={<View style={{flexDirection:'row',alignItems:'center',gap:8}}>{right}{onPress&&<ChevronRight size={17} color={C.muted}/>}</View>} onPress={onPress} style={{borderBottomWidth:StyleSheet.hairlineWidth,borderBottomColor:C.divider,paddingHorizontal:0,minHeight:68}}/>;
 }
-export function Pill({text,positive=false}:{text:string;positive?:boolean}){return <View style={[ui.pill,positive&&{backgroundColor:C.successBg}]}><Text style={{fontSize:11,fontWeight:'600',color:positive?C.success:C.primary}}>{text}</Text></View>;}
+export function Pill({text,positive=false}:{text:string;positive?:boolean}){return <Badge variant="secondary" style={[ui.pill,positive&&{backgroundColor:C.successBg}]}><BadgeText className="normal-case" style={{fontSize:12,fontWeight:'600',color:positive?C.success:C.primary}}>{text}</BadgeText></Badge>;}
 export const ui=StyleSheet.create({
   safe:{flex:1,backgroundColor:C.canvas},content:{paddingHorizontal:20,paddingTop:12,paddingBottom:28,gap:16},header:{minHeight:54,paddingHorizontal:12,flexDirection:'row',alignItems:'center',gap:4},pageTitle:{fontSize:19,fontWeight:'700',color:C.ink,flex:1,letterSpacing:-.4},iconButton:{width:44,height:44,alignItems:'center',justifyContent:'center'},
   button:{backgroundColor:C.primary,borderRadius:24,minHeight:46,paddingVertical:12,paddingHorizontal:20,alignItems:'center',justifyContent:'center'},buttonText:{color:'#fff',fontSize:14,fontWeight:'700'},quiet:{backgroundColor:C.primaryLight,borderWidth:1,borderColor:C.primaryTint},

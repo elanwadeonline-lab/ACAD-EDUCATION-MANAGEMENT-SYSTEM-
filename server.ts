@@ -51,8 +51,8 @@ import { handleRouted } from "./server/router";
 
 export const authz = createAuthorizationService(db, queries);
 
-// Auto-start ACAD Node Telemetry & Sync Daemon in background
-if (Bun.env.DISABLE_NODE_AGENT !== "true" && Bun.env.NODE_ENV !== "test") {
+// Auto-start ACAD Node Telemetry & Sync Daemon ONLY if explicitly enabled
+if (Bun.env.ENABLE_NODE_AGENT === "true" && Bun.env.NODE_ENV !== "test") {
   try {
     startNodeAgent(Number(Bun.env.NODE_AGENT_PULSE_SEC) || 60);
   } catch (err) {
@@ -7183,7 +7183,7 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
 
 
 const server = serve({
-  port: Number(Bun.env.PORT ?? 8001),
+  port: Number(Bun.env.PORT ?? 10000),
   hostname: "0.0.0.0",
   idleTimeout: 255,
   maxRequestBodySize: 1024 * 1024 * 64, // 64MB buffer limit to safely support up to 30MB file uploads
@@ -7201,6 +7201,7 @@ const server = serve({
 
     // ── Instant Cloud Orchestrator Health Check (Render, AWS, Fly, K8s) ───────
     if (cleanPath === "/api/health" || cleanPath === "/health") {
+      console.log(`[Health] ${method} ${cleanPath} -> 200 OK`);
       if (method === "HEAD") {
         return new Response(null, { status: 200, headers: corsHeaders });
       }
@@ -7218,6 +7219,7 @@ const server = serve({
       );
     }
     if (cleanPath === "/api") {
+      console.log(`[Health] ${method} /api -> 200 OK`);
       if (method === "HEAD") {
         return new Response(null, { status: 200, headers: corsHeaders });
       }

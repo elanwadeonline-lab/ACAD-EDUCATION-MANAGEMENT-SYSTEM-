@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "id": "base-separator",
+  "family": "base",
+  "license": "MIT",
+  "kind": "component",
+  "registryDependencies": [
+    "base-theme"
+  ],
+  "dependencies": {}
+}

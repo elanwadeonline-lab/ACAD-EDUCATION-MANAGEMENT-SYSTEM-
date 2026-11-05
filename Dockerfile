@@ -32,9 +32,5 @@ RUN mkdir -p /app/data /app/frontend/public/uploads
 # Expose Render standard port
 EXPOSE 10000
 
-# Container healthcheck
-HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
-  CMD curl -f http://localhost:${PORT}/api/health || exit 1
-
 # Start the Bun production server
 CMD ["bun", "server.ts"]

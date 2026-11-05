@@ -27,7 +27,8 @@ export function CircularProgressGauge({
   return (
     <View style={[styles.card, { width: "100%", alignItems: "center" }]}>
       <View style={{ width: size, height: size, alignItems: "center", justifyContent: "center" }}>
-        <Svg width={size} height={size} style={{ transform: [{ rotate: "135deg" }] }}>
+        <View style={{ transform: [{ rotate: "135deg" }] }}>
+        <Svg width={size} height={size}>
           <Defs>
             <LinearGradient id="magentaGaugeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
               <Stop offset="0%" stopColor="#F59E0B" />
@@ -58,6 +59,7 @@ export function CircularProgressGauge({
             fill="none"
           />
         </Svg>
+        </View>
 
         {/* Center Content */}
         <View style={styles.centerContent}>
