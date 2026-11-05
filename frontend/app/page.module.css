@@ -24,7 +24,8 @@
 
 /* ── Left Hero Pane ──────────────────────────────── */
 .heroPanl {
-  background: var(--color-text, #0f172a);
+  background: radial-gradient(circle at 10% 20%, rgba(245, 158, 11, 0.10) 0%, transparent 40%), radial-gradient(circle at 90% 80%, rgba(245, 158, 11, 0.05) 0%, transparent 45%), #090A0F;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -58,6 +59,7 @@
 }
 
 .heroBrand {
+  color: #FAFAF9;
   display: flex;
   align-items: center;
   justify-content: flex-start;
@@ -79,7 +81,7 @@
 
 .heroBrandName {
   font-size: 1.05rem;
-  font-weight: 800;
+  font-weight: 500;
   color: #FFFFFF;
   letter-spacing: -0.02em;
 }
@@ -96,7 +98,7 @@
 
 .heroTitle {
   font-size: 1.95rem;
-  font-weight: 800;
+  font-weight: 500;
   color: #FFFFFF;
   line-height: 1.1;
   letter-spacing: -0.035em;
@@ -132,7 +134,7 @@
 .heroFeatureDot {
   width: 6px; height: 6px;
   border-radius: 50%;
-  background: var(--color-primary-light, #14B8A6);
+  background: var(--color-primary-light, #D97706);
   flex-shrink: 0;
 }
 
@@ -144,7 +146,7 @@
   justify-content: center;
   padding: 3.5rem 4rem;
   background: var(--color-surface, #FFFFFF);
-  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .mobileBrand {
@@ -176,7 +178,7 @@
 
 .formTitle {
   font-size: 1.5rem;
-  font-weight: 800;
+  font-weight: 500;
   color: var(--color-text, #0F172A);
   letter-spacing: -0.025em;
   line-height: 1.2;
@@ -192,7 +194,7 @@
 
 .formSubtitleLink {
   color: var(--color-primary, #0F766E);
-  font-weight: 600;
+  font-weight: 500;
   transition: color 150ms ease;
 }
 
@@ -246,7 +248,7 @@
 
 .fieldLabel {
   font-size: 0.775rem;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--color-text, #0F172A);
   letter-spacing: 0.01em;
   text-transform: none;
@@ -289,7 +291,7 @@
   color: #FFFFFF;
   border: none;
   border-radius: 8px;
-  font-weight: 600;
+  font-weight: 500;
   font-size: 0.845rem;
   cursor: pointer;
   transition: all 150ms ease;

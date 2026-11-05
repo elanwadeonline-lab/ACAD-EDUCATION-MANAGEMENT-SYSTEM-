@@ -17,14 +17,15 @@
 
 .statCard {
   background: var(--color-surface, #FFFFFF);
-  border: 1px solid var(--color-border, #E2E8F0);
-  border-radius: 12px;
-  padding: 1rem 1.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 22px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   gap: 0.5rem;
   transition: border-color 150ms ease, box-shadow 150ms ease;
+  box-shadow: none;
 }
 
 .statCard:hover {
@@ -47,18 +48,21 @@
 }
 
 .statIcon {
-  color: var(--color-muted-2, #94A3B8);
+  color: var(--color-muted);
   display: flex;
   align-items: center;
+  background: transparent;
+  border: 0;
 }
 
 .statValue {
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-size: 2rem;
+  font-weight: 600;
   font-family: var(--font-mono, monospace);
   color: var(--color-text, #0F172A);
   line-height: 1.1;
-  letter-spacing: -0.03em;
+  letter-spacing: -.045em;
+  font-variant-numeric: tabular-nums;
 }
 
 .statFootnote {
@@ -104,8 +108,8 @@
 
 .formInput:focus,
 .formSelect:focus {
-  border-color: var(--color-primary, #4F46E5);
-  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.12);
+  border-color: var(--color-primary, #EA580C);
+  box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.12);
 }
 
 .dropZone {
@@ -124,9 +128,9 @@
 }
 
 .dropZone:hover {
-  border-color: var(--color-primary, #4F46E5);
+  border-color: var(--color-primary, #EA580C);
   background: #FFFFFF;
-  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.06);
+  box-shadow: 0 2px 8px rgba(234, 88, 12, 0.06);
 }
 
 /* ── Packages Section ───────────────────────────────────── */
@@ -147,17 +151,18 @@
 
 .searchInput {
   padding: 0.4rem 0.75rem;
-  font-size: 0.75rem;
+  font-size: .875rem;
   border: 1px solid var(--color-border, #CBD5E1);
-  border-radius: 6px;
+  border-radius: 8px;
   background: var(--color-surface, #FFFFFF);
   color: var(--color-text, #0F172A);
   width: 200px;
   outline: none;
+  min-height: 42px;
 }
 
 .searchInput:focus {
-  border-color: var(--color-primary, #4F46E5);
+  border-color: var(--color-primary, #EA580C);
 }
 
 .packagesGrid {
@@ -167,9 +172,9 @@
 }
 
 .packageCard {
-  background: var(--color-surface, #FFFFFF);
-  border: 1px solid var(--color-border, #E2E8F0);
-  border-radius: 12px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
   padding: 1.25rem;
   display: flex;
   flex-direction: column;
@@ -178,10 +183,11 @@
   cursor: pointer;
   transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
+  box-shadow: none;
 }
 
 .packageCard:hover {
-  border-color: var(--color-primary, #4F46E5);
+  border-color: var(--color-primary, #EA580C);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
 }
@@ -202,9 +208,9 @@
   border-radius: 4px;
 }
 
-.badgeJAMB { background: rgba(6, 182, 212, 0.12); color: #0891B2; border: 1px solid rgba(6, 182, 212, 0.25); }
+.badgeJAMB { background: rgba(6, 182, 212, 0.12); color: #92400E; border: 1px solid rgba(6, 182, 212, 0.25); }
 .badgeWAEC { background: rgba(16, 185, 129, 0.12); color: #059669; border: 1px solid rgba(16, 185, 129, 0.25); }
-.badgeNECO { background: rgba(99, 102, 241, 0.12); color: #4F46E5; border: 1px solid rgba(99, 102, 241, 0.25); }
+.badgeNECO { background: rgba(234, 88, 12, 0.12); color: #EA580C; border: 1px solid rgba(234, 88, 12, 0.25); }
 .badgeNABTEB { background: rgba(249, 115, 22, 0.12); color: #D97706; border: 1px solid rgba(249, 115, 22, 0.25); }
 .badgeCUSTOM { background: rgba(100, 116, 139, 0.12); color: #475569; border: 1px solid rgba(100, 116, 139, 0.25); }
 
@@ -239,7 +245,7 @@
   gap: 0.35rem;
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--color-primary, #4F46E5);
+  color: var(--color-primary, #EA580C);
   background: transparent;
   border: none;
   cursor: pointer;
@@ -305,9 +311,9 @@
 }
 
 .backBtn:hover {
-  background: rgba(79, 70, 229, 0.06);
-  color: #4F46E5;
-  border-color: #4F46E5;
+  background: rgba(234, 88, 12, 0.06);
+  color: #EA580C;
+  border-color: #EA580C;
   transform: translateX(-2px);
 }
 
@@ -396,26 +402,27 @@
 }
 
 .questionPill:hover {
-  border-color: var(--color-primary, #4F46E5);
+  border-color: var(--color-primary, #EA580C);
   background: var(--color-surface-2, #F8FAFC);
 }
 
 .questionPillActive {
-  background: var(--color-primary, #4F46E5) !important;
+  background: var(--color-primary, #EA580C) !important;
   color: #FFFFFF !important;
-  border-color: var(--color-primary, #4F46E5) !important;
-  box-shadow: 0 2px 6px rgba(79, 70, 229, 0.25);
+  border-color: var(--color-primary, #EA580C) !important;
+  box-shadow: 0 2px 6px rgba(234, 88, 12, 0.25);
 }
 
 /* ── Main Question Editor Card ──────────────────────────── */
 .editorCard {
-  background: var(--color-surface, #FFFFFF);
-  border: 1px solid var(--color-border, #E2E8F0);
-  border-radius: 12px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+  box-shadow: none;
 }
 
 .editorHeaderRow {
@@ -429,8 +436,8 @@
 .itemNumberBadge {
   font-size: 0.8125rem;
   font-weight: 700;
-  color: var(--color-primary, #4F46E5);
-  background: rgba(79, 70, 229, 0.08);
+  color: var(--color-primary, #EA580C);
+  background: rgba(234, 88, 12, 0.08);
   padding: 0.25rem 0.65rem;
   border-radius: 6px;
 }
@@ -452,8 +459,8 @@
 }
 
 .richTextarea:focus {
-  border-color: var(--color-primary, #4F46E5);
-  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.12);
+  border-color: var(--color-primary, #EA580C);
+  box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.12);
 }
 
 .charCount {
@@ -532,7 +539,7 @@
 }
 
 .optionTextInput:focus {
-  border-color: var(--color-primary, #4F46E5);
+  border-color: var(--color-primary, #EA580C);
 }
 
 .correctToggleBtn {
@@ -704,3 +711,7 @@
   }
 }
 
+
+
+/* Decorative gold wave: no metric values encoded. */
+.statCard,.packageCard { background-color:var(--color-surface); background-image:url("/gold-card-wave.svg"); background-repeat:no-repeat; background-position:right bottom; background-size:220px auto; }

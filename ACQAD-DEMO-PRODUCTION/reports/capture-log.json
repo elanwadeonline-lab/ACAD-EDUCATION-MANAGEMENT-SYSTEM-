@@ -1,0 +1,1379 @@
+{
+  "captures": {
+    "S01_brand_student-login_desktop.png": {
+      "role": "Public",
+      "module": "Branding / Authentication",
+      "purpose": "Opening view — ACQAD student sign-in with brand identity",
+      "url": "/",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "Acqad DIGITAL PLATFORM Student portal Your learning starts here. Practice, take assessments and follow your progress in one place. ✓ Practice available examination papers ✓ Access your scheduled assessments ✓ View published results and progress Acqad · Academic coordination, simplified. Sign in No account? Create one → Registration ID or Email Password Forgot Password? Sign in → Checking server…",
+      "capturedAt": "2026-11-03T16:55:00.748Z"
+    },
+    "S02_brand_admin-login_desktop.png": {
+      "role": "Public",
+      "module": "Administration",
+      "purpose": "Administration portal sign-in",
+      "url": "/ADMIN/",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "Acqad DIGITAL PLATFORM Administration Your school, working together. Manage academic sessions, people and assessment operations. ✓ Coordinate sessions and teaching assignments ✓ Manage subjects and examination schedules ✓ Review academic records and results Acqad · Academic coordination, simplified. Sign in Registration ID or Email Password Forgot Password? Sign in → Checking server…",
+      "capturedAt": "2026-11-03T16:55:17.121Z"
+    },
+    "S03_brand_teacher-login_desktop.png": {
+      "role": "Public",
+      "module": "Teacher",
+      "purpose": "Teacher portal sign-in",
+      "url": "/teacher/",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "Acqad DIGITAL PLATFORM Teacher portal A clear view of your classroom. Prepare assessments, record grades and stay connected with your students. ✓ Manage question banks and assessments ✓ Record attendance and class grades ✓ Review submissions and school messages Acqad · Academic coordination, simplified. Sign in Registration ID or Email Password Forgot Password? Sign in → Checking server…",
+      "capturedAt": "2026-11-03T16:55:22.880Z"
+    },
+    "S04_brand_guardian-login_desktop.png": {
+      "role": "Public",
+      "module": "Guardian",
+      "purpose": "Guardian portal sign-in",
+      "url": "/guardian/",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "Acqad DIGITAL PLATFORM Guardian portal Closer to their school day. Follow your children’s progress and keep in touch with their school. ✓ View published results and attendance ✓ Read school updates and messages ✓ Manage linked children and school records Acqad · Academic coordination, simplified. Sign in New guardian? Create an account → Registration ID or Email Password Forgot Password? Sign in →",
+      "capturedAt": "2026-11-03T16:55:27.562Z"
+    },
+    "S05_offline_fallback_desktop.png": {
+      "role": "Public",
+      "module": "Offline & Synchronisation",
+      "purpose": "PWA offline fallback screen shown when the school server is unreachable",
+      "url": "http://localhost:3100/?redirect=%2F%7Eoffline%2F",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "Acqad DIGITAL PLATFORM Student portal Your learning starts here. Practice, take assessments and follow your progress in one place. ✓ Practice available examination papers ✓ Access your scheduled assessments ✓ View published results and progress Acqad · Academic coordination, simplified. Sign in No account? Create one → Registration ID or Email Password Forgot Password? Sign in → Checking server…",
+      "capturedAt": "2026-11-03T16:55:32.428Z"
+    },
+    "S06_exam_kiosk-terminal_desktop.png": {
+      "role": "Public",
+      "module": "Assessment & Examination",
+      "purpose": "Lockdown kiosk terminal entry for exam halls",
+      "url": "/kiosk/",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "Seat UNASSIGNED Naija Hybrid CBT Center Enter your Registration Number and PIN to begin. Start Session",
+      "capturedAt": "2026-11-03T16:55:38.010Z"
+    },
+    "M01_guardian-login_mobile.png": {
+      "role": "Public",
+      "module": "Guardian",
+      "purpose": "Guardian sign-in on a phone",
+      "url": "/guardian/",
+      "viewport": "390x844@2x",
+      "redactions": 0,
+      "textSample": "Acqad DIGITAL PLATFORM Sign in New guardian? Create an account → Registration ID or Email Password Forgot Password? Sign in → Checking server…",
+      "capturedAt": "2026-11-03T16:55:43.205Z"
+    },
+    "M02_student-login_mobile.png": {
+      "role": "Public",
+      "module": "Student",
+      "purpose": "Student sign-in on a phone",
+      "url": "/",
+      "viewport": "390x844@2x",
+      "redactions": 0,
+      "textSample": "Acqad DIGITAL PLATFORM Sign in No account? Create one → Registration ID or Email Password Forgot Password? Sign in → Checking server…",
+      "capturedAt": "2026-11-03T16:55:47.849Z"
+    },
+    "S90_controlplane_api-health_desktop.png": {
+      "role": "Technical Administrator",
+      "module": "Control Plane & Monitoring",
+      "purpose": "Live ACAD Supervisory Control Plane API health response (deployed service is API-only)",
+      "url": "https://acad-controll.onrender.com/",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "{\"status\":\"ok\",\"timestamp\":\"2026-11-03T16:55:49.269Z\",\"version\":\"5.3.0\",\"service\":\"acad-control-api\",\"message\":\"ACAD Supervisory Control Plane API is online and operational.\",\"health\":\"/health\"}",
+      "capturedAt": "2026-11-03T16:55:51.433Z"
+    },
+    "A01_admin_dashboard.png": {
+      "role": "Administrator",
+      "module": "Administration",
+      "purpose": "Institutional overview with active session/term and KPIs",
+      "url": "/ADMIN/dashboard/",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "Acqad Operator Overview Dashboard Academic Structure Academic Sessions Class Teachers Subjects & Exams Timetable Grading & Results Annual Results Report Cards Content & Resources Content Library Administration Users & Access Notifications Guardian Inquiries License & Security Settings TUE 06 : 22 : 19 PM Period: 2026/2027 · First Term SA System Admin OPERATOR Operator Workspace · Active Session: 2",
+      "capturedAt": "2026-11-03T17:22:19.289Z"
+    },
+    "A02_admin_academic-sessions.png": {
+      "role": "Administrator",
+      "module": "School Management",
+      "purpose": "Academic sessions and terms",
+      "url": "/ADMIN/academic-sessions/",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "Acqad Operator Overview Dashboard Academic Structure Academic Sessions Class Teachers Subjects & Exams Timetable Grading & Results Annual Results Report Cards Content & Resources Content Library Administration Users & Access Notifications Guardian Inquiries License & Security Settings TUE 06 : 23 : 22 PM Period: 2026/2027 · First Term SA System Admin OPERATOR Academic Structure Academic Calendar M",
+      "capturedAt": "2026-11-03T17:23:23.309Z"
+    },
+    "A06_admin_class-teachers.png": {
+      "role": "Administrator",
+      "module": "School Management",
+      "purpose": "Class teacher assignment and history",
+      "url": "/ADMIN/class-teachers/",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "Acqad Operator Overview Dashboard Academic Structure Academic Sessions Class Teachers Subjects & Exams Timetable Grading & Results Annual Results Report Cards Content & Resources Content Library Administration Users & Access Notifications Guardian Inquiries License & Security Settings TUE 06 : 25 : 39 PM Period: 2026/2027 · First Term SA System Admin OPERATOR Academic Structure Class Teachers Auth",
+      "capturedAt": "2026-11-03T17:25:40.732Z"
+    },
+    "A07_admin_subjects.png": {
+      "role": "Administrator",
+      "module": "School Management",
+      "purpose": "Subject registry, teacher assignment and enrollment",
+      "url": "/ADMIN/subjects/",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "Acqad Operator Overview Dashboard Academic Structure Academic Sessions Class Teachers Subjects & Exams Timetable Grading & Results Annual Results Report Cards Content & Resources Content Library Administration Users & Access Notifications Guardian Inquiries License & Security Settings TUE 06 : 26 : 35 PM Period: 2026/2027 · First Term SA System Admin OPERATOR Academic Management Subjects & Curricu",
+      "capturedAt": "2026-11-03T17:26:36.429Z"
+    },
+    "A08_admin_users.png": {
+      "role": "Administrator",
+      "module": "Administration",
+      "purpose": "User management across all roles",
+      "url": "/ADMIN/users/",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "Acqad Operator Overview Dashboard Academic Structure Academic Sessions Class Teachers Subjects & Exams Timetable Grading & Results Annual Results Report Cards Content & Resources Content Library Administration Users & Access Notifications Guardian Inquiries License & Security Settings TUE 06 : 27 : 33 PM Period: 2026/2027 · First Term SA System Admin OPERATOR Administration Users & Access Control ",
+      "capturedAt": "2026-11-03T17:27:33.795Z"
+    },
+    "A09_admin_users-guardians.png": {
+      "role": "Administrator",
+      "module": "Guardian",
+      "purpose": "Guardian accounts and ward links",
+      "url": "/ADMIN/users/",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "Acqad Operator Overview Dashboard Academic Structure Academic Sessions Class Teachers Subjects & Exams Timetable Grading & Results Annual Results Report Cards Content & Resources Content Library Administration Users & Access Notifications Guardian Inquiries License & Security Settings TUE 06 : 28 : 00 PM Period: 2026/2027 · First Term SA System Admin OPERATOR Administration Users & Access Control ",
+      "capturedAt": "2026-11-03T17:28:00.851Z"
+    },
+    "A10_admin_timetable.png": {
+      "role": "Administrator",
+      "module": "Assessment & Examination",
+      "purpose": "Examination timetable scheduling",
+      "url": "/ADMIN/timetable/",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "Acqad Operator Overview Dashboard Academic Structure Academic Sessions Class Teachers Subjects & Exams Timetable Grading & Results Annual Results Report Cards Content & Resources Content Library Administration Users & Access Notifications Guardian Inquiries License & Security Settings TUE 06 : 28 : 58 PM Period: 2026/2027 · First Term SA System Admin OPERATOR Academic Structure Timetable & CBT Win",
+      "capturedAt": "2026-11-03T17:28:59.081Z"
+    },
+    "A11_admin_content-bank.png": {
+      "role": "Administrator",
+      "module": "Assessment & Examination",
+      "purpose": "Past-question content bank import & search",
+      "url": "/ADMIN/content/",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "Acqad Operator Overview Dashboard Academic Structure Academic Sessions Class Teachers Subjects & Exams Timetable Grading & Results Annual Results Report Cards Content & Resources Content Library Administration Users & Access Notifications Guardian Inquiries License & Security Settings TUE 06 : 29 : 55 PM Period: 2026/2027 · First Term SA System Admin OPERATOR Content Management Content Library Man",
+      "capturedAt": "2026-11-03T17:29:55.942Z"
+    },
+    "A12_admin_annual-results.png": {
+      "role": "Administrator",
+      "module": "Results & Analytics",
+      "purpose": "Annual results computation & promotion",
+      "url": "/ADMIN/annual-results/",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "Acqad Operator Overview Dashboard Academic Structure Academic Sessions Class Teachers Subjects & Exams Timetable Grading & Results Annual Results Report Cards Content & Resources Content Library Administration Users & Access Notifications Guardian Inquiries License & Security Settings TUE 06 : 30 : 50 PM Period: 2026/2027 · First Term SA System Admin OPERATOR Academic Outcomes Annual Results & Pro",
+      "capturedAt": "2026-11-03T17:30:51.135Z"
+    },
+    "A13_admin_report-card.png": {
+      "role": "Administrator",
+      "module": "Results & Analytics",
+      "purpose": "Report card workspace",
+      "url": "/ADMIN/report-card/",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "Acqad Operator Overview Dashboard Academic Structure Academic Sessions Class Teachers Subjects & Exams Timetable Grading & Results Annual Results Report Cards Content & Resources Content Library Administration Users & Access Notifications Guardian Inquiries License & Security Settings TUE 06 : 31 : 47 PM Period: 2026/2027 · First Term SA System Admin OPERATOR Report Cards & Academic Records School",
+      "capturedAt": "2026-11-03T17:31:48.481Z"
+    },
+    "A14_admin_report-card-open.png": {
+      "role": "Administrator",
+      "module": "Results & Analytics",
+      "purpose": "Opened report card for a student",
+      "url": "/ADMIN/report-card/",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "Acqad Operator Overview Dashboard Academic Structure Academic Sessions Class Teachers Subjects & Exams Timetable Grading & Results Annual Results Report Cards Content & Resources Content Library Administration Users & Access Notifications Guardian Inquiries License & Security Settings TUE 06 : 32 : 14 PM Period: 2026/2027 · First Term SA System Admin OPERATOR ← Student roster ← 1 of 251 → Student ",
+      "capturedAt": "2026-11-03T17:32:14.940Z"
+    },
+    "A15_admin_messages.png": {
+      "role": "Administrator",
+      "module": "Communication & Notifications",
+      "purpose": "Administrative guardian messaging inbox",
+      "url": "/ADMIN/messages/",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "Acqad Operator Overview Dashboard Academic Structure Academic Sessions Class Teachers Subjects & Exams Timetable Grading & Results Annual Results Report Cards Content & Resources Content Library Administration Users & Access Notifications Guardian Inquiries License & Security Settings TUE 06 : 33 : 12 PM Period: 2026/2027 · First Term SA System Admin OPERATOR Guardian Communication Guardian Inquir",
+      "capturedAt": "2026-11-03T17:33:13.273Z"
+    },
+    "A16_admin_notifications.png": {
+      "role": "Administrator",
+      "module": "Communication & Notifications",
+      "purpose": "Notification centre",
+      "url": "/ADMIN/notifications/",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "Acqad Operator Overview Dashboard Academic Structure Academic Sessions Class Teachers Subjects & Exams Timetable Grading & Results Annual Results Report Cards Content & Resources Content Library Administration Users & Access Notifications Guardian Inquiries License & Security Settings TUE 06 : 34 : 10 PM Period: 2026/2027 · First Term SA System Admin OPERATOR System Events & Activity Live Updates ",
+      "capturedAt": "2026-11-03T17:34:11.370Z"
+    },
+    "A17_admin_kiosk-monitor.png": {
+      "role": "Administrator",
+      "module": "Offline & Synchronisation",
+      "purpose": "Kiosk terminal fleet monitor (LAN)",
+      "url": "/ADMIN/kiosk-dashboard/",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "Acqad Operator Overview Dashboard Academic Structure Academic Sessions Class Teachers Subjects & Exams Timetable Grading & Results Annual Results Report Cards Content & Resources Content Library Administration Users & Access Notifications Guardian Inquiries License & Security Settings TUE 06 : 35 : 08 PM Period: 2026/2027 · First Term SA System Admin OPERATOR CBT Center Dashboard No active kiosk s",
+      "capturedAt": "2026-11-03T17:35:09.209Z"
+    },
+    "A18_admin_settings.png": {
+      "role": "Administrator",
+      "module": "Administration",
+      "purpose": "School configuration and branding",
+      "url": "/ADMIN/settings/",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "Acqad Operator Overview Dashboard Academic Structure Academic Sessions Class Teachers Subjects & Exams Timetable Grading & Results Annual Results Report Cards Content & Resources Content Library Administration Users & Access Notifications Guardian Inquiries License & Security Settings TUE 06 : 36 : 07 PM Period: 2026/2027 · First Term SA System Admin OPERATOR System Configuration Settings & Admini",
+      "capturedAt": "2026-11-03T17:36:08.502Z"
+    },
+    "A19_admin_settings-network.png": {
+      "role": "Administrator",
+      "module": "Offline & Synchronisation",
+      "purpose": "LAN network & zero-config domain access (IPs redacted)",
+      "url": "/ADMIN/settings/",
+      "viewport": "1920x1080@1x",
+      "redactions": 7,
+      "textSample": "Acqad Operator Overview Dashboard Academic Structure Academic Sessions Class Teachers Subjects & Exams Timetable Grading & Results Annual Results Report Cards Content & Resources Content Library Administration Users & Access Notifications Guardian Inquiries License & Security Settings TUE 06 : 36 : 34 PM Period: 2026/2027 · First Term SA System Admin OPERATOR System Configuration Settings & Admini",
+      "capturedAt": "2026-11-03T17:36:34.907Z"
+    },
+    "A20_admin_settings-backup.png": {
+      "role": "Administrator",
+      "module": "Offline & Synchronisation",
+      "purpose": "Database backup and restore",
+      "url": "/ADMIN/settings/",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "Acqad Operator Overview Dashboard Academic Structure Academic Sessions Class Teachers Subjects & Exams Timetable Grading & Results Annual Results Report Cards Content & Resources Content Library Administration Users & Access Notifications Guardian Inquiries License & Security Settings TUE 06 : 37 : 00 PM Period: 2026/2027 · First Term SA System Admin OPERATOR System Configuration Settings & Admini",
+      "capturedAt": "2026-11-03T17:37:01.254Z"
+    },
+    "A21_admin_license.png": {
+      "role": "Administrator",
+      "module": "Control Plane & Monitoring",
+      "purpose": "License & hardware binding (host identity redacted)",
+      "url": "/ADMIN/license/",
+      "viewport": "1920x1080@1x",
+      "redactions": 1,
+      "textSample": "Acqad Operator Overview Dashboard Academic Structure Academic Sessions Class Teachers Subjects & Exams Timetable Grading & Results Annual Results Report Cards Content & Resources Content Library Administration Users & Access Notifications Guardian Inquiries License & Security Settings TUE 06 : 37 : 56 PM Period: 2026/2027 · First Term SA System Admin OPERATOR Administration License & Hardware Secu",
+      "capturedAt": "2026-11-03T17:37:57.006Z"
+    },
+    "A22_admin_entitlements-json.png": {
+      "role": "Technical Administrator",
+      "module": "Control Plane & Monitoring",
+      "purpose": "Live entitlements/feature flags synchronised from the Control Plane (raw API view)",
+      "url": "/api/system/entitlements",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "{\"data\":{\"plan_tier\":\"standard\",\"license_status\":\"active\",\"valid_until\":\"2027-11-03T17:19:51.818Z\",\"is_expired\":false,\"max_students\":2500,\"current_students\":251,\"quota_remaining\":2249,\"current_software_version\":\"5.3.0\",\"latest_available_version\":\"5.3.0\",\"update_available\":false,\"modules\":{\"cbt_exam\":true,\"question_bank\":true,\"grading_center\":true,\"report_cards\":true,\"timetables\":false,\"guardian_po",
+      "capturedAt": "2026-11-03T17:38:49.253Z"
+    },
+    "T01_teacher_dashboard.png": {
+      "role": "Teacher",
+      "module": "Teacher",
+      "purpose": "Teaching overview with assigned subjects",
+      "url": "/teacher/dashboard/",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "Acqad Teacher Overview Dashboard Classroom Students Class Broadsheet Attendance Register Report Cards Guardian Inquiries Questions & Content Question Bank Content Library Grading & Scores Subject Grading Exam Results Account Notifications Settings TUE 06 : 39 : 54 PM Period: 2026/2027 · First Term DT Default Teacher TEACHER Faculty Workspace · Class Teacher (JSS 3) Teaching Overview Academic Sessi",
+      "capturedAt": "2026-11-03T17:39:54.686Z"
+    },
+    "T02_teacher_subject-menu.png": {
+      "role": "Teacher",
+      "module": "Teacher",
+      "purpose": "Per-subject actions: inspect questions, gradebook, results",
+      "url": "/teacher/dashboard/",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "Acqad Teacher Overview Dashboard Classroom Students Class Broadsheet Attendance Register Report Cards Guardian Inquiries Questions & Content Question Bank Content Library Grading & Scores Subject Grading Exam Results Account Notifications Settings TUE 06 : 39 : 56 PM Period: 2026/2027 · First Term DT Default Teacher TEACHER Faculty Workspace · Class Teacher (JSS 3) Teaching Overview Academic Sessi",
+      "capturedAt": "2026-11-03T17:39:56.622Z"
+    },
+    "T03_teacher_question-bank.png": {
+      "role": "Teacher",
+      "module": "Assessment & Examination",
+      "purpose": "Question bank & assessment authoring",
+      "url": "/teacher/questions/",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "Acqad Teacher Overview Dashboard Classroom Students Class Broadsheet Attendance Register Report Cards Guardian Inquiries Questions & Content Question Bank Content Library Grading & Scores Subject Grading Exam Results Account Notifications Settings TUE 06 : 41 : 10 PM Period: 2026/2027 · First Term DT Default Teacher TEACHER No Subject Selected Select a subject from your faculty dashboard to view o",
+      "capturedAt": "2026-11-03T17:41:11.096Z"
+    },
+    "T04_teacher_assignments.png": {
+      "role": "Teacher",
+      "module": "Assessment & Examination",
+      "purpose": "Assignments (online & offline packs)",
+      "url": "/teacher/assignments/",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "Acqad Teacher Overview Dashboard Classroom Students Class Broadsheet Attendance Register Report Cards Guardian Inquiries Questions & Content Question Bank Content Library Grading & Scores Subject Grading Exam Results Account Notifications Settings TUE 06 : 42 : 06 PM Period: 2026/2027 · First Term DT Default Teacher TEACHER Continuous Evaluation Offline Assignments & Coursework Session 2026/2027 ·",
+      "capturedAt": "2026-11-03T17:42:06.624Z"
+    },
+    "T05_teacher_content-bank.png": {
+      "role": "Teacher",
+      "module": "Assessment & Examination",
+      "purpose": "Past-question bank browser",
+      "url": "/teacher/content/",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "Acqad Teacher Overview Dashboard Classroom Students Class Broadsheet Attendance Register Report Cards Guardian Inquiries Questions & Content Question Bank Content Library Grading & Scores Subject Grading Exam Results Account Notifications Settings TUE 06 : 43 : 01 PM Period: 2026/2027 · First Term DT Default Teacher TEACHER Assessment Ingestion & Item Repositories Content Library & Question Packag",
+      "capturedAt": "2026-11-03T17:43:01.685Z"
+    },
+    "T06_teacher_grading-centre.png": {
+      "role": "Teacher",
+      "module": "Results & Analytics",
+      "purpose": "Subject grading centre",
+      "url": "/teacher/grading/",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "Acqad Teacher Overview Dashboard Classroom Students Class Broadsheet Attendance Register Report Cards Guardian Inquiries Questions & Content Question Bank Content Library Grading & Scores Subject Grading Exam Results Account Notifications Settings TUE 06 : 43 : 56 PM Period: 2026/2027 · First Term DT Default Teacher TEACHER Evaluation & Gradebook Subject Grading Center Continuous Assessment (40%) ",
+      "capturedAt": "2026-11-03T17:43:56.933Z"
+    },
+    "T07_teacher_gradebook.png": {
+      "role": "Teacher",
+      "module": "Results & Analytics",
+      "purpose": "Gradebook: CA + exam weighting with CBT scores",
+      "url": "/teacher/grading/details/?id=49",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "Acqad Teacher Overview Dashboard Classroom Students Class Broadsheet Attendance Register Report Cards Guardian Inquiries Questions & Content Question Bank Content Library Grading & Scores Subject Grading Exam Results Account Notifications Settings TUE 06 : 44 : 52 PM Period: 2026/2027 · First Term DT Default Teacher TEACHER ← Back to Subject Grading Center Physics Homework Online Draft mode PHYON5",
+      "capturedAt": "2026-11-03T17:44:52.622Z"
+    },
+    "T08_teacher_gradebook-breakdown.png": {
+      "role": "Teacher",
+      "module": "Results & Analytics",
+      "purpose": "Assessment weight breakdown",
+      "url": "/teacher/grading/details/?id=49",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "Acqad Teacher Overview Dashboard Classroom Students Class Broadsheet Attendance Register Report Cards Guardian Inquiries Questions & Content Question Bank Content Library Grading & Scores Subject Grading Exam Results Account Notifications Settings TUE 06 : 45 : 18 PM Period: 2026/2027 · First Term DT Default Teacher TEACHER ← Back to Subject Grading Center Physics Homework Online Draft mode PHYON5",
+      "capturedAt": "2026-11-03T17:45:19.022Z"
+    },
+    "T09_teacher_results.png": {
+      "role": "Teacher",
+      "module": "Results & Analytics",
+      "purpose": "Examination results and publication status",
+      "url": "/teacher/results/",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "Acqad Teacher Overview Dashboard Classroom Students Class Broadsheet Attendance Register Report Cards Guardian Inquiries Questions & Content Question Bank Content Library Grading & Scores Subject Grading Exam Results Account Notifications Settings TUE 06 : 46 : 15 PM Period: 2026/2027 · First Term DT Default Teacher TEACHER Evaluation & Performance Analytics Exam Results Academic Session 2026/2027",
+      "capturedAt": "2026-11-03T17:46:15.885Z"
+    },
+    "T10_teacher_class-broadsheet.png": {
+      "role": "Teacher",
+      "module": "Results & Analytics",
+      "purpose": "Class teacher broadsheet & remarks (JSS 3)",
+      "url": "/teacher/class-grading/",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "Acqad Teacher Overview Dashboard Classroom Students Class Broadsheet Attendance Register Report Cards Guardian Inquiries Questions & Content Question Bank Content Library Grading & Scores Subject Grading Exam Results Account Notifications Settings TUE 06 : 47 : 12 PM Period: 2026/2027 · First Term DT Default Teacher TEACHER Class Master Authority Class Grading Center JSS 3 · Academic Session 2026/",
+      "capturedAt": "2026-11-03T17:47:13.107Z"
+    },
+    "T11_teacher_attendance.png": {
+      "role": "Teacher",
+      "module": "Teacher",
+      "purpose": "Attendance register",
+      "url": "/teacher/attendance/",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "Acqad Teacher Overview Dashboard Classroom Students Class Broadsheet Attendance Register Report Cards Guardian Inquiries Questions & Content Question Bank Content Library Grading & Scores Subject Grading Exam Results Account Notifications Settings TUE 06 : 48 : 09 PM Period: 2026/2027 · First Term DT Default Teacher TEACHER Daily Attendance Register JSS 3 Mark daily roll call for your assigned cla",
+      "capturedAt": "2026-11-03T17:48:10.575Z"
+    },
+    "T12_teacher_students.png": {
+      "role": "Teacher",
+      "module": "Teacher",
+      "purpose": "Student roster",
+      "url": "/teacher/students/",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "Acqad Teacher Overview Dashboard Classroom Students Class Broadsheet Attendance Register Report Cards Guardian Inquiries Questions & Content Question Bank Content Library Grading & Scores Subject Grading Exam Results Account Notifications Settings TUE 06 : 49 : 06 PM Period: 2026/2027 · First Term DT Default Teacher TEACHER Roster & Enrolled Candidates Student Directory Session 2026/2027 · First T",
+      "capturedAt": "2026-11-03T17:49:07.549Z"
+    },
+    "T13_teacher_messages.png": {
+      "role": "Teacher",
+      "module": "Communication & Notifications",
+      "purpose": "Teacher–guardian messaging",
+      "url": "/teacher/messages/",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "Acqad Teacher Overview Dashboard Classroom Students Class Broadsheet Attendance Register Report Cards Guardian Inquiries Questions & Content Question Bank Content Library Grading & Scores Subject Grading Exam Results Account Notifications Settings TUE 06 : 50 : 04 PM Period: 2026/2027 · First Term DT Default Teacher TEACHER Guardian Inquiries & Messages D Default Guardian 2 Nov Ward: Daniel Adelek",
+      "capturedAt": "2026-11-03T17:50:04.329Z"
+    },
+    "T14_teacher_report-card.png": {
+      "role": "Teacher",
+      "module": "Results & Analytics",
+      "purpose": "Class report cards",
+      "url": "/teacher/report-card/",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "Acqad Teacher Overview Dashboard Classroom Students Class Broadsheet Attendance Register Report Cards Guardian Inquiries Questions & Content Question Bank Content Library Grading & Scores Subject Grading Exam Results Account Notifications Settings TUE 06 : 51 : 00 PM Period: 2026/2027 · First Term DT Default Teacher TEACHER Class Teacher Grading Center JSS 3 Review academic performance, continuous",
+      "capturedAt": "2026-11-03T17:51:00.934Z"
+    },
+    "T15_teacher_notifications.png": {
+      "role": "Teacher",
+      "module": "Communication & Notifications",
+      "purpose": "Teacher notification centre",
+      "url": "/teacher/notifications/",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "Acqad Teacher Overview Dashboard Classroom Students Class Broadsheet Attendance Register Report Cards Guardian Inquiries Questions & Content Question Bank Content Library Grading & Scores Subject Grading Exam Results Account Notifications Settings TUE 06 : 51 : 58 PM Period: 2026/2027 · First Term DT Default Teacher TEACHER System Events & Activity Live Updates & Notifications Chronological event ",
+      "capturedAt": "2026-11-03T17:51:59.006Z"
+    },
+    "ST01_student_dashboard.png": {
+      "role": "Student",
+      "module": "Student",
+      "purpose": "Learning insights dashboard",
+      "url": "/student/dashboard/",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "2026/2027 · First Term Cohort: SS 2 Reg ID: REG-MVH7YKJ9 Learning insights daniel, here’s your learning at a glance. Tue 3 Nov Term Report Card All Results (5) Overview Examinations Practice Results XP target 89% Progress to your next learning level Assessments completed 5 / 12 Formal exams 40% Practice average — Highest score 100% Recent activity Your latest published results Take-home Offline CS",
+      "capturedAt": "2026-11-03T18:05:37.589Z"
+    },
+    "ST02_student_examinations.png": {
+      "role": "Student",
+      "module": "Assessment & Examination",
+      "purpose": "Available assessments & timetable",
+      "url": "/student/examinations/",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "Your assessment desk Examinations & assignments Select an examination body to browse the available assessments. Examination body Choose an exam body School assessments Choose an exam body to view its assessments.",
+      "capturedAt": "2026-11-03T18:05:45.470Z"
+    },
+    "ST04_student_results.png": {
+      "role": "Student",
+      "module": "Results & Analytics",
+      "purpose": "Released results",
+      "url": "/student/results/",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "Academic Performance & Results Verified evaluation records, subject-by-subject comparisons, and question-level script reviews. 2026/2027 First Term COMPLETED EVALUATIONS 5 CUMULATIVE AVERAGE 40% (E) TOP ATTAINMENT 100% (A) Subject Score Comparison Percentage attainment across recent released assessments. Final Check … Final Check … Online A2 Take-home Of… Timetable E2E 0 25 50 75 100 Grade Distrib",
+      "capturedAt": "2026-11-03T18:05:53.192Z"
+    },
+    "ST05_student_report-card.png": {
+      "role": "Student",
+      "module": "Results & Analytics",
+      "purpose": "Student report card",
+      "url": "/student/report-card/",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "← Student roster Student report card daniel SS 2 Registration REG-MVH7YKJ9 Refresh records Print / Save PDF Viewing 2026/2027 · First Term Report settings Choose the academic period and how scores are combined. Academic session 2026/2027 Term All Terms Third Term Second Term First Term Single-term report Cumulative report Preview unavailable No assessment records No completed exams for this period",
+      "capturedAt": "2026-11-03T18:06:00.937Z"
+    },
+    "ST06_student_practice.png": {
+      "role": "Student",
+      "module": "Student",
+      "purpose": "Past-question practice catalogue",
+      "url": "/student/practice/",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "Your learning library Practice Choose an exam body, then select an available paper. Examination body Choose an exam body No practice papers have been published yet.",
+      "capturedAt": "2026-11-03T18:06:06.746Z"
+    },
+    "ST07_student_offline-assignments.png": {
+      "role": "Student",
+      "module": "Offline & Synchronisation",
+      "purpose": "Offline assignment packs and sync",
+      "url": "/student/offline-assignments/",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "Offline Assignments Hub Download assignments while connected, complete them anywhere offline, and sync your work when you return. 0 Cached Papers Offline Sync Status Keep coursework updated and submit completed papers back to your teacher. Download Latest Sync Answers (0 pending) DOWNLOADED COURSEWORK Offline Papers (0) No assignments downloaded Click the download button above while connected to t",
+      "capturedAt": "2026-11-03T18:06:12.747Z"
+    },
+    "ST08_student_notifications.png": {
+      "role": "Student",
+      "module": "Communication & Notifications",
+      "purpose": "Student notifications",
+      "url": "/student/notifications/",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "System Events & Activity Live Updates & Notifications Chronological event feed of examination submissions, question publishing, and broadsheet updates. All Updates Exam Submission Assessment EXAM SUBMISSION Assessment Submitted: Your exam for Take-home Offline CSV (TOFF57577) was submitted successfully. Score: 4/4 1h ago View → EXAM SUBMISSION Assessment Submitted: Your exam for Physics Homework O",
+      "capturedAt": "2026-11-03T18:06:35.256Z"
+    },
+    "ST10_exam_instructions.png": {
+      "role": "Student",
+      "module": "Assessment & Examination",
+      "purpose": "Examination instructions / preflight",
+      "url": "/student/exam/?subjectId=20",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "Acqad Physics Homework Online Course PHYON56645 · Question 1 of 2 57:46 Live Scratchpad Calculator Focus Mode Submit Questions: 0/2 1 2 Current Answered Flagged Unanswered QUESTION 1 OF 2 5 Marks Flag for Review What is 3+3? A 5 B 6 C 7 D 8 ← Previous Flag Next Question →",
+      "capturedAt": "2026-11-03T18:06:43.912Z"
+    },
+    "ST19_exam_flow-state.png": {
+      "role": "Student",
+      "module": "Assessment & Examination",
+      "purpose": "Exam flow state when automation stopped",
+      "url": "/student/exam/?subjectId=20",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "Acqad Physics Homework Online Course PHYON56645 · Question 1 of 2 57:44 Live Scratchpad Calculator Focus Mode Submit Questions: 0/2 1 2 Current Answered Flagged Unanswered QUESTION 1 OF 2 5 Marks Flag for Review What is 3+3? A 5 B 6 C 7 D 8 ← Previous Flag Next Question →",
+      "capturedAt": "2026-11-03T18:06:45.969Z"
+    },
+    "M10_student_dashboard_mobile.png": {
+      "role": "Student",
+      "module": "Student",
+      "purpose": "Student dashboard on a phone",
+      "url": "/student/dashboard/",
+      "viewport": "390x844@2x",
+      "redactions": 0,
+      "textSample": "2026/2027 · First Term Cohort: SS 2 Reg ID: REG-MVH7YKJ9 Learning insights daniel, here’s your learning at a glance. Tue 3 Nov Term Report Card All Results (6) Overview Examinations Practice Results XP target 4% Progress to your next learning level Assessments completed 6 / 12 Formal exams 33% Practice average — Highest score 100% Recent activity Your latest published results Take-home Offline CSV",
+      "capturedAt": "2026-11-03T18:01:03.981Z"
+    },
+    "M11_student_results_mobile.png": {
+      "role": "Student",
+      "module": "Results & Analytics",
+      "purpose": "Student results on a phone",
+      "url": "/student/results/",
+      "viewport": "390x844@2x",
+      "redactions": 0,
+      "textSample": "Academic Performance & Results Verified evaluation records, subject-by-subject comparisons, and question-level script reviews. 2026/2027 First Term COMPLETED EVALUATIONS 6 CUMULATIVE AVERAGE 33% (F) TOP ATTAINMENT 100% (A) Subject Score Comparison Percentage attainment across recent released assessments. Final Check … Online A2 Timetable E2E 0 25 50 75 100 Grade Distribution Summary of released si",
+      "capturedAt": "2026-11-03T18:02:01.033Z"
+    },
+    "M20_guardian_dashboard_mobile.png": {
+      "role": "Guardian",
+      "module": "Guardian",
+      "purpose": "Family overview on a phone",
+      "url": "/guardian/dashboard/",
+      "viewport": "390x844@2x",
+      "redactions": 0,
+      "textSample": "Skip to content D Hello, Default Guardian 49 Add child D daniel DA Daniel DA Daniel D daniel SS 2 REG-MVH7YKJ9 Switch child Average score 50% Reported academic average Class standing 1st of 1 Not yet available Attendance 100% No attendance records yet Completed exams — No exams scheduled Quick tools Child profile Results & reports Published grades and remarks Attendance Daily records and patterns ",
+      "capturedAt": "2026-11-03T18:08:12.286Z"
+    },
+    "M21_guardian_switch-child_mobile.png": {
+      "role": "Guardian",
+      "module": "Guardian",
+      "purpose": "Switch between linked children",
+      "url": "/guardian/dashboard/",
+      "viewport": "390x844@2x",
+      "redactions": 0,
+      "textSample": "Skip to content D Hello, Default Guardian 49 Add child D daniel DA Daniel DA Daniel D daniel SS 2 REG-MVH7YKJ9 Switch child Average score 50% Reported academic average Class standing 1st of 1 Not yet available Attendance 100% No attendance records yet Completed exams — No exams scheduled Quick tools Child profile Results & reports Published grades and remarks Attendance Daily records and patterns ",
+      "capturedAt": "2026-11-03T18:08:14.379Z"
+    },
+    "M22_guardian_wards_mobile.png": {
+      "role": "Guardian",
+      "module": "Guardian",
+      "purpose": "Linked children (mobile)",
+      "url": "/guardian/wards/",
+      "viewport": "390x844@2x",
+      "redactions": 0,
+      "textSample": "Skip to content My children D 49 My Children D daniel SS 2 Admission No. REG-MVH7YKJ9 AVERAGE 50% ATTENDANCE 100% POSITION 1st of 1 Performance Attendance Full Profile DA Daniel Adeleke JSS 3 Admission No. REG-2026-0001 AVERAGE 0% ATTENDANCE 100% POSITION 1st of 1 Performance Attendance Full Profile DA Daniel Adeleke JSS 3 Admission No. REG-2026-0001 AVERAGE 100% ATTENDANCE 100% POSITION 1st of 1 ",
+      "capturedAt": "2026-11-03T18:08:34.897Z"
+    },
+    "M23_guardian_performance_mobile.png": {
+      "role": "Guardian",
+      "module": "Results & Analytics",
+      "purpose": "Academic performance (mobile)",
+      "url": "/guardian/performance/",
+      "viewport": "390x844@2x",
+      "redactions": 0,
+      "textSample": "Skip to content Progress D 49 Overall Term Average 50% ▲ +2.4% Position: 1st of 1 in SS 2 Subject Breakdown 0 Subjects Graded No subject score records recorded for this term yet. Form Teacher Feedback \"daniel is making steady progress in SS 2. Complete end-of-term evaluations will be published soon.\" — Class Teacher (SS 2) View Full Term Report Card & Broadsheet Home My children Results Messages M",
+      "capturedAt": "2026-11-03T18:09:30.476Z"
+    },
+    "M24_guardian_results_mobile.png": {
+      "role": "Guardian",
+      "module": "Results & Analytics",
+      "purpose": "Released results (mobile)",
+      "url": "/guardian/results/",
+      "viewport": "390x844@2x",
+      "redactions": 0,
+      "textSample": "Skip to content Results D 49 Term Results CURRENT TERM EVALUATION 50% Grade: C (Pass) • Position: 1st of 1 in SS 2 Subject Scores & Breakdown 0 of 0 Released No examination results published for this academic term yet. View Full Report Card Broadsheet Share Verified Report Card Link Home My children Results Messages More",
+      "capturedAt": "2026-11-03T18:10:27.108Z"
+    },
+    "M25_guardian_reports_mobile.png": {
+      "role": "Guardian",
+      "module": "Results & Analytics",
+      "purpose": "Report cards (mobile)",
+      "url": "/guardian/reports/",
+      "viewport": "390x844@2x",
+      "redactions": 0,
+      "textSample": "Skip to content Reports D 49 First Term Report CardComprehensive academic broadsheet with subject CA, exam scores, and principal remarks. View Attendance & Punctuality Record0 of 0 school days attended (100% attendance rate). View Behavioral & Character AssessmentConduct, team participation, attentiveness, and neatness evaluation by Form Teacher. View Home My children Results Messages More",
+      "capturedAt": "2026-11-03T18:11:23.912Z"
+    },
+    "M26_guardian_examinations_mobile.png": {
+      "role": "Guardian",
+      "module": "Guardian",
+      "purpose": "Upcoming examinations (mobile)",
+      "url": "/guardian/examinations/",
+      "viewport": "390x844@2x",
+      "redactions": 0,
+      "textSample": "Skip to content Examinations D 49 Examinations All (5) Upcoming (0) Completed (5) NOV 3 TUE Take-home Offline CSV Completed 2026-11-03T16:13:22Z - 2026-11-03T16:13:47.588Z • CBT Center Note: Arrive 15 minutes before the start time with valid student registration slip. NOV 3 TUE Final Check ASG Completed 2026-11-03T10:08:17Z - 2026-11-03T10:09:08.141Z • CBT Center Note: Arrive 15 minutes before the",
+      "capturedAt": "2026-11-03T18:12:19.615Z"
+    },
+    "M27_guardian_attendance_mobile.png": {
+      "role": "Guardian",
+      "module": "Guardian",
+      "purpose": "Attendance (mobile)",
+      "url": "/guardian/attendance/",
+      "viewport": "390x844@2x",
+      "redactions": 0,
+      "textSample": "Skip to content Attendance D 49 100% Present Present 0 Days Absent 0 Days Late 0 Days 0 PRESENT 0 ABSENT 0 LATE 0 TOTAL DAYS November 2026 S M T W T F S 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 Recent Daily Roll Calls No daily attendance records are available for this period. Home My children Results Messages More",
+      "capturedAt": "2026-11-03T18:13:15.481Z"
+    },
+    "M28_guardian_fees_mobile.png": {
+      "role": "Guardian",
+      "module": "Guardian",
+      "purpose": "Fees (mobile)",
+      "url": "/guardian/fees/",
+      "viewport": "390x844@2x",
+      "redactions": 0,
+      "textSample": "Skip to content Fees & receipts D 49 This Term Outstanding Balance ₦0 Paid ₦0 of ₦0 (100%) • Due End of Term Term Fee Breakdown No outstanding fee items scheduled for this term. Payment Receipts & History No previous payment receipts recorded for this session. Home My children Results Messages More",
+      "capturedAt": "2026-11-03T18:14:14.684Z"
+    },
+    "M29_guardian_messages_mobile.png": {
+      "role": "Guardian",
+      "module": "Communication & Notifications",
+      "purpose": "Messages with the school (mobile)",
+      "url": "/guardian/messages/",
+      "viewport": "390x844@2x",
+      "redactions": 0,
+      "textSample": "Skip to content Messages D 49 Messages & Inquiries Active Ward: daniel (SS 2) All Teachers Administration S System Admin Admin Re: Daniel Adeleke Your ward's attendance record has been reconciled and updated. 1h ago D Default Teacher Teacher Re: Daniel Adeleke Hello! Question 4 requires simplifying the algebraic fraction before substituting. Yesterday S System Admin Admin Re: Daniel Adeleke Bus Ro",
+      "capturedAt": "2026-11-03T18:15:13.846Z"
+    },
+    "M30_guardian_announcements_mobile.png": {
+      "role": "Guardian",
+      "module": "Communication & Notifications",
+      "purpose": "School announcements (mobile)",
+      "url": "/guardian/announcements/",
+      "viewport": "390x844@2x",
+      "redactions": 0,
+      "textSample": "Skip to content School notices D 49 Announcements All School News Academic School News 25 May 2026 Inter-house Sports Championship 2026 All students and parents are warmly invited to participate in this year's annual inter-house sports festival. … Read Full Announcement Academic 20 May 2026 Updated Modern Library Guidelines Please review the updated digital library guidelines. E-library terminals ",
+      "capturedAt": "2026-11-03T18:16:21.938Z"
+    },
+    "M31_guardian_notifications_mobile.png": {
+      "role": "Guardian",
+      "module": "Communication & Notifications",
+      "purpose": "Notifications (mobile)",
+      "url": "/guardian/notifications/",
+      "viewport": "390x844@2x",
+      "redactions": 0,
+      "textSample": "Skip to content Notifications D 49 Notifications Mark all read All (49) Unread (49) Important (16) School Administration: Your ward's atten… School Administration: Your ward's attendance record has been reconciled and updated. 1h ago School Administration: ok… School Administration: ok 1h ago School Administration: it is 500,000 nai… School Administration: it is 500,000 naira 1h ago School Adminis",
+      "capturedAt": "2026-11-03T18:17:28.489Z"
+    },
+    "M32_guardian_calendar_mobile.png": {
+      "role": "Guardian",
+      "module": "Guardian",
+      "purpose": "School calendar (mobile)",
+      "url": "/guardian/calendar/",
+      "viewport": "390x844@2x",
+      "redactions": 0,
+      "textSample": "Skip to content School calendar D 49 Academic Calendar AllExamsSchool EventsHolidays November 2026 MAY 28 Mathematics 3rd Term Examination Exam 09:00 AM – 11:00 AM • Examination Hall 2 MAY 28 Parent-Teacher Association Meeting Event 02:00 PM – 04:00 PM • Main Auditorium MAY 31 Physics Mock Test Exam 09:00 AM – 10:30 AM • Science Laboratory JUN 5 Mid-Term Break Holiday Holiday All Day • All Campuse",
+      "capturedAt": "2026-11-03T18:18:24.125Z"
+    },
+    "M33_guardian_links_mobile.png": {
+      "role": "Guardian",
+      "module": "Guardian",
+      "purpose": "Link another child (mobile)",
+      "url": "/guardian/links/",
+      "viewport": "390x844@2x",
+      "redactions": 0,
+      "textSample": "Skip to content Manage children D 49 Linked Children Manage and link your student accounts Link Student All (3) Approved (3) Pending (0) DA Daniel Adeleke JSS 3 • Parent Approved Reg / Admission No: REG-2026-0001 Linked Date: 02/11/2026 DA Daniel Adeleke JSS 3 • Father Approved Reg / Admission No: REG-2026-0001 Linked Date: 02/11/2026 D daniel SS 2 • guardian Approved Reg / Admission No: REG-MVH7Y",
+      "capturedAt": "2026-11-03T18:19:17.604Z"
+    },
+    "M34_guardian_settings_mobile.png": {
+      "role": "Guardian",
+      "module": "Guardian",
+      "purpose": "Profile & preferences (mobile)",
+      "url": "/guardian/settings/",
+      "viewport": "390x844@2x",
+      "redactions": 0,
+      "textSample": "Skip to content Your account D 49 Settings & Profile My children › Link or manage a child › Attendance records › School calendar › Fees and receipts › School notices › D Default Guardian Parent / Guardian • +234 809 999 8888 Edit NOTIFICATION ALERTS Daily Attendance Alerts Instant SMS / Push when student roll call is marked Result Release Notices Notified as soon as term broadsheets are published ",
+      "capturedAt": "2026-11-03T18:20:10.968Z"
+    },
+    "G01_guardian_dashboard_desktop.png": {
+      "role": "Guardian",
+      "module": "Guardian",
+      "purpose": "Guardian dashboard on desktop",
+      "url": "/guardian/dashboard/",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "Skip to content Acqad Your family Home My children Results Messages Settings School tools Attendance School calendar Fees & receipts Announcements Manage child links Stay connected to their school day. D Hello, Default Guardian 49 Add child D daniel DA Daniel DA Daniel Your family at a glance A little closer to their school day. School overview D daniel SS 2 REG-MVH7YKJ9 Switch child Average score",
+      "capturedAt": "2026-11-03T18:21:06.219Z"
+    },
+    "G02_guardian_performance_desktop.png": {
+      "role": "Guardian",
+      "module": "Results & Analytics",
+      "purpose": "Guardian performance analytics on desktop",
+      "url": "/guardian/performance/",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "Skip to content Acqad Your family Home My children Results Messages Settings School tools Attendance School calendar Fees & receipts Announcements Manage child links Stay connected to their school day. Progress D daniel 49 This Term Overall Term Average 50% ▲ +2.4% Position: 1st of 1 in SS 2 Subject Breakdown 0 Subjects Graded No subject score records recorded for this term yet. Form Teacher Feedb",
+      "capturedAt": "2026-11-03T18:22:07.129Z"
+    },
+    "G03_guardian_messages_desktop.png": {
+      "role": "Guardian",
+      "module": "Communication & Notifications",
+      "purpose": "Guardian messaging on desktop",
+      "url": "/guardian/messages/",
+      "viewport": "1920x1080@1x",
+      "redactions": 0,
+      "textSample": "Skip to content Acqad Your family Home My children Results Messages Settings School tools Attendance School calendar Fees & receipts Announcements Manage child links Stay connected to their school day. Messages D daniel 49 Messages & Inquiries Active Ward: daniel (SS 2) All Teachers Administration S System Admin Admin Re: Daniel Adeleke Your ward's attendance record has been reconciled and updated",
+      "capturedAt": "2026-11-03T18:23:04.745Z"
+    }
+  },
+  "issues": [
+    {
+      "role": "public",
+      "url": "http://127.0.0.1:3100/",
+      "type": "pageerror",
+      "msg": "Evaluating a string as JavaScript violates the following Content Security Policy directive because 'unsafe-eval' is not an allowed source of script: script-src 'self' 'unsafe-inline'\".\n"
+    },
+    {
+      "role": "public",
+      "url": "http://127.0.0.1:3100/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "public",
+      "url": "http://127.0.0.1:3100/ADMIN/",
+      "type": "pageerror",
+      "msg": "Evaluating a string as JavaScript violates the following Content Security Policy directive because 'unsafe-eval' is not an allowed source of script: script-src 'self' 'unsafe-inline'\".\n"
+    },
+    {
+      "role": "public",
+      "url": "http://127.0.0.1:3100/ADMIN/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "public",
+      "url": "http://127.0.0.1:3100/teacher/",
+      "type": "pageerror",
+      "msg": "Evaluating a string as JavaScript violates the following Content Security Policy directive because 'unsafe-eval' is not an allowed source of script: script-src 'self' 'unsafe-inline'\".\n"
+    },
+    {
+      "role": "public",
+      "url": "http://127.0.0.1:3100/teacher/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "public",
+      "url": "http://127.0.0.1:3100/guardian/",
+      "type": "pageerror",
+      "msg": "Evaluating a string as JavaScript violates the following Content Security Policy directive because 'unsafe-eval' is not an allowed source of script: script-src 'self' 'unsafe-inline'\".\n"
+    },
+    {
+      "role": "public",
+      "url": "http://127.0.0.1:3100/guardian/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "public",
+      "url": "http://localhost:3100/?redirect=%2F%7Eoffline%2F",
+      "type": "pageerror",
+      "msg": "Evaluating a string as JavaScript violates the following Content Security Policy directive because 'unsafe-eval' is not an allowed source of script: script-src 'self' 'unsafe-inline'\".\n"
+    },
+    {
+      "role": "public",
+      "url": "http://localhost:3100/?redirect=%2F%7Eoffline%2F",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://localhost:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "public",
+      "url": "http://127.0.0.1:3100/kiosk/",
+      "type": "pageerror",
+      "msg": "Evaluating a string as JavaScript violates the following Content Security Policy directive because 'unsafe-eval' is not an allowed source of script: script-src 'self' 'unsafe-inline'\".\n"
+    },
+    {
+      "role": "public",
+      "url": "http://127.0.0.1:3100/kiosk/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "public",
+      "url": "http://127.0.0.1:3100/kiosk/",
+      "type": "pageerror",
+      "msg": "Evaluating a string as JavaScript violates the following Content Security Policy directive because 'unsafe-eval' is not an allowed source of script: script-src 'self' 'unsafe-inline'\".\n"
+    },
+    {
+      "role": "public",
+      "url": "http://127.0.0.1:3100/guardian/",
+      "type": "pageerror",
+      "msg": "Evaluating a string as JavaScript violates the following Content Security Policy directive because 'unsafe-eval' is not an allowed source of script: script-src 'self' 'unsafe-inline'\".\n"
+    },
+    {
+      "role": "public",
+      "url": "http://127.0.0.1:3100/guardian/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "public",
+      "url": "http://127.0.0.1:3100/",
+      "type": "pageerror",
+      "msg": "Evaluating a string as JavaScript violates the following Content Security Policy directive because 'unsafe-eval' is not an allowed source of script: script-src 'self' 'unsafe-inline'\".\n"
+    },
+    {
+      "role": "public",
+      "url": "http://127.0.0.1:3100/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "public",
+      "url": "http://127.0.0.1:3100/",
+      "type": "pageerror",
+      "msg": "Evaluating a string as JavaScript violates the following Content Security Policy directive because 'unsafe-eval' is not an allowed source of script: script-src 'self' 'unsafe-inline'\".\n"
+    },
+    {
+      "role": "public",
+      "url": "http://127.0.0.1:3100/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "operator",
+      "url": "http://127.0.0.1:3100/ADMIN/",
+      "type": "pageerror",
+      "msg": "Evaluating a string as JavaScript violates the following Content Security Policy directive because 'unsafe-eval' is not an allowed source of script: script-src 'self' 'unsafe-inline'\".\n"
+    },
+    {
+      "role": "operator",
+      "url": "http://127.0.0.1:3100/ADMIN/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "operator",
+      "url": "http://127.0.0.1:3100/ADMIN/?",
+      "type": "pageerror",
+      "msg": "Evaluating a string as JavaScript violates the following Content Security Policy directive because 'unsafe-eval' is not an allowed source of script: script-src 'self' 'unsafe-inline'\".\n"
+    },
+    {
+      "role": "operator",
+      "url": "http://127.0.0.1:3100/ADMIN/?",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "flow": "operator",
+      "type": "flow-failure",
+      "msg": "Waiting failed: 90000ms exceeded"
+    },
+    {
+      "role": "operator",
+      "url": "http://127.0.0.1:3100/ADMIN/dashboard/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "operator",
+      "url": "http://127.0.0.1:3100/ADMIN/academic-sessions/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "operator",
+      "url": "http://127.0.0.1:3100/ADMIN/academic-sessions/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "operator",
+      "type": "ui",
+      "msg": "tab \"Class\" not found on academic-sessions"
+    },
+    {
+      "role": "operator",
+      "url": "http://127.0.0.1:3100/ADMIN/academic-sessions/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "operator",
+      "type": "ui",
+      "msg": "tab \"Grading\" not found on academic-sessions"
+    },
+    {
+      "role": "operator",
+      "url": "http://127.0.0.1:3100/ADMIN/academic-sessions/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "operator",
+      "type": "ui",
+      "msg": "tab \"Calendar\" not found on academic-sessions"
+    },
+    {
+      "role": "operator",
+      "url": "http://127.0.0.1:3100/ADMIN/class-teachers/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "operator",
+      "url": "http://127.0.0.1:3100/ADMIN/subjects/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "operator",
+      "url": "http://127.0.0.1:3100/ADMIN/users/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "operator",
+      "url": "http://127.0.0.1:3100/ADMIN/timetable/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "operator",
+      "url": "http://127.0.0.1:3100/ADMIN/content/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "operator",
+      "url": "http://127.0.0.1:3100/ADMIN/annual-results/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "operator",
+      "url": "http://127.0.0.1:3100/ADMIN/report-card/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "operator",
+      "url": "http://127.0.0.1:3100/ADMIN/messages/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "operator",
+      "url": "http://127.0.0.1:3100/ADMIN/notifications/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "operator",
+      "url": "http://127.0.0.1:3100/ADMIN/kiosk-dashboard/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "operator",
+      "url": "http://127.0.0.1:3100/ADMIN/settings/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "operator",
+      "url": "http://127.0.0.1:3100/ADMIN/license/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "teacher",
+      "url": "http://127.0.0.1:3100/teacher/dashboard/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "teacher",
+      "url": "http://127.0.0.1:3100/teacher/questions/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "teacher",
+      "url": "http://127.0.0.1:3100/teacher/assignments/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "teacher",
+      "url": "http://127.0.0.1:3100/teacher/content/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "teacher",
+      "url": "http://127.0.0.1:3100/teacher/grading/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "teacher",
+      "url": "http://127.0.0.1:3100/teacher/grading/details/?id=49",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "teacher",
+      "url": "http://127.0.0.1:3100/teacher/results/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "teacher",
+      "url": "http://127.0.0.1:3100/teacher/class-grading/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "teacher",
+      "url": "http://127.0.0.1:3100/teacher/attendance/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "teacher",
+      "url": "http://127.0.0.1:3100/teacher/students/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "teacher",
+      "url": "http://127.0.0.1:3100/teacher/messages/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "teacher",
+      "url": "http://127.0.0.1:3100/teacher/report-card/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "teacher",
+      "url": "http://127.0.0.1:3100/teacher/notifications/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "student",
+      "url": "http://127.0.0.1:3100/student/dashboard/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "student",
+      "url": "http://127.0.0.1:3100/student/dashboard/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "student",
+      "url": "http://127.0.0.1:3100/student/examinations/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "student",
+      "url": "http://127.0.0.1:3100/student/results/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "student",
+      "url": "http://127.0.0.1:3100/student/report-card/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "student",
+      "url": "http://127.0.0.1:3100/student/practice/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "student",
+      "url": "http://127.0.0.1:3100/student/offline-assignments/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "student",
+      "url": "http://127.0.0.1:3100/student/notifications/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "student",
+      "url": "http://127.0.0.1:3100/student/exam/?subjectId=20",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "student",
+      "url": "/student/exam/?subjectId=20",
+      "type": "api",
+      "status": 409,
+      "api": "/api/exams/start"
+    },
+    {
+      "role": "student",
+      "type": "exam-flow",
+      "msg": "Waiting failed: 30000ms exceeded"
+    },
+    {
+      "role": "student",
+      "url": "http://127.0.0.1:3100/student/exam/?subjectId=20",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "student",
+      "url": "http://127.0.0.1:3100/student/dashboard/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "student",
+      "url": "http://127.0.0.1:3100/student/results/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "flow": "guardian",
+      "type": "flow-failure",
+      "msg": "Authentication failed for guardian: {\"error\":\"Not found\"}"
+    },
+    {
+      "role": "operator",
+      "url": "http://127.0.0.1:3100/ADMIN/dashboard/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "operator",
+      "url": "http://127.0.0.1:3100/ADMIN/dashboard/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "operator",
+      "url": "http://127.0.0.1:3100/ADMIN/academic-sessions/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "operator",
+      "url": "http://127.0.0.1:3100/ADMIN/subjects/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "operator",
+      "url": "http://127.0.0.1:3100/ADMIN/users/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "operator",
+      "url": "http://127.0.0.1:3100/ADMIN/timetable/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "student",
+      "url": "http://127.0.0.1:3100/student/dashboard/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "student",
+      "url": "http://127.0.0.1:3100/student/dashboard/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "student",
+      "url": "http://127.0.0.1:3100/student/examinations/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "student",
+      "url": "http://127.0.0.1:3100/student/results/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "student",
+      "url": "http://127.0.0.1:3100/student/report-card/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "student",
+      "url": "http://127.0.0.1:3100/student/practice/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "student",
+      "url": "http://127.0.0.1:3100/student/offline-assignments/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "student",
+      "url": "http://127.0.0.1:3100/student/notifications/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "student",
+      "url": "http://127.0.0.1:3100/student/exam/?subjectId=20",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "student",
+      "type": "exam-flow",
+      "msg": "Begin/Resume Assessment button not found"
+    },
+    {
+      "flow": "student",
+      "type": "flow-failure",
+      "msg": "Navigation timeout of 30000 ms exceeded"
+    },
+    {
+      "role": "guardian",
+      "url": "http://127.0.0.1:3100/guardian/dashboard/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "guardian",
+      "url": "http://127.0.0.1:3100/guardian/wards/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "guardian",
+      "url": "http://127.0.0.1:3100/guardian/performance/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "guardian",
+      "url": "http://127.0.0.1:3100/guardian/results/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "guardian",
+      "url": "http://127.0.0.1:3100/guardian/reports/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "guardian",
+      "url": "http://127.0.0.1:3100/guardian/examinations/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "guardian",
+      "url": "http://127.0.0.1:3100/guardian/attendance/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "guardian",
+      "url": "http://127.0.0.1:3100/guardian/fees/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "guardian",
+      "url": "http://127.0.0.1:3100/guardian/messages/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "guardian",
+      "url": "http://127.0.0.1:3100/guardian/announcements/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "guardian",
+      "url": "http://127.0.0.1:3100/guardian/notifications/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "guardian",
+      "url": "http://127.0.0.1:3100/guardian/calendar/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "guardian",
+      "url": "http://127.0.0.1:3100/guardian/links/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "guardian",
+      "url": "http://127.0.0.1:3100/guardian/settings/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "guardian",
+      "url": "http://127.0.0.1:3100/guardian/dashboard/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "guardian",
+      "url": "http://127.0.0.1:3100/guardian/performance/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "guardian",
+      "url": "http://127.0.0.1:3100/guardian/messages/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "guardian",
+      "url": "http://127.0.0.1:3100/guardian/dashboard/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "guardian",
+      "url": "http://127.0.0.1:3100/guardian/results/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "guardian",
+      "url": "http://127.0.0.1:3100/guardian/performance/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    },
+    {
+      "role": "guardian",
+      "url": "http://127.0.0.1:3100/guardian/messages/",
+      "type": "pageerror",
+      "msg": "Failed to update a ServiceWorker for scope ('http://127.0.0.1:3100/') with script ('Unknown'): Not found"
+    }
+  ]
+}

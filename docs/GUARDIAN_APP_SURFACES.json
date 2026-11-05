@@ -1,0 +1,17 @@
+[
+  "frontend\\app\\guardian\\announcements\\page.module.css",
+  "frontend\\app\\guardian\\attendance\\page.module.css",
+  "frontend\\app\\guardian\\calendar\\page.module.css",
+  "frontend\\app\\guardian\\examinations\\page.module.css",
+  "frontend\\app\\guardian\\fees\\page.module.css",
+  "frontend\\app\\guardian\\links\\page.module.css",
+  "frontend\\app\\guardian\\messages\\page.module.css",
+  "frontend\\app\\guardian\\notifications\\page.module.css",
+  "frontend\\app\\guardian\\performance\\page.module.css",
+  "frontend\\app\\guardian\\register\\page.module.css",
+  "frontend\\app\\guardian\\reports\\page.module.css",
+  "frontend\\app\\guardian\\results\\page.module.css",
+  "frontend\\app\\guardian\\settings\\page.module.css",
+  "frontend\\app\\guardian\\wards\\page.module.css",
+  "frontend\\app\\guardian\\wards\\[id]\\page.module.css"
+]

@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "../../hooks/useAuth";
+import { getPortalLoginRoute } from "../../lib/api";
 
 function normalizePath(p: string): string {
   return p.replace(/\/+$/, "") || "/";
@@ -26,12 +27,12 @@ export function RequireRole({ role, children }: Props) {
           router.replace("/setup/");
         }
       } else {
-        router.replace("/");
+        router.replace(getPortalLoginRoute(role));
       }
       return;
     }
     if (user.role !== role) {
-      router.replace("/");
+      router.replace(getPortalLoginRoute(role));
     }
   }, [isLoading, isAuthenticated, user, role, setupRequired, pathname, router]);
 

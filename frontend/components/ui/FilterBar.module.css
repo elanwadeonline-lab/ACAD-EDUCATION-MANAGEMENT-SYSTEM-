@@ -40,17 +40,18 @@
   width: 100%;
   height: 36px;
   padding: 0.35rem 2rem 0.35rem 2.25rem;
-  font-size: 0.85rem;
+  font-size: .875rem;
   border-radius: var(--radius-sm, 6px);
   border: 1px solid var(--color-border, #E2E8F0);
   background: var(--color-surface-2, #F8FAFC);
   color: var(--color-text, #0F172A);
   transition: all var(--duration-fast, 150ms) ease;
+  min-height: 42px;
 }
 
 .searchInput:focus {
   background: var(--color-surface, #FFFFFF);
-  border-color: var(--color-primary, #4F46E5);
+  border-color: var(--color-primary, #92400E);
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
   outline: none;
 }
@@ -95,7 +96,7 @@
 }
 
 .selectInput:focus {
-  border-color: var(--color-primary, #4F46E5);
+  border-color: var(--color-primary, #92400E);
   background: #FFFFFF;
 }
 

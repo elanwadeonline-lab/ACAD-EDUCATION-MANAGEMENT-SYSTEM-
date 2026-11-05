@@ -397,6 +397,7 @@ export function initializeDatabase(): void {
     CREATE TABLE IF NOT EXISTS user_devices (
       user_id INTEGER NOT NULL,
       device_fingerprint TEXT NOT NULL,
+      device_name TEXT,
       user_agent TEXT,
       ip TEXT,
       last_used TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')),
@@ -405,6 +406,7 @@ export function initializeDatabase(): void {
       PRIMARY KEY (user_id, device_fingerprint)
     )
   `);
+  addColumnIfMissing("user_devices", "device_name", "TEXT");
   db.run("CREATE INDEX IF NOT EXISTS idx_user_devices_user ON user_devices(user_id)");
 
   // ── user_tokens ──────────────────────────────────────────────────────────
@@ -561,6 +563,10 @@ export function initializeDatabase(): void {
     console.warn("[db] subjects migration check skipped:", e);
   }
   db.run("CREATE INDEX IF NOT EXISTS idx_user_tokens_user ON user_tokens(user_id)");
+  db.run("CREATE INDEX IF NOT EXISTS idx_user_tokens_jti ON user_tokens(jti)");
+  db.run("CREATE INDEX IF NOT EXISTS idx_user_tokens_user_active ON user_tokens(user_id, revoked_at, expires_at)");
+  db.run("CREATE INDEX IF NOT EXISTS idx_exams_student_session_term ON exams(student_id, status, session_id, term_id)");
+  db.run("CREATE INDEX IF NOT EXISTS idx_exams_subject_status ON exams(subject_id, status)");
   db.run("CREATE INDEX IF NOT EXISTS idx_user_tokens_expires ON user_tokens(expires_at)");
   db.run("CREATE INDEX IF NOT EXISTS idx_user_tokens_device ON user_tokens(device_fingerprint)");
   // student_answers indexes
@@ -591,6 +597,7 @@ export function initializeDatabase(): void {
   `);
   db.run("CREATE INDEX IF NOT EXISTS idx_se_subject ON subject_enrollments(subject_id)");
   db.run("CREATE INDEX IF NOT EXISTS idx_se_student ON subject_enrollments(student_id)");
+  db.run("CREATE INDEX IF NOT EXISTS idx_se_student_subject ON subject_enrollments(student_id, subject_id)");
 
   // ── student_term_remarks ───────────────────────────────────────────────────
   // Stores overall term remarks for a student (from teacher and principal).
@@ -947,12 +954,19 @@ export function initializeDatabase(): void {
           CASE WHEN mode = 'assignment' OR is_assignment = 1 THEN 'Assignment' ELSE 'CBT' END, 
           IFNULL(is_published, 0)
         FROM subjects 
-        WHERE exam_datetime IS NOT NULL AND exam_datetime != ''
+        WHERE exam_datetime IS NOT NULL AND exam_datetime != '' AND exam_datetime NOT LIKE '2099%'
       `);
     }
   } catch (e) {
     console.warn("Could not migrate subjects to timetables:", e);
   }
+  // Clean stale timetable slots derived from unscheduled (TBA sentinel) cycles
+  try {
+    db.run(`
+      DELETE FROM timetables
+      WHERE subject_id IN (SELECT id FROM subjects WHERE exam_datetime = '2099-01-01T00:00')
+    `);
+  } catch (e) {}
 
   // ── Seeding Default Academic Session and Term if empty ──
   const sessionRow = db.prepare("SELECT COUNT(*) as count FROM academic_sessions").get() as any;
@@ -1359,6 +1373,21 @@ export function initializeDatabase(): void {
   `);
   db.run("CREATE INDEX IF NOT EXISTS idx_push_user ON push_subscriptions(user_id)");
 
+  // ── School Announcements ──────────────────────────────────────────────────
+  db.run(`
+    CREATE TABLE IF NOT EXISTS school_announcements (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      category TEXT NOT NULL DEFAULT 'school' CHECK(category IN ('school', 'academic', 'general', 'urgent')),
+      date TEXT NOT NULL DEFAULT (strftime('%Y-%m-%d','now')),
+      priority TEXT NOT NULL DEFAULT 'normal' CHECK(priority IN ('normal', 'important', 'urgent')),
+      content TEXT NOT NULL,
+      action_label TEXT,
+      created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now'))
+    )
+  `);
+  db.run("CREATE INDEX IF NOT EXISTS idx_announcements_cat_date ON school_announcements(category, date DESC)");
+
   // ── Guardian Notification Preferences in Users table ──
   addColumnIfMissing("users", "notify_attendance", "INTEGER NOT NULL DEFAULT 1");
   addColumnIfMissing("users", "notify_results", "INTEGER NOT NULL DEFAULT 1");
@@ -1669,7 +1698,7 @@ export const queries = {
   countEnrollments: db.prepare("SELECT COUNT(*) as count FROM subject_enrollments WHERE subject_id = ?"),
   createSubject:             db.prepare(`
     INSERT INTO subjects (name, code, term, duration, total_score, exam_datetime, is_published, teacher_id, created_by, description, class, grade_level_id, session, mode, instructions, is_timetable_published, window_duration, can_retake, is_assignment, session_id, term_id, assessment_type, result_policy, result_release_time)
-    VALUES (?, ?, ?, 60, ?, '2099-01-01T00:00', 0, ?, ?, ?, ?, ?, ?, ?, ?, 0, 120, ?, 0, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, 60, ?, '2099-01-01T00:00', 0, ?, ?, ?, ?, ?, ?, ?, ?, 0, 120, ?, ?, ?, ?, ?, ?, ?)
   `),
   updateSubject: db.prepare(`
     UPDATE subjects SET name=?, code=?, term=?, total_score=?, teacher_id=?, description=?, class=?, grade_level_id=?, session=?, mode=?, instructions=?, can_retake=?, session_id=?, term_id=?, is_published=?, assessment_type=?, result_policy=?, result_release_time=?
@@ -1767,6 +1796,26 @@ export const queries = {
   revokeAllUserTokens: db.prepare("UPDATE user_tokens SET revoked_at = strftime('%Y-%m-%dT%H:%M:%SZ','now') WHERE user_id = ? AND revoked_at IS NULL"),
   getUserDevices: db.prepare("SELECT * FROM user_devices WHERE user_id = ? ORDER BY last_used DESC"),
   revokeUserDevice: db.prepare("UPDATE user_devices SET last_used = strftime('%Y-%m-%dT%H:%M:%SZ','now') WHERE user_id = ? AND device_fingerprint = ?"),
+  upsertUserDevice: db.prepare(`
+    INSERT INTO user_devices (user_id, device_fingerprint, device_name, user_agent, ip, last_used, created_at)
+    VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%SZ','now'), strftime('%Y-%m-%dT%H:%M:%SZ','now'))
+    ON CONFLICT(user_id, device_fingerprint) DO UPDATE SET
+      device_name = COALESCE(excluded.device_name, user_devices.device_name),
+      user_agent = COALESCE(excluded.user_agent, user_devices.user_agent),
+      ip = COALESCE(excluded.ip, user_devices.ip),
+      last_used = strftime('%Y-%m-%dT%H:%M:%SZ','now')
+  `),
+  getUserTokenByJti: db.prepare("SELECT * FROM user_tokens WHERE jti = ? LIMIT 1"),
+  getActiveUserSessions: db.prepare(`
+    SELECT ut.jti, ut.user_id, ut.device_fingerprint, ut.token_type, ut.created_at, ut.expires_at, ut.revoked_at,
+           ud.device_name, ud.user_agent, ud.ip, ud.last_used
+    FROM user_tokens ut
+    LEFT JOIN user_devices ud ON ud.user_id = ut.user_id AND ud.device_fingerprint = ut.device_fingerprint
+    WHERE ut.user_id = ? AND ut.token_type = 'access' AND ut.revoked_at IS NULL AND ut.expires_at > strftime('%Y-%m-%dT%H:%M:%SZ','now')
+    ORDER BY ut.created_at DESC
+  `),
+  getUserActiveTokenJtis: db.prepare("SELECT jti FROM user_tokens WHERE user_id = ? AND revoked_at IS NULL"),
+  revokeUserTokenByOwner: db.prepare("UPDATE user_tokens SET revoked_at = strftime('%Y-%m-%dT%H:%M:%SZ','now') WHERE jti = ? AND user_id = ? AND revoked_at IS NULL"),
 
   countUsers:    db.prepare("SELECT COUNT(*) as count FROM users"),
   countActiveOperators: db.prepare("SELECT COUNT(*) as count FROM users WHERE role = 'operator' AND is_active = 1"),

@@ -228,7 +228,23 @@ export function checkModuleAccess(pathname: string): void {
       // Check if feature flag is explicitly disabled by the supervisory platform
       const isEnabled = entitlements.modules[mod.moduleKey];
       if (isEnabled === false) {
-        throw new ModuleAccessError(mod.moduleKey, mod.moduleName, "DISABLED_BY_SUPERVISOR");
+        // A signed license that explicitly enables the module outranks a per-flag
+        // override stored in settings. The control plane disables licensed modules
+        // by omitting them from license.enabled_modules; flipping the individual
+        // feature_flag_* keys only restricts modules the license does NOT include.
+        // (Without this, a stale supervisory flag repeatedly re-blocks and
+        // re-disables modules every heartbeat sync even though the license runs them.)
+        let licenseAllows = false;
+        try {
+          const raw = getSetting("license_enabled_modules", "[]");
+          const parsed = JSON.parse(raw);
+          licenseAllows = Array.isArray(parsed) && parsed.includes(mod.moduleKey);
+        } catch {
+          licenseAllows = false;
+        }
+        if (!licenseAllows) {
+          throw new ModuleAccessError(mod.moduleKey, mod.moduleName, "DISABLED_BY_SUPERVISOR");
+        }
       }
 
       // Check if license is expired for non-core modules

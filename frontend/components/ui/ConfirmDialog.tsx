@@ -28,9 +28,7 @@ export function ConfirmDialog({
   loading = false,
 }: ConfirmDialogProps) {
   return (
-    <Modal open={open} onClose={onClose} size="sm">
-      <h2>{title}</h2>
-      <p className="modal-desc">{message}</p>
+    <Modal open={open} onClose={() => { if (!loading) onClose(); }} size="sm" title={title} description={message} hideCloseButton={loading}>
       <div className="modal-actions">
         <button className="btn btn-ghost" onClick={onClose} disabled={loading}>
           {cancelLabel}

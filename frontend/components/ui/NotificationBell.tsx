@@ -17,7 +17,7 @@ type NotificationItem = {
 const TYPE_META: Record<string, { icon: React.ReactNode; colour: string; label: string }> = {
   exam_submitted: {
     label: "Exam Submitted",
-    colour: "#4f7cff",
+    colour: "#D97706",
     icon: (
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
@@ -46,7 +46,7 @@ const TYPE_META: Record<string, { icon: React.ReactNode; colour: string; label: 
   },
   info: {
     label: "Info",
-    colour: "#38bdf8",
+    colour: "#F59E0B",
     icon: (
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
         <circle cx="12" cy="12" r="10" />
@@ -234,7 +234,7 @@ export function NotificationBell({ role = "ADMIN" }: { role?: "ADMIN" | "teacher
         style={{
           background: "none", border: "none", cursor: "pointer",
           position: "relative", display: "inline-flex", alignItems: "center",
-          padding: "0.5rem", color: isOpen ? "#4f7cff" : "#64748b",
+          padding: "0.5rem", color: isOpen ? "#D97706" : "#64748b",
           transition: "color 0.2s"
         }}
         title="Notifications"
@@ -286,7 +286,7 @@ export function NotificationBell({ role = "ADMIN" }: { role?: "ADMIN" | "teacher
             position: "sticky", top: 0, background: "white", zIndex: 10
           }}>
             <h3 style={{ margin: 0, fontSize: "1.05rem", fontWeight: 700, color: "#0f172a" }}>Live Events</h3>
-            <Link href={`/${role}/notifications`} onClick={() => setIsOpen(false)} style={{ fontSize: "0.8rem", color: "#4f7cff", textDecoration: "none", fontWeight: 600 }}>
+            <Link href={`/${role}/notifications`} onClick={() => setIsOpen(false)} style={{ fontSize: "0.8rem", color: "#D97706", textDecoration: "none", fontWeight: 600 }}>
               View all
             </Link>
           </div>

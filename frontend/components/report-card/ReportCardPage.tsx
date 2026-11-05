@@ -16,6 +16,12 @@ import {
 } from "../icons/Icons";
 import { ActiveGoldBadge } from "../ui/ActiveGoldBadge";
 import styles from "./ReportCardPage.module.css";
+import { ReportWorkspaceHeader, ReportPeriodPanel, ReportEmptyState } from "./ReportWorkspace";
+import { studentReportIcons } from "../icons/StudentIcons";
+
+const defaultReportIcons = { SearchIcon, UsersIcon, DocumentIcon, CheckCircleIcon, WarningIcon, EditIcon,
+  SchoolIcon, ClipboardIcon, RefreshIcon, ChevronRightIcon, TrophyIcon, ShieldCheckIcon, LayersIcon,
+  ActivityIcon, SparklesIcon, CrownIcon, BookIcon };
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -191,14 +197,18 @@ function ReportCardPageInner() {
   const { user } = useAuth();
   const isOperator = user?.role === "operator";
   const isStudent = user?.role === "student";
+  const { SearchIcon, UsersIcon, DocumentIcon, CheckCircleIcon, WarningIcon, EditIcon, SchoolIcon,
+    ClipboardIcon, RefreshIcon, ChevronRightIcon, TrophyIcon, ShieldCheckIcon, LayersIcon, ActivityIcon,
+    SparklesIcon, CrownIcon, BookIcon } = isStudent ? studentReportIcons : defaultReportIcons;
   const isClassTeacher = (user as any)?.is_class_teacher === true;
   const assignedClassId: number | null = (user as any)?.assigned_class_id ?? null;
   const assignedClassName: string | null = (user as any)?.assigned_class_name ?? null;
 
   const searchParams = useSearchParams();
-  const preselectedStudentId = Number(searchParams?.get("studentId") ?? 0);
+  const preselectedStudentId = Number(searchParams?.get("studentId") ?? searchParams?.get("student_id") ?? 0);
   const preselectedSessionId = Number(searchParams?.get("sessionId") ?? 0);
   const preselectedTermId = Number(searchParams?.get("termId") ?? 0);
+  const shareToken = searchParams?.get("token") || "";
 
   const { sessions, terms, selectedSession, selectedTerm, activeSession, activeTerm, setSelectedSession, setSelectedTerm } = useAcademic();
   const isCurrentSessionActive = Boolean(selectedSession?.is_active || (activeSession && selectedSession?.id === activeSession?.id));
@@ -258,6 +268,41 @@ function ReportCardPageInner() {
       try {
         let studentList: Student[] = [];
         let cfg: Settings | null = null;
+        if (shareToken) {
+          const cfgRes = await api.getPublicSettings() as Settings;
+          cfg = cfgRes;
+          try {
+            const verifyRes = await fetch(`/api/guardian/verify-share-token?token=${encodeURIComponent(shareToken)}`).then(r => r.json());
+            if (verifyRes.success && verifyRes.data?.student) {
+              const sharedStudent: Student = {
+                id: verifyRes.data.student.id,
+                name: verifyRes.data.student.name,
+                email: "",
+                reg_id: verifyRes.data.student.reg_id,
+                grade: verifyRes.data.student.grade,
+                role: "student"
+              };
+              studentList = [sharedStudent];
+              if (alive) {
+                setSettings(cfg);
+                setStudents(studentList);
+                setSelectedStudent(sharedStudent);
+                setExams(verifyRes.data.results || []);
+                if (Array.isArray(verifyRes.data.remarks) && verifyRes.data.remarks.length > 0) {
+                  setRemarks({
+                    teacher_remark: verifyRes.data.remarks[0].teacher_remark || null,
+                    principal_remark: verifyRes.data.remarks[0].principal_remark || null,
+                  });
+                }
+                setLoadingInit(false);
+                return;
+              }
+            }
+          } catch (e) {
+            console.error("[ReportCardPage] Error verifying share token:", e);
+          }
+        }
+
         if (isStudent && user) {
           const cfgRes = await api.getPublicSettings() as Settings;
           cfg = cfgRes;
@@ -529,7 +574,7 @@ function ReportCardPageInner() {
         {/* ── Access Guard for non-class teachers (students get own report) ── */}
         {!loadingInit && !isOperator && !isClassTeacher && !isStudent && (
           <div className="card" style={{ padding: "4rem 2rem", textAlign: "center", maxWidth: 580, margin: "2rem auto" }}>
-            <SchoolIcon width="48" height="48" style={{ margin: "0 auto 1.25rem", color: "var(--color-primary, #4F46E5)", opacity: 0.8 }} />
+            <SchoolIcon width="48" height="48" style={{ margin: "0 auto 1.25rem", color: "var(--color-primary, #92400E)", opacity: 0.8 }} />
             <h2 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "0.5rem", color: "var(--color-text, #0F172A)" }}>
               Class Teacher Assignment Required
             </h2>
@@ -625,7 +670,7 @@ function ReportCardPageInner() {
               <div className={styles.metricCard}>
                 <div className={styles.metricHeader}>
                   <span className={styles.metricLabel}>Total Students</span>
-                  <div className={styles.metricIcon} style={{ color: "#4F46E5" }}><UsersIcon width="15" height="15" /></div>
+                  <div className={styles.metricIcon} style={{ color: "#92400E" }}><UsersIcon width="15" height="15" /></div>
                 </div>
                 <div className={styles.metricValue}>{students.length}</div>
                 <div className={styles.metricSubtext}>
@@ -647,7 +692,7 @@ function ReportCardPageInner() {
               <div className={styles.metricCard}>
                 <div className={styles.metricHeader}>
                   <span className={styles.metricLabel}>Evaluation Mode</span>
-                  <div className={styles.metricIcon} style={{ color: "#10B981" }}><TrophyIcon width="15" height="15" /></div>
+                  <div className={styles.metricIcon} style={{ color: "var(--color-primary)" }}><TrophyIcon width="15" height="15" /></div>
                 </div>
                 <div className={styles.metricValue} style={{ fontSize: "1.125rem" }}>
                   {activeTermName.toLowerCase().includes("3rd") || activeTermName.toLowerCase().includes("third")
@@ -759,95 +804,21 @@ function ReportCardPageInner() {
         {/* ── View 2: Student Report Card Workspace ── */}
         {selectedStudent && (
           <>
-            {/* Sticky Workspace Header */}
-            <div className={styles.workspaceHeader}>
-              <div className={styles.navBreadcrumb}>
-                <button
-                  type="button"
-                  className={styles.backBtn}
-                  onClick={() => setSelectedStudent(null)}
-                >
-                  ← Back to Roster
-                </button>
-
-                <div className={styles.studentMetaGroup}>
-                  <div className={styles.studentMetaTitle}>
-                    {selectedStudent.name}
-                    {selectedStudent.grade && (
-                      <span className="badge badge-primary" style={{ fontSize: "0.75rem", padding: "0.15rem 0.5rem" }}>
-                        {selectedStudent.grade}
-                      </span>
-                    )}
-                  </div>
-                  <div className={styles.studentMetaDetails}>
-                    {selectedStudent.reg_id && (
-                      <span>Reg: <code className={styles.regCode}>{selectedStudent.reg_id}</code></span>
-                    )}
-                    <span>·</span>
-                    <span>Evaluation: <strong style={{ color: "var(--color-primary, #4F46E5)" }}>{currentAcademicDisplay}</strong></span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Student Switcher + Print Actions */}
-              <div className={styles.actionButtonGroup}>
-                {filteredStudents.length > 1 && currentStudentIndex !== -1 && (
-                  <div className={styles.studentSwitcher}>
-                    <button
-                      type="button"
-                      className={styles.switcherBtn}
-                      onClick={handlePrevStudent}
-                      disabled={currentStudentIndex === 0}
-                      title="Previous Student"
-                    >
-                      ←
-                    </button>
-                    <span className={styles.switcherIndex}>
-                      {currentStudentIndex + 1} of {filteredStudents.length}
-                    </span>
-                    <button
-                      type="button"
-                      className={styles.switcherBtn}
-                      onClick={handleNextStudent}
-                      disabled={currentStudentIndex === filteredStudents.length - 1}
-                      title="Next Student"
-                    >
-                      →
-                    </button>
-                  </div>
-                )}
-
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-sm"
-                  onClick={() => selectStudent(selectedStudent)}
-                  title="Reload exam records"
-                >
-                  <RefreshIcon width="14" height="14" />
-                </button>
-
-                <button
-                  type="button"
-                  className="btn btn-primary btn-sm"
-                  onClick={handlePrint}
-                  disabled={selectedIds.size === 0 || loadingCard}
-                  style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem" }}
-                >
-                  <DocumentIcon width="14" height="14" />
-                  Print / Save PDF
-                </button>
-              </div>
-            </div>
+            <ReportWorkspaceHeader student={selectedStudent} period={currentAcademicDisplay}
+              index={currentStudentIndex} count={filteredStudents.length} busy={loadingCard}
+              canPrint={selectedIds.size>0 && !cardError}
+              onBack={()=>setSelectedStudent(null)} onPrevious={handlePrevStudent} onNext={handleNextStudent}
+              onReload={()=>selectStudent(selectedStudent)} onPrint={handlePrint}/>
 
             {/* Academic Controls & Mode Switcher in Detail View */}
-            <div className={styles.academicBar} style={{ padding: "0.5rem 1rem" }}>
+            <ReportPeriodPanel>
               <div className={styles.academicControls}>
                 {sessions.length > 0 && (
                   <>
                     <div className={styles.controlGroup}>
-                      <span className={styles.controlLabel}>Session:</span>
+                      <label htmlFor="report-session" className={styles.controlLabel}>Academic session</label>
                       <select
-                        className={styles.selectInput}
+                        id="report-session" className={styles.selectInput}
                         value={selectedSession?.id || ""}
                         onChange={(e) => {
                           const s = sessions.find((x) => x.id === Number(e.target.value));
@@ -865,9 +836,9 @@ function ReportCardPageInner() {
                     </div>
 
                     <div className={styles.controlGroup}>
-                      <span className={styles.controlLabel}>Term:</span>
+                      <label htmlFor="report-term" className={styles.controlLabel}>Term</label>
                       <select
-                        className={styles.selectInput}
+                        id="report-term" className={styles.selectInput}
                         value={selectedTerm?.id || ""}
                         onChange={(e) => {
                           const t = terms.find((x) => x.id === Number(e.target.value));
@@ -887,16 +858,18 @@ function ReportCardPageInner() {
                   <button
                     type="button"
                     className={`${styles.modeBtn} ${!isCumulativeMode ? styles.modeBtnActive : ""}`}
+                    aria-pressed={!isCumulativeMode}
                     onClick={() => setIsCumulativeMode(false)}
                   >
-                    Single Term (C.A. + Exam)
+                    Single-term report
                   </button>
                   <button
                     type="button"
                     className={`${styles.modeBtn} ${isCumulativeMode ? styles.modeBtnActive : ""}`}
+                    aria-pressed={isCumulativeMode}
                     onClick={() => setIsCumulativeMode(true)}
                   >
-                    3rd Term Cumulative
+                    Cumulative report
                   </button>
                 </div>
               </div>
@@ -905,12 +878,14 @@ function ReportCardPageInner() {
                 <button
                   type="button"
                   className={styles.textBtn}
+                  disabled={loadingCard || exams.length===0 || selectedIds.size===0}
+                  aria-expanded={showLivePreview}
                   onClick={() => setShowLivePreview(!showLivePreview)}
                 >
-                  {showLivePreview ? "Hide Preview Sheet" : "Show Preview Sheet"}
+                  {exams.length===0 ? "Preview unavailable" : showLivePreview ? "Hide report preview" : "Show report preview"}
                 </button>
               </div>
-            </div>
+            </ReportPeriodPanel>
 
             {/* Loading State */}
             {loadingCard && (
@@ -939,15 +914,9 @@ function ReportCardPageInner() {
 
             {/* No exams State */}
             {!loadingCard && !cardError && exams.length === 0 && (
-              <div className="card" style={{ textAlign: "center", padding: "3.5rem 1.5rem" }}>
-                <ClipboardIcon width="40" height="40" style={{ margin: "0 auto 0.75rem", opacity: 0.35, color: "var(--color-muted, #64748B)" }} />
-                <p style={{ fontWeight: 700, fontSize: "1rem", marginBottom: "0.25rem", color: "var(--color-text, #0F172A)" }}>
-                  No completed exams found for this academic period
-                </p>
-                <p style={{ color: "var(--color-muted, #64748B)", fontSize: "0.8125rem", margin: 0 }}>
-                  {selectedStudent.name} does not have any recorded exam scores for {currentAcademicDisplay}.
-                </p>
-              </div>
+              <ReportEmptyState name={selectedStudent.name} period={currentAcademicDisplay}
+                onPeriod={()=>document.getElementById("report-session")?.focus()}
+                onReload={()=>selectStudent(selectedStudent)} onBack={()=>setSelectedStudent(null)}/>
             )}
 
             {/* Main Scorecard + Remarks Grid */}

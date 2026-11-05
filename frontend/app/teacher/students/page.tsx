@@ -352,7 +352,7 @@ function StudentRoster() {
         <div className={styles.statCard}>
           <div className={styles.statTop}>
             <span className={styles.statLabel}>Enrolled Roster</span>
-            <div className={styles.statIcon} style={{ color: "#4F46E5" }}><UsersIcon width="15" height="15" /></div>
+            <div className={styles.statIcon} ><UsersIcon width="15" height="15" /></div>
           </div>
           <div>
             <div className={styles.statValue}>{students.length}</div>
@@ -363,7 +363,7 @@ function StudentRoster() {
         <div className={styles.statCard}>
           <div className={styles.statTop}>
             <span className={styles.statLabel}>Submitted Exams</span>
-            <div className={styles.statIcon} style={{ color: "#10B981" }}><CheckCircleIcon width="15" height="15" /></div>
+            <div className={styles.statIcon} ><CheckCircleIcon width="15" height="15" /></div>
           </div>
           <div>
             <div className={styles.statValue}>{completedCount}</div>
@@ -374,7 +374,7 @@ function StudentRoster() {
         <div className={styles.statCard}>
           <div className={styles.statTop}>
             <span className={styles.statLabel}>Active Attempts</span>
-            <div className={styles.statIcon} style={{ color: "#F97316" }}><ClockIcon width="15" height="15" /></div>
+            <div className={styles.statIcon} ><ClockIcon width="15" height="15" /></div>
           </div>
           <div>
             <div className={styles.statValue}>{inProgressCount}</div>
@@ -385,7 +385,7 @@ function StudentRoster() {
         <div className={styles.statCard}>
           <div className={styles.statTop}>
             <span className={styles.statLabel}>Pending Intake</span>
-            <div className={styles.statIcon} style={{ color: "#06B6D4" }}><BookIcon width="15" height="15" /></div>
+            <div className={styles.statIcon} ><BookIcon width="15" height="15" /></div>
           </div>
           <div>
             <div className={styles.statValue}>{notStartedCount}</div>
@@ -561,7 +561,7 @@ function StudentRoster() {
                         <div style={{ fontSize: "0.6875rem", color: "var(--color-muted)" }}>{s.reg_id || s.email} · {s.grade || "General"}</div>
                       </div>
                       {selectedStudentId === s.id && (
-                        <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--color-primary, #4F46E5)" }}>Selected</span>
+                        <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--color-primary, #92400E)" }}>Selected</span>
                       )}
                     </div>
                   ))}
@@ -594,3 +594,4 @@ function StudentRoster() {
     </div>
   );
 }
+

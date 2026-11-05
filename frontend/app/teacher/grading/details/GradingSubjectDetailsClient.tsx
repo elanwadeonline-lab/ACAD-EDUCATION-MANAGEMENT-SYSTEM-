@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useCallback, Suspense, useMemo } from "react";
 import Link from "next/link";
+import styles from "./Gradebook.module.css";
 import { useSearchParams } from "next/navigation";
 import { RequireRole } from "../../../../components/auth/RequireRole";
 import { api } from "../../../../lib/api";
@@ -9,7 +10,7 @@ import { useAcademic } from "../../../../components/context/AcademicContext";
 import { useToast } from "../../../../hooks/useToast";
 import { Skeleton } from "../../../../components/ui/Skeleton";
 import { ConfirmDialog } from "../../../../components/ui/ConfirmDialog";
-import { PageHeader, Tabs, Badge, Button } from "../../../../components/ui";
+import { PageHeader, Tabs, Button } from "../../../../components/ui";
 import { GradingWeightBar } from "../../../../components/domain/GradingWeightBar";
 import { CheckIcon, WarningIcon, PlusIcon, TrashIcon } from "../../../../components/icons/Icons";
 
@@ -62,6 +63,7 @@ function GradeTag({ grade }: { grade: string }) {
         fontSize: "0.75rem",
         fontWeight: 700,
         fontFamily: "var(--font-mono, monospace)",
+        fontVariantNumeric: "tabular-nums",
         background: "var(--color-surface-2, #F1F5F9)",
         border: "1px solid var(--color-border, #E2E8F0)",
         borderRadius: "4px",
@@ -136,8 +138,6 @@ function GradingSubjectDetails() {
         setTermResults(scoresData.termResults || []);
         setPassMark(scoresData.pass_mark ?? "");
         const draft: Record<number, Record<number, number | string>> = {};
-        const manualList: any[] = Array.isArray(scoresData.manualScores) ? scoresData.manualScores : (scoresData.manualScores ? Object.values(scoresData.manualScores).flat() as any[] : []);
-        // Also handle manualMap shape: { policyId: { studentId: score } }
         if (Array.isArray(scoresData.manualScores)) {
           for (const ms of scoresData.manualScores || []) {
             const sid = Number(ms.student_id ?? ms.studentId);
@@ -396,7 +396,7 @@ function GradingSubjectDetails() {
   const canApprove = !isApproved && students.length > 0 && totalMax > 0;
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
+    <div className={`${styles.gradebook} max-w-7xl mx-auto space-y-6`} style={{ fontFamily: "var(--font-sans), 'Manrope', sans-serif" }}>
       <ConfirmDialog
         open={Boolean(confirmState?.open)}
         onClose={() => setConfirmState(null)}
@@ -408,7 +408,7 @@ function GradingSubjectDetails() {
 
       <Link
         href="/teacher/grading"
-        className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-800"
+        className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900"
       >
         &larr; Back to Subject Grading Center
       </Link>
@@ -416,17 +416,8 @@ function GradingSubjectDetails() {
       <PageHeader
         title={subjectDetails?.name ?? "Subject Gradebook"}
         subtitle={`${subjectDetails?.code || ""} · ${subjectDetails?.class || "All Cohorts"} · ${students.length} candidate(s)`}
-        eyebrow="Continuous Assessment & Examination"
         badge={
-          isApproved ? (
-            <Badge variant="success" size="sm" dot>
-              Approved & Locked
-            </Badge>
-          ) : (
-            <Badge variant="warning" size="sm" dot>
-              Draft Mode
-            </Badge>
-          )
+          <span className={styles.statusText}>{isApproved ? "Approved & locked" : "Draft mode"}</span>
         }
         actions={
           isApproved ? (
@@ -471,37 +462,37 @@ function GradingSubjectDetails() {
           />
 
           {students.length === 0 ? (
-            <div className="bg-white border border-slate-200 rounded-xl p-12 text-center shadow-xs">
-              <h3 className="text-base font-bold text-slate-800 mb-1">No Student Scores Yet</h3>
+            <div className="bg-white border border-slate-200 rounded-lg p-12 text-center shadow-none">
+              <h3 className="text-base font-medium text-slate-800 mb-1">No Student Scores Yet</h3>
               <p className="text-xs text-slate-500 max-w-md mx-auto">
                 Students will appear here once they submit CBT tests or once you configure assessment policies in Score Setup.
               </p>
             </div>
           ) : (
-            <div className="bg-white border border-slate-200 rounded-xl overflow-x-auto shadow-xs">
+            <div className="bg-white border border-slate-200 rounded-lg overflow-x-auto shadow-none">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                  <tr className="border-b border-slate-200 bg-slate-50 text-[11px] font-medium text-slate-600 uppercase tracking-wider">
                     <th className="p-3.5 sticky left-0 bg-slate-50 z-10">Candidate</th>
                     {/* CBT Exam auto-score column — shown when source exam exists */}
                     {subjectDetails?.source_cbt_subject_id && (
-                      <th className="p-3.5 text-center whitespace-nowrap bg-indigo-50 border-l-2 border-indigo-200">
-                        <div className="text-indigo-700 font-bold">CBT Score</div>
-                        <div className="text-indigo-400 font-mono text-[10px]">Auto · Read-only</div>
+                      <th className="p-3.5 text-center whitespace-nowrap bg-slate-50 border-l border-slate-200">
+                        <div className="text-slate-800 font-medium">CBT Score</div>
+                        <div className="text-slate-500 font-mono text-[10px]">Auto · Read-only</div>
                       </th>
                     )}
                     {policies.map((p, i) => (
                       <th key={p.id ?? i} className="p-3.5 text-center whitespace-nowrap">
-                        <div className="text-slate-900 font-bold">{p.name}</div>
+                        <div className="text-slate-900 font-medium">{p.name}</div>
                         <div className="text-slate-500 font-mono text-[10px]">
                           {p.type === "manual" ? "Manual" : "CBT Auto"} · {p.max_marks}pts
                         </div>
                       </th>
                     ))}
-                    <th className="p-3.5 text-center border-l border-slate-200 bg-slate-100/60 font-bold">
+                    <th className="p-3.5 text-center border-l border-slate-200 bg-white font-medium">
                       Total (/ {totalMax || 100})
                     </th>
-                    <th className="p-3.5 text-center bg-slate-100/60 font-bold">Grade</th>
+                    <th className="p-3.5 text-center bg-white font-medium">Grade</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
@@ -511,18 +502,18 @@ function GradingSubjectDetails() {
                     return (
                       <tr key={st.id} className="hover:bg-slate-50/80 transition">
                         <td className="p-3.5 sticky left-0 bg-white z-10 border-r border-slate-200">
-                          <div className="font-bold text-slate-900">{st.name}</div>
+                          <div className="font-medium text-slate-900">{st.name}</div>
                           <div className="text-slate-500 font-mono text-[11px]">{st.reg_id}</div>
                         </td>
                         {/* Raw CBT score column */}
                         {subjectDetails?.source_cbt_subject_id && (
-                          <td className="p-3 text-center bg-indigo-50/40 border-l-2 border-indigo-100">
+                          <td className="p-3 text-center bg-white border-l border-slate-200">
                             {rawCbtScores[st.id] ? (
                               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1px" }}>
-                                <span className="inline-flex items-center justify-center font-mono font-bold px-2 py-1 rounded bg-indigo-100 border border-indigo-300 text-indigo-800 text-xs">
+                                <span className="font-mono font-medium text-slate-800 text-xs">
                                   {rawCbtScores[st.id]!.score}/{rawCbtScores[st.id]!.total_score}
                                 </span>
-                                <span className="text-[10px] text-indigo-500 font-mono">{rawCbtScores[st.id]!.pct}%</span>
+                                <span className="text-[10px] text-slate-500 font-mono">{rawCbtScores[st.id]!.pct}%</span>
                               </div>
                             ) : (
                               <span className="text-slate-400 font-mono italic text-xs">Not taken</span>
@@ -540,7 +531,7 @@ function GradingSubjectDetails() {
                             <td key={p.id ?? i} className="p-3 text-center">
                               {isCbt ? (
                                 cbtVal !== undefined ? (
-                                  <span className="inline-flex items-center justify-center font-mono font-bold px-2 py-1 rounded bg-indigo-50 border border-indigo-200 text-indigo-700">
+                                  <span className="font-mono font-medium text-slate-800">
                                     {cbtVal}
                                   </span>
                                 ) : (
@@ -549,7 +540,7 @@ function GradingSubjectDetails() {
                               ) : (
                                 <input
                                   type="number"
-                                  className="w-16 text-center font-mono font-bold text-xs p-1.5 rounded border border-slate-300 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 outline-none transition bg-white"
+                                  className="w-16 text-center font-mono font-medium text-xs p-1.5 rounded border border-slate-300 focus:border-amber-600 focus:ring-1 focus:ring-amber-600 outline-none transition bg-white"
                                   value={draftScores[st.id]?.[p.id] ?? ""}
                                   onChange={(e) => updateDraftScore(st.id, p.id, e.target.value, p.max_marks)}
                                   disabled={isApproved || !p.id}
@@ -561,7 +552,7 @@ function GradingSubjectDetails() {
                             </td>
                           );
                         })}
-                        <td className="p-3.5 text-center border-l border-slate-200 bg-slate-50/50 font-mono font-bold text-slate-900 text-sm">
+                        <td className="p-3.5 text-center border-l border-slate-200 bg-slate-50/50 font-mono font-medium text-slate-900 text-sm">
                           {total.toFixed(1)}
                         </td>
                         <td className="p-3.5 text-center bg-slate-50/50">
@@ -581,10 +572,10 @@ function GradingSubjectDetails() {
         <div className="space-y-6">
           {/* Quick Presets */}
           {!isApproved && (
-            <div className="bg-white border border-slate-200 p-5 rounded-xl shadow-xs space-y-3">
+            <div className="py-4 space-y-3">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                 <div>
-                  <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                  <h3 className="text-xs font-medium text-slate-800 uppercase tracking-wider">
                     Quick Assessment Presets
                   </h3>
                   <p className="text-xs text-slate-500">Apply standard institution grading distributions:</p>
@@ -614,9 +605,9 @@ function GradingSubjectDetails() {
           )}
 
           {/* Assessment Policies Config */}
-          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs">
-            <div className="px-5 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
-              <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+          <div className="bg-white">
+            <div className="py-4 border-b border-slate-200 flex flex-wrap gap-3 items-center justify-between">
+              <h3 className="text-xs font-medium text-slate-800 uppercase tracking-wider">
                 Configured Assessment Components ({policies.length})
               </h3>
               {!isApproved && (
@@ -627,7 +618,7 @@ function GradingSubjectDetails() {
                     leftIcon={<PlusIcon width="13" height="13" />}
                     onClick={() => addManualPolicy(false, "New CA Component", 10)}
                   >
-                    + CA Item
+                    CA Item
                   </Button>
                   <Button
                     variant="outline"
@@ -635,17 +626,17 @@ function GradingSubjectDetails() {
                     leftIcon={<PlusIcon width="13" height="13" />}
                     onClick={() => addManualPolicy(true, "Final Examination", 60)}
                   >
-                    + Exam Item
+                    Exam Item
                   </Button>
                 </div>
               )}
             </div>
 
-            <div className="divide-y divide-slate-200 p-5 space-y-4">
+            <div className="divide-y divide-slate-200 space-y-4">
               {policies.map((p, idx) => (
-                <div key={idx} className="flex flex-wrap items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                <div key={idx} className="flex flex-wrap items-center gap-3 py-4">
                   <div className="flex-1 min-w-[180px]">
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase">Name</label>
+                    <label className="block text-[10px] font-medium text-slate-500 uppercase">Name</label>
                     <input
                       type="text"
                       className="w-full px-2.5 py-1.5 rounded border border-slate-300 text-xs font-semibold text-slate-900 bg-white"
@@ -656,10 +647,10 @@ function GradingSubjectDetails() {
                   </div>
 
                   <div className="w-28">
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase">Max Points</label>
+                    <label className="block text-[10px] font-medium text-slate-500 uppercase">Max Points</label>
                     <input
                       type="number"
-                      className="w-full px-2.5 py-1.5 rounded border border-slate-300 text-xs font-mono font-bold text-slate-900 bg-white"
+                      className="w-full px-2.5 py-1.5 rounded border border-slate-300 text-xs font-mono font-medium text-slate-900 bg-white"
                       value={p.max_marks}
                       disabled={isApproved}
                       onChange={(e) => updatePolicy(idx, "max_marks", Number(e.target.value))}
@@ -667,7 +658,7 @@ function GradingSubjectDetails() {
                   </div>
 
                   <div className="w-32">
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase">Category</label>
+                    <label className="block text-[10px] font-medium text-slate-500 uppercase">Category</label>
                     <select
                       className="w-full px-2 py-1.5 rounded border border-slate-300 text-xs font-semibold bg-white"
                       value={p.is_exam ? "1" : "0"}
@@ -680,7 +671,7 @@ function GradingSubjectDetails() {
                   </div>
 
                   <div className="w-36">
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase">Delivery</label>
+                    <label className="block text-[10px] font-medium text-slate-500 uppercase">Delivery</label>
                     <select
                       className="w-full px-2 py-1.5 rounded border border-slate-300 text-xs font-semibold bg-white"
                       value={p.type || "manual"}
@@ -703,7 +694,7 @@ function GradingSubjectDetails() {
 
                   {(p.type === "cbt_exam" || p.type === "cbt_test") && (
                     <div className="w-44">
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase">Linked CBT Subject</label>
+                      <label className="block text-[10px] font-medium text-slate-500 uppercase">Linked CBT Subject</label>
                       <select
                         className="w-full px-2 py-1.5 rounded border border-slate-300 text-xs font-semibold bg-white"
                         value={p.mapped_cbt_subject_id || ""}

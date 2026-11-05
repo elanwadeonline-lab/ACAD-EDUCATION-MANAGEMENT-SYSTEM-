@@ -78,11 +78,11 @@ export function AdminGlobalSearch() {
   }, [query, filterType, filterSessionId, filterTermId, executeSearch]);
 
   const categories = [
-    { key: "all", label: "All", icon: <LayersIcon width="13" height="13" />, color: "#4F46E5" },
-    { key: "report_cards", label: "Report Cards", icon: <GraduationCapIcon width="13" height="13" />, color: "#0D9488" },
+    { key: "all", label: "All", icon: <LayersIcon width="13" height="13" />, color: "#92400E" },
+    { key: "report_cards", label: "Report Cards", icon: <GraduationCapIcon width="13" height="13" />, color: "#92400E" },
     { key: "exams", label: "Exams", icon: <ActivityIcon width="13" height="13" />, color: "#EA580C" },
-    { key: "subjects", label: "Subjects", icon: <BookIcon width="13" height="13" />, color: "#0891B2" },
-    { key: "teachers", label: "Teachers", icon: <UsersIcon width="13" height="13" />, color: "#7C3AED" },
+    { key: "subjects", label: "Subjects", icon: <BookIcon width="13" height="13" />, color: "#92400E" },
+    { key: "teachers", label: "Teachers", icon: <UsersIcon width="13" height="13" />, color: "#92400E" },
     { key: "sessions", label: "Sessions", icon: <CalendarIcon width="13" height="13" />, color: "#EAB308" },
   ];
 
@@ -99,7 +99,7 @@ export function AdminGlobalSearch() {
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.5rem" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.45rem" }}>
-          <span className="text-cyan-600 flex items-center">
+          <span className="text-amber-600 flex items-center">
             <ArchiveIcon width="16" height="16" />
           </span>
           <h2 style={{ fontSize: "0.9375rem", fontWeight: 600, margin: 0, color: "var(--color-text, #0F172A)", letterSpacing: "-0.01em" }}>
@@ -407,7 +407,7 @@ export function AdminGlobalSearch() {
                     {item.type === "report_card" && (
                       <Link
                         href={`/ADMIN/report-card?studentId=${item.student_id}&sessionId=${item.session_id}&termId=${item.term_id}`}
-                        style={{ fontSize: "0.6875rem", fontWeight: 600, color: "var(--color-primary, #4F46E5)", padding: "0.2rem 0.5rem" }}
+                        style={{ fontSize: "0.6875rem", fontWeight: 600, color: "var(--color-primary, #92400E)", padding: "0.2rem 0.5rem" }}
                       >
                         Report Card →
                       </Link>

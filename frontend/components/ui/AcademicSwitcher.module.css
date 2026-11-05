@@ -22,15 +22,15 @@
   border: 1px solid var(--color-border, #E2E8F0);
   color: var(--color-text, #0F172A);
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
-  transition: all 0.14s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.14s cubic-bezier(0.16, 1, 0.3, 1);
   min-height: unset;
   line-height: 1.2;
 }
 
 .triggerBtn:hover {
-  background: rgba(79, 70, 229, 0.04);
-  border-color: #4F46E5;
-  color: #4F46E5;
+  background: var(--color-surface-2, #F8FAFC);
+  border-color: var(--color-border-hover, #CBD5E1);
+  color: var(--color-text, #0F172A);
 }
 
 .triggerBtn:active {
@@ -38,9 +38,8 @@
 }
 
 .triggerOpen {
-  border-color: #4F46E5;
-  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.15);
-  background: rgba(79, 70, 229, 0.04);
+  border-color: var(--color-primary, #EA580C);
+  box-shadow: 0 0 0 2px var(--color-primary-glow, rgba(234, 88, 12, 0.15));
 }
 
 .iconWrap {
@@ -50,7 +49,7 @@
 }
 
 .triggerIcon {
-  color: #4F46E5;
+  color: var(--color-primary, #EA580C);
   transition: transform 0.14s ease;
 }
 
@@ -90,8 +89,8 @@
   width: 260px;
   background: #FFFFFF;
   border: 1px solid var(--color-border, #E2E8F0);
-  border-radius: 10px;
-  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.1), 0 4px 6px -2px rgba(15, 23, 42, 0.03);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
   padding: 0.75rem;
   display: flex;
   flex-direction: column;
@@ -149,7 +148,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 0.35rem 0.5rem;
-  border-radius: 6px;
+  border-radius: 5px;
   background: transparent;
   border: 1px solid transparent;
   cursor: pointer;
@@ -191,7 +190,7 @@
 }
 
 .checkIcon {
-  color: #4F46E5;
+  color: var(--color-primary, #EA580C);
 }
 
 /* Terms Grid */
@@ -222,8 +221,8 @@
 }
 
 .termPillActive {
-  background: #0F172A !important;
-  border-color: #0F172A !important;
+  background: var(--color-text, #0F172A) !important;
+  border-color: var(--color-text, #0F172A) !important;
   color: #FFFFFF !important;
 }
 
@@ -233,3 +232,13 @@
   border-radius: 50%;
   background: #10B981;
 }
+
+/* Focused neutral presentation; operational states retain text labels. */
+
+.triggerBtn { background:transparent; border:0; border-radius:0; box-shadow:none; min-height:36px; }
+.triggerOpen { box-shadow:none; }.badgeLive { background:transparent; border:0; border-radius:0; color:var(--color-primary); }
+
+
+.termPillActive { background:transparent !important; border-color:var(--color-primary) !important; color:var(--color-primary) !important; }
+.termPill { background:transparent; border-radius:4px; min-height:36px; }
+.tinyLiveDot { display:none; }.dropdownPanel { border-radius:8px; box-shadow:0 8px 24px #00000012; }

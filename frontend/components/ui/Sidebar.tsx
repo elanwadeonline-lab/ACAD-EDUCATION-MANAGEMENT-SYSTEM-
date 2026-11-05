@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useAuth } from "../../hooks/useAuth";
-import { AcadBrandIcon } from "../icons/Icons";
+import { AcqadLogo } from "../brand/AcqadLogo";
 import styles from "./Sidebar.module.css";
 import React, { type ReactNode } from "react";
 
@@ -25,60 +24,67 @@ type Props = {
 
 export function Sidebar({ items, title, open, onClose }: Props) {
   const pathname = usePathname();
-  const { user, logout } = useAuth();
-
   const normalizedPathname = pathname.replace(/\/+$/, "") || "/";
 
-  // Group items by section transition
+  // Group items by section header
   let lastSection: string | undefined = undefined;
 
   return (
     <>
-      {/* Backdrop (mobile) */}
+      {/* Mobile backdrop */}
       {open && (
         <div
           className={`${styles.backdrop} ${styles.backdropVisible}`}
           onClick={onClose}
+          aria-hidden="true"
         />
       )}
 
-      <aside className={`${styles.sidebar} ${open ? styles.mobileOpen : ""}`}>
-        {/* Logo / brand */}
+      <aside
+        className={`${styles.sidebar} ${open ? styles.mobileOpen : ""}`}
+        aria-label="Primary navigation"
+      >
+        {/* ── Brand Header ── */}
         <div className={styles.brand}>
-          <div className={styles.brandIcon}>
-            <AcadBrandIcon width={20} height={20} stroke="currentColor" />
-          </div>
-          <div className={styles.brandMeta}>
-            <span className={styles.brandName}>ACAD</span>
-            <span className={styles.brandRole}>{title} Portal</span>
-          </div>
-          {/* Close btn on mobile */}
+          <div className={styles.brandMeta}><AcqadLogo size="lg" wordmarkWeight={700}/><span className={styles.brandRole}>{title}</span></div>
+          {/* Mobile close */}
           <button
             onClick={onClose}
-            className="md:hidden ml-auto p-1 text-slate-400 hover:text-white bg-slate-800 rounded border border-slate-700"
-            aria-label="Close menu"
+            className={`${styles.mobileClose} md:hidden`}
+            aria-label="Close navigation menu"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </button>
         </div>
 
-        {/* Navigation */}
-        <nav className={styles.nav}>
+        {/* ── Navigation ── */}
+        <nav className={styles.nav} aria-label="Main menu">
           {items.map((item) => {
             const showSection = item.section && item.section !== lastSection;
             if (item.section) lastSection = item.section;
 
-            const active =
-              normalizedPathname === item.href.replace(/\/+$/, "") ||
-              (item.href !== "/ADMIN/dashboard" && item.href !== "/teacher/dashboard" && item.href !== "/student/dashboard" &&
-                normalizedPathname.startsWith(item.href.replace(/\/+$/, "") + "/"));
+            // Precise active matching — avoid false matches on parent paths
+            const exactRoutes = [
+              "/ADMIN/dashboard",
+              "/teacher/dashboard",
+              "/student/dashboard",
+              "/guardian/dashboard",
+            ];
+            const isExact = exactRoutes.includes(item.href);
+            const normalizedHref = item.href.replace(/\/+$/, "");
+
+            const active = isExact
+              ? normalizedPathname === normalizedHref
+              : normalizedPathname === normalizedHref ||
+                normalizedPathname.startsWith(normalizedHref + "/");
 
             return (
               <React.Fragment key={item.href}>
                 {showSection && (
-                  <div className={styles.navSection}>
+                  <div className={styles.navSection} role="presentation">
                     <span className={styles.navSectionLabel}>{item.section}</span>
                   </div>
                 )}
@@ -86,11 +92,27 @@ export function Sidebar({ items, title, open, onClose }: Props) {
                   href={item.href}
                   onClick={onClose}
                   className={`${styles.navItem} ${active ? styles.active : ""}`}
+                  aria-current={active ? "page" : undefined}
                 >
-                  <span className={styles.navIcon}>{item.icon}</span>
+                  <span className={styles.navIcon} aria-hidden="true">
+                    {item.icon}
+                  </span>
                   <span className={styles.navLabel}>{item.label}</span>
-                  {item.badge && <span className="ml-auto text-xs">{item.badge}</span>}
-                  {active && <span className={styles.activeDot} />}
+                  {item.badge && (
+                    <span
+                      className="ml-auto text-[0.6rem] font-bold px-1.5 py-0.5 rounded-full"
+                      style={{
+                        background: "var(--color-primary-subtle)",
+                        color: "var(--color-primary)",
+                        minWidth: "18px",
+                        textAlign: "center",
+                        lineHeight: "1",
+                      }}
+                      aria-label="notification count"
+                    >
+                      {item.badge}
+                    </span>
+                  )}
                 </Link>
               </React.Fragment>
             );

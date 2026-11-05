@@ -18,7 +18,7 @@ export function ProgressRing({
   strokeWidth = 5,
   label,
   showValue = true,
-  color = "var(--g-primary, #6366F1)",
+  color = "var(--g-primary, #D97706)",
   trackColor = "var(--g-border, #E2E8F0)",
 }: Props) {
   const [mounted, setMounted] = useState(false);
@@ -38,7 +38,7 @@ export function ProgressRing({
     return "#EF4444"; // danger
   };
 
-  const resolvedColor = color === "var(--g-primary, #6366F1)" ? getColor(clamped) : color;
+  const resolvedColor = color === "var(--g-primary, #D97706)" ? getColor(clamped) : color;
 
   return (
     <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", gap: "0.25rem" }}>

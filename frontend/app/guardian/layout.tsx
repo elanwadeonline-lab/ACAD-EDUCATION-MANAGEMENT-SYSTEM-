@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { AcademicProvider } from "../../components/context/AcademicContext";
 import { GuardianProvider } from "../../components/guardian/GuardianContext";
+import { GuardianMaterialProvider } from "../../components/guardian/GuardianMaterialProvider";
 import { GuardianMobileShell } from "../../components/guardian/GuardianMobileShell";
 import "./design-tokens.css";
 
@@ -19,7 +20,7 @@ export default function GuardianLayout({ children }: { children: ReactNode }) {
   return (
     <AcademicProvider>
       <GuardianProvider>
-        <GuardianMobileShell>{children}</GuardianMobileShell>
+        <GuardianMaterialProvider><GuardianMobileShell>{children}</GuardianMobileShell></GuardianMaterialProvider>
       </GuardianProvider>
     </AcademicProvider>
   );

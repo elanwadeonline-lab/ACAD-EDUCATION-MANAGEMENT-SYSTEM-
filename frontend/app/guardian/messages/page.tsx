@@ -313,7 +313,7 @@ function MessagesList() {
                 <div className={styles.threadLeft}>
                   <div
                     className={styles.avatarBox}
-                    style={isAdminThread ? { background: "linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%)" } : {}}
+                    style={isAdminThread ? { background: "linear-gradient(135deg, #92400E 0%, #29231B 100%)" } : {}}
                   >
                     {thread.sender_name.charAt(0).toUpperCase()}
                   </div>
@@ -499,14 +499,14 @@ function MessagesList() {
                               width: 36,
                               height: 36,
                               fontSize: "0.875rem",
-                              background: "linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%)",
+                              background: "linear-gradient(135deg, #92400E 0%, #29231B 100%)",
                             }}
                           >
                             {c.name.charAt(0)}
                           </div>
                           <div>
                             <div className={styles.contactName}>{c.name}</div>
-                            <div className={styles.contactRole} style={{ color: "#7C3AED", fontWeight: 600 }}>
+                            <div className={styles.contactRole} style={{ color: "#92400E", fontWeight: 600 }}>
                               {c.role_label}
                             </div>
                           </div>

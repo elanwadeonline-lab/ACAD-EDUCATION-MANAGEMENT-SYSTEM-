@@ -65,7 +65,7 @@ export function BulkUploadModal({ subjectId, onClose, onSuccess }: BulkUploadMod
   function validateFile(file: File): string | null {
     const type = detectFileType(file);
     if (!type) return "Unsupported file format. Please upload .xlsx, .csv, .docx, or .txt";
-    if (file.size > 5 * 1024 * 1024) return "File exceeds 5MB limit.";
+    if (file.size > 30 * 1024 * 1024) return "File exceeds 30MB limit.";
     return null;
   }
 
@@ -560,7 +560,7 @@ export function BulkUploadModal({ subjectId, onClose, onSuccess }: BulkUploadMod
             <div style={{ fontSize: "2rem", marginBottom: "0.5rem", opacity: 0.4 }}>📄</div>
             <div style={{ fontWeight: 600, color: "#334155", fontSize: "0.95rem" }}>Click to browse or drag &amp; drop</div>
             <div style={{ fontSize: "0.8rem", color: "#64748b", marginTop: "0.4rem" }}>
-              .xlsx &middot; .csv &middot; .docx &middot; .txt &nbsp; (max 5 MB)
+              .xlsx &middot; .csv &middot; .docx &middot; .txt &nbsp; (max 30 MB)
             </div>
           </div>
           <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept={ACCEPTED_MIME} style={{ display: "none" }} />

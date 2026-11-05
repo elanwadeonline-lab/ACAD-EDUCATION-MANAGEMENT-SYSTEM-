@@ -37,7 +37,7 @@
 
 .backBtn:hover {
   background: var(--g-surface-subtle, #F8FAFC);
-  border-color: var(--g-border-focus, #3B82F6);
+  border-color: var(--g-border-focus, #D97706);
 }
 
 .childSelectBtn {
@@ -54,7 +54,7 @@
 
 .childSelectBtn:hover {
   background: var(--g-surface-subtle, #F8FAFC);
-  border-color: var(--g-border-focus, #3B82F6);
+  border-color: var(--g-border-focus, #D97706);
 }
 
 .childSelectName {
@@ -80,19 +80,20 @@
 
 .periodBadge:hover {
   background: var(--g-surface-subtle, #F8FAFC);
-  border-color: var(--g-border-focus, #3B82F6);
+  border-color: var(--g-border-focus, #D97706);
 }
 
 /* ── 1. Donut Card ── */
 .donutCard {
   background: var(--g-surface, #FFFFFF);
   border: 1px solid var(--g-border, #E2E8F0);
-  border-radius: var(--g-radius-xl, 18px);
+  border-radius: 18px;
   padding: 1.25rem 1.5rem;
   display: flex;
   align-items: center;
   gap: 1.25rem;
-  box-shadow: var(--g-shadow-sm, 0 1px 3px rgba(15, 23, 42, 0.03));
+  box-shadow: none;
+  border-color: var(--g-border);
 }
 
 .donutRingBox {
@@ -190,8 +191,8 @@
 .subjectBadgeBox {
   font-size: 0.6875rem;
   font-weight: 800;
-  color: var(--g-primary, #165AF6);
-  background: var(--g-primary-subtle, #EFF4FF);
+  color: var(--g-primary-text, #92400E);
+  background: var(--g-primary-subtle, #FFFBEB);
   padding: 0.2rem 0.45rem;
   border-radius: 6px;
 }
@@ -228,9 +229,9 @@
 }
 
 .gradeB {
-  background: var(--g-primary-subtle, #EFF4FF);
-  color: var(--g-primary, #165AF6);
-  border: 1px solid var(--g-primary-border, #DBEAFE);
+  background: var(--g-primary-subtle, #FFFBEB);
+  color: var(--g-primary-text, #92400E);
+  border: 1px solid var(--g-primary-border, #FDE68A);
 }
 
 .gradeC {
@@ -257,12 +258,13 @@
 .remarkCard {
   background: var(--g-surface, #FFFFFF);
   border: 1px solid var(--g-border, #E2E8F0);
-  border-radius: var(--g-radius-lg, 16px);
+  border-radius: 18px;
   padding: 1.15rem;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  box-shadow: var(--g-shadow-sm, 0 1px 3px rgba(15, 23, 42, 0.03));
+  box-shadow: none;
+  border-color: var(--g-border);
 }
 
 .remarkHeading {
@@ -274,7 +276,7 @@
 
 .remarkQuoteBox {
   background: var(--g-surface-subtle, #F8FAFC);
-  border-left: 3px solid var(--g-primary, #165AF6);
+  border-left: 3px solid var(--g-primary, #92400E);
   padding: 0.75rem 1rem;
   border-radius: 0 10px 10px 0;
 }
@@ -290,7 +292,7 @@
 .remarkAuthor {
   font-size: 0.6875rem;
   font-weight: 700;
-  color: var(--g-primary, #165AF6);
+  color: var(--g-primary-text, #92400E);
 }
 
 /* Full Result Action Button */
@@ -299,18 +301,18 @@
   align-items: center;
   justify-content: center;
   gap: 0.45rem;
-  background: var(--g-primary, #165AF6);
+  background: var(--g-primary, #92400E);
   color: #FFFFFF;
   font-size: 0.875rem;
   font-weight: 700;
   padding: 0.85rem 1.25rem;
   border-radius: var(--g-radius-md, 12px);
   text-decoration: none;
-  box-shadow: 0 4px 12px var(--g-primary-glow, rgba(22, 90, 246, 0.25));
+  box-shadow: 0 4px 12px var(--g-primary-glow, rgba(217, 119, 6, 0.25));
   transition: all var(--g-duration, 180ms) ease;
 }
 
 .viewFullResultBtn:hover {
-  background: var(--g-primary-hover, #1248C8);
+  background: var(--g-primary-hover, #78350F);
   transform: translateY(-1px);
 }

@@ -58,7 +58,7 @@
   width: 36px;
   height: 36px;
   border-radius: 9px;
-  background: linear-gradient(135deg, #0F766E 0%, #14B8A6 100%);
+  background: linear-gradient(135deg, #0F766E 0%, #D97706 100%);
   color: #FFFFFF;
   display: flex;
   align-items: center;
@@ -106,7 +106,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #14B8A6;
+  background: #D97706;
   animation: pulse 2s infinite ease-in-out;
 }
 
@@ -314,7 +314,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: #4F46E5;
+  color: #92400E;
   margin-bottom: 0.5rem;
 }
 
@@ -337,7 +337,7 @@
 }
 
 .readinessList li span {
-  color: #4F46E5;
+  color: #92400E;
   font-weight: 700;
 }
 

@@ -1,31 +1,31 @@
-/* ── Minimalist Academic Sessions Design (Neutral-First) ── */
+/* ── Minimalist Academic Sessions Design (ACQAD Refined) ── */
 
 .container {
   display: flex;
   flex-direction: column;
-  gap: 1.75rem;
+  gap: 1.5rem;
   width: 100%;
   max-width: 100%;
 }
 
-/* ── Live Status Banner ─────────────────────────────────── */
+/* ── Live Status Banner ────────────────────────────────── */
 .liveBanner {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1.25rem;
-  padding: 1.25rem 1.5rem;
+  padding: 1.125rem 1.5rem;
   background: var(--color-surface, #FFFFFF);
   border: 1px solid var(--color-border, #E2E8F0);
-  border-radius: 12px;
-  box-shadow: 0 1px 2px 0 rgba(15, 23, 42, 0.03);
-  transition: all 200ms ease;
+  border-radius: var(--radius-md, 8px);
+  box-shadow: 0 1px 2px 0 rgba(15, 23, 42, 0.02);
+  transition: all 150ms ease;
 }
 
 .liveBannerActiveGold {
-  background: var(--color-gold-banner, linear-gradient(135deg, rgba(254, 249, 195, 0.6) 0%, rgba(255, 255, 255, 1) 100%));
-  border: 1px solid var(--color-gold-border, rgba(202, 138, 4, 0.40));
-  box-shadow: 0 4px 20px rgba(234, 179, 8, 0.12), 0 1px 3px rgba(0, 0, 0, 0.02);
+  background: #FAFAF9;
+  border: 1px solid rgba(234, 88, 12, 0.25);
+  box-shadow: 0 2px 8px rgba(234, 88, 12, 0.04);
 }
 
 .liveBannerLeft {
@@ -38,11 +38,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  background: var(--color-surface-2, #F1F5F9);
-  color: var(--color-text, #0F172A);
+  width: 38px;
+  height: 38px;
+  border-radius: 6px;
+  background: var(--color-surface-2, #F8FAFC);
+  color: var(--color-primary, #EA580C);
   border: 1px solid var(--color-border, #E2E8F0);
   flex-shrink: 0;
 }
@@ -50,14 +50,14 @@
 .liveBannerText {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.2rem;
 }
 
 .liveBannerLabel {
   font-size: 0.6875rem;
-  font-weight: 700;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   color: var(--color-muted, #64748B);
   display: flex;
   align-items: center;
@@ -68,7 +68,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #10B981;
+  background: var(--color-primary);
 }
 
 .statusDotInactive {
@@ -79,21 +79,22 @@
 }
 
 .liveBannerValue {
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
   font-weight: 500;
   color: var(--color-text, #0F172A);
   line-height: 1.4;
 }
 
 .liveBannerValue strong {
-  font-weight: 700;
+  font-weight: 600;
+  color: var(--color-text, #0F172A);
 }
 
 .liveBannerAction {
   flex-shrink: 0;
 }
 
-/* ── Chronological Timeline Section ─────────────────────── */
+/* ── Chronological Timeline Section ───────────────────── */
 .timelineSection {
   display: flex;
   flex-direction: column;
@@ -108,7 +109,7 @@
 }
 
 .sectionTitle {
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
   font-weight: 600;
   color: var(--color-text, #0F172A);
   letter-spacing: -0.01em;
@@ -129,17 +130,18 @@
 }
 
 .timelineCard {
-  background: var(--color-surface, #FFFFFF);
-  border: 1px solid var(--color-border, #E2E8F0);
-  border-radius: 12px;
-  padding: 1.75rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 1.5rem;
+  box-shadow: none;
 }
 
 .timelineContainer {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1.75rem;
 }
 
 /* Central vertical alignment rule */
@@ -148,7 +150,7 @@
   position: absolute;
   top: 10px;
   bottom: 10px;
-  left: 6px;
+  left: 5px;
   width: 1px;
   background: var(--color-border, #E2E8F0);
   z-index: 0;
@@ -159,8 +161,9 @@
   z-index: 1;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  padding-left: 2rem;
+  gap: 0.875rem;
+  padding-left: 1.75rem;
+  transition: background-color 150ms ease;
 }
 
 .timelineYearMarker {
@@ -172,26 +175,31 @@
 
 .timelineYearDot {
   position: absolute;
-  left: -2rem;
+  left: -1.75rem;
   top: 50%;
   transform: translateY(-50%) translateX(1px);
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   background: var(--color-surface, #FFFFFF);
   border: 2px solid var(--color-muted-2, #94A3B8);
-  box-shadow: 0 0 0 4px var(--color-surface, #FFFFFF);
+  box-shadow: 0 0 0 3px var(--color-surface, #FFFFFF);
   transition: all 150ms ease;
 }
 
 .timelineYearGroupActive .timelineYearDot {
-  border-color: #10B981;
-  background: #10B981;
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+}
+
+.timelineYearDotActive {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
 }
 
 .timelineYearName {
-  font-size: 1.0625rem;
-  font-weight: 700;
+  font-size: 0.9375rem;
+  font-weight: 600;
   font-family: var(--font-mono, monospace);
   color: var(--color-text, #0F172A);
   margin: 0;
@@ -205,92 +213,63 @@
 .activeSessionBadge {
   font-size: 0.6875rem;
   font-weight: 600;
-  color: #059669;
-  background: rgba(16, 185, 129, 0.1);
-  padding: 0.15rem 0.45rem;
+  color: var(--color-primary);
+  background: rgba(22, 163, 74, 0.08);
+  padding: 0.15rem 0.5rem;
   border-radius: 4px;
+  border: 1px solid rgba(22, 163, 74, 0.2);
 }
 
 .activeTermBadge {
-  font-size: 0.65rem;
-  font-weight: 600;
-  color: #059669;
-  background: rgba(16, 185, 129, 0.1);
-  padding: 0.1rem 0.4rem;
-  border-radius: 4px;
-}
-
-.activateTermLink {
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: #4F46E5;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0.1rem 0.35rem;
-  border-radius: 4px;
-}
-
-.activateTermLink:hover {
-  background: var(--color-surface, #FFFFFF);
-}
-
-.noTerms {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.75rem 1rem;
-  font-size: 0.75rem;
-  color: var(--color-muted, #64748B);
-}
-
-.addTermInline {
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: #4F46E5;
-  background: none;
-  border: none;
-  cursor: pointer;
-}
-
-.activeTag {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
   font-size: 0.6875rem;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  color: var(--color-primary, #EA580C);
+  background: rgba(234, 88, 12, 0.08);
   padding: 0.15rem 0.5rem;
   border-radius: 4px;
-  background: var(--color-surface-2, #F1F5F9);
-  color: var(--color-text, #0F172A);
-  border: 1px solid var(--color-border, #CBD5E1);
+  border: 1px solid rgba(234, 88, 12, 0.2);
 }
 
 .activateLink {
   font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--color-primary, #4F46E5);
+  font-weight: 500;
+  color: var(--color-primary, #EA580C);
   background: none;
   border: none;
   cursor: pointer;
   padding: 0.15rem 0.4rem;
   border-radius: 4px;
-  transition: background 150ms ease;
+  transition: all 150ms ease;
 }
 
 .activateLink:hover {
-  background: var(--color-surface-2, #F1F5F9);
+  background: rgba(234, 88, 12, 0.06);
 }
 
-/* ── Terms Table / List ─────────────────────────────────── */
+.activateTermLink {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-muted, #64748B);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  transition: all 150ms ease;
+}
+
+.activateTermLink:hover {
+  color: var(--color-primary, #EA580C);
+  background: rgba(234, 88, 12, 0.06);
+}
+
+/* ── Terms Table / List ────────────────────────────────── */
 .termsList {
   display: flex;
   flex-direction: column;
   background: var(--color-surface-2, #F8FAFC);
   border: 1px solid var(--color-border, #E2E8F0);
-  border-radius: 8px;
+  border-radius: 6px;
   overflow: hidden;
 }
 
@@ -298,9 +277,14 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.65rem 1rem;
+  padding: 0.6rem 0.875rem;
   border-bottom: 1px solid var(--color-border, #E2E8F0);
   font-size: 0.8125rem;
+  transition: background 100ms ease;
+}
+
+.termRow:hover {
+  background: #FFFFFF;
 }
 
 .termRow:last-child {
@@ -321,14 +305,14 @@
 .emptyTerms {
   font-size: 0.75rem;
   color: var(--color-muted, #64748B);
-  padding: 0.875rem 1rem;
+  padding: 0.75rem 0.875rem;
   font-style: italic;
 }
 
-/* ── Feedback Alert Banner ──────────────────────────────── */
+/* ── Feedback Alert Banner ────────────────────────────── */
 .alertBanner {
-  padding: 0.75rem 1.125rem;
-  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -340,11 +324,13 @@
 }
 
 .alertSuccess {
-  border-color: rgba(22, 163, 74, 0.3);
+  border-color: rgba(22, 163, 74, 0.25);
+  background: rgba(22, 163, 74, 0.04);
 }
 
 .alertError {
-  border-color: rgba(220, 38, 38, 0.3);
+  border-color: rgba(220, 38, 38, 0.25);
+  background: rgba(220, 38, 38, 0.04);
   color: var(--color-danger, #DC2626);
 }
 
@@ -361,11 +347,11 @@
   color: var(--color-text, #0F172A);
 }
 
-/* ── Modals & Forms ─────────────────────────────────────── */
+/* ── Modals & Forms ────────────────────────────────────── */
 .modalForm {
   display: flex;
   flex-direction: column;
-  gap: 1.125rem;
+  gap: 1rem;
 }
 
 .modalIntro {
@@ -402,8 +388,8 @@
 
 .formInput:focus,
 .formSelect:focus {
-  border-color: var(--color-primary, #4F46E5);
-  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+  border-color: var(--color-primary, #EA580C);
+  box-shadow: 0 0 0 2px var(--color-primary-glow, rgba(234, 88, 12, 0.12));
 }
 
 .radioGroup {
@@ -423,7 +409,7 @@
 }
 
 .radioInput {
-  accent-color: var(--color-primary, #0F172A);
+  accent-color: var(--color-primary, #EA580C);
   cursor: pointer;
 }
 
@@ -437,7 +423,7 @@
   margin-top: 0.5rem;
 }
 
-/* ── Responsive ─────────────────────────────────────────── */
+/* ── Responsive ────────────────────────────────────────── */
 @media (max-width: 768px) {
   .liveBanner {
     flex-direction: column;
@@ -450,6 +436,19 @@
     width: 100%;
   }
   .timelineCard {
-    padding: 1.25rem;
+    padding: 1.125rem;
+    border-radius: 14px;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    box-shadow: none;
   }
 }
+
+/* Focused neutral presentation; operational states retain text labels. */
+
+.liveBanner { background:white; border:0; border-bottom:1px solid var(--color-border); border-radius:0; box-shadow:none; padding:20px 0; }
+.liveBannerIcon { background:transparent; color:var(--color-primary); }
+.liveBannerLabel,.liveBannerValue,.activeSessionBadge,.activeTermBadge { color:var(--color-text-2); background:transparent; border:0; border-radius:0; }
+.statusDotActive,.statusDotInactive { display:none; }
+.timelineYearGroupActive,.timelineCard { background:white; box-shadow:none; border-color:var(--color-border); }
+.timelineYearDotActive { background:var(--color-primary); box-shadow:none; }

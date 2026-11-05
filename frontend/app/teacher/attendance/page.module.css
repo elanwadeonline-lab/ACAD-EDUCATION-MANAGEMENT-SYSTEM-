@@ -1,7 +1,10 @@
+/* ── Attendance Register Module Styles — ACQAD ── */
+
 .container {
-  padding: 1.5rem;
+  padding: 0 0 3rem 0;
   max-width: 1200px;
   margin: 0 auto;
+  font-family: var(--font-sans), 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 .headerRow {
@@ -33,9 +36,9 @@
 .classBadge {
   font-size: 0.75rem;
   font-weight: 600;
-  background: var(--color-primary-light, #eff6ff);
-  color: var(--color-primary, #2563eb);
-  border: 1px solid rgba(37, 99, 235, 0.2);
+  background: rgba(234, 88, 12, 0.08);
+  color: var(--color-primary, #ea580c);
+  border: 1px solid rgba(234, 88, 12, 0.25);
   padding: 0.2rem 0.6rem;
   border-radius: 9999px;
   letter-spacing: 0;
@@ -61,7 +64,7 @@
   background: var(--color-surface, #ffffff);
   border: 1px solid var(--color-border, #e2e8f0);
   padding: 0.4rem 0.75rem;
-  border-radius: 8px;
+  border-radius: var(--radius-sm, 6px);
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
@@ -80,20 +83,20 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  background: #ecfdf5;
-  color: #059669;
-  border: 1px solid #a7f3d0;
+  background: rgba(16, 185, 129, 0.08);
+  color: #065f46;
+  border: 1px solid rgba(16, 185, 129, 0.25);
   padding: 0.45rem 0.85rem;
-  border-radius: 8px;
+  border-radius: var(--radius-sm, 6px);
   font-size: 0.8125rem;
+  font-family: inherit;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.14s ease;
+  transition: all var(--duration-fast, 120ms) ease;
 }
 
 .markAllBtn:hover {
-  background: #d1fae5;
-  border-color: #6ee7b7;
+  background: rgba(16, 185, 129, 0.15);
 }
 
 .markAllBtn:active {
@@ -109,35 +112,38 @@
 
 .statCard {
   background: var(--color-surface, #ffffff);
-  border: 1px solid var(--color-border, #e2e8f0);
-  border-radius: 10px;
-  padding: 0.75rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 22px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
+  box-shadow: none;
 }
 
 .statLabel {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 600;
   color: var(--color-muted, #64748b);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
 }
 
 .statValue {
-  font-size: 1.25rem;
-  font-weight: 700;
+  font-size: 2rem;
+  font-weight: 600;
+  font-family: var(--font-mono, monospace);
+  font-variant-numeric: tabular-nums;
   color: var(--color-text, #0f172a);
+  letter-spacing: -.045em;
 }
 
 .rosterCard {
-  background: var(--color-surface, #ffffff);
-  border: 1px solid var(--color-border, #e2e8f0);
-  border-radius: 12px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  box-shadow: none;
   margin-bottom: 1.5rem;
 }
 
@@ -158,20 +164,22 @@
 }
 
 .filterPill {
-  border: none;
+  border: 1px solid transparent;
   background: transparent;
   padding: 0.3rem 0.65rem;
-  border-radius: 6px;
+  border-radius: var(--radius-sm, 6px);
   font-size: 0.75rem;
+  font-family: inherit;
   font-weight: 600;
   color: var(--color-muted, #64748b);
   cursor: pointer;
-  transition: all 0.12s ease;
+  transition: all var(--duration-fast, 120ms) ease;
 }
 
 .filterPillActive {
-  background: var(--color-surface, #ffffff);
-  color: var(--color-text, #0f172a);
+  background: #ffffff;
+  color: var(--color-primary, #ea580c);
+  border-color: rgba(234, 88, 12, 0.25);
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
 }
 
@@ -183,22 +191,23 @@
   width: 100%;
   border-collapse: collapse;
   text-align: left;
+  font-family: inherit;
 }
 
 .rosterTable th {
   padding: 0.75rem 1.25rem;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 600;
   color: var(--color-muted, #64748b);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   border-bottom: 1px solid var(--color-border, #e2e8f0);
   background: var(--color-surface-2, #f8fafc);
 }
 
 .rosterTable td {
   padding: 0.85rem 1.25rem;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   border-bottom: 1px solid var(--color-border, #f1f5f9);
   color: var(--color-text, #0f172a);
   vertical-align: middle;
@@ -211,16 +220,17 @@
 }
 
 .studentAvatar {
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  background: var(--color-primary-light, #eff6ff);
-  color: var(--color-primary, #2563eb);
+  background: #0b0d11;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   flex-shrink: 0;
 }
 
@@ -234,6 +244,7 @@
   font-size: 0.75rem;
   color: var(--color-muted, #64748b);
   font-family: var(--font-mono, monospace);
+  font-variant-numeric: tabular-nums;
 }
 
 .statusPills {
@@ -242,14 +253,15 @@
 }
 
 .statusBtn {
-  border: 1px solid transparent;
+  border: 1px solid var(--color-border, #e2e8f0);
   padding: 0.3rem 0.6rem;
-  border-radius: 6px;
+  border-radius: var(--radius-sm, 6px);
   font-size: 0.75rem;
+  font-family: inherit;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.12s ease;
-  background: #f1f5f9;
+  transition: all var(--duration-fast, 120ms) ease;
+  background: #f8fafc;
   color: #64748b;
 }
 
@@ -279,27 +291,29 @@
 }
 
 .statusExcusedActive {
-  background: #f0f9ff;
-  color: #0284c7;
-  border-color: #bae6fd;
+  background: #f0fdf4;
+  color: #166534;
+  border-color: #bbf7d0;
   font-weight: 700;
 }
 
 .remarksInput {
   width: 100%;
   max-width: 260px;
-  padding: 0.35rem 0.6rem;
-  border-radius: 6px;
+  padding: 0.4rem 0.65rem;
+  border-radius: var(--radius-sm, 6px);
   border: 1px solid var(--color-border, #e2e8f0);
   background: var(--color-surface, #ffffff);
   font-size: 0.8125rem;
+  font-family: inherit;
   color: var(--color-text, #0f172a);
   outline: none;
-  transition: border-color 0.14s ease;
+  transition: border-color var(--duration-fast, 120ms) ease, box-shadow var(--duration-fast, 120ms) ease;
 }
 
 .remarksInput:focus {
-  border-color: var(--color-primary, #2563eb);
+  border-color: var(--color-primary, #ea580c);
+  box-shadow: 0 0 0 3px var(--color-primary-glow, rgba(234, 88, 12, 0.12));
 }
 
 .bottomActionRow {
@@ -314,20 +328,21 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  background: var(--color-primary, #2563eb);
+  background: var(--color-primary, #ea580c);
   color: #ffffff;
   border: none;
   padding: 0.65rem 1.5rem;
-  border-radius: 8px;
+  border-radius: var(--radius-sm, 6px);
   font-size: 0.875rem;
+  font-family: inherit;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.25);
-  transition: all 0.14s ease;
+  box-shadow: 0 1px 3px rgba(234, 88, 12, 0.25);
+  transition: all var(--duration-fast, 120ms) ease;
 }
 
 .saveBtn:hover:not(:disabled) {
-  background: var(--color-primary-dark, #1d4ed8);
+  background: #c2410c;
 }
 
 .saveBtn:disabled {
@@ -341,7 +356,7 @@
 
 .alertBox {
   padding: 0.85rem 1.25rem;
-  border-radius: 10px;
+  border-radius: var(--radius-sm, 6px);
   font-size: 0.8125rem;
   font-weight: 600;
   margin-bottom: 1.25rem;
@@ -367,3 +382,6 @@
   text-align: center;
   color: var(--color-muted, #64748b);
 }
+
+/* Decorative gold wave: no metric values encoded. */
+.statCard { background-color:var(--color-surface); background-image:url("/gold-card-wave.svg"); background-repeat:no-repeat; background-position:right bottom; background-size:220px auto; }

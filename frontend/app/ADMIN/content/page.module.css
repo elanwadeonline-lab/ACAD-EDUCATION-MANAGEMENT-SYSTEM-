@@ -7,6 +7,7 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  font-family: var(--font-sans), 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 /* ── KPI Grid ── */
@@ -24,13 +25,13 @@
 
 .kpiCard {
   background: var(--color-surface, #FFFFFF);
-  border: 1px solid var(--color-border, #E2E8F0);
-  border-radius: var(--radius-md, 12px);
-  padding: 1.25rem 1.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 22px;
   display: flex;
   align-items: center;
   gap: 1.25rem;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  box-shadow: none;
   transition: border-color 150ms ease, box-shadow 150ms ease;
 }
 
@@ -40,13 +41,16 @@
 }
 
 .kpiIconWrapper {
-  width: 44px;
-  height: 44px;
-  border-radius: 10px;
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-sm, 6px);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  background: transparent;
+  border: 0;
+  color: var(--color-muted);
 }
 
 .kpiSlate {
@@ -77,18 +81,19 @@
 .kpiValue {
   font-family: var(--font-mono, 'Geist Mono', monospace);
   font-variant-numeric: tabular-nums;
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-size: 2rem;
+  font-weight: 600;
   color: var(--color-text, #0F172A);
   margin-top: 0.15rem;
+  letter-spacing: -.045em;
 }
 
 /* ── Content Card Container ── */
 .contentCard {
-  background: var(--color-surface, #FFFFFF);
-  border: 1px solid var(--color-border, #E2E8F0);
-  border-radius: var(--radius-lg, 16px);
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  box-shadow: none;
   overflow: hidden;
 }
 
@@ -119,6 +124,7 @@
   font-weight: 700;
   color: var(--color-text, #0F172A);
   margin: 0;
+  letter-spacing: -0.01em;
 }
 
 .cardSubtitle {
@@ -158,19 +164,21 @@
 .searchInput {
   width: 100%;
   padding: 0.45rem 0.75rem 0.45rem 2.25rem;
-  font-size: 0.8125rem;
+  font-size: .875rem;
+  font-family: inherit;
   color: var(--color-text, #0F172A);
   background: #F8FAFC;
   border: 1px solid var(--color-border, #E2E8F0);
   border-radius: 8px;
   outline: none;
   transition: all 150ms ease;
+  min-height: 42px;
 }
 
 .searchInput:focus {
   background: #FFFFFF;
-  border-color: #94A3B8;
-  box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.15);
+  border-color: var(--color-primary, #ea580c);
+  box-shadow: 0 0 0 3px var(--color-primary-glow, rgba(234, 88, 12, 0.12));
 }
 
 .filterChips {
@@ -182,8 +190,9 @@
 
 .chip {
   padding: 0.3rem 0.65rem;
-  border-radius: 6px;
+  border-radius: var(--radius-sm, 6px);
   font-size: 0.72rem;
+  font-family: inherit;
   font-weight: 600;
   background: #F1F5F9;
   color: #475569;
@@ -198,9 +207,9 @@
 }
 
 .chipActive {
-  background: #0F172A;
+  background: var(--color-primary, #ea580c);
   color: #FFFFFF;
-  border-color: #0F172A;
+  border-color: var(--color-primary, #ea580c);
 }
 
 /* ── Table Layout ── */
@@ -214,6 +223,7 @@
   border-collapse: collapse;
   text-align: left;
   font-size: 0.8125rem;
+  font-family: inherit;
 }
 
 .table th {
@@ -313,7 +323,7 @@
 /* ── Alerts ── */
 .alertBanner {
   padding: 0.85rem 1.25rem;
-  border-radius: 10px;
+  border-radius: var(--radius-sm, 6px);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -353,6 +363,7 @@
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+  font-family: var(--font-sans), 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 .modalIntro {
@@ -397,6 +408,7 @@
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
   font-size: 0.7rem;
+  font-family: inherit;
   font-weight: 600;
   background: #F1F5F9;
   color: #475569;
@@ -411,27 +423,28 @@
 }
 
 .bodySelectChipActive {
-  background: #0F172A;
+  background: var(--color-primary, #ea580c);
   color: #FFFFFF;
-  border-color: #0F172A;
+  border-color: var(--color-primary, #ea580c);
 }
 
 .modalInput {
   width: 100%;
   padding: 0.55rem 0.75rem;
   font-size: 0.8125rem;
+  font-family: inherit;
   color: #0F172A;
   background: #F8FAFC;
   border: 1px solid #CBD5E1;
-  border-radius: 8px;
+  border-radius: var(--radius-sm, 6px);
   outline: none;
   transition: all 150ms ease;
 }
 
 .modalInput:focus {
   background: #FFFFFF;
-  border-color: #475569;
-  box-shadow: 0 0 0 3px rgba(71, 85, 105, 0.12);
+  border-color: var(--color-primary, #ea580c);
+  box-shadow: 0 0 0 3px var(--color-primary-glow, rgba(234, 88, 12, 0.12));
 }
 
 .subjectSuggestions {
@@ -443,6 +456,7 @@
 
 .subjectHintBtn {
   font-size: 0.68rem;
+  font-family: inherit;
   font-weight: 500;
   padding: 0.15rem 0.4rem;
   border-radius: 4px;
@@ -468,7 +482,7 @@
 .dropzone {
   position: relative;
   border: 2px dashed #CBD5E1;
-  border-radius: 12px;
+  border-radius: var(--radius-md, 8px);
   padding: 1.75rem 1.5rem;
   text-align: center;
   background: #F8FAFC;
@@ -482,8 +496,8 @@
 
 .dropzone:hover,
 .dropzoneActive {
-  border-color: #64748B;
-  background: #F1F5F9;
+  border-color: var(--color-primary, #ea580c);
+  background: rgba(234, 88, 12, 0.04);
 }
 
 .dropzoneHasFile {

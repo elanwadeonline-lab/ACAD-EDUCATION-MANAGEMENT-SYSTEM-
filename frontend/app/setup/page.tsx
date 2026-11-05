@@ -2,13 +2,14 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { api } from "../../lib/api";
+import { api, API_BASE } from "../../lib/api";
 import { useAuth } from "../../hooks/useAuth";
 import {
   WarningIcon,
   CheckCircleIcon,
   ShieldCheckIcon,
   ActivityIcon,
+  AcadBrandIcon,
 } from "../../components/icons/Icons";
 import styles from "./page.module.css";
 
@@ -23,16 +24,35 @@ export default function SetupPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [checkError, setCheckError] = useState("");
+  const [checkAttempt, setCheckAttempt] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [step, setStep] = useState<1 | 2 | 3>(1);
 
   useEffect(() => {
-    fetch("/api/setup", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" })
+    const controller = new AbortController();
+    // Never spin forever: if the backend/proxy doesn't answer within 10s,
+    // show an actionable error with a retry button instead of hanging.
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    setLoading(true);
+    setCheckError("");
+    const targetUrl = API_BASE ? `${API_BASE}/api/setup` : "/api/setup";
+    fetch(targetUrl, { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}", signal: controller.signal })
       .then((res) => {
         if (res.status === 403) router.replace("/");
       })
-      .finally(() => setLoading(false));
-  }, [router]);
+      .catch(() => {
+        setCheckError("Could not reach the local server. Make sure the backend is running (bun server.ts on port 8001) and retry.");
+      })
+      .finally(() => {
+        clearTimeout(timeoutId);
+        setLoading(false);
+      });
+    return () => {
+      clearTimeout(timeoutId);
+      controller.abort();
+    };
+  }, [router, checkAttempt]);
 
   const onStep1Submit = (e: FormEvent) => {
     e.preventDefault();
@@ -83,6 +103,27 @@ export default function SetupPage() {
     );
   }
 
+  if (checkError) {
+    return (
+      <main className={styles.loadingPage}>
+        <div className={styles.loadingSpinnerWrap} style={{ maxWidth: "26rem", textAlign: "center" }}>
+          <span className={styles.loadingText} style={{ color: "#b91c1c" }}>{checkError}</span>
+          <button
+            type="button"
+            onClick={() => setCheckAttempt((n) => n + 1)}
+            style={{
+              marginTop: "1rem", padding: "0.625rem 1.5rem", borderRadius: "0.5rem",
+              border: "none", background: "var(--color-primary, #0F766E)", color: "#fff",
+              fontWeight: 600, cursor: "pointer",
+            }}
+          >
+            Retry connection
+          </button>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <div className={styles.setupLayout}>
       {/* Top Admin Bar */}
@@ -90,14 +131,12 @@ export default function SetupPage() {
         <div className={styles.topHeaderContent}>
           <div className={styles.brandRow}>
             <div className={styles.brandBadge}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" />
-              </svg>
+              <AcadBrandIcon width={22} height={22} />
             </div>
             <div>
-              <span className={styles.brandTitle}>ACAD</span>
+              <span className={styles.brandTitle}>Acqad</span>
               <span className={styles.brandDivider}>/</span>
-              <span className={styles.brandSubtitle}>Academic Assessment & Administration</span>
+              <span className={styles.brandSubtitle}>Academic Coordination, Quality & Administration</span>
             </div>
           </div>
 

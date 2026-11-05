@@ -1,9 +1,11 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { AuthProvider } from "../hooks/useAuth";
 import "../styles/globals.css";
 
 import { ToastProvider } from "../hooks/useToast";
+
+export const viewport: Viewport = { width: "device-width", initialScale: 1, viewportFit: "cover" };
 
 export const metadata: Metadata = {
   title: "ACAD LAN - Academic Assessment Platform",
@@ -18,13 +20,13 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <meta httpEquiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
         <meta httpEquiv="Pragma" content="no-cache" />
         <meta httpEquiv="Expires" content="0" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta
           httpEquiv="Content-Security-Policy"
           content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self';"
         />
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#0D9488" />
+        <meta name="theme-color" content="#92400E" />
         <script
           dangerouslySetInnerHTML={{
             __html: `

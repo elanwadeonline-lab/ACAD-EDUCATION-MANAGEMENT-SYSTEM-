@@ -114,6 +114,24 @@ export async function clearPendingSubmissions() {
   });
 }
 
+export async function deletePendingSubmissionsByIds(ids: (number | string)[]) {
+  if (!ids || ids.length === 0) return;
+  const db = await openOfflineDB();
+  return new Promise<void>((resolve, reject) => {
+    const tx = db.transaction("submissions", "readwrite");
+    const store = tx.objectStore("submissions");
+    for (const id of ids) {
+      try {
+        store.delete(id);
+      } catch (e) {
+        console.error("[offlineSync] Failed to delete submission id", id, e);
+      }
+    }
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
 // ── Uploads Queue ────────────────────────────────────────────────────────────
 export async function queueFileUpload(file: File, question_id: number): Promise<string> {
   const db = await openOfflineDB();

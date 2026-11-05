@@ -1,4 +1,4 @@
-/* ── License Management Module Styles ── */
+/* ── ACQAD License & Security Module (Refined Institutional Design) ── */
 
 .container {
   max-width: 1080px;
@@ -11,25 +11,24 @@
 
 /* ── Hero Status Card ── */
 .heroCard {
-  background: var(--color-surface, #FFFFFF);
-  border: 1px solid var(--color-border, #E2E8F0);
-  border-radius: var(--radius-lg, 16px);
-  padding: 1.75rem;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 1.5rem;
+  box-shadow: none;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.25rem;
   position: relative;
   overflow: hidden;
 }
 
 .heroActivated {
-  border-color: #CBD5E1;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  border-color: var(--color-border-hover, #CBD5E1);
 }
 
 .heroUnlicensed {
-  border-color: #E2E8F0;
+  border-color: var(--color-border, #E2E8F0);
 }
 
 .heroTop {
@@ -53,9 +52,9 @@
 }
 
 .heroIconBadge {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -63,13 +62,13 @@
 }
 
 .heroIconActive {
-  background: var(--color-surface-2, #F1F5F9);
-  color: var(--color-text, #0F172A);
+  background: var(--color-surface-2, #F8FAFC);
+  color: var(--color-primary, #EA580C);
   border: 1px solid var(--color-border, #E2E8F0);
 }
 
 .heroIconNeutral {
-  background: var(--color-surface-2, #F1F5F9);
+  background: var(--color-surface-2, #F8FAFC);
   color: var(--color-muted, #64748B);
   border: 1px solid var(--color-border, #E2E8F0);
 }
@@ -81,16 +80,16 @@
 
 .heroEyebrow {
   font-size: 0.6875rem;
-  font-weight: 700;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #64748B;
+  letter-spacing: 0.05em;
+  color: var(--color-muted, #64748B);
 }
 
 .heroTitle {
-  font-size: 1.25rem;
+  font-size: 1.125rem;
   font-weight: 700;
-  color: #0F172A;
+  color: var(--color-text, #0F172A);
   letter-spacing: -0.01em;
   margin: 0;
 }
@@ -99,11 +98,11 @@
 .metaGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
-  background: #F8FAFC;
-  border: 1px solid #E2E8F0;
-  border-radius: 12px;
-  padding: 1.25rem;
+  gap: 0.875rem;
+  background: var(--color-surface-2, #F8FAFC);
+  border: 1px solid var(--color-border, #E2E8F0);
+  border-radius: 6px;
+  padding: 1rem 1.25rem;
 }
 
 @media (min-width: 768px) {
@@ -115,34 +114,35 @@
 .metaItem {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.2rem;
 }
 
 .metaLabel {
-  font-size: 0.7rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #64748B;
+  color: var(--color-muted, #64748B);
 }
 
 .metaValue {
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 600;
-  color: #0F172A;
+  color: var(--color-text, #0F172A);
 }
 
 .metaMono {
-  font-family: var(--font-mono, 'Geist Mono', monospace);
+  font-family: var(--font-mono, monospace);
+  font-variant-numeric: tabular-nums;
 }
 
 /* ── Hardware Fingerprint Card ── */
 .fingerprintCard {
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  border-radius: 16px;
-  padding: 1.5rem;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  box-shadow: none;
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -161,15 +161,15 @@
 }
 
 .cardTitle {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: #0F172A;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text, #0F172A);
   margin: 0;
 }
 
 .cardSubtitle {
-  font-size: 0.78rem;
-  color: #64748B;
+  font-size: 0.75rem;
+  color: var(--color-muted, #64748B);
   margin: 0.15rem 0 0 0;
 }
 
@@ -184,31 +184,32 @@
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  padding: 0.25rem 0.6rem;
-  border-radius: 6px;
-  background: #F1F5F9;
-  font-size: 0.72rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  background: var(--color-surface-2, #F1F5F9);
+  border: 1px solid var(--color-border, #E2E8F0);
+  font-size: 0.6875rem;
 }
 
 .specKey {
   font-weight: 600;
-  color: #64748B;
+  color: var(--color-muted, #64748B);
 }
 
 .specVal {
-  font-family: var(--font-mono, 'Geist Mono', monospace);
+  font-family: var(--font-mono, monospace);
   font-weight: 600;
-  color: #1E293B;
+  color: var(--color-text, #0F172A);
 }
 
 .fingerprintBox {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  background: #F8FAFC;
-  border: 1px solid #E2E8F0;
-  border-radius: 10px;
-  padding: 0.85rem 1rem;
+  background: var(--color-surface-2, #F8FAFC);
+  border: 1px solid var(--color-border, #E2E8F0);
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
 }
 
 @media (min-width: 640px) {
@@ -220,11 +221,11 @@
 }
 
 .fingerprintCode {
-  font-family: var(--font-mono, 'Geist Mono', monospace);
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: #0F172A;
-  letter-spacing: 0.05em;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text, #0F172A);
+  letter-spacing: 0.04em;
 }
 
 .copyButton {
@@ -235,12 +236,12 @@
   display: flex;
   align-items: flex-start;
   gap: 0.6rem;
-  background: #F8FAFC;
-  border: 1px solid #E2E8F0;
-  border-radius: 8px;
+  background: var(--color-surface-2, #F8FAFC);
+  border: 1px solid var(--color-border, #E2E8F0);
+  border-radius: 6px;
   padding: 0.75rem 1rem;
-  font-size: 0.78rem;
-  color: #475569;
+  font-size: 0.75rem;
+  color: var(--color-text-2, #475569);
   line-height: 1.45;
 }
 
@@ -252,9 +253,9 @@
 }
 
 .sectionHeading {
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: #0F172A;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text, #0F172A);
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -274,33 +275,32 @@
 }
 
 .featureCard {
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  border-radius: 12px;
-  padding: 1.1rem 1.25rem;
+  background: var(--color-surface, #FFFFFF);
+  border: 1px solid var(--color-border, #E2E8F0);
+  border-radius: var(--radius-md, 8px);
+  padding: 1rem 1.125rem;
   display: flex;
   align-items: flex-start;
-  gap: 0.85rem;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+  gap: 0.75rem;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
 }
 
 .featureIcon {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  background: #F1F5F9;
-  color: #475569;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: var(--color-surface-2, #F1F5F9);
+  color: var(--color-muted, #64748B);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  margin-top: 0.1rem;
 }
 
 .featureContent {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.2rem;
   flex: 1;
 }
 
@@ -312,24 +312,24 @@
 
 .featureTitle {
   font-size: 0.8125rem;
-  font-weight: 700;
-  color: #0F172A;
+  font-weight: 600;
+  color: var(--color-text, #0F172A);
 }
 
 .featureDesc {
   font-size: 0.75rem;
-  color: #64748B;
+  color: var(--color-muted, #64748B);
   line-height: 1.4;
   margin: 0;
 }
 
 /* ── Upload Master License File ── */
 .uploadCard {
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  border-radius: 16px;
-  padding: 1.5rem;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  box-shadow: none;
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -337,11 +337,11 @@
 
 .dropzone {
   position: relative;
-  border: 2px dashed #CBD5E1;
-  border-radius: 12px;
-  padding: 1.75rem 1.5rem;
+  border: 1.5px dashed var(--color-border-hover, #CBD5E1);
+  border-radius: 8px;
+  padding: 1.5rem;
   text-align: center;
-  background: #F8FAFC;
+  background: var(--color-surface-2, #F8FAFC);
   transition: all 150ms ease;
   display: flex;
   flex-direction: column;
@@ -352,8 +352,8 @@
 
 .dropzone:hover,
 .dropzoneActive {
-  border-color: #64748B;
-  background: #F1F5F9;
+  border-color: var(--color-primary, #EA580C);
+  background: rgba(234, 88, 12, 0.03);
 }
 
 .dropzoneFileInput {
@@ -368,28 +368,28 @@
 }
 
 .dropzoneIcon {
-  color: #64748B;
+  color: var(--color-muted, #64748B);
   margin-bottom: 0.5rem;
 }
 
 .dropzoneTitle {
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 600;
-  color: #0F172A;
+  color: var(--color-text, #0F172A);
 }
 
 .dropzoneSub {
   font-size: 0.75rem;
-  color: #64748B;
-  margin-top: 0.25rem;
+  color: var(--color-muted, #64748B);
+  margin-top: 0.2rem;
 }
 
 /* ── Stepper Guide ── */
 .stepperCard {
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  border-radius: 16px;
-  padding: 1.5rem;
+  background: var(--color-surface, #FFFFFF);
+  border: 1px solid var(--color-border, #E2E8F0);
+  border-radius: var(--radius-md, 8px);
+  padding: 1.25rem 1.5rem;
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -398,7 +398,7 @@
 .stepsGrid {
   display: grid;
   grid-template-columns: repeat(1, minmax(0, 1fr));
-  gap: 1rem;
+  gap: 0.875rem;
 }
 
 @media (min-width: 640px) {
@@ -410,37 +410,37 @@
 .stepItem {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  background: #F8FAFC;
-  border: 1px solid #E2E8F0;
-  border-radius: 10px;
-  padding: 1rem;
+  gap: 0.25rem;
+  background: var(--color-surface-2, #F8FAFC);
+  border: 1px solid var(--color-border, #E2E8F0);
+  border-radius: 6px;
+  padding: 0.875rem;
 }
 
 .stepNumber {
   font-size: 0.65rem;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.05em;
-  color: #64748B;
+  color: var(--color-muted, #64748B);
 }
 
 .stepTitle {
   font-size: 0.8125rem;
-  font-weight: 700;
-  color: #0F172A;
+  font-weight: 600;
+  color: var(--color-text, #0F172A);
 }
 
 .stepText {
   font-size: 0.75rem;
-  color: #64748B;
+  color: var(--color-muted, #64748B);
   line-height: 1.4;
   margin: 0;
 }
 
 /* ── Alerts & Loading ── */
 .alertBanner {
-  padding: 0.85rem 1.25rem;
-  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -449,15 +449,15 @@
 }
 
 .alertError {
-  background: #FEF2F2;
-  border: 1px solid #FCA5A5;
-  color: #991B1B;
+  background: rgba(220, 38, 38, 0.05);
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  color: var(--color-danger, #DC2626);
 }
 
 .alertSuccess {
-  background: #F0FDF4;
-  border: 1px solid #86EFAC;
-  color: #166534;
+  background: rgba(22, 163, 74, 0.05);
+  border: 1px solid rgba(22, 163, 74, 0.2);
+  color: var(--color-success, #16A34A);
 }
 
 .alertClose {
@@ -467,19 +467,13 @@
   font-weight: 600;
   color: inherit;
   cursor: pointer;
-  opacity: 0.8;
-}
-
-.alertClose:hover {
-  opacity: 1;
-  text-decoration: underline;
 }
 
 .loadingContainer {
-  padding: 4rem 2rem;
+  padding: 3rem 2rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }

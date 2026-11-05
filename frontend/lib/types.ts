@@ -207,6 +207,37 @@ export interface StudentTelemetry {
   rank: number;
   cohortTotal: number;
   cohortName: string;
+  // Gamification layer (XP levels, achievements, leaderboard)
+  xp?: number;
+  level?: number;
+  levelTitle?: string;
+  nextLevelXp?: number | null;
+  xpIntoLevel?: number;
+  xpToNext?: number;
+  levelProgressPct?: number;
+  pointsBreakdown?: { examScorePoints: number; examBonus: number; practicePoints: number };
+  badges?: GamificationBadge[];
+  leaderboard?: CohortLeaderboardEntry[];
+}
+
+export interface GamificationBadge {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+  target: number;
+  progress: number;
+  unlocked: boolean;
+}
+
+export interface CohortLeaderboardEntry {
+  student_id: number;
+  name: string;
+  points: number;
+  level: number;
+  levelTitle: string;
+  rank: number;
+  is_self: boolean;
 }
 
 export interface PracticeReviewItem {

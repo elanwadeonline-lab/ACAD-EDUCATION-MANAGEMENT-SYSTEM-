@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ACQAD / eCard — Client Product Demo Theater & Visuals Gallery</title>
+  <style>
+    :root {
+      --bg: #090d16;
+      --card: #111827;
+      --card-border: #1f293d;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --primary: #0284c7;
+      --primary-light: #38bdf8;
+      --accent: #10b981;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 24px;
+    }
+    header {
+      max-width: 1400px;
+      margin: 0 auto 32px auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 20px;
+    }
+    .badge {
+      background: rgba(2, 132, 199, 0.15);
+      border: 1px solid var(--primary);
+      color: var(--primary-light);
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      display: inline-block;
+      margin-bottom: 8px;
+    }
+    h1 { font-size: 28px; font-weight: 700; color: #fff; }
+    p.lead { color: var(--text-muted); font-size: 15px; margin-top: 4px; }
+    .container { max-width: 1400px; margin: 0 auto; }
+    
+    .video-hero {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 40px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    }
+    .video-hero-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .video-title { font-size: 20px; font-weight: 600; color: #fff; }
+    .video-meta { font-size: 14px; color: var(--text-muted); }
+    .video-meta span { color: var(--accent); font-weight: 600; }
+    
+    video {
+      width: 100%;
+      max-height: 720px;
+      border-radius: 12px;
+      background: #000;
+      outline: none;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+    }
+
+    .timeline-quicklinks {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--card-border);
+    }
+    .scene-pill {
+      background: #1e293b;
+      color: #cbd5e1;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.2s;
+    }
+    .scene-pill:hover {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary-light);
+    }
+
+    .section-title {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .section-title::before {
+      content: "";
+      width: 4px;
+      height: 24px;
+      background: var(--primary);
+      border-radius: 2px;
+    }
+
+    .gallery-filter {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .filter-btn {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .filter-btn.active, .filter-btn:hover {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 20px;
+    }
+    .screenshot-card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: transform 0.2s, border-color 0.2s;
+      cursor: pointer;
+    }
+    .screenshot-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--primary);
+      box-shadow: 0 12px 24px rgba(2, 132, 199, 0.2);
+    }
+    .card-preview {
+      width: 100%;
+      height: 220px;
+      object-fit: cover;
+      background: #000;
+      display: block;
+    }
+    .card-body { padding: 16px; }
+    .card-tag {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--primary-light);
+      margin-bottom: 4px;
+    }
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 4px;
+    }
+    .card-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      height: 38px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.9);
+      z-index: 1000;
+      padding: 40px;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+    .modal.active { display: flex; }
+    .modal img {
+      max-width: 95%;
+      max-height: 85vh;
+      border-radius: 8px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+      border: 1px solid #334155;
+    }
+    .modal-caption {
+      margin-top: 16px;
+      color: #fff;
+      font-size: 16px;
+      text-align: center;
+    }
+    .close-modal {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      color: #fff;
+      font-size: 32px;
+      cursor: pointer;
+      background: none;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div>
+      <div class="badge">ACQAD / eCard School Management System</div>
+      <h1>Official Product Demonstration & Visuals Theater</h1>
+      <p class="lead">Full 7m40s Presentation Video with Synced Narration, Subtitles, and 77 Verified Screenshots</p>
+    </div>
+    <div>
+      <a href="final/ACQAD-Client-Demo.mp4" download class="filter-btn active" style="text-decoration:none; display:inline-block;">
+        ↓ Download MP4 (10.37 MB)
+      </a>
+    </div>
+  </header>
+
+  <div class="container">
+    
+    <!-- Video Player Section -->
+    <div class="video-hero">
+      <div class="video-hero-header">
+        <div class="video-title">🎬 ACQAD Client Product Demonstration (Full 10-Module Overview)</div>
+        <div class="video-meta">Duration: <span>07:40</span> &nbsp;|&nbsp; Quality: <span>1080p Full HD</span> &nbsp;|&nbsp; FPS: <span>30</span></div>
+      </div>
+
+      <video id="demoVideo" controls preload="metadata">
+        <source src="final/ACQAD-Client-Demo.mp4" type="video/mp4">
+        <track label="English" kind="subtitles" srclang="en" src="captions/subtitles.srt" default>
+        Your browser does not support HTML5 video.
+      </video>
+
+      <div class="timeline-quicklinks">
+        <span style="font-size:13px; color:var(--text-muted); align-self:center; font-weight:600;">Jump to Scene:</span>
+        <button class="scene-pill" onclick="seek(0)">00:00 Intro</button>
+        <button class="scene-pill" onclick="seek(20)">00:20 Administration</button>
+        <button class="scene-pill" onclick="seek(60)">01:00 School Mgmt</button>
+        <button class="scene-pill" onclick="seek(95)">01:35 Teacher</button>
+        <button class="scene-pill" onclick="seek(130)">02:10 CBT Engine</button>
+        <button class="scene-pill" onclick="seek(175)">02:55 Student</button>
+        <button class="scene-pill" onclick="seek(210)">03:30 Results</button>
+        <button class="scene-pill" onclick="seek(255)">04:15 Guardian</button>
+        <button class="scene-pill" onclick="seek(290)">04:50 Communication</button>
+        <button class="scene-pill" onclick="seek(315)">05:15 Offline LAN</button>
+        <button class="scene-pill" onclick="seek(350)">05:50 Control Plane</button>
+        <button class="scene-pill" onclick="seek(380)">06:20 Full Workflow</button>
+        <button class="scene-pill" onclick="seek(425)">07:05 Deployment</button>
+      </div>
+    </div>
+
+    <!-- Gallery Section -->
+    <div class="section-title">🖼️ Verified Application Screenshots (77 Captures)</div>
+    
+    <div class="gallery-filter">
+      <button class="filter-btn active" onclick="filterGallery('all')">All (77)</button>
+      <button class="filter-btn" onclick="filterGallery('Admin')">Admin (22)</button>
+      <button class="filter-btn" onclick="filterGallery('Teacher')">Teacher (15)</button>
+      <button class="filter-btn" onclick="filterGallery('Student')">Student (16)</button>
+      <button class="filter-btn" onclick="filterGallery('Guardian')">Guardian Mobile & Desktop (18)</button>
+      <button class="filter-btn" onclick="filterGallery('Assessment')">CBT & Exam (6)</button>
+    </div>
+
+    <div class="gallery-grid" id="galleryGrid"></div>
+
+  </div>
+
+  <!-- Modal Lightbox -->
+  <div class="modal" id="imageModal" onclick="closeModal()">
+    <button class="close-modal">&times;</button>
+    <img id="modalImg" src="" alt="Screenshot preview">
+    <div class="modal-caption" id="modalCaption"></div>
+  </div>
+
+  <script>
+    function seek(sec) {
+      const vid = document.getElementById('demoVideo');
+      vid.currentTime = sec;
+      vid.play();
+    }
+
+    const manifestData = [{"filename":"A01_admin_dashboard.png","role":"Administrator","module":"Administration","purpose":"Institutional overview with active session/term and KPIs","route":"/ADMIN/dashboard/","viewport":"1920x1080@1x","fileSizeKB":155,"capturedAt":"2026-11-03T17:22:19.289Z"},{"filename":"A02_admin_academic-sessions.png","role":"Administrator","module":"School Management","purpose":"Academic sessions and terms","route":"/ADMIN/academic-sessions/","viewport":"1920x1080@1x","fileSizeKB":95,"capturedAt":"2026-11-03T17:23:23.309Z"},{"filename":"A06_admin_class-teachers.png","role":"Administrator","module":"School Management","purpose":"Class teacher assignment and history","route":"/ADMIN/class-teachers/","viewport":"1920x1080@1x","fileSizeKB":143,"capturedAt":"2026-11-03T17:25:40.732Z"},{"filename":"A07_admin_subjects.png","role":"Administrator","module":"School Management","purpose":"Subject registry, teacher assignment and enrollment","route":"/ADMIN/subjects/","viewport":"1920x1080@1x","fileSizeKB":186,"capturedAt":"2026-11-03T17:26:36.429Z"},{"filename":"A08_admin_users.png","role":"Administrator","module":"Administration","purpose":"User management across all roles","route":"/ADMIN/users/","viewport":"1920x1080@1x","fileSizeKB":149,"capturedAt":"2026-11-03T17:27:33.795Z"},{"filename":"A09_admin_users-guardians.png","role":"Administrator","module":"Guardian","purpose":"Guardian accounts and ward links","route":"/ADMIN/users/","viewport":"1920x1080@1x","fileSizeKB":158,"capturedAt":"2026-11-03T17:28:00.851Z"},{"filename":"A10_admin_timetable.png","role":"Administrator","module":"Assessment & Examination","purpose":"Examination timetable scheduling","route":"/ADMIN/timetable/","viewport":"1920x1080@1x","fileSizeKB":138,"capturedAt":"2026-11-03T17:28:59.081Z"},{"filename":"A11_admin_content-bank.png","role":"Administrator","module":"Assessment & Examination","purpose":"Past-question content bank import & search","route":"/ADMIN/content/","viewport":"1920x1080@1x","fileSizeKB":106,"capturedAt":"2026-11-03T17:29:55.942Z"},{"filename":"A12_admin_annual-results.png","role":"Administrator","module":"Results & Analytics","purpose":"Annual results computation & promotion","route":"/ADMIN/annual-results/","viewport":"1920x1080@1x","fileSizeKB":93,"capturedAt":"2026-11-03T17:30:51.135Z"},{"filename":"A13_admin_report-card.png","role":"Administrator","module":"Results & Analytics","purpose":"Report card workspace","route":"/ADMIN/report-card/","viewport":"1920x1080@1x","fileSizeKB":156,"capturedAt":"2026-11-03T17:31:48.481Z"},{"filename":"A14_admin_report-card-open.png","role":"Administrator","module":"Results & Analytics","purpose":"Opened report card for a student","route":"/ADMIN/report-card/","viewport":"1920x1080@1x","fileSizeKB":108,"capturedAt":"2026-11-03T17:32:14.940Z"},{"filename":"A15_admin_messages.png","role":"Administrator","module":"Communication & Notifications","purpose":"Administrative guardian messaging inbox","route":"/ADMIN/messages/","viewport":"1920x1080@1x","fileSizeKB":142,"capturedAt":"2026-11-03T17:33:13.273Z"},{"filename":"A16_admin_notifications.png","role":"Administrator","module":"Communication & Notifications","purpose":"Notification centre","route":"/ADMIN/notifications/","viewport":"1920x1080@1x","fileSizeKB":121,"capturedAt":"2026-11-03T17:34:11.370Z"},{"filename":"A17_admin_kiosk-monitor.png","role":"Administrator","module":"Offline & Synchronisation","purpose":"Kiosk terminal fleet monitor (LAN)","route":"/ADMIN/kiosk-dashboard/","viewport":"1920x1080@1x","fileSizeKB":67,"capturedAt":"2026-11-03T17:35:09.209Z"},{"filename":"A18_admin_settings.png","role":"Administrator","module":"Administration","purpose":"School configuration and branding","route":"/ADMIN/settings/","viewport":"1920x1080@1x","fileSizeKB":132,"capturedAt":"2026-11-03T17:36:08.502Z"},{"filename":"A19_admin_settings-network.png","role":"Administrator","module":"Offline & Synchronisation","purpose":"LAN network & zero-config domain access (IPs redacted)","route":"/ADMIN/settings/","viewport":"1920x1080@1x","fileSizeKB":146,"capturedAt":"2026-11-03T17:36:34.907Z"},{"filename":"A20_admin_settings-backup.png","role":"Administrator","module":"Offline & Synchronisation","purpose":"Database backup and restore","route":"/ADMIN/settings/","viewport":"1920x1080@1x","fileSizeKB":119,"capturedAt":"2026-11-03T17:37:01.254Z"},{"filename":"A21_admin_license.png","role":"Administrator","module":"Control Plane & Monitoring","purpose":"License & hardware binding (host identity redacted)","route":"/ADMIN/license/","viewport":"1920x1080@1x","fileSizeKB":156,"capturedAt":"2026-11-03T17:37:57.006Z"},{"filename":"A22_admin_entitlements-json.png","role":"Technical Administrator","module":"Control Plane & Monitoring","purpose":"Live entitlements/feature flags synchronised from the Control Plane (raw API view)","route":"/api/system/entitlements","viewport":"1920x1080@1x","fileSizeKB":22,"capturedAt":"2026-11-03T17:38:49.253Z"},{"filename":"G01_guardian_dashboard_desktop.png","role":"Guardian","module":"Guardian","purpose":"Guardian dashboard on desktop","route":"/guardian/dashboard/","viewport":"1920x1080@1x","fileSizeKB":105,"capturedAt":"2026-11-03T18:21:06.219Z"},{"filename":"G02_guardian_performance_desktop.png","role":"Guardian","module":"Results & Analytics","purpose":"Guardian performance analytics on desktop","route":"/guardian/performance/","viewport":"1920x1080@1x","fileSizeKB":69,"capturedAt":"2026-11-03T18:22:07.129Z"},{"filename":"G03_guardian_messages_desktop.png","role":"Guardian","module":"Communication & Notifications","purpose":"Guardian messaging on desktop","route":"/guardian/messages/","viewport":"1920x1080@1x","fileSizeKB":79,"capturedAt":"2026-11-03T18:23:04.745Z"},{"filename":"M01_guardian-login_mobile.png","role":"Public","module":"Guardian","purpose":"Guardian sign-in on a phone","route":"/guardian/","viewport":"390x844@2x","fileSizeKB":52,"capturedAt":"2026-11-03T16:55:43.205Z"},{"filename":"M02_student-login_mobile.png","role":"Public","module":"Student","purpose":"Student sign-in on a phone","route":"/","viewport":"390x844@2x","fileSizeKB":54,"capturedAt":"2026-11-03T16:55:47.849Z"},{"filename":"M10_student_dashboard_mobile.png","role":"Student","module":"Student","purpose":"Student dashboard on a phone","route":"/student/dashboard/","viewport":"390x844@2x","fileSizeKB":162,"capturedAt":"2026-11-03T18:01:03.981Z"},{"filename":"M11_student_results_mobile.png","role":"Student","module":"Results & Analytics","purpose":"Student results on a phone","route":"/student/results/","viewport":"390x844@2x","fileSizeKB":120,"capturedAt":"2026-11-03T18:02:01.033Z"},{"filename":"M20_guardian_dashboard_mobile.png","role":"Guardian","module":"Guardian","purpose":"Family overview on a phone","route":"/guardian/dashboard/","viewport":"390x844@2x","fileSizeKB":113,"capturedAt":"2026-11-03T18:08:12.286Z"},{"filename":"M21_guardian_switch-child_mobile.png","role":"Guardian","module":"Guardian","purpose":"Switch between linked children","route":"/guardian/dashboard/","viewport":"390x844@2x","fileSizeKB":111,"capturedAt":"2026-11-03T18:08:14.379Z"},{"filename":"M22_guardian_wards_mobile.png","role":"Guardian","module":"Guardian","purpose":"Linked children (mobile)","route":"/guardian/wards/","viewport":"390x844@2x","fileSizeKB":116,"capturedAt":"2026-11-03T18:08:34.897Z"},{"filename":"M23_guardian_performance_mobile.png","role":"Guardian","module":"Results & Analytics","purpose":"Academic performance (mobile)","route":"/guardian/performance/","viewport":"390x844@2x","fileSizeKB":125,"capturedAt":"2026-11-03T18:09:30.476Z"},{"filename":"M24_guardian_results_mobile.png","role":"Guardian","module":"Results & Analytics","purpose":"Released results (mobile)","route":"/guardian/results/","viewport":"390x844@2x","fileSizeKB":168,"capturedAt":"2026-11-03T18:10:27.108Z"},{"filename":"M25_guardian_reports_mobile.png","role":"Guardian","module":"Results & Analytics","purpose":"Report cards (mobile)","route":"/guardian/reports/","viewport":"390x844@2x","fileSizeKB":110,"capturedAt":"2026-11-03T18:11:23.912Z"},{"filename":"M26_guardian_examinations_mobile.png","role":"Guardian","module":"Guardian","purpose":"Upcoming examinations (mobile)","route":"/guardian/examinations/","viewport":"390x844@2x","fileSizeKB":135,"capturedAt":"2026-11-03T18:12:19.615Z"},{"filename":"M27_guardian_attendance_mobile.png","role":"Guardian","module":"Guardian","purpose":"Attendance (mobile)","route":"/guardian/attendance/","viewport":"390x844@2x","fileSizeKB":97,"capturedAt":"2026-11-03T18:13:15.481Z"},{"filename":"M28_guardian_fees_mobile.png","role":"Guardian","module":"Guardian","purpose":"Fees (mobile)","route":"/guardian/fees/","viewport":"390x844@2x","fileSizeKB":94,"capturedAt":"2026-11-03T18:14:14.684Z"},{"filename":"M29_guardian_messages_mobile.png","role":"Guardian","module":"Communication & Notifications","purpose":"Messages with the school (mobile)","route":"/guardian/messages/","viewport":"390x844@2x","fileSizeKB":143,"capturedAt":"2026-11-03T18:15:13.846Z"},{"filename":"M30_guardian_announcements_mobile.png","role":"Guardian","module":"Communication & Notifications","purpose":"School announcements (mobile)","route":"/guardian/announcements/","viewport":"390x844@2x","fileSizeKB":144,"capturedAt":"2026-11-03T18:16:21.938Z"},{"filename":"M31_guardian_notifications_mobile.png","role":"Guardian","module":"Communication & Notifications","purpose":"Notifications (mobile)","route":"/guardian/notifications/","viewport":"390x844@2x","fileSizeKB":143,"capturedAt":"2026-11-03T18:17:28.489Z"},{"filename":"M32_guardian_calendar_mobile.png","role":"Guardian","module":"Guardian","purpose":"School calendar (mobile)","route":"/guardian/calendar/","viewport":"390x844@2x","fileSizeKB":134,"capturedAt":"2026-11-03T18:18:24.125Z"},{"filename":"M33_guardian_links_mobile.png","role":"Guardian","module":"Guardian","purpose":"Link another child (mobile)","route":"/guardian/links/","viewport":"390x844@2x","fileSizeKB":143,"capturedAt":"2026-11-03T18:19:17.604Z"},{"filename":"M34_guardian_settings_mobile.png","role":"Guardian","module":"Guardian","purpose":"Profile & preferences (mobile)","route":"/guardian/settings/","viewport":"390x844@2x","fileSizeKB":119,"capturedAt":"2026-11-03T18:20:10.968Z"},{"filename":"S01_brand_student-login_desktop.png","role":"Public","module":"Branding / Authentication","purpose":"Opening view — ACQAD student sign-in with brand identity","route":"/","viewport":"1920x1080@1x","fileSizeKB":223,"capturedAt":"2026-11-03T16:55:00.748Z"},{"filename":"S02_brand_admin-login_desktop.png","role":"Public","module":"Administration","purpose":"Administration portal sign-in","route":"/ADMIN/","viewport":"1920x1080@1x","fileSizeKB":221,"capturedAt":"2026-11-03T16:55:17.121Z"},{"filename":"S03_brand_teacher-login_desktop.png","role":"Public","module":"Teacher","purpose":"Teacher portal sign-in","route":"/teacher/","viewport":"1920x1080@1x","fileSizeKB":223,"capturedAt":"2026-11-03T16:55:22.880Z"},{"filename":"S04_brand_guardian-login_desktop.png","role":"Public","module":"Guardian","purpose":"Guardian portal sign-in","route":"/guardian/","viewport":"1920x1080@1x","fileSizeKB":223,"capturedAt":"2026-11-03T16:55:27.562Z"},{"filename":"S05_offline_fallback_desktop.png","role":"Public","module":"Offline & Synchronisation","purpose":"PWA offline fallback screen shown when the school server is unreachable","route":"http://localhost:3100/?redirect=%2F%7Eoffline%2F","viewport":"1920x1080@1x","fileSizeKB":223,"capturedAt":"2026-11-03T16:55:32.428Z"},{"filename":"S06_exam_kiosk-terminal_desktop.png","role":"Public","module":"Assessment & Examination","purpose":"Lockdown kiosk terminal entry for exam halls","route":"/kiosk/","viewport":"1920x1080@1x","fileSizeKB":34,"capturedAt":"2026-11-03T16:55:38.010Z"},{"filename":"S90_controlplane_api-health_desktop.png","role":"Technical Administrator","module":"Control Plane & Monitoring","purpose":"Live ACAD Supervisory Control Plane API health response (deployed service is API-only)","route":"https://acad-controll.onrender.com/","viewport":"1920x1080@1x","fileSizeKB":15,"capturedAt":"2026-11-03T16:55:51.433Z"},{"filename":"ST01_student_dashboard.png","role":"Student","module":"Student","purpose":"Learning insights dashboard","route":"/student/dashboard/","viewport":"1920x1080@1x","fileSizeKB":148,"capturedAt":"2026-11-03T18:05:37.589Z"},{"filename":"ST02_student_examinations.png","role":"Student","module":"Assessment & Examination","purpose":"Available assessments & timetable","route":"/student/examinations/","viewport":"1920x1080@1x","fileSizeKB":42,"capturedAt":"2026-11-03T18:05:45.470Z"},{"filename":"ST04_student_results.png","role":"Student","module":"Results & Analytics","purpose":"Released results","route":"/student/results/","viewport":"1920x1080@1x","fileSizeKB":113,"capturedAt":"2026-11-03T18:05:53.192Z"},{"filename":"ST05_student_report-card.png","role":"Student","module":"Results & Analytics","purpose":"Student report card","route":"/student/report-card/","viewport":"1920x1080@1x","fileSizeKB":63,"capturedAt":"2026-11-03T18:06:00.937Z"},{"filename":"ST06_student_practice.png","role":"Student","module":"Student","purpose":"Past-question practice catalogue","route":"/student/practice/","viewport":"1920x1080@1x","fileSizeKB":35,"capturedAt":"2026-11-03T18:06:06.746Z"},{"filename":"ST07_student_offline-assignments.png","role":"Student","module":"Offline & Synchronisation","purpose":"Offline assignment packs and sync","route":"/student/offline-assignments/","viewport":"1920x1080@1x","fileSizeKB":60,"capturedAt":"2026-11-03T18:06:12.747Z"},{"filename":"ST08_student_notifications.png","role":"Student","module":"Communication & Notifications","purpose":"Student notifications","route":"/student/notifications/","viewport":"1920x1080@1x","fileSizeKB":100,"capturedAt":"2026-11-03T18:06:35.256Z"},{"filename":"ST10_exam_instructions.png","role":"Student","module":"Assessment & Examination","purpose":"Examination instructions / preflight","route":"/student/exam/?subjectId=20","viewport":"1920x1080@1x","fileSizeKB":58,"capturedAt":"2026-11-03T18:06:43.912Z"},{"filename":"ST11_exam_active-question.png","role":"Student","module":"Assessment & Examination","purpose":"exam active-question","route":"","viewport":"1920x1080@1x","fileSizeKB":43,"capturedAt":"2026-11-03T18:26:13.240Z"},{"filename":"ST12_exam_answer-selected.png","role":"Student","module":"Assessment & Examination","purpose":"exam answer-selected","route":"","viewport":"1920x1080@1x","fileSizeKB":43,"capturedAt":"2026-11-03T18:26:14.806Z"},{"filename":"ST13_exam_question-navigation.png","role":"Student","module":"Assessment & Examination","purpose":"exam question-navigation","route":"","viewport":"1920x1080@1x","fileSizeKB":44,"capturedAt":"2026-11-03T18:26:16.827Z"},{"filename":"ST14_exam_submit-summary.png","role":"Student","module":"Assessment & Examination","purpose":"exam submit-summary","route":"","viewport":"1920x1080@1x","fileSizeKB":37,"capturedAt":"2026-11-03T18:26:19.108Z"},{"filename":"ST15_exam_submission-receipt.png","role":"Student","module":"Assessment & Examination","purpose":"exam submission-receipt","route":"","viewport":"1920x1080@1x","fileSizeKB":48,"capturedAt":"2026-11-03T18:26:23.120Z"},{"filename":"ST19_exam_flow-state.png","role":"Student","module":"Assessment & Examination","purpose":"Exam flow state when automation stopped","route":"/student/exam/?subjectId=20","viewport":"1920x1080@1x","fileSizeKB":58,"capturedAt":"2026-11-03T18:06:45.969Z"},{"filename":"T01_teacher_dashboard.png","role":"Teacher","module":"Teacher","purpose":"Teaching overview with assigned subjects","route":"/teacher/dashboard/","viewport":"1920x1080@1x","fileSizeKB":194,"capturedAt":"2026-11-03T17:39:54.686Z"},{"filename":"T02_teacher_subject-menu.png","role":"Teacher","module":"Teacher","purpose":"Per-subject actions: inspect questions, gradebook, results","route":"/teacher/dashboard/","viewport":"1920x1080@1x","fileSizeKB":188,"capturedAt":"2026-11-03T17:39:56.622Z"},{"filename":"T03_teacher_question-bank.png","role":"Teacher","module":"Assessment & Examination","purpose":"Question bank & assessment authoring","route":"/teacher/questions/","viewport":"1920x1080@1x","fileSizeKB":67,"capturedAt":"2026-11-03T17:41:11.096Z"},{"filename":"T04_teacher_assignments.png","role":"Teacher","module":"Assessment & Examination","purpose":"Assignments (online & offline packs)","route":"/teacher/assignments/","viewport":"1920x1080@1x","fileSizeKB":172,"capturedAt":"2026-11-03T17:42:06.624Z"},{"filename":"T05_teacher_content-bank.png","role":"Teacher","module":"Assessment & Examination","purpose":"Past-question bank browser","route":"/teacher/content/","viewport":"1920x1080@1x","fileSizeKB":153,"capturedAt":"2026-11-03T17:43:01.685Z"},{"filename":"T06_teacher_grading-centre.png","role":"Teacher","module":"Results & Analytics","purpose":"Subject grading centre","route":"/teacher/grading/","viewport":"1920x1080@1x","fileSizeKB":140,"capturedAt":"2026-11-03T17:43:56.933Z"},{"filename":"T07_teacher_gradebook.png","role":"Teacher","module":"Results & Analytics","purpose":"Gradebook: CA + exam weighting with CBT scores","route":"/teacher/grading/details/?id=49","viewport":"1920x1080@1x","fileSizeKB":91,"capturedAt":"2026-11-03T17:44:52.622Z"},{"filename":"T08_teacher_gradebook-breakdown.png","role":"Teacher","module":"Results & Analytics","purpose":"Assessment weight breakdown","route":"/teacher/grading/details/?id=49","viewport":"1920x1080@1x","fileSizeKB":105,"capturedAt":"2026-11-03T17:45:19.022Z"},{"filename":"T09_teacher_results.png","role":"Teacher","module":"Results & Analytics","purpose":"Examination results and publication status","route":"/teacher/results/","viewport":"1920x1080@1x","fileSizeKB":140,"capturedAt":"2026-11-03T17:46:15.885Z"},{"filename":"T10_teacher_class-broadsheet.png","role":"Teacher","module":"Results & Analytics","purpose":"Class teacher broadsheet & remarks (JSS 3)","route":"/teacher/class-grading/","viewport":"1920x1080@1x","fileSizeKB":108,"capturedAt":"2026-11-03T17:47:13.107Z"},{"filename":"T11_teacher_attendance.png","role":"Teacher","module":"Teacher","purpose":"Attendance register","route":"/teacher/attendance/","viewport":"1920x1080@1x","fileSizeKB":137,"capturedAt":"2026-11-03T17:48:10.575Z"},{"filename":"T12_teacher_students.png","role":"Teacher","module":"Teacher","purpose":"Student roster","route":"/teacher/students/","viewport":"1920x1080@1x","fileSizeKB":135,"capturedAt":"2026-11-03T17:49:07.549Z"},{"filename":"T13_teacher_messages.png","role":"Teacher","module":"Communication & Notifications","purpose":"Teacher–guardian messaging","route":"/teacher/messages/","viewport":"1920x1080@1x","fileSizeKB":99,"capturedAt":"2026-11-03T17:50:04.329Z"},{"filename":"T14_teacher_report-card.png","role":"Teacher","module":"Results & Analytics","purpose":"Class report cards","route":"/teacher/report-card/","viewport":"1920x1080@1x","fileSizeKB":94,"capturedAt":"2026-11-03T17:51:00.934Z"},{"filename":"T15_teacher_notifications.png","role":"Teacher","module":"Communication & Notifications","purpose":"Teacher notification centre","route":"/teacher/notifications/","viewport":"1920x1080@1x","fileSizeKB":122,"capturedAt":"2026-11-03T17:51:59.006Z"}];
+    renderCards(manifestData);
+
+    function renderCards(items) {
+      const grid = document.getElementById('galleryGrid');
+      grid.innerHTML = items.map(item => `
+        <div class="screenshot-card" data-role="${item.role}" data-mod="${item.module}" onclick="openModal('screenshots/${item.filename}', '${item.filename} — ${item.purpose}')">
+          <img class="card-preview" src="screenshots/${item.filename}" alt="${item.filename}" loading="lazy">
+          <div class="card-body">
+            <div class="card-tag">${item.role} • ${item.module}</div>
+            <div class="card-title">${item.filename}</div>
+            <div class="card-desc">${item.purpose}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function filterGallery(category) {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+
+      if (category === 'all') {
+        renderCards(manifestData);
+        return;
+      }
+      const filtered = manifestData.filter(i => 
+        (i.role && i.role.toLowerCase().includes(category.toLowerCase())) ||
+        (i.module && i.module.toLowerCase().includes(category.toLowerCase()))
+      );
+      renderCards(filtered);
+    }
+
+    function openModal(src, caption) {
+      document.getElementById('modalImg').src = src;
+      document.getElementById('modalCaption').innerText = caption;
+      document.getElementById('imageModal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('imageModal').classList.remove('active');
+    }
+  </script>
+</body>
+</html>
+

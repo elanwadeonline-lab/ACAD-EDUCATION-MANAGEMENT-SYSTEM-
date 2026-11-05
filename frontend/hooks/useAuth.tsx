@@ -1,7 +1,15 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, type ReactNode } from "react";
-import { api, getSession, type SessionUser } from "../lib/api";
+import { usePathname } from "next/navigation";
+import {
+  api,
+  clearTabSession,
+  getSession,
+  inferPortalRoleFromPath,
+  setTabSession,
+  type SessionUser,
+} from "../lib/api";
 
 type User = SessionUser;
 
@@ -66,16 +74,18 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState);
+  const pathname = usePathname();
+  const portalRole = useMemo(() => inferPortalRoleFromPath(pathname || undefined), [pathname]);
 
   const init = useCallback(async () => {
     dispatch({ type: "SET_LOADING", payload: true });
     try {
-      const { user, setupRequired } = await getSession();
+      const { user, setupRequired } = await getSession(portalRole);
       dispatch({ type: "HYDRATE_SESSION", payload: { user, setupRequired } });
     } catch {
       dispatch({ type: "LOGOUT" });
     }
-  }, []);
+  }, [portalRole]);
 
   const login = useCallback(async (email: string, password: string) => {
     dispatch({ type: "SET_LOADING", payload: true });
@@ -84,16 +94,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // fetchWithAuth now throws on 401, so result should always be truthy here.
       // Keep the null guard as a safety net for unexpected edge cases.
       if (!result) throw new Error("Login failed. Please try again.");
-      dispatch({ type: "LOGIN", payload: (result.user ?? result) as User });
+      const loggedInUser = (result.user ?? result) as User;
+      if (result.token) {
+        setTabSession(result.token, loggedInUser?.role ?? null, result.session_id ?? null);
+      }
+      dispatch({ type: "LOGIN", payload: loggedInUser });
     } finally {
       dispatch({ type: "SET_LOADING", payload: false });
     }
   }, []);
 
   const logout = useCallback(async () => {
+    const currentRole = state.user?.role ?? portalRole;
     await api.logout().catch(() => undefined);
+    clearTabSession(currentRole);
+    try {
+      if (typeof navigator !== "undefined" && navigator.serviceWorker?.controller) {
+        navigator.serviceWorker.controller.postMessage({ type: "CLEAR_AUTH_CACHE" });
+        navigator.serviceWorker.controller.postMessage({ type: "CLEAR_GUARDIAN_CACHE" });
+      }
+    } catch {}
     dispatch({ type: "LOGOUT" });
-  }, []);
+  }, [state.user?.role, portalRole]);
 
   useEffect(() => {
     void init();

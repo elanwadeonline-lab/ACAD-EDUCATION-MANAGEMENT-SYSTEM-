@@ -367,50 +367,58 @@ export const AwardIcon = (props: IconProps) => (
 );
 
 export const AcadBrandIcon = ({
-  width = 20,
-  height = 20,
+  width = 24,
+  height = 24,
   stroke = "currentColor",
   ...props
 }: IconProps) => (
   <svg
     width={width}
     height={height}
-    viewBox="0 0 24 24"
+    viewBox="0 0 100 100"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
     {...props}
   >
-    {/* Academic Mortarboard Diamond Roof */}
-    <path
-      d="M12 2.75L2 8L12 13.25L22 8L12 2.75Z"
-      fill="currentColor"
-      stroke={stroke}
-      strokeWidth="1.2"
-      strokeLinejoin="round"
-    />
-    {/* Academic Foundation & Open Book Arc */}
-    <path
-      d="M5.5 11V15.5C5.5 17.5 8.4 19.75 12 19.75C15.6 19.75 18.5 17.5 18.5 15.5V11"
-      stroke={stroke}
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    {/* Central Pillar / Page Divide */}
-    <path
-      d="M12 13.25V19.75"
-      stroke={stroke}
-      strokeWidth="1.6"
-      strokeLinecap="round"
-    />
-    {/* Tassel Cord & Ornament */}
-    <path
-      d="M21 9.25V14.25M21 14.25C21 14.9 20.45 15.45 19.75 15.45C19.05 15.45 18.5 14.9 18.5 14.25C18.5 13.6 19.05 13.05 19.75 13.05C20.45 13.05 21 13.6 21 14.25Z"
-      stroke={stroke}
-      strokeWidth="1.4"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
+    <defs>
+      <linearGradient id="acadBrandGold" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#F59E0B" />
+        <stop offset="60%" stopColor="#D97706" />
+        <stop offset="100%" stopColor="#92400E" />
+      </linearGradient>
+      <linearGradient id="acadBrandChrome" x1="0%" y1="100%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#E2E8F0" />
+        <stop offset="100%" stopColor="#FFFFFF" />
+      </linearGradient>
+    </defs>
+    <g transform="rotate(-12 50 50)">
+      {/* Outer Tilted Asymmetric Rounded Square */}
+      <path
+        d="M20 28 C20 18, 30 14, 46 16 L76 22 C84 24, 88 32, 86 42 L80 74 C78 84, 70 88, 56 86 L26 80 C16 78, 14 70, 16 58 Z"
+        fill="url(#acadBrandGold)"
+      />
+      {/* Bottom Metallic Chrome Accent Corner */}
+      <path
+        d="M16 58 L26 80 C70 88, 78 84, 80 74 L83 60 C55 68, 30 65, 16 58 Z"
+        fill="url(#acadBrandChrome)"
+        opacity="0.9"
+      />
+      {/* Inner Cutout */}
+      <path
+        d="M32 36 C30 26, 68 28, 72 34 C76 40, 72 68, 66 72 C60 76, 28 72, 32 36 Z"
+        fill="#0C0D12"
+      />
+      {/* Central Rotated Diamond Dot */}
+      <rect
+        x="44"
+        y="44"
+        width="15"
+        height="15"
+        rx="2"
+        transform="rotate(45 51.5 51.5)"
+        fill="#F59E0B"
+      />
+    </g>
   </svg>
 );
 

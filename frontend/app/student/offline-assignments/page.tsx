@@ -15,16 +15,18 @@ import {
   ArrowRightIcon,
   RefreshIcon,
   SubjectIcon,
-} from "../../../components/icons/Icons";
+} from "../../../components/icons/StudentIcons";
 import {
   getCachedAssignments,
   saveOfflineSubmission,
   cacheAssignments,
   getPendingSubmissions,
   clearPendingSubmissions,
+  deletePendingSubmissionsByIds,
   OfflineSubmission,
 } from "../../../lib/offlineSync";
 import { api } from "../../../lib/api";
+import { useOfflineAutoSync } from "../../../hooks/useOfflineAutoSync";
 import { ConfettiCelebration } from "../../../components/student/ConfettiCelebration";
 import styles from "./page.module.css";
 
@@ -51,6 +53,14 @@ function AssignmentContent() {
   const [isDownloading, setIsDownloading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [pendingSync, setPendingSync] = useState<OfflineSubmission[]>([]);
+
+  // Auto-push cached submissions to the server whenever the device is back online
+  const { pendingCount, flush } = useOfflineAutoSync((n) => {
+    if (n > 0) {
+      showToast(`${n} submission${n === 1 ? "" : "s"} synced automatically.`, "success");
+      getPendingSubmissions().then(setPendingSync).catch(() => undefined);
+    }
+  });
 
   // Viewer state
   const [subject, setSubject] = useState<any>(null);
@@ -132,9 +142,15 @@ function AssignmentContent() {
     setIsSyncing(true);
     try {
       const res = await api.syncOfflineAssignments(pendingSync);
-      await clearPendingSubmissions();
-      setPendingSync([]);
-      showToast(`Successfully synced ${res.synced} assignment(s).`, "success");
+      const ackIds = (res as any)?.acknowledged_ids;
+      if (Array.isArray(ackIds) && ackIds.length > 0) {
+        await deletePendingSubmissionsByIds(ackIds);
+      } else if (Number((res as any)?.synced) === pendingSync.length) {
+        await clearPendingSubmissions();
+      }
+      const updated = await getPendingSubmissions();
+      setPendingSync(updated);
+      showToast(`Successfully synced ${(res as any)?.synced ?? 0} assignment(s).`, "success");
     } catch (err) {
       showToast("Failed to sync. Make sure you are connected to the network.", "error");
     } finally {
@@ -151,8 +167,8 @@ function AssignmentContent() {
   };
 
   const handleFileUpload = (qid: number, file: File) => {
-    if (file.size > 5 * 1024 * 1024) {
-      showToast("File is too large (max 5MB)", "error");
+    if (file.size > 30 * 1024 * 1024) {
+      showToast("File is too large (max 30MB)", "error");
       return;
     }
     setFiles({ ...files, [qid]: file });
@@ -207,7 +223,7 @@ function AssignmentContent() {
   if (loading) {
     return (
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "320px", gap: "0.75rem", color: "#64748B", fontSize: "0.875rem" }}>
-        <div className="spinner" style={{ width: 22, height: 22, borderColor: "#E2E8F0", borderTopColor: "#165AF6" }} />
+        <div className="spinner" style={{ width: 22, height: 22, borderColor: "#E2E8F0", borderTopColor: "#92400E" }} />
         <span>Loading offline assignments…</span>
       </div>
     );
@@ -227,7 +243,8 @@ function AssignmentContent() {
             Your responses and attachments are securely cached on this device and ready to sync.
           </p>
           <div className={styles.syncNotice}>
-            <strong>Sync Reminder:</strong> When connected to the school network, return to the hub and click <strong>Sync Answers</strong> to submit to your teacher.
+            <strong>{pendingCount > 0 ? `${pendingCount} saved submission${pendingCount === 1 ? "" : "s"} will sync automatically next time you are online — ` : ""}</strong>
+            When connected to the school network, return to the hub and click <strong>Sync Answers</strong> to submit to your teacher.
           </div>
           <Link href="/student/dashboard" className={styles.returnBtn}>
             <span>Return to Dashboard</span>
@@ -417,7 +434,7 @@ function AssignmentContent() {
               <DocumentIcon width="18" height="18" />
               <div>
                 <strong>Attached Resource</strong>
-                <a href={q.attached_file_url} target="_blank" rel="noreferrer" className="link" style={{ display: "block", fontSize: "0.85rem", color: "#165AF6" }}>
+                <a href={q.attached_file_url} target="_blank" rel="noreferrer" className="link" style={{ display: "block", fontSize: "0.85rem", color: "#92400E" }}>
                   Download PDF/Document
                 </a>
               </div>

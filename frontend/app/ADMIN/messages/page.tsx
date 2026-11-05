@@ -58,6 +58,14 @@ function AdminMessagesContent() {
   const [sending, setSending] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
+  // Compose New Message (outbound admin → guardian)
+  const [composeOpen, setComposeOpen] = useState(false);
+  const [guardians, setGuardians] = useState<Array<{ id: number; name: string; email: string }>>([]);
+  const [composeGuardianId, setComposeGuardianId] = useState("");
+  const [composeSubject, setComposeSubject] = useState("School Communication");
+  const [composeText, setComposeText] = useState("");
+  const [sendingNew, setSendingNew] = useState(false);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const showToast = (text: string) => {
@@ -209,6 +217,45 @@ function AdminMessagesContent() {
     "Please check your Guardian portal under Reports to review the latest broadsheet scorecard.",
   ];
 
+  const openCompose = async () => {
+    setComposeOpen(true);
+    if (guardians.length === 0) {
+      try {
+        const all: any[] = (await api.getUsers()) || [];
+        setGuardians(all.filter((u) => u.role === "guardian" && u.is_active).map((u) => ({ id: Number(u.id), name: u.name, email: u.email })));
+      } catch {
+        showToast("Failed to load guardian directory");
+      }
+    }
+  };
+
+  const handleSendNewMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!composeGuardianId || !composeText.trim()) {
+      showToast("Select a recipient and write a message");
+      return;
+    }
+    setSendingNew(true);
+    try {
+      const res: any = await api.createAdminMessageThread({
+        guardian_id: Number(composeGuardianId),
+        text: composeText.trim(),
+        subject: composeSubject.trim() || "School Communication",
+      });
+      showToast("Message sent to guardian");
+      setComposeOpen(false);
+      setComposeText("");
+      await loadThreads();
+      if (res?.threadId) {
+        setSelectedThreadId(Number(res.threadId));
+      }
+    } catch (err: any) {
+      showToast(err?.message || "Failed to send message");
+    } finally {
+      setSendingNew(false);
+    }
+  };
+
   return (
     <div className={styles.container}>
       {toast && (
@@ -237,9 +284,14 @@ function AdminMessagesContent() {
         title="Guardian Inquiries & Helpdesk"
         subtitle="Manage parental inquiries, admissions support, and student academic communications."
         actions={
-          <Button variant="secondary" size="sm" onClick={() => loadThreads()}>
-            Refresh Inquiries
-          </Button>
+          <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+            <Button variant="secondary" size="sm" onClick={() => loadThreads()}>
+              Refresh Inquiries
+            </Button>
+            <Button variant="primary" size="sm" onClick={openCompose}>
+              + New Message
+            </Button>
+          </div>
         }
       />
 
@@ -441,6 +493,125 @@ function AdminMessagesContent() {
           )}
         </div>
       </div>
+
+      {/* ── MODAL: Compose New Message ─────────────────────── */}
+      {composeOpen && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(15, 23, 42, 0.45)",
+            backdropFilter: "blur(2px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1200,
+            padding: "1rem",
+          }}
+          onClick={() => setComposeOpen(false)}
+        >
+          <form
+            onSubmit={handleSendNewMessage}
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "#FFFFFF",
+              borderRadius: "16px",
+              width: "100%",
+              maxWidth: "460px",
+              padding: "1.5rem",
+              boxShadow: "0 20px 50px rgba(15, 23, 42, 0.25)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.9rem",
+            }}
+          >
+            <div>
+              <h3 style={{ margin: 0, fontSize: "1rem", fontWeight: 700, color: "#0F172A" }}>
+                New Message to Guardian
+              </h3>
+              <p style={{ margin: "0.25rem 0 0", fontSize: "0.75rem", color: "#64748B" }}>
+                The guardian is notified in real time on their portal.
+              </p>
+            </div>
+
+            <div>
+              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 700, color: "#334155", marginBottom: "0.3rem" }}>
+                Recipient Guardian <span style={{ color: "#DC2626" }}>*</span>
+              </label>
+              <select
+                required
+                value={composeGuardianId}
+                onChange={(e) => setComposeGuardianId(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "0.55rem 0.7rem",
+                  borderRadius: "9px",
+                  border: "1px solid #E2E8F0",
+                  fontSize: "0.8125rem",
+                  color: "#0F172A",
+                }}
+              >
+                <option value="">Select guardian…</option>
+                {guardians.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.name} ({g.email})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 700, color: "#334155", marginBottom: "0.3rem" }}>
+                Subject
+              </label>
+              <input
+                type="text"
+                value={composeSubject}
+                onChange={(e) => setComposeSubject(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "0.55rem 0.7rem",
+                  borderRadius: "9px",
+                  border: "1px solid #E2E8F0",
+                  fontSize: "0.8125rem",
+                  color: "#0F172A",
+                }}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 700, color: "#334155", marginBottom: "0.3rem" }}>
+                Message <span style={{ color: "#DC2626" }}>*</span>
+              </label>
+              <textarea
+                required
+                rows={4}
+                value={composeText}
+                onChange={(e) => setComposeText(e.target.value)}
+                placeholder="Write your message to the guardian…"
+                style={{
+                  width: "100%",
+                  padding: "0.55rem 0.7rem",
+                  borderRadius: "9px",
+                  border: "1px solid #E2E8F0",
+                  fontSize: "0.8125rem",
+                  color: "#0F172A",
+                  resize: "vertical",
+                }}
+              />
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem" }}>
+              <Button type="button" variant="secondary" size="sm" onClick={() => setComposeOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" variant="primary" size="sm" loading={sendingNew}>
+                Send Message
+              </Button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 }

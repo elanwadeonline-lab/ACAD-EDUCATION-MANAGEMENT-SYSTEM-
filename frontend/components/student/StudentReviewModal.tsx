@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Dialog from "@mui/material/Dialog";
 import { api } from "../../lib/api";
 import { PracticeReviewItem } from "../../lib/types";
+import { CloseIcon, CheckCircleIcon, XCircleIcon } from "../icons/StudentIcons";
 
 type StudentReviewModalProps = {
   examId?: number;
@@ -73,20 +75,8 @@ export function StudentReviewModal({ examId, subjectName, practiceData, onClose 
   }, [examId, practiceData]);
 
   return (
-    <div className="overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div
-        className="modal"
-        style={{
-          maxWidth: 780,
-          maxHeight: "90vh",
-          overflowY: "auto",
-          padding: "2rem 2.25rem",
-          borderRadius: "16px",
-          background: "#FFFFFF",
-          border: "1px solid #E2E8F0",
-          boxShadow: "0 25px 50px -12px rgba(15, 23, 42, 0.15)",
-        }}
-      >
+    <Dialog open onClose={onClose} fullWidth maxWidth="md" aria-labelledby="student-review-title" slotProps={{ paper:{sx:{borderRadius:2,boxShadow:"0 12px 40px #00000018",p:{xs:2,sm:3},maxHeight:"90dvh"}} }}>
+      <div>
         <div
           style={{
             display: "flex",
@@ -98,7 +88,7 @@ export function StudentReviewModal({ examId, subjectName, practiceData, onClose 
           }}
         >
           <div>
-            <h2 style={{ fontSize: "1.375rem", fontWeight: 800, color: "#0F172A", margin: 0, letterSpacing: "-0.02em" }}>
+            <h2 id="student-review-title" style={{ fontSize: "1.375rem", fontWeight: 500, color: "#0F172A", margin: 0, letterSpacing: "-0.02em" }}>
               Assessment Evaluation Review
             </h2>
             <p style={{ color: "#64748B", fontSize: "0.875rem", marginTop: "0.25rem", fontWeight: 500 }}>
@@ -115,10 +105,10 @@ export function StudentReviewModal({ examId, subjectName, practiceData, onClose 
               padding: "0.4rem 0.75rem",
               cursor: "pointer",
               fontSize: "0.8125rem",
-              fontWeight: 700,
+              fontWeight: 500,
             }}
           >
-            ✕ Close
+            <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}><CloseIcon width={13} height={13} /> Close</span>
           </button>
         </div>
 
@@ -127,7 +117,7 @@ export function StudentReviewModal({ examId, subjectName, practiceData, onClose 
             <div className="spinner" />
           </div>
         ) : error ? (
-          <div style={{ textAlign: "center", color: "#DC2626", padding: "2rem", background: "#FEF2F2", borderRadius: "10px" }}>
+          <div style={{ textAlign: "center", color: "#374151", padding: "2rem", background: "#fafafa", borderRadius: "10px" }}>
             {error}
           </div>
         ) : reviewData ? (
@@ -178,13 +168,13 @@ export function StudentReviewModal({ examId, subjectName, practiceData, onClose 
                       color: "#64748B",
                       textTransform: "uppercase",
                       letterSpacing: "0.05em",
-                      fontWeight: 700,
+                      fontWeight: 500,
                       marginBottom: "0.35rem",
                     }}
                   >
                     {s.label}
                   </div>
-                  <div style={{ fontWeight: 800, fontSize: "1.125rem", color: "#0F172A", fontFamily: "var(--font-mono, monospace)" }}>
+                  <div style={{ fontWeight: 500, fontSize: "1.125rem", color: "#0F172A", fontFamily: "var(--font-mono, monospace)" }}>
                     {s.value}
                   </div>
                 </div>
@@ -250,7 +240,7 @@ export function StudentReviewModal({ examId, subjectName, practiceData, onClose 
                           gap: "1rem",
                         }}
                       >
-                        <span style={{ fontWeight: 700, fontSize: "0.9375rem", color: "#0F172A", lineHeight: 1.5 }}>
+                        <span style={{ fontWeight: 500, fontSize: "0.9375rem", color: "#0F172A", lineHeight: 1.5 }}>
                           <span style={{ color: "#64748B", marginRight: "0.4rem", fontFamily: "var(--font-mono, monospace)" }}>
                             Q{idx + 1}.
                           </span>
@@ -260,8 +250,8 @@ export function StudentReviewModal({ examId, subjectName, practiceData, onClose 
                           <span
                             style={{
                               fontSize: "0.75rem",
-                              fontWeight: 800,
-                              color: a.is_correct ? "#059669" : "#DC2626",
+                              fontWeight: 500,
+                              color: a.is_correct ? "#374151" : "#374151",
                               background: a.is_correct ? "rgba(16, 185, 129, 0.12)" : "rgba(239, 68, 68, 0.12)",
                               padding: "0.2rem 0.55rem",
                               borderRadius: "4px",
@@ -311,7 +301,7 @@ export function StudentReviewModal({ examId, subjectName, practiceData, onClose 
                             <span style={{ color: "#64748B", width: "110px", flexShrink: 0, fontSize: "0.78rem", fontWeight: 600 }}>
                               Your Answer:
                             </span>
-                            <strong style={{ color: a.is_correct ? "#059669" : "#DC2626" }}>
+                            <strong style={{ color: a.is_correct ? "#374151" : "#374151" }}>
                               {selectedText}
                             </strong>
                           </div>
@@ -320,25 +310,25 @@ export function StudentReviewModal({ examId, subjectName, practiceData, onClose 
                               <span style={{ color: "#64748B", width: "110px", flexShrink: 0, fontSize: "0.78rem", fontWeight: 600 }}>
                                 Correct Answer:
                               </span>
-                              <strong style={{ color: "#059669" }}>
+                              <strong style={{ color: "#374151" }}>
                                 {correctText}
                               </strong>
                             </div>
                           )}
 
                           {a.explanation && (
-                            <div style={{ marginTop: "0.5rem", padding: "0.6rem 0.85rem", background: "#EFF4FF", border: "1px solid #DBEAFE", borderRadius: "8px", fontSize: "0.8125rem", color: "#1E40AF", lineHeight: 1.5 }}>
-                              <strong style={{ color: "#1D4ED8", display: "block", marginBottom: "0.2rem" }}>Explanation:</strong>
+                            <div style={{ marginTop: "0.5rem", padding: "0.6rem 0.85rem", background: "#fafafa", border: "1px solid #e5e7eb", borderRadius: "8px", fontSize: "0.8125rem", color: "#374151", lineHeight: 1.5 }}>
+                              <strong style={{ color: "#374151", display: "block", marginBottom: "0.2rem" }}>Explanation:</strong>
                               {a.explanation}
                             </div>
                           )}
 
                           {a.solution && (
-                            <div style={{ marginTop: "0.4rem", padding: "0.6rem 0.85rem", background: "#F5F3FF", border: "1px solid #DDD6FE", borderRadius: "8px", fontSize: "0.8125rem", color: "#5B21B6", lineHeight: 1.5 }}>
+                            <div style={{ marginTop: "0.4rem", padding: "0.6rem 0.85rem", background: "#fafafa", border: "1px solid #e5e7eb", borderRadius: "8px", fontSize: "0.8125rem", color: "#374151", lineHeight: 1.5 }}>
                               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.2rem" }}>
-                                <strong style={{ color: "#6D28D9" }}>Worked Solution:</strong>
+                                <strong style={{ color: "#29231B" }}>Worked Solution:</strong>
                                 {a.is_solution_revealed && (
-                                  <span style={{ fontSize: "0.6875rem", fontWeight: 700, color: "#059669", background: "#ECFDF5", padding: "0.1rem 0.4rem", borderRadius: "4px" }}>
+                                  <span style={{ fontSize: "0.6875rem", fontWeight: 500, color: "#374151", background: "#fafafa", padding: "0.1rem 0.4rem", borderRadius: "4px" }}>
                                     ✓ Unlocked During Attempt
                                   </span>
                                 )}
@@ -356,6 +346,6 @@ export function StudentReviewModal({ examId, subjectName, practiceData, onClose 
           </div>
         ) : null}
       </div>
-    </div>
+    </Dialog>
   );
 }

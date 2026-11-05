@@ -40,7 +40,7 @@ export function FilterBar({
       {onSearchChange !== undefined && (
         <div className={styles.searchWrapper}>
           <span className={styles.searchIcon}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#06B6D4" strokeWidth="2.2">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="2.2">
               <circle cx="11" cy="11" r="8" />
               <line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
@@ -49,6 +49,7 @@ export function FilterBar({
             type="text"
             className={styles.searchInput}
             placeholder={searchPlaceholder}
+            aria-label={searchPlaceholder}
             value={searchQuery || ""}
             onChange={(e) => onSearchChange(e.target.value)}
           />
@@ -72,6 +73,7 @@ export function FilterBar({
         {filters?.map((filter) => (
           <select
             key={filter.id}
+            aria-label={filter.label || filter.id}
             className={styles.selectInput}
             value={filter.value}
             onChange={(e) => filter.onChange(e.target.value)}

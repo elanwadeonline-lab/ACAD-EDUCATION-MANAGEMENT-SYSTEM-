@@ -221,7 +221,7 @@ export function AssignClassTeacherPage() {
         <div className={styles.statCard}>
           <div className={styles.statTop}>
             <span className={styles.statLabel}>Standard Classes</span>
-            <div className={styles.statIcon} style={{ color: "#3B82F6" }}><UsersIcon width="15" height="15" /></div>
+            <div className={styles.statIcon}><UsersIcon width="15" height="15" /></div>
           </div>
           <div>
             <div className={styles.statValue}>{totalClasses}</div>
@@ -232,7 +232,7 @@ export function AssignClassTeacherPage() {
         <div className={styles.statCard}>
           <div className={styles.statTop}>
             <span className={styles.statLabel}>Assigned Classes</span>
-            <div className={styles.statIcon} style={{ color: "#10B981" }}><CheckCircleIcon width="15" height="15" /></div>
+            <div className={styles.statIcon}><CheckCircleIcon width="15" height="15" /></div>
           </div>
           <div>
             <div className={styles.statValue}>{assignedCount}</div>
@@ -243,7 +243,7 @@ export function AssignClassTeacherPage() {
         <div className={styles.statCard}>
           <div className={styles.statTop}>
             <span className={styles.statLabel}>Unassigned Classes</span>
-            <div className={styles.statIcon} style={{ color: "#F97316" }}><WarningIcon width="15" height="15" /></div>
+            <div className={styles.statIcon}><WarningIcon width="15" height="15" /></div>
           </div>
           <div>
             <div className={styles.statValue}>{unassignedCount}</div>

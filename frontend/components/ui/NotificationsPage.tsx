@@ -5,6 +5,7 @@ import Link from "next/link";
 import { fetchWithAuth } from "../../lib/api";
 import { PageHeader, Button } from "./index";
 import { BookIcon, CheckCircleIcon, DocumentIcon } from "../icons/Icons";
+import { StudentNotificationSymbol, useStudentIconScope } from "../icons/StudentIcons";
 
 type Notification = {
   id: number;
@@ -50,8 +51,9 @@ const TYPE_META: Record<string, { label: string; icon: React.ReactNode }> = {
   },
 };
 
-function getTypeMeta(type: string) {
-  return TYPE_META[type] ?? TYPE_META.info;
+function getTypeMeta(type: string, studentIcons = false) {
+  const meta = TYPE_META[type] ?? TYPE_META.info;
+  return studentIcons ? {...meta, icon: <StudentNotificationSymbol type={type} />} : meta;
 }
 
 function timeAgo(dateStr: string): string {
@@ -63,6 +65,7 @@ function timeAgo(dateStr: string): string {
 }
 
 export function NotificationsPage() {
+  const studentIcons = useStudentIconScope();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("all");
@@ -122,7 +125,7 @@ export function NotificationsPage() {
     filter === "all" ? notifications : notifications.filter((n) => n.type === filter);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", width: "100%" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", width: "100%", fontFamily: "var(--font-sans), 'Manrope', sans-serif" }}>
       {/* ── Page Header ───────────────────────────────────── */}
       <PageHeader
         eyebrow="System Events & Activity"
@@ -134,7 +137,7 @@ export function NotificationsPage() {
       {types.length > 1 && (
         <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
           {types.map((t) => {
-            const meta = getTypeMeta(t);
+            const meta = getTypeMeta(t, studentIcons);
             const active = filter === t;
             return (
               <button
@@ -143,13 +146,14 @@ export function NotificationsPage() {
                 style={{
                   padding: "0.35rem 0.75rem",
                   borderRadius: "6px",
-                  border: `1px solid ${active ? "var(--color-border-hover, #CBD5E1)" : "var(--color-border, #E2E8F0)"}`,
-                  background: active ? "var(--color-surface-2, #F1F5F9)" : "#FFFFFF",
-                  color: "var(--color-text, #0F172A)",
+                  border: `1px solid ${active ? "rgba(234, 88, 12, 0.3)" : "var(--color-border, #E2E8F0)"}`,
+                  background: active ? "rgba(234, 88, 12, 0.08)" : "#FFFFFF",
+                  color: active ? "var(--color-primary, #EA580C)" : "var(--color-text, #0F172A)",
                   fontSize: "0.75rem",
                   fontWeight: active ? 700 : 500,
                   cursor: "pointer",
                   transition: "all 120ms ease",
+                  fontFamily: "inherit",
                 }}
               >
                 {t === "all" ? "All Updates" : meta.label}
@@ -161,7 +165,7 @@ export function NotificationsPage() {
 
       {/* ── Notifications List ────────────────────────────── */}
       {loading ? (
-        <div style={{ textAlign: "center", padding: "3rem", color: "var(--color-muted)", fontSize: "0.8125rem" }}>
+        <div style={{ textAlign: "center", padding: "3rem", color: "var(--color-muted, #64748B)", fontSize: "0.8125rem" }}>
           Loading notification feed…
         </div>
       ) : filtered.length === 0 ? (
@@ -169,22 +173,22 @@ export function NotificationsPage() {
           style={{
             background: "var(--color-surface, #FFFFFF)",
             border: "1px dashed var(--color-border, #E2E8F0)",
-            borderRadius: "12px",
+            borderRadius: "8px",
             padding: "3.5rem 2rem",
             textAlign: "center",
           }}
         >
-          <div style={{ fontWeight: 600, color: "var(--color-text)", fontSize: "0.9375rem", marginBottom: "0.25rem" }}>
+          <div style={{ fontWeight: 600, color: "var(--color-text, #0F172A)", fontSize: "0.9375rem", marginBottom: "0.25rem" }}>
             No Updates Recorded
           </div>
-          <div style={{ color: "var(--color-muted)", fontSize: "0.75rem" }}>
+          <div style={{ color: "var(--color-muted, #64748B)", fontSize: "0.75rem" }}>
             Real-time candidate submissions and faculty actions will appear here.
           </div>
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "0.65rem" }}>
           {filtered.map((notif) => {
-            const meta = getTypeMeta(notif.type);
+            const meta = getTypeMeta(notif.type, studentIcons);
             const isUnread = !notif.is_read;
             return (
               <div
@@ -192,8 +196,8 @@ export function NotificationsPage() {
                 style={{
                   background: "var(--color-surface, #FFFFFF)",
                   border: "1px solid var(--color-border, #E2E8F0)",
-                  borderRadius: "10px",
-                  padding: "1rem 1.25rem",
+                  borderRadius: "8px",
+                  padding: "0.875rem 1.25rem",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
@@ -235,10 +239,10 @@ export function NotificationsPage() {
                       {isUnread && (
                         <span
                           style={{
-                            width: "5px",
-                            height: "5px",
+                            width: "6px",
+                            height: "6px",
                             borderRadius: "50%",
-                            background: "var(--color-primary, #0F172A)",
+                            background: "var(--color-primary, #EA580C)",
                             display: "inline-block",
                           }}
                         />
@@ -260,6 +264,7 @@ export function NotificationsPage() {
                         fontSize: "0.6875rem",
                         color: "var(--color-muted, #64748B)",
                         fontFamily: "var(--font-mono, monospace)",
+                        fontVariantNumeric: "tabular-nums",
                         marginTop: "0.25rem",
                         display: "block",
                       }}

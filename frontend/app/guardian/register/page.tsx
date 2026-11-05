@@ -1,4 +1,5 @@
 "use client";
+import { AcqadLogo } from "../../../components/brand/AcqadLogo";
 
 import { FormEvent, useState, Suspense } from "react";
 import { useRouter } from "next/navigation";
@@ -68,12 +69,7 @@ function GuardianRegisterContent() {
       <div className={styles.container}>
         {/* Left Informational Sidebar */}
         <div className={styles.leftPane}>
-          <div className={styles.brand}>
-            <div className={styles.brandIcon}>
-              <AcadBrandIcon width="24" height="24" />
-            </div>
-            ExamPool Guardian
-          </div>
+          <div className={styles.brand}><AcqadLogo size="lg" showSubtitle wordmarkWeight={500}/></div>
 
           <div className={styles.heroText}>
             <h1>Stay closely connected with your ward&#39;s academic journey.</h1>
@@ -108,7 +104,7 @@ function GuardianRegisterContent() {
         </div>
 
         {/* Right Form Card */}
-        <div className={styles.rightPane}>
+        <div className={styles.rightPane}><div className={styles.mobileBrand}><AcqadLogo size="lg" showSubtitle wordmarkWeight={500}/></div>
           <div className={styles.formCard}>
             {successRegId ? (
               <div className={styles.successState}>

@@ -134,9 +134,9 @@
   width: 38px;
   height: 38px;
   border-radius: 10px;
-  background: #EFF4FF;
-  color: #165AF6;
-  border: 1px solid #DBEAFE;
+  background: #FFFBEB;
+  color: #92400E;
+  border: 1px solid #FDE68A;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -191,18 +191,18 @@
   gap: 0.45rem;
   padding: 0.55rem 1.15rem;
   border-radius: 8px;
-  background: #165AF6;
+  background: #92400E;
   color: #FFFFFF;
   font-size: 0.8125rem;
   font-weight: 600;
   border: none;
   cursor: pointer;
   transition: all 150ms ease;
-  box-shadow: 0 1px 3px rgba(22, 90, 246, 0.2);
+  box-shadow: 0 1px 3px rgba(217, 119, 6, 0.2);
 }
 
 .launchBtn:hover {
-  background: #1248C8;
+  background: #78350F;
   transform: translateY(-1px);
 }
 
@@ -282,7 +282,7 @@
 }
 
 .filterSelect:hover, .filterSelect:focus {
-  border-color: #165AF6;
+  border-color: #92400E;
 }
 
 /* Past Question Paper Grid */
@@ -312,9 +312,9 @@
 }
 
 .paperCardSelected {
-  border-color: #165AF6 !important;
+  border-color: #92400E !important;
   background: #FAFCFF;
-  box-shadow: 0 0 0 1px #165AF6;
+  box-shadow: 0 0 0 1px #92400E;
 }
 
 .paperCardHeader {
@@ -340,9 +340,9 @@
 .paperBadge {
   font-size: 0.6875rem;
   font-weight: 600;
-  color: #165AF6;
-  background: #EFF4FF;
-  border: 1px solid #DBEAFE;
+  color: #92400E;
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
   padding: 0.15rem 0.45rem;
   border-radius: 6px;
   letter-spacing: 0.02em;
@@ -366,7 +366,7 @@
 .paperActionBtn {
   font-size: 0.8125rem;
   font-weight: 600;
-  color: #165AF6;
+  color: #92400E;
   background: transparent;
   border: none;
   cursor: pointer;

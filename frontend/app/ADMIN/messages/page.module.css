@@ -1,9 +1,16 @@
+/* ==========================================================================
+   ADMIN MESSAGES / GUARDIAN INQUIRIES — eCard Systems ACQAD
+   Strictly Manrope typography, Institutional Amber-Orange accents,
+   Obsidian surfaces, clean 1px borders, Linear-style density & restraint.
+   ========================================================================== */
+
 .container {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
   width: 100%;
-  height: calc(100vh - 120px);
+  height: calc(100vh - 110px);
+  font-family: var(--font-sans), 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 .hubGrid {
@@ -23,11 +30,11 @@
 .leftPanel {
   background: var(--color-surface, #ffffff);
   border: 1px solid var(--color-border, #e2e8f0);
-  border-radius: 12px;
+  border-radius: var(--radius-md, 8px);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: var(--shadow-sm, 0 1px 2px 0 rgba(0, 0, 0, 0.05));
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
 }
 
 .panelHeader {
@@ -36,6 +43,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  background: #ffffff;
 }
 
 .searchBox {
@@ -50,6 +58,8 @@
   transform: translateY(-50%);
   color: var(--color-muted, #64748b);
   pointer-events: none;
+  display: flex;
+  align-items: center;
 }
 
 .searchInput {
@@ -57,17 +67,19 @@
   padding: 0.5rem 0.75rem 0.5rem 2.25rem;
   border: 1px solid var(--color-border, #e2e8f0);
   border-radius: 8px;
-  font-size: 0.8125rem;
+  font-size: .875rem;
+  font-family: inherit;
   background: var(--color-surface-2, #f8fafc);
   color: var(--color-text, #0f172a);
   outline: none;
-  transition: all 150ms ease;
+  transition: border-color var(--duration-fast, 120ms) ease, box-shadow var(--duration-fast, 120ms) ease;
+  min-height: 42px;
 }
 
 .searchInput:focus {
-  border-color: #165af6;
+  border-color: var(--color-primary, #ea580c);
   background: #ffffff;
-  box-shadow: 0 0 0 3px rgba(22, 90, 246, 0.1);
+  box-shadow: 0 0 0 3px var(--color-primary-glow, rgba(234, 88, 12, 0.12));
 }
 
 .tabList {
@@ -78,15 +90,16 @@
 
 .tabBtn {
   padding: 0.35rem 0.65rem;
-  border-radius: 6px;
+  border-radius: var(--radius-sm, 6px);
   font-size: 0.75rem;
+  font-family: inherit;
   font-weight: 500;
   border: 1px solid transparent;
   background: transparent;
   color: var(--color-muted, #64748b);
   cursor: pointer;
   white-space: nowrap;
-  transition: all 120ms ease;
+  transition: all var(--duration-fast, 120ms) ease;
 }
 
 .tabBtn:hover {
@@ -95,10 +108,10 @@
 }
 
 .tabBtnActive {
-  background: #eff4ff;
-  color: #165af6;
+  background: rgba(234, 88, 12, 0.08);
+  color: var(--color-primary, #ea580c);
   font-weight: 600;
-  border-color: #dbeafe;
+  border-color: rgba(234, 88, 12, 0.2);
 }
 
 .threadList {
@@ -109,16 +122,17 @@
 }
 
 .threadItem {
-  padding: 1rem 1.25rem;
+  padding: 0.875rem 1.25rem;
   border-bottom: 1px solid var(--color-border, #e2e8f0);
   display: flex;
   gap: 0.75rem;
   cursor: pointer;
-  transition: background 120ms ease;
+  transition: background var(--duration-fast, 120ms) ease;
   text-align: left;
   border-left: 3px solid transparent;
   background: transparent;
   width: 100%;
+  font-family: inherit;
 }
 
 .threadItem:hover {
@@ -126,22 +140,24 @@
 }
 
 .threadItemActive {
-  background: #eff4ff;
-  border-left-color: #165af6;
+  background: rgba(234, 88, 12, 0.05);
+  border-left-color: var(--color-primary, #ea580c);
 }
 
 .threadAvatar {
-  width: 38px;
-  height: 38px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #165af6 0%, #3b82f6 100%);
-  color: #ffffff;
+  background: #0b0d11;
+  color: #f8fafc;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
-  font-size: 0.875rem;
+  font-weight: 600;
+  font-size: 0.8125rem;
   flex-shrink: 0;
+  letter-spacing: -0.01em;
 }
 
 .threadContent {
@@ -149,7 +165,7 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0.25rem;
 }
 
 .threadTopRow {
@@ -172,14 +188,16 @@
   font-size: 0.6875rem;
   color: var(--color-muted, #64748b);
   white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .wardBadge {
   font-size: 0.6875rem;
   font-weight: 500;
-  color: #165af6;
-  background: #eff4ff;
-  padding: 0.1rem 0.4rem;
+  color: var(--color-primary, #ea580c);
+  background: rgba(234, 88, 12, 0.08);
+  border: 1px solid rgba(234, 88, 12, 0.15);
+  padding: 0.1rem 0.45rem;
   border-radius: 4px;
   align-self: flex-start;
   max-width: 100%;
@@ -200,7 +218,7 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #165af6;
+  background: var(--color-primary, #ea580c);
   flex-shrink: 0;
   margin-top: 0.35rem;
 }
@@ -208,15 +226,15 @@
 .rightPanel {
   background: var(--color-surface, #ffffff);
   border: 1px solid var(--color-border, #e2e8f0);
-  border-radius: 12px;
+  border-radius: var(--radius-md, 8px);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: var(--shadow-sm, 0 1px 2px 0 rgba(0, 0, 0, 0.05));
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
 }
 
 .chatHeader {
-  padding: 1rem 1.5rem;
+  padding: 0.875rem 1.5rem;
   border-bottom: 1px solid var(--color-border, #e2e8f0);
   display: flex;
   justify-content: space-between;
@@ -233,6 +251,7 @@
 .chatGuardianTitle {
   font-size: 0.9375rem;
   font-weight: 700;
+  letter-spacing: -0.01em;
   color: var(--color-text, #0f172a);
 }
 
@@ -259,19 +278,19 @@
   max-width: 70%;
   background: #ffffff;
   border: 1px solid var(--color-border, #e2e8f0);
-  border-radius: 12px 12px 12px 2px;
-  padding: 0.85rem 1rem;
+  border-radius: 8px 8px 8px 2px;
+  padding: 0.85rem 1.1rem;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
 .messageBubbleMe {
   align-self: flex-end;
   max-width: 70%;
-  background: #165af6;
+  background: var(--color-primary, #ea580c);
   color: #ffffff;
-  border-radius: 12px 12px 2px 12px;
-  padding: 0.85rem 1rem;
-  box-shadow: 0 2px 4px rgba(22, 90, 246, 0.2);
+  border-radius: 8px 8px 2px 8px;
+  padding: 0.85rem 1.1rem;
+  box-shadow: 0 2px 6px rgba(234, 88, 12, 0.2);
 }
 
 .bubbleSender {
@@ -279,15 +298,16 @@
   font-weight: 600;
   margin-bottom: 0.25rem;
   color: #64748b;
+  letter-spacing: 0.02em;
 }
 
 .messageBubbleMe .bubbleSender {
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .bubbleText {
   font-size: 0.8125rem;
-  line-height: 1.45;
+  line-height: 1.5;
   white-space: pre-wrap;
   word-break: break-word;
 }
@@ -297,10 +317,11 @@
   margin-top: 0.35rem;
   text-align: right;
   color: #94a3b8;
+  font-variant-numeric: tabular-nums;
 }
 
 .messageBubbleMe .bubbleTime {
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .quickRepliesBar {
@@ -313,25 +334,27 @@
 }
 
 .quickPill {
-  padding: 0.3rem 0.65rem;
+  padding: 0.3rem 0.7rem;
   border-radius: 20px;
   border: 1px solid var(--color-border, #cbd5e1);
   background: var(--color-surface-2, #f1f5f9);
   color: var(--color-text, #0f172a);
   font-size: 0.6875rem;
+  font-family: inherit;
+  font-weight: 500;
   cursor: pointer;
   white-space: nowrap;
-  transition: all 120ms ease;
+  transition: all var(--duration-fast, 120ms) ease;
 }
 
 .quickPill:hover {
-  background: #eff4ff;
-  border-color: #165af6;
-  color: #165af6;
+  background: rgba(234, 88, 12, 0.08);
+  border-color: var(--color-primary, #ea580c);
+  color: var(--color-primary, #ea580c);
 }
 
 .composerArea {
-  padding: 1rem 1.25rem;
+  padding: 0.875rem 1.25rem;
   background: #ffffff;
   border-top: 1px solid var(--color-border, #e2e8f0);
   display: flex;
@@ -344,20 +367,21 @@
   padding: 0.75rem;
   border: 1px solid var(--color-border, #e2e8f0);
   border-radius: 8px;
-  font-size: 0.8125rem;
+  font-size: .875rem;
   font-family: inherit;
   resize: none;
   outline: none;
-  min-height: 48px;
+  min-height: 42px;
   max-height: 120px;
   background: var(--color-surface-2, #f8fafc);
   color: var(--color-text, #0f172a);
+  transition: border-color var(--duration-fast, 120ms) ease, box-shadow var(--duration-fast, 120ms) ease;
 }
 
 .composerInput:focus {
-  border-color: #165af6;
+  border-color: var(--color-primary, #ea580c);
   background: #ffffff;
-  box-shadow: 0 0 0 3px rgba(22, 90, 246, 0.1);
+  box-shadow: 0 0 0 3px var(--color-primary-glow, rgba(234, 88, 12, 0.12));
 }
 
 .emptyState {
@@ -370,3 +394,11 @@
   text-align: center;
   color: var(--color-muted, #64748b);
 }
+
+/* Focused neutral presentation; operational states retain text labels. */
+
+.leftPanel { border:0; border-right:1px solid var(--color-border); border-radius:0; box-shadow:none; background:transparent; }
+.threadItem,.threadItemActive,.threadItem:hover { background:transparent; border:0; border-radius:0; box-shadow:none; }
+.threadItemActive { box-shadow:inset 2px 0 var(--color-primary); }
+.wardBadge,.quickPill,.threadAvatar { background:transparent; border:0; border-radius:0; color:var(--color-muted); }
+.guardianName { color:var(--color-text); }.threadItem:focus-visible { outline:2px solid var(--color-primary); outline-offset:-2px; }

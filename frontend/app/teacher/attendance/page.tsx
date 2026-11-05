@@ -237,8 +237,8 @@ function TeacherAttendanceContent() {
           <span className={styles.statValue} style={{ color: "#D97706" }}>{stats.late}</span>
         </div>
         <div className={styles.statCard}>
-          <span className={styles.statLabel} style={{ color: "#0284C7" }}>Excused</span>
-          <span className={styles.statValue} style={{ color: "#0284C7" }}>{stats.excused}</span>
+          <span className={styles.statLabel} style={{ color: "#92400E" }}>Excused</span>
+          <span className={styles.statValue} style={{ color: "#92400E" }}>{stats.excused}</span>
         </div>
         <div className={styles.statCard}>
           <span className={styles.statLabel}>Rate</span>

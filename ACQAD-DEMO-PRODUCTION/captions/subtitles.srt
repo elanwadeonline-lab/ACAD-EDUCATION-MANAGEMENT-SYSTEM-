@@ -1,0 +1,235 @@
+1
+00:00:00,000 --> 00:00:06,567
+Welcome to ACQAD, an integrated academic coordination and computer-based examination ecosystem engineered for educational institutions.
+
+2
+00:00:06,667 --> 00:00:13,233
+ACQAD unifies school administration, curriculum tracking, resilient offline assessment, and family engagement into a cohesive,
+
+3
+00:00:13,333 --> 00:00:19,900
+high-performance platform designed to operate seamlessly on campus local networks and across cloud supervisory fleets.
+
+4
+00:00:20,000 --> 00:00:29,900
+At the institutional core, administrators maintain end-to-end governance over the academic calendar.
+
+5
+00:00:30,000 --> 00:00:39,900
+The administration portal enables school principals and registrars to configure academic
+
+6
+00:00:40,000 --> 00:00:49,900
+sessions, activate active terms, enforce system-wide grading standards, and schedule institutional timetables.
+
+7
+00:00:50,000 --> 00:00:59,900
+Real-time telemetry dashboards monitor daily attendance, active examination slots, and system operations across the entire campus.
+
+8
+00:01:00,000 --> 00:01:06,900
+School management bridges administrative structure with daily learning.
+
+9
+00:01:07,000 --> 00:01:13,900
+Leadership maps academic departments, assigns qualified form teachers to
+
+10
+00:01:14,000 --> 00:01:20,900
+classes and arms, registers subjects, and enrolls student cohorts.
+
+11
+00:01:21,000 --> 00:01:27,900
+Every student record maintains admission tracking, guardian linkage, and academic
+
+12
+00:01:28,000 --> 00:01:34,900
+progression history, ensuring absolute accountability across Junior and Senior secondary tiers.
+
+13
+00:01:35,000 --> 00:01:41,900
+Teachers operate within a focused workspace tailored to their assigned curriculum.
+
+14
+00:01:42,000 --> 00:01:48,900
+From their dashboard, educators author rich multi-format questions, curate
+
+15
+00:01:49,000 --> 00:01:55,900
+institution-wide question banks, configure assessment rules, and schedule examinations.
+
+16
+00:01:56,000 --> 00:02:02,900
+Automated shuffling, customizable duration controls, and pass mark
+
+17
+00:02:03,000 --> 00:02:09,900
+definitions give teachers complete pedagogical control over classroom evaluations.
+
+18
+00:02:10,000 --> 00:02:18,900
+ACQAD's flagship assessment engine delivers resilient computer-based testing even in air-gapped exam halls.
+
+19
+00:02:19,000 --> 00:02:27,900
+When scheduled, assessments lock into tamper-resistant kiosk terminals.
+
+20
+00:02:28,000 --> 00:02:36,900
+Students verify their seat and pin, review preflight instructions, and
+
+21
+00:02:37,000 --> 00:02:45,900
+navigate questions with built-in scratchpads, scientific calculators, and visual timers.
+
+22
+00:02:46,000 --> 00:02:54,900
+Responses are saved instantly to local storage, shielding examinees from power or network drops.
+
+23
+00:02:55,000 --> 00:03:01,900
+For students, the ACQAD portal is an engaging personal learning desk.
+
+24
+00:03:02,000 --> 00:03:08,900
+Learners view upcoming assessments, review released grades, and access
+
+25
+00:03:09,000 --> 00:03:15,900
+an extensive practice catalog featuring past WAEC and mock papers.
+
+26
+00:03:16,000 --> 00:03:22,900
+Students can download encrypted offline assignment packs to their personal devices,
+
+27
+00:03:23,000 --> 00:03:29,900
+complete homework without internet access, and synchronize scores automatically when reconnected.
+
+28
+00:03:30,000 --> 00:03:38,900
+Evaluation is instantaneous and comprehensive.
+
+29
+00:03:39,000 --> 00:03:47,900
+Objective questions grade automatically upon exam submission, while subjective
+
+30
+00:03:48,000 --> 00:03:56,900
+questions enter the teacher grading centre for rubric scoring.
+
+31
+00:03:57,000 --> 00:04:05,900
+ACQAD automatically computes class averages, subject rankings, and term broadsheets.
+
+32
+00:04:06,000 --> 00:04:14,900
+With one click, administrators generate tamper-evident digital report cards complete with principal remarks and grading keys.
+
+33
+00:04:15,000 --> 00:04:23,650
+Parents and guardians enjoy unprecedented visibility through a mobile-first portal.
+
+34
+00:04:23,750 --> 00:04:32,400
+Guardians can monitor multiple siblings from a single account, reviewing real-time
+
+35
+00:04:32,500 --> 00:04:41,150
+class attendance, published examination results, teacher remarks, and school fee payment statuses.
+
+36
+00:04:41,250 --> 00:04:49,900
+This transparency deepens parent-school partnership and keeps families actively invested in their children's progress.
+
+37
+00:04:50,000 --> 00:04:56,150
+Direct, authenticated communication keeps the school community synchronized.
+
+38
+00:04:56,250 --> 00:05:02,400
+Administrators publish institution-wide announcements and emergency bulletins, while guardians and
+
+39
+00:05:02,500 --> 00:05:08,650
+teachers exchange private messages regarding academic progress and pastoral care.
+
+40
+00:05:08,750 --> 00:05:14,900
+All communication is securely archived within the institutional database, preserving institutional privacy.
+
+41
+00:05:15,000 --> 00:05:23,650
+A critical advantage of ACQAD is its uncompromising local-first design.
+
+42
+00:05:23,750 --> 00:05:32,400
+Powered by a high-throughput Bun HTTP backend and SQLite write-ahead-logging, the platform
+
+43
+00:05:32,500 --> 00:05:41,150
+continues delivering examinations and recording attendance even when public internet is completely down.
+
+44
+00:05:41,250 --> 00:05:49,900
+Background synchronization queues hold operational transactions, uploading them securely to cloud endpoints once connectivity restores.
+
+45
+00:05:50,000 --> 00:05:57,400
+For multi-campus school groups and educational ministries, the ACQAD Control Plane provides centralised fleet management.
+
+46
+00:05:57,500 --> 00:06:04,900
+Technical supervisors monitor server CPU health, memory usage, SQLite
+
+47
+00:06:05,000 --> 00:06:12,400
+database sizes, and API latency across distributed campus nodes.
+
+48
+00:06:12,500 --> 00:06:19,900
+Automated health beacons alert administrators to node degradation before students enter examination halls.
+
+49
+00:06:20,000 --> 00:06:27,400
+Experience the complete synergy of the ACQAD ecosystem.
+
+50
+00:06:27,500 --> 00:06:34,900
+A physics teacher schedules a mid-term examination from their portal.
+
+51
+00:06:35,000 --> 00:06:42,400
+Students sit for the assessment inside the secure exam kiosk.
+
+52
+00:06:42,500 --> 00:06:49,900
+As soon as the final student submits, objective scores calculate automatically and populate the teacher gradebook.
+
+53
+00:06:50,000 --> 00:06:57,400
+The school principal approves the term broadsheet, and within seconds, parents receive
+
+54
+00:06:57,500 --> 00:07:04,900
+a notification on their mobile phones to view the verified report card.
+
+55
+00:07:05,000 --> 00:07:11,900
+ACQAD deploys flexibly as a self-contained on-premise server appliance,
+
+56
+00:07:12,000 --> 00:07:18,900
+a private school LAN node, or a hybrid cloud-synchronized cluster.
+
+57
+00:07:19,000 --> 00:07:25,900
+With military-grade data sovereignty, zero per-exam licensing penalties, and exceptional performance on
+
+58
+00:07:26,000 --> 00:07:32,900
+standard school hardware, ACQAD is the definitive operating system for modern academic institutions.
+
+59
+00:07:33,000 --> 00:07:39,900
+Partner with ACQAD today to transform your institution's digital future.

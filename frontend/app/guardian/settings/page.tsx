@@ -6,7 +6,11 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { RequireRole } from "../../../components/auth/RequireRole";
 import { useGuardian } from "../../../components/guardian/GuardianContext";
+import List from "@mui/material/List";
+import ListItemButton from "@mui/material/ListItemButton";
+import ListItemText from "@mui/material/ListItemText";
 import { api } from "../../../lib/api";
+import { useAuth } from "../../../hooks/useAuth";
 import styles from "./page.module.css";
 
 interface ProfileData {
@@ -32,14 +36,17 @@ export default function GuardianSettingsPage() {
 
 function SettingsContent() {
   const router = useRouter();
+  const { logout } = useAuth();
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [profileError, setProfileError] = useState("");
   const { guardianName, theme, setTheme } = useGuardian();
   const [profile, setProfile] = useState<ProfileData>({
-    id: 1,
-    name: guardianName || "Mrs. Adenike Adeleke",
-    email: "adenike.ad@gmail.com",
-    phone: "+234 801 234 5678",
-    address: "Lekki Phase 1, Lagos, Nigeria",
-    relationship: "Mother",
+    id: 0,
+    name: guardianName || "",
+    email: "",
+    phone: "",
+    address: "",
+    relationship: "",
     notify_attendance: true,
     notify_results: true,
     notify_fees: true,
@@ -58,13 +65,15 @@ function SettingsContent() {
   useEffect(() => {
     api.get<ProfileData>("/api/guardian/profile")
       .then((res) => {
+        if (!res?.name) throw new Error("Profile unavailable");
         if (res && res.name) {
           setProfile(res);
           setPhoneInput(res.phone || "");
           setAddressInput(res.address || "");
         }
       })
-      .catch(() => {});
+      .catch(() => setProfileError("Your profile could not be loaded. Please reload to try again."))
+      .finally(() => setProfileLoading(false));
   }, []);
 
   const handleToggleNotification = async (key: keyof Pick<ProfileData, "notify_attendance" | "notify_results" | "notify_fees" | "notify_messages">) => {
@@ -123,15 +132,18 @@ function SettingsContent() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("auth_token");
-    localStorage.removeItem("user_role");
-    router.push("/auth/login");
+  const handleLogout = async () => {
+    await logout();
+    router.push("/guardian/");
   };
+
+  if (profileLoading) return <div className={styles.container} role="status">Loading your profile…</div>;
+  if (profileError) return <div className={styles.container} role="alert"><p>{profileError}</p><button type="button" onClick={() => window.location.reload()}>Reload profile</button></div>;
 
   return (
     <div className={styles.container}>
       <h1 className={styles.pageTitle}>Settings & Profile</h1>
+      <List component="nav" aria-label="School and family tools" sx={{ bgcolor: "var(--g-surface)", border: "1px solid var(--g-border)", borderRadius: 3, overflow: "hidden" }}>{[{href:"/guardian/wards",label:"My children"},{href:"/guardian/links",label:"Link or manage a child"},{href:"/guardian/attendance",label:"Attendance records"},{href:"/guardian/calendar",label:"School calendar"},{href:"/guardian/fees",label:"Fees and receipts"},{href:"/guardian/announcements",label:"School notices"}].map(item=><ListItemButton component={Link} href={item.href} key={item.href} sx={{ minHeight:52, borderBottom:"1px solid var(--g-border-subtle)" }}><ListItemText primary={item.label}/><span aria-hidden="true">›</span></ListItemButton>)}</List>
 
       {/* ── 1. Profile Hero Summary ── */}
       <section className={styles.profileHeroCard}>

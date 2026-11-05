@@ -17,7 +17,7 @@ export default function GuardianAttendancePage() {
 }
 
 function AttendanceContent() {
-  const { activeWard, period, setPeriod, openChildSwitcher } = useGuardian();
+  const { activeWard } = useGuardian();
   const router = useRouter();
   const [currentMonthIndex, setCurrentMonthIndex] = useState(new Date().getMonth());
   const [attendanceData, setAttendanceData] = useState<any>(null);
@@ -59,11 +59,11 @@ function AttendanceContent() {
   const realLogs = (attendanceData?.calendar || activeWard.attendance?.calendar_days || []) as Array<{ date?: string; day?: number; status?: string }>;
   const logMap = new Map<number, string>();
   for (const item of realLogs) {
-    if (item.day) logMap.set(item.day, item.status || "present");
+    if (item.day) logMap.set(item.day, item.status || "unrecorded");
     else if (item.date) {
       const d = new Date(item.date);
-      if (d.getMonth() === currentMonthIndex) {
-        logMap.set(d.getDate(), item.status || "present");
+      if (d.getMonth() === currentMonthIndex && d.getFullYear() === year) {
+        logMap.set(d.getDate(), item.status || "unrecorded");
       }
     }
   }
@@ -77,14 +77,14 @@ function AttendanceContent() {
   for (let d = 1; d <= daysInMonth; d++) {
     const dayOfWeek = new Date(year, currentMonthIndex, d).getDay();
     const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-    const recordedStatus = logMap.get(d) || (isWeekend ? "weekend" : "present");
+    const recordedStatus = logMap.get(d) || (isWeekend ? "weekend" : "unrecorded");
     calendarDays.push({ day: d, currentMonth: true, status: recordedStatus });
   }
 
   // Donut circumference
   const radius = 38;
   const circumference = 2 * Math.PI * radius;
-  const pct = att.percentage || activeWard.attendance_pct || 0;
+  const pct = att.percentage ?? activeWard.attendance_pct ?? 0;
   const strokeDashoffset = circumference - (Math.max(0, Math.min(100, pct)) / 100) * circumference;
 
   // Recent attendance logs
@@ -92,33 +92,6 @@ function AttendanceContent() {
 
   return (
     <div className={styles.container}>
-      {/* ── Top Header Controls ── */}
-      <div className={styles.topControlRow}>
-        <button
-          type="button"
-          className={styles.childSelectBtn}
-          onClick={openChildSwitcher}
-          style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
-        >
-          <StudentAvatar name={activeWard.name} imageUrl={activeWard.image_url} size="xs" />
-          <span className={styles.childSelectName}>{activeWard.name}</span>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <polyline points="6 9 12 15 18 9" />
-          </svg>
-        </button>
-
-        <button
-          type="button"
-          className={styles.periodBadge}
-          onClick={() => setPeriod(period === "this_term" ? "this_week" : "this_term")}
-        >
-          <span>{period === "this_term" ? "This Term" : "This Week"}</span>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <polyline points="6 9 12 15 18 9" />
-          </svg>
-        </button>
-      </div>
-
       {/* ── 1. Donut Gauge Card & Legend ── */}
       <section className={styles.gaugeCard}>
         <div className={styles.donutBox}>
@@ -154,17 +127,17 @@ function AttendanceContent() {
           <div className={styles.legendItem}>
             <span className={styles.dotPresent} />
             <span className={styles.legendLabel}>Present</span>
-            <span className={styles.legendDays}>{att.present_days || 46} Days</span>
+            <span className={styles.legendDays}>{att.present_days ?? 0} Days</span>
           </div>
           <div className={styles.legendItem}>
             <span className={styles.dotAbsent} />
             <span className={styles.legendLabel}>Absent</span>
-            <span className={styles.legendDays}>{att.absent_days || 4} Days</span>
+            <span className={styles.legendDays}>{att.absent_days ?? 0} Days</span>
           </div>
           <div className={styles.legendItem}>
             <span className={styles.dotLate} />
             <span className={styles.legendLabel}>Late</span>
-            <span className={styles.legendDays}>{att.late_days || 0} Days</span>
+            <span className={styles.legendDays}>{att.late_days ?? 0} Days</span>
           </div>
         </div>
       </section>
@@ -193,7 +166,7 @@ function AttendanceContent() {
       <section className={styles.calendarCard}>
         <div className={styles.calendarHeader}>
           <h2 className={styles.calendarMonthTitle}>
-            {currentMonthIndex === 4 ? "May 2026" : "June 2026"}
+            {new Date(year, currentMonthIndex, 1).toLocaleDateString("en", { month:"long", year:"numeric" })}
           </h2>
           <div style={{ display: "flex", gap: "0.35rem" }}>
             <button
@@ -252,7 +225,7 @@ function AttendanceContent() {
         <div className={styles.logList}>
           {logs.length === 0 ? (
             <div style={{ padding: "1.25rem", textAlign: "center", color: "var(--g-text-secondary, #64748B)", fontSize: "0.8125rem", background: "var(--g-surface, #FFFFFF)", borderRadius: "var(--g-radius-md, 12px)", border: "1px solid var(--g-border, #E2E8F0)" }}>
-              No absence or tardy records for this term. All roll calls are recorded in the term summary.
+              No daily attendance records are available for this period.
             </div>
           ) : (
             logs.map((item: any, idx: number) => (

@@ -8,7 +8,9 @@
     "build": "cd frontend && bun run build",
     "start": "bun --env-file=.env server.ts",
     "setup": "cd frontend && bun install",
-    "hosts:setup": "bun run scripts/setup-hosts.ts"
+    "hosts:setup": "bun run scripts/setup-hosts.ts",
+    "mobile:guardian": "cd apps/mobile-guardian && bun serve-preview.ts",
+    "mobile:guardian:dev": "cd apps/mobile-guardian && npx expo start"
   },
   "devDependencies": {
     "@types/bun": "^1.1.13",

@@ -1,4 +1,5 @@
 "use client";
+import { ResultsSummary } from "../../../components/domain/ResultsSummary";
 
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { RequireRole } from "../../../components/auth/RequireRole";
@@ -166,59 +167,14 @@ function AnnualResultsContent() {
       )}
 
       {/* ── Minimalist KPI Metrics Row ──────────────────────── */}
-      <section className={styles.statsGrid}>
-        <div className={styles.statCard}>
-          <div className={styles.statTop}>
-            <span className={styles.statLabel}>Candidates Assessed</span>
-            <div className={styles.statIcon} style={{ color: "#3B82F6" }}><UsersIcon width="15" height="15" /></div>
-          </div>
-          <div>
-            <div className={styles.statValue}>{stats.total}</div>
-            <div className={styles.statFootnote}>With approved results</div>
-          </div>
-        </div>
-
-        <div className={styles.statCard}>
-          <div className={styles.statTop}>
-            <span className={styles.statLabel}>Cohort Mean Average</span>
-            <div className={styles.statIcon} style={{ color: "#06B6D4" }}><BookIcon width="15" height="15" /></div>
-          </div>
-          <div>
-            <div className={styles.statValue}>{stats.overallAvg.toFixed(1)}%</div>
-            <div className={styles.statFootnote}>Across all assessed terms</div>
-          </div>
-        </div>
-
-        <div className={styles.statCard}>
-          <div className={styles.statTop}>
-            <span className={styles.statLabel}>Promoted / Graduated</span>
-            <div className={styles.statIcon} style={{ color: "#10B981" }}><CheckCircleIcon width="15" height="15" /></div>
-          </div>
-          <div>
-            <div className={styles.statValue}>{stats.promoted + stats.graduated}</div>
-            <div className={styles.statFootnote}>{stats.promoted} promoted, {stats.graduated} graduated</div>
-          </div>
-        </div>
-
-        <div className={styles.statCard}>
-          <div className={styles.statTop}>
-            <span className={styles.statLabel}>Pending Decisions</span>
-            <div className={styles.statIcon} style={{ color: "#F97316" }}><WarningIcon width="15" height="15" /></div>
-          </div>
-          <div>
-            <div className={styles.statValue}>{stats.pending}</div>
-            <div className={styles.statFootnote}>Awaiting outcome</div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Filter Strip ─────────────────────────────────────── */}
+      <ResultsSummary items={[{label:"Students assessed",value:stats.total,detail:"With approved results"},{label:"Mean average",value:`${stats.overallAvg.toFixed(1)}%`,detail:"Across assessed terms"},{label:"Promoted / graduated",value:stats.promoted+stats.graduated,detail:`${stats.promoted} promoted · ${stats.graduated} graduated`},{label:"Pending decisions",value:stats.pending,detail:"Awaiting a promotion decision"}]}/>    {/* ── Filter Strip ─────────────────────────────────────── */}
       <div className={styles.filterStrip}>
         <div className={styles.searchBox}>
           <SearchIcon width="14" height="14" className={styles.searchIcon} />
           <input
             type="text"
             placeholder="Search candidate by name or registration ID…"
+            aria-label="Search annual results"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className={styles.searchInput}
@@ -226,6 +182,7 @@ function AnnualResultsContent() {
         </div>
 
         <select
+          aria-label="Promotion outcome"
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
           className={styles.selectFilter}

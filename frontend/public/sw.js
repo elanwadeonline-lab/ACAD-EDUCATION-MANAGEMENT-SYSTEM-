@@ -41,26 +41,25 @@ self.addEventListener('fetch', (event) => {
 
   if (isGuardianRoute) {
     event.respondWith(
-      caches.match(event.request).then((cachedResponse) => {
-        const fetchPromise = fetch(event.request)
-          .then((networkResponse) => {
-            if (networkResponse && networkResponse.status === 200) {
-              const responseToCache = networkResponse.clone();
-              caches.open(GUARDIAN_CACHE).then((cache) => {
-                cache.put(event.request, responseToCache);
-              });
-            }
-            return networkResponse;
-          })
-          .catch(() => {
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseToCache = networkResponse.clone();
+            caches.open(GUARDIAN_CACHE).then((cache) => {
+              cache.put(event.request, responseToCache);
+            });
+          }
+          return networkResponse;
+        })
+        .catch(() => {
+          return caches.match(event.request).then((cachedResponse) => {
+            if (cachedResponse) return cachedResponse;
             if (event.request.mode === 'navigate') {
               return caches.match('/offline.html');
             }
             return new Response('Offline', { status: 503 });
           });
-
-        return cachedResponse || fetchPromise;
-      })
+        })
     );
     return;
   }
@@ -261,8 +260,9 @@ self.addEventListener('message', (event) => {
     });
   }
 
-  if (event.data.type === 'CLEAR_GUARDIAN_CACHE') {
+  if (event.data && (event.data.type === 'CLEAR_GUARDIAN_CACHE' || event.data.type === 'CLEAR_AUTH_CACHE')) {
     caches.delete(GUARDIAN_CACHE);
+    caches.delete(CACHE_NAME);
   }
 
   if (event.data.type === 'REGISTER_BACKGROUND_SYNC') {

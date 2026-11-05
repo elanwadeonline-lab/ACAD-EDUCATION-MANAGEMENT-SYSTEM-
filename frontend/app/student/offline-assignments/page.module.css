@@ -161,18 +161,18 @@
   gap: 0.45rem;
   padding: 0.55rem 1.15rem;
   border-radius: 10px;
-  background: #165AF6;
+  background: #92400E;
   color: #FFFFFF;
   font-size: 0.8125rem;
   font-weight: 600;
   border: none;
   cursor: pointer;
   transition: all 150ms ease;
-  box-shadow: 0 1px 3px rgba(22, 90, 246, 0.2);
+  box-shadow: 0 1px 3px rgba(217, 119, 6, 0.2);
 }
 
 .downloadBtn:hover:not(:disabled) {
-  background: #1248C8;
+  background: #78350F;
   transform: translateY(-1px);
 }
 
@@ -328,7 +328,7 @@
 .startBtn {
   font-size: 0.8125rem;
   font-weight: 600;
-  color: #165AF6;
+  color: #92400E;
   text-decoration: none;
   display: inline-flex;
   align-items: center;
@@ -435,7 +435,7 @@
 .saveBtn {
   padding: 0.5rem 1.15rem;
   border-radius: 8px;
-  background: #165AF6;
+  background: #92400E;
   color: #FFFFFF;
   font-size: 0.8125rem;
   font-weight: 600;
@@ -445,7 +445,7 @@
 }
 
 .saveBtn:hover {
-  background: #1248C8;
+  background: #78350F;
   transform: translateY(-1px);
 }
 
@@ -492,15 +492,15 @@
 }
 
 .navBtnActive {
-  background: #165AF6 !important;
+  background: #92400E !important;
   color: #FFFFFF !important;
-  border-color: #165AF6 !important;
+  border-color: #92400E !important;
 }
 
 .navBtnAnswered {
-  background: #EFF4FF;
-  color: #165AF6;
-  border-color: #DBEAFE;
+  background: #FFFBEB;
+  color: #92400E;
+  border-color: #FDE68A;
 }
 
 .qArea {
@@ -532,9 +532,9 @@
 .marks {
   font-size: 0.75rem;
   font-weight: 600;
-  color: #165AF6;
-  background: #EFF4FF;
-  border: 1px solid #DBEAFE;
+  color: #92400E;
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
   padding: 0.2rem 0.55rem;
   border-radius: 6px;
 }
@@ -577,8 +577,8 @@
 }
 
 .optionBtnActive {
-  border-color: #165AF6 !important;
-  background: #EFF4FF !important;
+  border-color: #92400E !important;
+  background: #FFFBEB !important;
 }
 
 .optionLetter {
@@ -596,7 +596,7 @@
 }
 
 .optionBtnActive .optionLetter {
-  background: #165AF6;
+  background: #92400E;
   color: #FFFFFF;
 }
 
@@ -644,7 +644,7 @@
   gap: 0.35rem;
   padding: 0.55rem 1.25rem;
   border-radius: 8px;
-  background: #165AF6;
+  background: #92400E;
   color: #FFFFFF;
   font-size: 0.8125rem;
   font-weight: 600;
@@ -654,7 +654,7 @@
 }
 
 .nextActionBtn:hover {
-  background: #1248C8;
+  background: #78350F;
   transform: translateY(-1px);
 }
 
@@ -743,17 +743,17 @@
   gap: 0.45rem;
   padding: 0.65rem 1.35rem;
   border-radius: 10px;
-  background: #165AF6;
+  background: #92400E;
   color: #FFFFFF;
   font-size: 0.875rem;
   font-weight: 600;
   text-decoration: none;
   transition: all 150ms ease;
-  box-shadow: 0 2px 6px rgba(22, 90, 246, 0.2);
+  box-shadow: 0 2px 6px rgba(217, 119, 6, 0.2);
 }
 
 .returnBtn:hover {
-  background: #1248C8;
+  background: #78350F;
   transform: translateY(-1px);
 }
 

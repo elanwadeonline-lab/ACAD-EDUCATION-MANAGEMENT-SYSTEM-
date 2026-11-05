@@ -15,11 +15,11 @@
 }
 
 .pageTitle {
-  font-size: 1.25rem;
-  font-weight: 800;
+  font-size: 1.375rem;
+  font-weight: 600;
   color: var(--g-text-primary, #0F172A);
   margin: 0;
-  letter-spacing: -0.02em;
+  letter-spacing: -.03em;
 }
 
 .addWardBtn {
@@ -29,17 +29,17 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: var(--g-primary, #165AF6);
+  background: var(--g-primary, #92400E);
   color: #FFFFFF;
   border: none;
   cursor: pointer;
-  box-shadow: 0 2px 8px var(--g-primary-glow, rgba(22, 90, 246, 0.28));
+  box-shadow: 0 2px 8px var(--g-primary-glow, rgba(217, 119, 6, 0.28));
   transition: transform var(--g-duration, 180ms) ease, background var(--g-duration, 180ms) ease;
   text-decoration: none;
 }
 
 .addWardBtn:hover {
-  background: var(--g-primary-hover, #1248C8);
+  background: var(--g-primary-hover, #78350F);
   transform: scale(1.05);
 }
 
@@ -52,19 +52,20 @@
 .childCard {
   background: var(--g-surface, #FFFFFF);
   border: 1px solid var(--g-border, #E2E8F0);
-  border-radius: var(--g-radius-xl, 18px);
+  border-radius: 18px;
   padding: 1.25rem;
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  box-shadow: var(--g-shadow-sm, 0 1px 3px rgba(15, 23, 42, 0.03));
+  box-shadow: none;
   transition: transform var(--g-duration, 180ms) ease, border-color var(--g-duration, 180ms) ease, box-shadow var(--g-duration, 180ms) ease;
   text-decoration: none;
   color: inherit;
+  border-color: var(--g-border);
 }
 
 .childCard:hover {
-  border-color: var(--g-border-focus, #3B82F6);
+  border-color: var(--g-border-focus, #D97706);
   box-shadow: var(--g-shadow-md, 0 4px 12px rgba(15, 23, 42, 0.05));
 }
 
@@ -89,7 +90,7 @@
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--g-primary, #165AF6) 0%, #0D47C9 100%);
+  background: linear-gradient(135deg, var(--g-primary, #92400E) 0%, #78350F 100%);
   color: #FFFFFF;
   font-size: 1.125rem;
   font-weight: 800;
@@ -97,7 +98,7 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  border: 2px solid var(--g-primary-subtle, #EFF4FF);
+  border: 2px solid var(--g-primary-subtle, #FFFBEB);
 }
 
 .childMeta {
@@ -115,7 +116,7 @@
 .childClass {
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--g-primary, #165AF6);
+  color: var(--g-primary-text, #92400E);
 }
 
 .childAdmission {
@@ -179,7 +180,7 @@
 }
 
 .quickActionBtn:hover {
-  background: var(--g-primary-subtle, #EFF4FF);
-  border-color: var(--g-primary-border, #DBEAFE);
-  color: var(--g-primary, #165AF6);
+  background: var(--g-primary-subtle, #FFFBEB);
+  border-color: var(--g-primary-border, #FDE68A);
+  color: var(--g-primary-text, #92400E);
 }

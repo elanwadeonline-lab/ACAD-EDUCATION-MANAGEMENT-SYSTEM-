@@ -2,304 +2,73 @@
 
 import React from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { usePathname } from "next/navigation";
+import BottomNavigation from "@mui/material/BottomNavigation";
+import BottomNavigationAction from "@mui/material/BottomNavigationAction";
+import SwipeableDrawer from "@mui/material/SwipeableDrawer";
+import ListItemButton from "@mui/material/ListItemButton";
+import { ArrowLeft, Home, Users, FileText, MessageCircle, MoreHorizontal, Bell, Sun, Moon, Plus, Check, X, ChevronDown, CalendarDays, Wallet, ClipboardCheck, Megaphone, Link2 } from "lucide-react";
 import { useGuardian } from "./GuardianContext";
 import { StudentAvatar } from "./StudentAvatar";
+import { AcqadLogo } from "../brand/AcqadLogo";
 import styles from "./GuardianMobileShell.module.css";
 
-interface Props {
-  children: React.ReactNode;
-}
+const navigation = [
+  { href: "/guardian/dashboard", label: "Home", Icon: Home, paths: ["/guardian/dashboard"] },
+  { href: "/guardian/wards", label: "My children", Icon: Users, paths: ["/guardian/wards"] },
+  { href: "/guardian/results", label: "Results", Icon: FileText, paths: ["/guardian/results", "/guardian/reports", "/guardian/performance", "/guardian/examinations"] },
+  { href: "/guardian/messages", label: "Messages", Icon: MessageCircle, paths: ["/guardian/messages"] },
+  { href: "/guardian/settings", label: "More", Icon: MoreHorizontal, paths: ["/guardian/settings", "/guardian/fees", "/guardian/attendance", "/guardian/calendar", "/guardian/announcements", "/guardian/links", "/guardian/notifications"] },
+];
+const tools = [
+  { href: "/guardian/attendance", label: "Attendance", Icon: ClipboardCheck },
+  { href: "/guardian/calendar", label: "School calendar", Icon: CalendarDays },
+  { href: "/guardian/fees", label: "Fees & receipts", Icon: Wallet },
+  { href: "/guardian/announcements", label: "Announcements", Icon: Megaphone },
+  { href: "/guardian/links", label: "Manage child links", Icon: Link2 },
+];
 
-export function GuardianMobileShell({ children }: Props) {
-  const pathname = usePathname() || "";
-  const router = useRouter();
-  const {
-    activeWard,
-    wards,
-    setActiveWardId,
-    childSwitcherOpen,
-    openChildSwitcher,
-    closeChildSwitcher,
-    unreadNotificationCount,
-    unreadMessageCount,
-    theme,
-    toggleTheme,
-  } = useGuardian();
+export function GuardianMobileShell({ children }: { children: React.ReactNode }) {
+  const pathname = (usePathname() || "").replace(/\/+$/, "");
+  const { activeWard, wards, guardianName, setActiveWardId, childSwitcherOpen, openChildSwitcher, closeChildSwitcher,
+    unreadNotificationCount, unreadMessageCount, theme, toggleTheme } = useGuardian();
+  const isHome = pathname === "/guardian/dashboard";
+  const pageTitles: Record<string,string> = { wards:"My children",results:"Results",reports:"Reports",performance:"Progress",examinations:"Examinations",messages:"Messages",settings:"Your account",fees:"Fees & receipts",attendance:"Attendance",calendar:"School calendar",announcements:"School notices",links:"Manage children",notifications:"Notifications" };
+  const pageTitle = pageTitles[pathname.split("/")[2]] || "Your family";
+  const selectedId = activeWard ? activeWard.student_id || activeWard.id : null;
+  const matches = (paths: string[]) => paths.some(p => pathname === p || pathname.startsWith(p + "/"));
 
-  const isHome = pathname === "/guardian/dashboard" || pathname === "/guardian" || pathname === "/guardian/";
-  const isStudentsTab = pathname.startsWith("/guardian/wards");
-  const isResultsTab = pathname.startsWith("/guardian/results") || pathname.startsWith("/guardian/reports") || pathname.startsWith("/guardian/performance") || pathname.startsWith("/guardian/examinations");
-  const isMessagesTab = pathname.startsWith("/guardian/messages");
-  const isMoreTab =
-    pathname.startsWith("/guardian/settings") ||
-    pathname.startsWith("/guardian/fees") ||
-    pathname.startsWith("/guardian/attendance") ||
-    pathname.startsWith("/guardian/calendar") ||
-    pathname.startsWith("/guardian/announcements") ||
-    pathname.startsWith("/guardian/links");
-
-  return (
-    <div className={styles.pwaContainer}>
-      <div className={styles.mobileViewport}>
-        {/* ── 1. Top Safe-Area Mobile Header ── */}
-        <header className={styles.mobileHeader}>
-          <div className={styles.headerLeft}>
-            <Link href="/guardian/dashboard" className={styles.brandLink}>
-              <div className={styles.brandIconBox}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-                  <path d="M6 12v5c3 3 9 3 12 0v-5" />
-                </svg>
-              </div>
-              <span className={styles.brandTitle}>ACAD</span>
-            </Link>
-          </div>
-
-          {/* Active Child Switcher Pill */}
-          {activeWard ? (
-            <button
-              type="button"
-              className={styles.childSelectorPill}
-              onClick={openChildSwitcher}
-              aria-label={`Active ward: ${activeWard.name}. Tap to switch child.`}
-            >
-              <StudentAvatar name={activeWard.name} imageUrl={activeWard.image_url} size="xs" />
-              <span className={styles.childPillText}>
-                {activeWard.name.split(" ")[0]} ({activeWard.grade})
-              </span>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={styles.childPillChevron}>
-                <polyline points="6 9 12 15 18 9" />
-              </svg>
-            </button>
-          ) : (
-            <Link href="/guardian/links" className={styles.childSelectorPill}>
-              <span className={styles.childPillText}>+ Link Child</span>
-            </Link>
-          )}
-
-          {/* Header Right Actions: Messages, Theme Toggle & Notification Bell */}
-          <div className={styles.headerRight}>
-            <Link
-              href="/guardian/messages"
-              className={styles.notifyBtn}
-              aria-label="Messages and Chat"
-              title="Chat with Teachers & Administration"
-            >
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-              </svg>
-              {unreadMessageCount > 0 && (
-                <span className={styles.notifyDot}>{unreadMessageCount > 99 ? "99+" : unreadMessageCount}</span>
-              )}
-            </Link>
-
-            <button
-              type="button"
-              className={styles.themeToggleBtn}
-              onClick={toggleTheme}
-              aria-label={`Switch to ${theme === "light" ? "Dark" : "Light"} mode`}
-              title={`Switch to ${theme === "light" ? "Dark" : "Light"} mode`}
-            >
-              {theme === "light" ? (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-                </svg>
-              ) : (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="5" />
-                  <line x1="12" y1="1" x2="12" y2="3" />
-                  <line x1="12" y1="21" x2="12" y2="23" />
-                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-                  <line x1="1" y1="12" x2="3" y2="12" />
-                  <line x1="21" y1="12" x2="23" y2="12" />
-                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-                </svg>
-              )}
-            </button>
-
-            <Link
-              href="/guardian/notifications"
-              className={styles.notifyBtn}
-              aria-label="Notifications"
-              title="View notifications"
-            >
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-              </svg>
-              {unreadNotificationCount > 0 && (
-                <span className={styles.notifyDot}>{unreadNotificationCount > 99 ? "99+" : unreadNotificationCount}</span>
-              )}
-            </Link>
-          </div>
-        </header>
-
-        {/* ── 2. Scrollable Body Content ── */}
-        <main className={styles.mobileContent}>{children}</main>
-
-        {/* ── 3. Fixed Bottom Navigation Bar (5 Primary Tabs) ── */}
-        <nav className={styles.bottomNav} aria-label="Main Navigation">
-          {/* Tab 1: Home */}
-          <Link
-            href="/guardian/dashboard"
-            className={`${styles.navItem} ${isHome ? styles.navItemActive : ""}`}
-          >
-            <div className={styles.navIconBox}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={isHome ? "2.4" : "1.8"} strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                <polyline points="9 22 9 12 15 12 15 22" />
-              </svg>
-            </div>
-            <span className={styles.navLabel}>Home</span>
-          </Link>
-
-          {/* Tab 2: Students */}
-          <Link
-            href="/guardian/wards"
-            className={`${styles.navItem} ${isStudentsTab ? styles.navItemActive : ""}`}
-          >
-            <div className={styles.navIconBox}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={isStudentsTab ? "2.4" : "1.8"} strokeLinecap="round" strokeLinejoin="round">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                <circle cx="9" cy="7" r="4" />
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-              </svg>
-            </div>
-            <span className={styles.navLabel}>Students</span>
-          </Link>
-
-          {/* Tab 3: Results & Academics */}
-          <Link
-            href="/guardian/results"
-            className={`${styles.navItem} ${isResultsTab ? styles.navItemActive : ""}`}
-          >
-            <div className={styles.navIconBox}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={isResultsTab ? "2.4" : "1.8"} strokeLinecap="round" strokeLinejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                <polyline points="14 2 14 8 20 8" />
-                <line x1="16" y1="13" x2="8" y2="13" />
-                <line x1="16" y1="17" x2="8" y2="17" />
-                <polyline points="10 9 9 9 8 9" />
-              </svg>
-            </div>
-            <span className={styles.navLabel}>Results</span>
-          </Link>
-
-          {/* Tab 4: Messages / Chat */}
-          <Link
-            href="/guardian/messages"
-            className={`${styles.navItem} ${isMessagesTab ? styles.navItemActive : ""}`}
-          >
-            <div className={styles.navIconBox}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={isMessagesTab ? "2.4" : "1.8"} strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-              </svg>
-              {unreadMessageCount > 0 && <span className={styles.navBadge} />}
-            </div>
-            <span className={styles.navLabel}>Messages</span>
-          </Link>
-
-          {/* Tab 5: More */}
-          <Link
-            href="/guardian/settings"
-            className={`${styles.navItem} ${isMoreTab ? styles.navItemActive : ""}`}
-          >
-            <div className={styles.navIconBox}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={isMoreTab ? "2.4" : "1.8"} strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="1.5" />
-                <circle cx="19" cy="12" r="1.5" />
-                <circle cx="5" cy="12" r="1.5" />
-              </svg>
-            </div>
-            <span className={styles.navLabel}>More</span>
-          </Link>
-        </nav>
-
-        {/* ── 4. Spring Child Switcher Bottom Sheet Modal ── */}
-        <AnimatePresence>
-          {childSwitcherOpen && (
-            <motion.div
-              className={styles.sheetBackdrop}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={closeChildSwitcher}
-            >
-              <motion.div
-                className={styles.sheetContainer}
-                initial={{ y: "100%" }}
-                animate={{ y: 0 }}
-                exit={{ y: "100%" }}
-                transition={{ type: "spring", stiffness: 400, damping: 35 }}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className={styles.sheetHandleBar} />
-                <div className={styles.sheetHeader}>
-                  <h3 className={styles.sheetTitle}>Select Active Ward</h3>
-                  <button
-                    type="button"
-                    className={styles.sheetCloseBtn}
-                    onClick={closeChildSwitcher}
-                    aria-label="Close"
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <line x1="18" y1="6" x2="6" y2="18" />
-                      <line x1="6" y1="6" x2="18" y2="18" />
-                    </svg>
-                  </button>
-                </div>
-
-                <div className={styles.wardList}>
-                  {wards.map((w) => {
-                    const isSelected = activeWard?.id === w.id || activeWard?.student_id === w.student_id;
-                    const studentId = w.student_id || w.id;
-                    return (
-                      <button
-                        key={studentId}
-                        type="button"
-                        className={`${styles.wardCardOption} ${isSelected ? styles.wardCardOptionActive : ""}`}
-                        onClick={() => setActiveWardId(studentId)}
-                      >
-                        <div className={styles.wardInfoLeft}>
-                          <StudentAvatar name={w.name} imageUrl={w.image_url} size="sm" />
-                          <div className={styles.wardMetaCol}>
-                            <span className={styles.wardNameText}>{w.name}</span>
-                            <span className={styles.wardGradeText}>
-                              {w.grade} • {w.admission_number || w.reg_id || `ID: ${studentId}`}
-                            </span>
-                          </div>
-                        </div>
-                        {isSelected && (
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={styles.wardCheckIcon}>
-                            <polyline points="20 6 9 17 4 12" />
-                          </svg>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <Link
-                  href="/guardian/links"
-                  className={styles.linkNewWardBtn}
-                  onClick={closeChildSwitcher}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <line x1="12" y1="5" x2="12" y2="19" />
-                    <line x1="5" y1="12" x2="19" y2="12" />
-                  </svg>
-                  <span>Link Another Ward</span>
-                </Link>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+  return <div className={styles.pwaContainer}>
+    <a className={styles.skipLink} href="#guardian-content">Skip to content</a>
+    <aside className={styles.desktopSidebar} aria-label="Guardian workspace">
+      <Link href="/guardian/dashboard" className={styles.brandLink}><AcqadLogo size="lg" wordmarkWeight={700}/></Link>
+      <p className={styles.navSection}>Your family</p>
+      <nav aria-label="Desktop navigation">{navigation.map(({ href, label, Icon, paths }) => <Link key={href} href={href} className={`${styles.desktopNavItem} ${matches(paths) ? styles.desktopNavActive : ""}`} aria-current={matches(paths) ? "page" : undefined}><Icon size={18} /><span>{label === "More" ? "Settings" : label}</span></Link>)}</nav>
+      <p className={styles.navSection}>School tools</p>
+      <nav aria-label="School tools">{tools.map(({ href, label, Icon }) => <Link key={href} href={href} className={styles.desktopNavItem} aria-current={pathname === href ? "page" : undefined}><Icon size={18} /><span>{label}</span></Link>)}</nav>
+      <p className={styles.sidebarFoot}>Stay connected to their school day.</p>
+    </aside>
+    <div className={styles.mobileViewport}>
+      <header className={styles.mobileHeader}>
+        {isHome ? (<Link href="/guardian/dashboard" className={styles.greetingLink}><span className={styles.parentAvatar}>{guardianName?.trim().charAt(0) || <Users size={20} />}</span><span className={styles.parentGreeting}><small>Hello,</small><strong>{guardianName || "Your family"}</strong></span></Link>) : <div className={styles.subpageHeading}><Link href="/guardian/dashboard" className={styles.iconButton} aria-label="Back to home"><ArrowLeft size={20}/></Link><strong>{pageTitle}</strong></div>}
+        <div className={styles.headerRight}>
+          {activeWard && !isHome && <button type="button" className={styles.childSelectorPill} onClick={openChildSwitcher} aria-label={`Switch child, currently ${activeWard.name}`} aria-haspopup="dialog" aria-expanded={childSwitcherOpen}><StudentAvatar name={activeWard.name} imageUrl={activeWard.image_url} size="xs" /><span className={styles.childSelectorName}>{activeWard.name.split(" ")[0]}</span><ChevronDown size={14} /></button>}
+          <button type="button" className={styles.iconButton} onClick={toggleTheme} aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}>{theme === "light" ? <Moon size={19} /> : <Sun size={19} />}</button>
+          <Link href="/guardian/notifications" className={styles.iconButton} aria-label={`Notifications${unreadNotificationCount ? `, ${unreadNotificationCount} unread` : ""}`}><Bell size={20} />{unreadNotificationCount > 0 && <span className={styles.notifyDot}>{unreadNotificationCount > 99 ? "99+" : unreadNotificationCount}</span>}</Link>
+        </div>
+      </header>
+      {isHome && <nav className={styles.childStrip} aria-label="Select child">
+        <Link href="/guardian/links" className={styles.childShortcut}><span className={styles.addChild}><Plus size={22} /></span><span>Add child</span></Link>
+        {wards.map(ward => { const id = ward.student_id || ward.id; return <button type="button" key={id} className={`${styles.childShortcut} ${selectedId === id ? styles.childShortcutActive : ""}`} aria-pressed={selectedId === id} aria-label={`View ${ward.name}`} onClick={() => setActiveWardId(id)}><span className={styles.childAvatar}><StudentAvatar name={ward.name} imageUrl={ward.image_url} size="sm" /></span><span>{ward.name.split(" ")[0]}</span></button>; })}
+      </nav>}
+      <main id="guardian-content" className={styles.mobileContent}>{children}</main>
+      <BottomNavigation component="nav" showLabels className={styles.bottomNav} aria-label="Mobile navigation" value={navigation.findIndex(item => matches(item.paths))} sx={{ height: "auto", display: { xs: "flex", md: "none" }, backgroundColor: "var(--g-surface)" }}>
+        {navigation.map(({ href, label, Icon, paths }, index) => <BottomNavigationAction key={href} value={index} component={Link} href={href} label={label} aria-current={matches(paths) ? "page" : undefined} icon={<span className={styles.navIconBox}><Icon size={21} />{href === "/guardian/messages" && unreadMessageCount > 0 && <span className={styles.navBadge} />}</span>} />)}
+      </BottomNavigation>
     </div>
-  );
+    <SwipeableDrawer anchor="bottom" open={childSwitcherOpen} onOpen={openChildSwitcher} onClose={closeChildSwitcher} disableSwipeToOpen slotProps={{ paper: { role: "dialog", "aria-labelledby": "ward-picker-title", "aria-describedby": "ward-picker-description", sx: { maxWidth: 520, mx: "auto", borderRadius: "24px 24px 0 0", bgcolor: "var(--g-surface)", color: "var(--g-text-primary)" } } }}>
+      <div className={styles.sheetBody}><div className={styles.sheetHandle} /><div className={styles.sheetHeader}><h2 id="ward-picker-title" className={styles.sheetTitle}>Choose a child</h2><button type="button" className={styles.iconButton} onClick={closeChildSwitcher} aria-label="Close child selector"><X size={20}/></button></div><p id="ward-picker-description" className={styles.sheetDescription}>Results, attendance and messages will follow your selection.</p>
+      <div className={styles.wardList}>{wards.map(ward=>{const id=ward.student_id||ward.id;return <ListItemButton component="button" key={id} className={styles.wardCardOption} selected={selectedId===id} aria-pressed={selectedId===id} onClick={()=>setActiveWardId(id)}><StudentAvatar name={ward.name} imageUrl={ward.image_url} size="sm"/><span className={styles.wardMeta}><strong>{ward.name}</strong><small>{ward.grade} · {ward.admission_number||ward.reg_id||"Registration unavailable"}</small></span>{selectedId===id&&<Check size={20}/>}</ListItemButton>;})}</div><Link href="/guardian/links" className={styles.linkNewWardBtn} onClick={closeChildSwitcher}><Plus size={18}/>Link another child</Link></div>
+    </SwipeableDrawer>
+  </div>;
 }

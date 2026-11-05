@@ -1,4 +1,6 @@
 "use client";
+import { resultPublicationState } from "../../../lib/resultPresentation";
+import { ResultsSummary } from "../../../components/domain/ResultsSummary";
 
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { RequireRole } from "../../../components/auth/RequireRole";
@@ -35,6 +37,14 @@ export default function TeacherResultsPage() {
 function TeacherResults() {
   const [rows, setRows] = useState<ExamResult[]>([]);
   const [query, setQuery] = useState("");
+  const [subjectFilter, setSubjectFilter] = useState("all");
+  const [releaseFilter, setReleaseFilter] = useState("all");
+  useEffect(() => {
+    const requestedSubject = new URLSearchParams(window.location.search).get("subjectId");
+    if (requestedSubject && /^\d+$/.test(requestedSubject)) setSubjectFilter(requestedSubject);
+  }, []);
+  const [sortKey,setSortKey] = useState("");
+  const [sortDirection,setSortDirection] = useState<"asc"|"desc">("asc");
   const { selectedSession, selectedTerm, activeSession, activeTerm } = useAcademic();
   const currentSessionName = selectedSession?.name || activeSession?.name || "2026/2027";
   const currentTermName = selectedTerm?.name || activeTerm?.name || "First Term";
@@ -80,16 +90,17 @@ function TeacherResults() {
     return () => window.removeEventListener("notification_received", handler);
   }, [load, selectedSession?.id, selectedTerm?.id]);
 
+  const subjectOptions = useMemo(() => Array.from(new Map(rows.map(row => [String(row.subject_id), row.subject_name || "Assessment"])).entries()).map(([value,label]) => ({value,label})), [rows]);
   const filtered = useMemo(() => {
-    const q = query.toLowerCase();
-    if (!q) return rows;
-    return rows.filter(
-      (r) =>
-        String(r.student_name || "").toLowerCase().includes(q) ||
-        String(r.subject_name || "").toLowerCase().includes(q) ||
-        String(r.reg_id || "").toLowerCase().includes(q)
-    );
-  }, [rows, query]);
+    const q = query.trim().toLowerCase();
+    return rows.filter(row => (subjectFilter === "all" || String(row.subject_id) === subjectFilter) && (releaseFilter === "all" || resultPublicationState(row) === releaseFilter) && (!q || [row.student_name,row.subject_name,row.reg_id].some(value=>String(value||"").toLowerCase().includes(q))));
+  }, [rows,query,subjectFilter,releaseFilter]);
+
+  const sorted = useMemo(() => !sortKey ? filtered : [...filtered].sort((a,b) => {
+    const value=(row:ExamResult) => sortKey === "score" ? scorePct(row.score,row.total_score) : String((row as unknown as Record<string,unknown>)[sortKey] || "");
+    const av=value(a),bv=value(b); const order=typeof av === "number" && typeof bv === "number" ? av-bv : String(av).localeCompare(String(bv),undefined,{numeric:true});
+    return sortDirection === "asc" ? order : -order;
+  }),[filtered,sortKey,sortDirection]);
 
   const stats = useMemo(() => {
     if (!rows.length) return { total: 0, avg: 0, highest: 0, passRate: 0 };
@@ -188,8 +199,8 @@ function TeacherResults() {
           <span style={{ fontWeight: 500, color: "var(--color-text)", fontSize: "0.8125rem", display: "block" }}>
             {r.subject_name || `Subject #${r.subject_id}`}
           </span>
-          <span style={{ fontSize: "0.6875rem", color: r.result_status === "hidden" ? "#D97706" : "#059669", fontWeight: 600 }}>
-            {r.result_status === "hidden" ? "● Unpublished" : "● Live"}
+          <span style={{ fontSize: "0.6875rem", color: resultPublicationState(r) === "released" ? "var(--color-success)" : "var(--color-muted)", fontWeight: 600 }}>
+            {resultPublicationState(r) === "hidden" ? "Unpublished" : resultPublicationState(r) === "scheduled" ? "Scheduled release" : "Published"}
           </span>
         </div>
       ),
@@ -307,74 +318,30 @@ function TeacherResults() {
       )}
 
       {/* ── Minimalist KPI Metrics Row ──────────────────────── */}
-      <section className={styles.statsGrid}>
-        <div className={styles.statCard}>
-          <div className={styles.statTop}>
-            <span className={styles.statLabel}>Submissions</span>
-            <div className={styles.statIcon} style={{ color: "#4F46E5" }}><UsersIcon width="15" height="15" /></div>
-          </div>
-          <div>
-            <div className={styles.statValue}>{stats.total}</div>
-            <div className={styles.statFootnote}>Submitted examinations</div>
-          </div>
-        </div>
-
-        <div className={styles.statCard}>
-          <div className={styles.statTop}>
-            <span className={styles.statLabel}>Average Score</span>
-            <div className={styles.statIcon} style={{ color: "#06B6D4" }}><BarChartIcon width="15" height="15" /></div>
-          </div>
-          <div>
-            <div className={styles.statValue}>{stats.avg}%</div>
-            <div className={styles.statFootnote}>Cohort mean performance</div>
-          </div>
-        </div>
-
-        <div className={styles.statCard}>
-          <div className={styles.statTop}>
-            <span className={styles.statLabel}>Top Score</span>
-            <div className={styles.statIcon} style={{ color: "#F97316" }}><SubjectIcon width="15" height="15" /></div>
-          </div>
-          <div>
-            <div className={styles.statValue}>{stats.highest}%</div>
-            <div className={styles.statFootnote}>Highest recorded result</div>
-          </div>
-        </div>
-
-        <div className={styles.statCard}>
-          <div className={styles.statTop}>
-            <span className={styles.statLabel}>Pass Rate</span>
-            <div className={styles.statIcon} style={{ color: "#10B981" }}><CheckCircleIcon width="15" height="15" /></div>
-          </div>
-          <div>
-            <div className={styles.statValue}>{stats.passRate}%</div>
-            <div className={styles.statFootnote}>Scored 40% and above</div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Filter Bar ─────────────────────────────────────────── */}
+      <ResultsSummary items={[{label:"Submissions",value:stats.total,detail:"In the selected academic period"},{label:"Average score",value:`${stats.avg}%`,detail:"Across the period’s submissions"},{label:"Highest score",value:`${stats.highest}%`,detail:"Highest recorded percentage"},{label:"Pass rate",value:`${stats.passRate}%`,detail:"Scored 40% or above"}]}/>    {/* ── Filter Bar ─────────────────────────────────────────── */}
       <FilterBar
         searchQuery={query}
         onSearchChange={setQuery}
         searchPlaceholder="Search candidates by name, reg ID, or subject..."
-        hasActiveFilters={Boolean(query)}
-        onReset={() => setQuery("")}
+        hasActiveFilters={Boolean(query) || subjectFilter !== "all" || releaseFilter !== "all"}
+        filters={[{id:"subject",label:"Subject",value:subjectFilter,onChange:setSubjectFilter,options:[{label:"All subjects",value:"all"},...subjectOptions]},{id:"publication",label:"Publication status",value:releaseFilter,onChange:setReleaseFilter,options:[{label:"All publication states",value:"all"},{label:"Unpublished",value:"hidden"},{label:"Published",value:"released"},{label:"Scheduled release",value:"scheduled"}]}]}
+        onReset={() => { setQuery(""); setSubjectFilter("all"); setReleaseFilter("all"); }}
       />
 
       {/* ── Results Table ──────────────────────────────────────── */}
-      <div className={styles.tableContainer}>
+      <section className={styles.tableContainer} aria-label="Student results"><div className={styles.ledgerHeader}><h2>Student results</h2><span>{filtered.length} matching submissions</span></div>
         <Table
           columns={columns}
-          data={filtered}
+          data={sorted}
+          sortColumn={sortKey}
+          sortDirection={sortDirection}
+          onSort={key=>{setSortDirection(sortKey===key&&sortDirection==="asc"?"desc":"asc");setSortKey(key);}}
           keyExtractor={(r) => r.id}
           loading={loading}
           emptyTitle="No Examination Results Found"
           emptySubtitle={query ? "No submissions match your search parameters." : "Submissions will appear here live as candidates complete their tests."}
         />
-      </div>
-
-
+      </section>
 
       {/* Exam Question-by-Question Review Modal */}
       {reviewModal && (

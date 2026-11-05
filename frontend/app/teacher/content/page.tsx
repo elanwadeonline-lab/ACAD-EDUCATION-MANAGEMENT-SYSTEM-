@@ -288,6 +288,10 @@ function ContentLibrary() {
   const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (file.size > 30 * 1024 * 1024) {
+      setError("PDF file must be smaller than 30MB.");
+      return;
+    }
 
     if (!pdfMeta.exam_body || !pdfMeta.subject_code) {
       setError("Please fill out Exam Body and Subject Code before uploading the PDF.");
@@ -739,7 +743,7 @@ function ContentLibrary() {
         <div className={styles.statCard}>
           <div className={styles.statTop}>
             <span className={styles.statLabel}>Available Packages</span>
-            <div className={styles.statIcon} style={{ color: "#06B6D4" }}><BookIcon width="15" height="15" /></div>
+            <div className={styles.statIcon} ><BookIcon width="15" height="15" /></div>
           </div>
           <div>
             <div className={styles.statValue}>{packages.length}</div>
@@ -750,7 +754,7 @@ function ContentLibrary() {
         <div className={styles.statCard}>
           <div className={styles.statTop}>
             <span className={styles.statLabel}>Ingestion Engine</span>
-            <div className={styles.statIcon} style={{ color: "#10B981" }}><CheckCircleIcon width="15" height="15" /></div>
+            <div className={styles.statIcon} ><CheckCircleIcon width="15" height="15" /></div>
           </div>
           <div>
             <div className={styles.statValue} style={{ fontSize: "1.125rem" }}>
@@ -763,7 +767,7 @@ function ContentLibrary() {
         <div className={styles.statCard}>
           <div className={styles.statTop}>
             <span className={styles.statLabel}>Target Standards</span>
-            <div className={styles.statIcon} style={{ color: "#6366F1" }}><SubjectIcon width="15" height="15" /></div>
+            <div className={styles.statIcon} ><SubjectIcon width="15" height="15" /></div>
           </div>
           <div>
             <div className={styles.statValue} style={{ fontSize: "1.125rem" }}>
@@ -853,7 +857,7 @@ function ContentLibrary() {
             {uploadingPdf ? "Parsing & Ingesting PDF…" : "Click to select PDF past question document"}
           </div>
           <div style={{ fontSize: "0.6875rem", color: "var(--color-muted)" }}>
-            Standard layout PDF · Max 25 MB
+            Standard layout PDF · Max 30 MB
           </div>
         </div>
       </section>
@@ -1000,4 +1004,5 @@ function ContentLibrary() {
     </div>
   );
 }
+
 

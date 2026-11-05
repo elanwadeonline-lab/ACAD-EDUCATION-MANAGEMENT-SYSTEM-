@@ -1,0 +1,17 @@
+.header { display:grid; gap:24px; padding-bottom:24px; border-bottom:1px solid var(--color-border); }
+.navigation,.identityRow,.actions,.pager,.metadata,.emptyActions { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.navigation,.identityRow { justify-content:space-between; }.identityRow { align-items:flex-start; }
+.header h1 { font-size:clamp(1.5rem,3vw,2rem); font-weight:500; margin:4px 0 12px; overflow-wrap:anywhere; }
+.eyebrow { display:block; margin:0; font-size:.75rem; color:var(--color-muted); }
+.metadata { font-size:.8125rem; color:var(--color-muted); gap:8px 24px; }.metadata strong { font-weight:500; color:var(--color-text-2); overflow-wrap:anywhere; }
+.period { margin:0; font-size:.8125rem; color:var(--color-muted); }.period strong { font-weight:500; color:var(--color-text); }
+.header button,.empty button { min-height:44px; padding:10px 14px; font:inherit; font-size:.8125rem; background:white; border:1px solid var(--color-border); border-radius:6px; color:var(--color-text); cursor:pointer; }
+.navigation>button { border:0; padding-left:0; background:transparent; }.pager { gap:4px; font-size:.75rem; }.pager button { border:0; background:transparent; }
+.header .primary,.empty .primary { background:var(--color-primary); border-color:var(--color-primary); color:white; }
+.header button:disabled { opacity:.45; cursor:not-allowed; }.header button:focus-visible,.empty button:focus-visible { outline:2px solid var(--color-primary); outline-offset:3px; }
+.periodPanel { background:white; padding:24px; border:1px solid var(--color-border); border-radius:8px; display:grid; gap:20px; }
+.panelHeading h2 { font-size:.9375rem; font-weight:500; }.panelHeading p { font-size:.8125rem; color:var(--color-muted); margin:4px 0 0; }
+.controls { display:flex; align-items:flex-end; flex-wrap:wrap; gap:20px; justify-content:space-between; }
+.empty { padding:56px 24px; background:white; display:flex; align-items:center; flex-direction:column; text-align:center; gap:16px; border-bottom:1px solid var(--color-border); }
+.empty h2 { font-size:1.25rem; font-weight:500; }.empty p { max-width:60ch; font-size:.875rem; color:var(--color-muted); margin:0; line-height:1.7; }.empty small { color:var(--color-muted); font-size:.75rem; }.emptyActions { justify-content:center; }
+@media(max-width:600px) { .periodPanel { padding:20px 16px; }.empty { padding:36px 16px; }.actions { width:100%; }.actions button { flex:1; }.metadata { align-items:flex-start; flex-direction:column; }.identityRow>div { min-width:0; max-width:100%; } }

@@ -1,0 +1,14 @@
+.metric { display: flex; flex-direction: column; justify-content: space-between; }
+.metric .header { padding: 20px 22px 14px; }
+.value { grid-column: 1 / -1; font-size: clamp(1.65rem, 2.6vw, 2rem); font-weight: 600; color: var(--color-text); letter-spacing: -.045em; font-variant-numeric: tabular-nums; line-height: 1.2; margin-top: 8px; overflow-wrap: anywhere; }
+.metric .action { font-size: .75rem; color: var(--color-primary); }
+.action a { color: inherit; text-decoration: none; }
+.action a:hover { text-decoration: underline; }
+.metric .footer { flex-direction: column; align-items: stretch; gap: 10px; padding: 0 22px 20px; }
+.detail { font-size: .8125rem; line-height: 1.5; color: var(--color-muted); }
+.track { height: 6px; width: 100%; border-radius: 99px; overflow: hidden; background: var(--color-surface-3); }
+.fill { display: block; height: 100%; background: var(--color-brand-mid); border-radius: inherit; }
+.compact .value { font-size: 1.5rem; }
+@media (max-width: 480px) { .metric .header { padding: 18px 16px 12px; } .metric .footer { padding: 0 16px 18px; } }
+.metric { background-image:url('/gold-card-wave.svg'); background-size:160px auto; background-position:right bottom; background-repeat:no-repeat; }
+.metric .footer { position:relative; }

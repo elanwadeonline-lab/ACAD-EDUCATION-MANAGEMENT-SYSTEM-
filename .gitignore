@@ -58,3 +58,10 @@ Thumbs.db
 
 # Standalone Supervisory Control Platform (Independent Repository)
 acad-control/
+
+# Expo and build previews
+.expo
+dist-review
+
+# Scratch and temporary work
+scratch/

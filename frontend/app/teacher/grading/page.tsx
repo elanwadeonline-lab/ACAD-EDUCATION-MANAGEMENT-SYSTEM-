@@ -208,7 +208,7 @@ function GradingCenter() {
         <div style={{
           position: "fixed",
           inset: 0,
-          background: "rgba(15, 23, 42, 0.6)",
+          background: "rgba(11, 13, 17, 0.6)",
           backdropFilter: "blur(4px)",
           display: "flex",
           alignItems: "center",
@@ -218,7 +218,7 @@ function GradingCenter() {
         }}>
           <div style={{
             background: "#FFFFFF",
-            borderRadius: "14px",
+            borderRadius: "8px",
             width: "100%",
             maxWidth: "480px",
             boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)",
@@ -227,7 +227,7 @@ function GradingCenter() {
           }}>
             <div style={{ padding: "1.25rem 1.5rem", borderBottom: "1px solid #E2E8F0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
-                <h3 style={{ margin: 0, fontSize: "1rem", fontWeight: 700, color: "#0F172A" }}>Create Subject Gradebook</h3>
+                <h3 style={{ margin: 0, fontSize: "1rem", fontWeight: 700, color: "#0F172A", letterSpacing: "-0.01em" }}>Create Subject Gradebook</h3>
                 <p style={{ margin: "0.2rem 0 0", fontSize: "0.75rem", color: "#64748B" }}>
                   Add a subject for manual written scoring or continuous evaluation.
                 </p>
@@ -257,7 +257,7 @@ function GradingCenter() {
               )}
 
               <div>
-                <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 700, color: "#475569", marginBottom: "0.35rem", textTransform: "uppercase" }}>
+                <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 700, color: "#475569", marginBottom: "0.35rem", textTransform: "uppercase", letterSpacing: "0.04em" }}>
                   Subject Name *
                 </label>
                 <input
@@ -266,12 +266,12 @@ function GradingCenter() {
                   value={formName}
                   onChange={(e) => setFormName(e.target.value)}
                   required
-                  style={{ width: "100%", padding: "0.6rem 0.75rem", borderRadius: "6px", border: "1px solid #CBD5E1", fontSize: "0.85rem", outline: "none" }}
+                  style={{ width: "100%", padding: "0.6rem 0.75rem", borderRadius: "6px", border: "1px solid #CBD5E1", fontSize: "0.8125rem", outline: "none", fontFamily: "inherit" }}
                 />
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 700, color: "#475569", marginBottom: "0.35rem", textTransform: "uppercase" }}>
+                <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 700, color: "#475569", marginBottom: "0.35rem", textTransform: "uppercase", letterSpacing: "0.04em" }}>
                   Subject Code *
                 </label>
                 <input
@@ -280,18 +280,18 @@ function GradingCenter() {
                   value={formCode}
                   onChange={(e) => setFormCode(e.target.value)}
                   required
-                  style={{ width: "100%", padding: "0.6rem 0.75rem", borderRadius: "6px", border: "1px solid #CBD5E1", fontSize: "0.85rem", textTransform: "uppercase", outline: "none" }}
+                  style={{ width: "100%", padding: "0.6rem 0.75rem", borderRadius: "6px", border: "1px solid #CBD5E1", fontSize: "0.8125rem", textTransform: "uppercase", outline: "none", fontFamily: "var(--font-mono, monospace)" }}
                 />
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 700, color: "#475569", marginBottom: "0.35rem", textTransform: "uppercase" }}>
+                <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 700, color: "#475569", marginBottom: "0.35rem", textTransform: "uppercase", letterSpacing: "0.04em" }}>
                   Class / Cohort (Optional)
                 </label>
                 <select
                   value={formClassId}
                   onChange={(e) => setFormClassId(e.target.value)}
-                  style={{ width: "100%", padding: "0.6rem 0.75rem", borderRadius: "6px", border: "1px solid #CBD5E1", fontSize: "0.85rem", outline: "none", background: "#FFFFFF" }}
+                  style={{ width: "100%", padding: "0.6rem 0.75rem", borderRadius: "6px", border: "1px solid #CBD5E1", fontSize: "0.8125rem", outline: "none", background: "#FFFFFF", fontFamily: "inherit" }}
                 >
                   <option value="">All Cohorts / General Subject</option>
                   {classes.map((c: any) => (
@@ -303,13 +303,13 @@ function GradingCenter() {
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 700, color: "#475569", marginBottom: "0.35rem", textTransform: "uppercase" }}>
+                <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 700, color: "#475569", marginBottom: "0.35rem", textTransform: "uppercase", letterSpacing: "0.04em" }}>
                   Assessment Type
                 </label>
                 <select
                   value={formMode}
                   onChange={(e) => setFormMode(e.target.value)}
-                  style={{ width: "100%", padding: "0.6rem 0.75rem", borderRadius: "6px", border: "1px solid #CBD5E1", fontSize: "0.85rem", outline: "none", background: "#FFFFFF" }}
+                  style={{ width: "100%", padding: "0.6rem 0.75rem", borderRadius: "6px", border: "1px solid #CBD5E1", fontSize: "0.8125rem", outline: "none", background: "#FFFFFF", fontFamily: "inherit" }}
                 >
                   <option value="exam">Terminal Examination (CA + Final Exam)</option>
                   <option value="test">Continuous Assessment Test</option>
@@ -341,7 +341,7 @@ function GradingCenter() {
       )}
 
       {error && (
-        <div style={{ padding: "0.875rem 1rem", background: "var(--color-surface-2)", border: "1px solid var(--color-border)", borderRadius: "8px", color: "var(--color-danger, #DC2626)", fontSize: "0.8125rem" }}>
+        <div style={{ padding: "0.875rem 1rem", background: "#FEF2F2", border: "1px solid #FCA5A5", borderRadius: "6px", color: "#991B1B", fontSize: "0.8125rem" }}>
           {error}
         </div>
       )}
@@ -351,7 +351,7 @@ function GradingCenter() {
         <div className={styles.statCard}>
           <div className={styles.statTop}>
             <span className={styles.statLabel}>Gradebook Courses</span>
-            <div className={styles.statIcon} style={{ color: "#06B6D4" }}><BookIcon width="15" height="15" /></div>
+            <div className={styles.statIcon}><BookIcon width="15" height="15" /></div>
           </div>
           <div>
             <div className={styles.statValue}>{subjects.length}</div>
@@ -362,7 +362,7 @@ function GradingCenter() {
         <div className={styles.statCard}>
           <div className={styles.statTop}>
             <span className={styles.statLabel}>Approved Records</span>
-            <div className={styles.statIcon} style={{ color: "#10B981" }}><CheckCircleIcon width="15" height="15" /></div>
+            <div className={styles.statIcon}><CheckCircleIcon width="15" height="15" /></div>
           </div>
           <div>
             <div className={styles.statValue}>{approvedCount}</div>
@@ -373,7 +373,7 @@ function GradingCenter() {
         <div className={styles.statCard}>
           <div className={styles.statTop}>
             <span className={styles.statLabel}>Pending Grading</span>
-            <div className={styles.statIcon} style={{ color: "#F97316" }}><ClockIcon width="15" height="15" /></div>
+            <div className={styles.statIcon}><ClockIcon width="15" height="15" /></div>
           </div>
           <div>
             <div className={styles.statValue}>{pendingCount}</div>
@@ -384,7 +384,7 @@ function GradingCenter() {
         <div className={styles.statCard}>
           <div className={styles.statTop}>
             <span className={styles.statLabel}>Evaluation Policy</span>
-            <div className={styles.statIcon} style={{ color: "#6366F1" }}><SubjectIcon width="15" height="15" /></div>
+            <div className={styles.statIcon}><SubjectIcon width="15" height="15" /></div>
           </div>
           <div>
             <div className={styles.statValue} style={{ fontSize: "1.125rem" }}>

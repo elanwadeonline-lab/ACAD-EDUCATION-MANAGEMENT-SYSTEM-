@@ -90,8 +90,8 @@ function NotificationsList() {
           </div>
         ) : (
           filteredItems.map((item) => {
-            const iconBg = item.category === "attendance" ? "#ECFDF5" : item.category === "finance" ? "#FEF3C7" : item.category === "exam" ? "#F5F3FF" : "#EFF4FF";
-            const iconColor = item.category === "attendance" ? "#059669" : item.category === "finance" ? "#D97706" : item.category === "exam" ? "#7C3AED" : "#165AF6";
+            const iconBg = item.category === "attendance" ? "#ECFDF5" : item.category === "finance" ? "#FEF3C7" : item.category === "exam" ? "#FFFBEB" : "#FFFBEB";
+            const iconColor = item.category === "attendance" ? "#059669" : item.category === "finance" ? "#D97706" : item.category === "exam" ? "#92400E" : "#92400E";
             const iconType = item.category === "attendance" ? "check" : item.category === "finance" ? "receipt" : item.category === "exam" ? "calendar" : "document";
 
             return (

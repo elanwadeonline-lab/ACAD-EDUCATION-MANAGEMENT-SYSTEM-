@@ -57,19 +57,20 @@ export const AcademicProvider = ({ children }: { children: React.ReactNode }) =>
   const [terms, setTerms] = useState<AcademicTerm[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Persisted wrappers — survive page reload and keep user's switch choice
+  // Tab-isolated persistence — use sessionStorage so academic session/term selection in one tab
+  // never contaminates another user's or role's tab in the same browser.
   const setSelectedSession = useCallback((s: AcademicSession | null) => {
     setSelectedSessionRaw(s);
     try {
-      if (s) localStorage.setItem("exampool_selected_session", JSON.stringify(s));
-      else localStorage.removeItem("exampool_selected_session");
+      if (s) sessionStorage.setItem("exampool_selected_session", JSON.stringify(s));
+      else sessionStorage.removeItem("exampool_selected_session");
     } catch {}
   }, []);
   const setSelectedTerm = useCallback((t: AcademicTerm | null) => {
     setSelectedTermRaw(t);
     try {
-      if (t) localStorage.setItem("exampool_selected_term", JSON.stringify(t));
-      else localStorage.removeItem("exampool_selected_term");
+      if (t) sessionStorage.setItem("exampool_selected_term", JSON.stringify(t));
+      else sessionStorage.removeItem("exampool_selected_term");
     } catch {}
   }, []);
 
@@ -89,7 +90,7 @@ export const AcademicProvider = ({ children }: { children: React.ReactNode }) =>
           setActiveSession(resActive.activeSession);
           // Restore persisted selection if valid, otherwise default to active
           try {
-            const stored = localStorage.getItem("exampool_selected_session");
+            const stored = sessionStorage.getItem("exampool_selected_session");
             if (stored) {
               const parsed = JSON.parse(stored);
               const stillExists = resAll?.sessions?.some((s: any) => s.id === parsed.id);
@@ -97,7 +98,7 @@ export const AcademicProvider = ({ children }: { children: React.ReactNode }) =>
                 setSelectedSessionRaw(parsed);
               } else {
                 setSelectedSessionRaw(resActive.activeSession);
-                localStorage.setItem("exampool_selected_session", JSON.stringify(resActive.activeSession));
+                sessionStorage.setItem("exampool_selected_session", JSON.stringify(resActive.activeSession));
               }
             } else {
               setSelectedSessionRaw(resActive.activeSession);
@@ -108,13 +109,13 @@ export const AcademicProvider = ({ children }: { children: React.ReactNode }) =>
         } else {
           setActiveSession(null);
           setSelectedSessionRaw(null);
-          localStorage.removeItem("exampool_selected_session");
+          try { sessionStorage.removeItem("exampool_selected_session"); } catch {}
         }
 
         if (resActive.activeTerm) {
           setActiveTerm(resActive.activeTerm);
           try {
-            const storedT = localStorage.getItem("exampool_selected_term");
+            const storedT = sessionStorage.getItem("exampool_selected_term");
             if (storedT) {
               const parsedT = JSON.parse(storedT);
               // Allow null (All Terms) persistence
@@ -126,7 +127,7 @@ export const AcademicProvider = ({ children }: { children: React.ReactNode }) =>
                   setSelectedTermRaw(parsedT);
                 } else {
                   setSelectedTermRaw(resActive.activeTerm);
-                  localStorage.setItem("exampool_selected_term", JSON.stringify(resActive.activeTerm));
+                  sessionStorage.setItem("exampool_selected_term", JSON.stringify(resActive.activeTerm));
                 }
               }
             } else {
@@ -138,7 +139,7 @@ export const AcademicProvider = ({ children }: { children: React.ReactNode }) =>
         } else {
           setActiveTerm(null);
           setSelectedTermRaw(null);
-          localStorage.removeItem("exampool_selected_term");
+          try { sessionStorage.removeItem("exampool_selected_term"); } catch {}
         }
       }
     } catch (e) {

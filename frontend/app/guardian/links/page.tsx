@@ -84,7 +84,7 @@ function LinksContent() {
   const handleRevokeLink = async (linkId: number) => {
     if (!confirm("Are you sure you want to revoke this student link?")) return;
     try {
-      await api.deleteGuardianLink(linkId);
+      await api.cancelGuardianLink(linkId);
       setToastMessage("Link request cancelled.");
       setTimeout(() => setToastMessage(null), 3000);
       await fetchLinks();

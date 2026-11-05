@@ -1,0 +1,251 @@
+[
+  {
+    "scene": 1,
+    "module": "Branding & Architecture",
+    "title": "Welcome to ACQAD / eCard",
+    "subtitle": "Next-Generation School Management & Assessment Ecosystem",
+    "start_time": "00:00",
+    "end_time": "00:20",
+    "duration_sec": 20,
+    "primary_assets": [
+      "S01_brand_student-login_desktop.png",
+      "S02_brand_admin-login_desktop.png"
+    ],
+    "narration": "Welcome to ACQAD, an integrated academic coordination and computer-based examination ecosystem engineered for educational institutions. ACQAD unifies school administration, curriculum tracking, resilient offline assessment, and family engagement into a cohesive, high-performance platform designed to operate seamlessly on campus local networks and across cloud supervisory fleets.",
+    "client_benefit": "Eliminates fragmented software by unifying administrative governance, offline CBT examinations, and guardian communication into a single secure platform.",
+    "transition": "fade_in",
+    "highlight_elements": ["Institutional brand header", "Unified role-based sign-in portals", "Server health check badge"]
+  },
+  {
+    "scene": 2,
+    "module": "Module 1: Administration",
+    "title": "Institutional Administration & Governance",
+    "subtitle": "Academic Sessions, Term Controls, and Timetables",
+    "start_time": "00:20",
+    "end_time": "01:00",
+    "duration_sec": 40,
+    "primary_assets": [
+      "A01_admin_dashboard.png",
+      "A02_admin_academic-sessions.png",
+      "A06_admin_timetable.png",
+      "A17_admin_system-settings.png"
+    ],
+    "narration": "At the institutional core, administrators maintain end-to-end governance over the academic calendar. The administration portal enables school principals and registrars to configure academic sessions, activate active terms, enforce system-wide grading standards, and schedule institutional timetables. Real-time telemetry dashboards monitor daily attendance, active examination slots, and system operations across the entire campus.",
+    "client_benefit": "Guarantees strict academic calendar governance with role-based permissions and instant operational oversight.",
+    "transition": "slide_left",
+    "highlight_elements": ["Session creation modal", "Active term switcher", "Campus timetable visualizer", "Real-time registration counter"]
+  },
+  {
+    "scene": 3,
+    "module": "Module 2: School Management",
+    "title": "Academic Operations & Class Structures",
+    "subtitle": "Classes, Arms, Subject Allocation, and Student Rosters",
+    "start_time": "01:00",
+    "end_time": "01:35",
+    "duration_sec": 35,
+    "primary_assets": [
+      "A03_admin_class-teachers.png",
+      "A04_admin_subjects.png",
+      "A05_admin_users.png",
+      "A12_admin_annual-results.png"
+    ],
+    "narration": "School management bridges administrative structure with daily learning. Leadership maps academic departments, assigns qualified form teachers to classes and arms, registers subjects, and enrolls student cohorts. Every student record maintains admission tracking, guardian linkage, and academic progression history, ensuring absolute accountability across Junior and Senior secondary tiers.",
+    "client_benefit": "Reduces administrative overhead through centralized student registration, automated enrollment tracking, and clear class teacher ownership.",
+    "transition": "fade_through_black",
+    "highlight_elements": ["Class teacher assignment table", "Subject catalog and department tagging", "User role manager", "Student cohort filters"]
+  },
+  {
+    "scene": 4,
+    "module": "Module 3: Teacher Experience",
+    "title": "Teacher Workspace & Question Banking",
+    "subtitle": "Course Rosters, Question Creation, and Assessment Authoring",
+    "start_time": "01:35",
+    "end_time": "02:10",
+    "duration_sec": 35,
+    "primary_assets": [
+      "T01_teacher_dashboard.png",
+      "T02_teacher_subject-menu.png",
+      "T03_teacher_question-bank.png",
+      "T04_teacher_assignments.png"
+    ],
+    "narration": "Teachers operate within a focused workspace tailored to their assigned curriculum. From their dashboard, educators author rich multi-format questions, curate institution-wide question banks, configure assessment rules, and schedule examinations. Automated shuffling, customizable duration controls, and pass mark definitions give teachers complete pedagogical control over classroom evaluations.",
+    "client_benefit": "Empowers educators with automated question banking, reducing assessment preparation time while maintaining rigorous exam security.",
+    "transition": "slide_left",
+    "highlight_elements": ["Teacher quick-action cards", "Assigned subject switcher", "Question bank rich text editor", "Assessment scheduling modal"]
+  },
+  {
+    "scene": 5,
+    "module": "Module 6: Assessment & Examination",
+    "title": "Autonomous CBT Engine & Kiosk Execution",
+    "subtitle": "Timed Delivery, Active Question Navigation, and Instant Submission",
+    "start_time": "02:10",
+    "end_time": "02:55",
+    "duration_sec": 45,
+    "primary_assets": [
+      "S06_exam_kiosk-terminal_desktop.png",
+      "ST10_exam_instructions.png",
+      "ST11_exam_active-question.png",
+      "ST12_exam_answer-selected.png",
+      "ST14_exam_submit-summary.png"
+    ],
+    "narration": "ACQAD's flagship assessment engine delivers resilient computer-based testing even in air-gapped exam halls. When scheduled, assessments lock into tamper-resistant kiosk terminals. Students verify their seat and pin, review preflight instructions, and navigate questions with built-in scratchpads, scientific calculators, and visual timers. Responses are saved instantly to local storage, shielding examinees from power or network drops.",
+    "client_benefit": "Guarantees zero-data-loss exam delivery with sub-second response auto-saving and dedicated lockdown kiosk terminals.",
+    "transition": "zoom_in",
+    "highlight_elements": ["Lockdown kiosk authentication", "Countdown timer", "Live question status palette", "Dual-confirmation submission receipt"]
+  },
+  {
+    "scene": 6,
+    "module": "Module 4: Student Experience",
+    "title": "Student Learning Desk & Self-Paced Practice",
+    "subtitle": "Timetables, Learning Library, and Offline Assignment Packs",
+    "start_time": "02:55",
+    "end_time": "03:30",
+    "duration_sec": 35,
+    "primary_assets": [
+      "ST01_student_dashboard.png",
+      "ST02_student_examinations.png",
+      "ST06_student_practice.png",
+      "ST07_student_offline-assignments.png",
+      "M10_student_dashboard_mobile.png"
+    ],
+    "narration": "For students, the ACQAD portal is an engaging personal learning desk. Learners view upcoming assessments, review released grades, and access an extensive practice catalog featuring past WAEC and mock papers. Students can download encrypted offline assignment packs to their personal devices, complete homework without internet access, and synchronize scores automatically when reconnected.",
+    "client_benefit": "Encourages continuous independent study with offline past-paper practice and instant feedback.",
+    "transition": "slide_left",
+    "highlight_elements": ["Term GPA tracker", "Upcoming exam countdown", "Past-question practice hub", "Offline assignment downloader"]
+  },
+  {
+    "scene": 7,
+    "module": "Module 7: Results and Analytics",
+    "title": "Grading Centre & Performance Broadsheets",
+    "subtitle": "Automated Grading, Term Broadsheets, and Digital Report Cards",
+    "start_time": "03:30",
+    "end_time": "04:15",
+    "duration_sec": 45,
+    "primary_assets": [
+      "T06_teacher_grading-center.png",
+      "T08_teacher_results.png",
+      "T09_teacher_broadsheet.png",
+      "A13_admin_report-cards.png",
+      "ST04_student_results.png"
+    ],
+    "narration": "Evaluation is instantaneous and comprehensive. Objective questions grade automatically upon exam submission, while subjective questions enter the teacher grading centre for rubric scoring. ACQAD automatically computes class averages, subject rankings, and term broadsheets. With one click, administrators generate tamper-evident digital report cards complete with principal remarks and grading keys.",
+    "client_benefit": "Cuts result computation time from weeks to minutes, eliminating grading errors and enabling instant broadsheet generation.",
+    "transition": "fade_through_black",
+    "highlight_elements": ["Grading centre rubric scorecards", "Auto-computed broadsheet matrix", "Term ranking engine", "Downloadable official PDF report card"]
+  },
+  {
+    "scene": 8,
+    "module": "Module 5: Guardian Experience",
+    "title": "Guardian Portal & Mobile Family Desk",
+    "subtitle": "Multi-Ward Monitoring, Attendance Records, and Fee Tracking",
+    "start_time": "04:15",
+    "end_time": "04:50",
+    "duration_sec": 35,
+    "primary_assets": [
+      "G01_guardian_dashboard_desktop.png",
+      "M20_guardian_dashboard_mobile.png",
+      "M21_guardian_switch-child_mobile.png",
+      "M23_guardian_performance_mobile.png",
+      "M28_guardian_fees_mobile.png"
+    ],
+    "narration": "Parents and guardians enjoy unprecedented visibility through a mobile-first portal. Guardians can monitor multiple siblings from a single account, reviewing real-time class attendance, published examination results, teacher remarks, and school fee payment statuses. This transparency deepens parent-school partnership and keeps families actively invested in their children's progress.",
+    "client_benefit": "Builds parent trust with instant mobile access to attendance records, academic performance, and school fees.",
+    "transition": "slide_left",
+    "highlight_elements": ["Multi-child switcher sheet", "Term GPA progression curve", "Daily attendance status badge", "Fee clearance verification"]
+  },
+  {
+    "scene": 9,
+    "module": "Module 8: Communication & Notifications",
+    "title": "School Announcements & Two-Way Messaging",
+    "subtitle": "Targeted Notices, Parent Inquiries, and Event Calendars",
+    "start_time": "04:50",
+    "end_time": "05:15",
+    "duration_sec": 25,
+    "primary_assets": [
+      "A15_admin_messages.png",
+      "T13_teacher_messages.png",
+      "M29_guardian_messages_mobile.png",
+      "M30_guardian_announcements_mobile.png"
+    ],
+    "narration": "Direct, authenticated communication keeps the school community synchronized. Administrators publish institution-wide announcements and emergency bulletins, while guardians and teachers exchange private messages regarding academic progress and pastoral care. All communication is securely archived within the institutional database, preserving institutional privacy.",
+    "client_benefit": "Replaces unverified social messaging groups with authenticated, audit-logged institutional communications.",
+    "transition": "fade_through_black",
+    "highlight_elements": ["Administrative announcement broadcaster", "Two-way teacher inquiry thread", "Category tagging", "Push notification feed"]
+  },
+  {
+    "scene": 10,
+    "module": "Module 9: Offline Operations & Sync",
+    "title": "Local-First Architecture & Network Resilience",
+    "subtitle": "Campus LAN Autonomy, SQLite WAL, and PWA Synchronization",
+    "start_time": "05:15",
+    "end_time": "05:50",
+    "duration_sec": 35,
+    "primary_assets": [
+      "S05_offline_fallback_desktop.png",
+      "A18_admin_network-status.png",
+      "A19_admin_backup-restore.png",
+      "ST07_student_offline-assignments.png"
+    ],
+    "narration": "A critical advantage of ACQAD is its uncompromising local-first design. Powered by a high-throughput Bun HTTP backend and SQLite write-ahead-logging, the platform continues delivering examinations and recording attendance even when public internet is completely down. Background synchronization queues hold operational transactions, uploading them securely to cloud endpoints once connectivity restores.",
+    "client_benefit": "Zero exam disruptions during internet blackouts with resilient local SQLite WAL storage and automatic sync.",
+    "transition": "slide_left",
+    "highlight_elements": ["LAN server status indicator", "Local SQLite WAL snapshot engine", "Encrypted backup restore tool", "Service Worker offline fallback"]
+  },
+  {
+    "scene": 11,
+    "module": "Module 10: Control Plane & Monitoring",
+    "title": "Supervisory Fleet Control & Institutional Health",
+    "subtitle": "Node Telemetry, Schema Synchronisation, and Cluster Oversight",
+    "start_time": "05:50",
+    "end_time": "06:20",
+    "duration_sec": 30,
+    "primary_assets": [
+      "S90_controlplane_api-health_desktop.png",
+      "A18_admin_network-status.png",
+      "A20_admin_license-info.png"
+    ],
+    "narration": "For multi-campus school groups and educational ministries, the ACQAD Control Plane provides centralised fleet management. Technical supervisors monitor server CPU health, memory usage, SQLite database sizes, and API latency across distributed campus nodes. Automated health beacons alert administrators to node degradation before students enter examination halls.",
+    "client_benefit": "Enables multi-campus groups and ministries to manage hundreds of school nodes with unified health telemetry.",
+    "transition": "fade_through_black",
+    "highlight_elements": ["Fleet API health response", "Telemetry heartbeat metrics", "Campus node sync monitor", "Enterprise licensing status"]
+  },
+  {
+    "scene": 12,
+    "module": "End-to-End Workflow Integration",
+    "title": "Connected Academic Workflow in Action",
+    "subtitle": "From Assessment Creation to Published Report Cards",
+    "start_time": "06:20",
+    "end_time": "07:05",
+    "duration_sec": 45,
+    "primary_assets": [
+      "T04_teacher_assignments.png",
+      "ST11_exam_active-question.png",
+      "T06_teacher_grading-center.png",
+      "T09_teacher_broadsheet.png",
+      "M25_guardian_reports_mobile.png"
+    ],
+    "narration": "Experience the complete synergy of the ACQAD ecosystem. A physics teacher schedules a mid-term examination from their portal. Students sit for the assessment inside the secure exam kiosk. As soon as the final student submits, objective scores calculate automatically and populate the teacher gradebook. The school principal approves the term broadsheet, and within seconds, parents receive a notification on their mobile phones to view the verified report card.",
+    "client_benefit": "Unifies all stakeholders into one frictionless academic cycle, eliminating delays and lost exam papers.",
+    "transition": "zoom_in",
+    "highlight_elements": ["Integrated role workflow", "Sub-second score propagation", "Audit-trailed approval pipeline", "Instant guardian report release"]
+  },
+  {
+    "scene": 13,
+    "module": "Deployment Options & Conclusion",
+    "title": "Deployment Models & Enterprise Value",
+    "subtitle": "On-Premise LAN Appliances, Hybrid Cloud, and Sustainable Education",
+    "start_time": "07:05",
+    "end_time": "07:40",
+    "duration_sec": 35,
+    "primary_assets": [
+      "A19_admin_backup-restore.png",
+      "A20_admin_license-info.png",
+      "S01_brand_student-login_desktop.png"
+    ],
+    "narration": "ACQAD deploys flexibly as a self-contained on-premise server appliance, a private school LAN node, or a hybrid cloud-synchronized cluster. With military-grade data sovereignty, zero per-exam licensing penalties, and exceptional performance on standard school hardware, ACQAD is the definitive operating system for modern academic institutions. Partner with ACQAD today to transform your institution's digital future.",
+    "client_benefit": "Flexible low-cost deployment on commodity hardware with full institutional data sovereignty.",
+    "transition": "fade_out",
+    "highlight_elements": ["On-premise appliance architecture", "Data sovereignty guarantees", "Call to action & support contacts"]
+  }
+]
+

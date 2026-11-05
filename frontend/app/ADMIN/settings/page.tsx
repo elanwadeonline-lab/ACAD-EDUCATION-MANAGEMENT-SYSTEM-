@@ -265,7 +265,7 @@ function SettingsContent() {
             className={`${styles.navItem} ${activeTab === "institution" ? styles.navItemActive : ""}`}
             onClick={() => setActiveTab("institution")}
           >
-            <div className={styles.navIcon} style={{ color: "#06B6D4" }}><BookIcon width="15" height="15" /></div>
+            <div className={styles.navIcon}><BookIcon width="15" height="15" /></div>
             Institution & Profile
           </button>
 
@@ -274,7 +274,7 @@ function SettingsContent() {
             className={`${styles.navItem} ${activeTab === "security" ? styles.navItemActive : ""}`}
             onClick={() => setActiveTab("security")}
           >
-            <div className={styles.navIcon} style={{ color: "#6366F1" }}><SettingsIcon width="15" height="15" /></div>
+            <div className={styles.navIcon}><SettingsIcon width="15" height="15" /></div>
             Security & License
           </button>
 
@@ -283,7 +283,7 @@ function SettingsContent() {
             className={`${styles.navItem} ${activeTab === "network" ? styles.navItemActive : ""}`}
             onClick={() => setActiveTab("network")}
           >
-            <div className={styles.navIcon} style={{ color: "#10B981" }}><CalendarIcon width="15" height="15" /></div>
+            <div className={styles.navIcon}><CalendarIcon width="15" height="15" /></div>
             Network & Domain
           </button>
 
@@ -292,7 +292,7 @@ function SettingsContent() {
             className={`${styles.navItem} ${activeTab === "backup" ? styles.navItemActive : ""}`}
             onClick={() => setActiveTab("backup")}
           >
-            <div className={styles.navIcon} style={{ color: "#F97316" }}><DocumentIcon width="15" height="15" /></div>
+            <div className={styles.navIcon}><DocumentIcon width="15" height="15" /></div>
             Backup & Maintenance
           </button>
 
@@ -301,7 +301,7 @@ function SettingsContent() {
             className={`${styles.navItem} ${activeTab === "terminal" ? styles.navItemActive : ""}`}
             onClick={() => setActiveTab("terminal")}
           >
-            <div className={styles.navIcon} style={{ color: "#8B5CF6" }}><ClockIcon width="15" height="15" /></div>
+            <div className={styles.navIcon}><ClockIcon width="15" height="15" /></div>
             Server Logs & Diagnostics
           </button>
 
@@ -310,7 +310,7 @@ function SettingsContent() {
             className={`${styles.navItem} ${activeTab === "audit" ? styles.navItemActive : ""}`}
             onClick={() => setActiveTab("audit")}
           >
-            <div className={styles.navIcon} style={{ color: "#3B82F6" }}><UsersIcon width="15" height="15" /></div>
+            <div className={styles.navIcon}><UsersIcon width="15" height="15" /></div>
             Audit Trail
           </button>
         </aside>
@@ -549,7 +549,7 @@ function SettingsContent() {
 
           {/* ── TAB 3: NETWORK & DOMAIN ── */}
           {activeTab === "network" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+            <div className={styles.networkWorkspace}>
               {/* Custom Domain Management Card */}
               <div className={styles.card}>
                 <div className={styles.cardHeader}>
@@ -576,19 +576,19 @@ function SettingsContent() {
                   <div style={{ fontWeight: 600, fontSize: "0.8125rem", color: "var(--color-text)" }}>Available Access URLs on School Network:</div>
                   
                   {/* Method 1: Zero-Config mDNS */}
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.65rem 0.85rem", background: "#F0FDF4", border: "1px solid #BBF7D0", borderRadius: "8px" }}>
+                  <div className={styles.accessRow}>
                     <div>
                       <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-                        <span style={{ fontSize: "0.8125rem", fontWeight: 700, color: "#166534" }}>🚀 Zero-Config Wi-Fi (No Router Setup Needed):</span>
-                        <span style={{ fontSize: "0.6875rem", background: "#DCFCE7", color: "#15803D", padding: "0.1rem 0.4rem", borderRadius: "4px", fontWeight: 600 }}>● mDNS Active</span>
+                        <span style={{ fontSize: "0.8125rem", fontWeight: 700, color: "#374151" }}>Local network address</span>
+                        <span style={{ fontSize: "0.6875rem", background: "#FFFFFF", color: "#374151", padding: "0.1rem 0.4rem", borderRadius: "4px", fontWeight: 600 }}>mDNS</span>
                       </div>
-                      <div style={{ fontFamily: "monospace", fontSize: "0.8125rem", color: "#14532D", marginTop: "0.15rem" }}>
-                        <a href={`http://exampool.local:${systemSettings?.server_port || 8001}`} target="_blank" rel="noreferrer" style={{ color: "#15803D", textDecoration: "underline", fontWeight: 600 }}>
+                      <div style={{ fontFamily: "monospace", fontSize: "0.8125rem", color: "#374151", marginTop: "0.15rem" }}>
+                        <a href={`http://exampool.local:${systemSettings?.server_port || 8001}`} target="_blank" rel="noreferrer" style={{ color: "#374151", textDecoration: "underline", fontWeight: 600 }}>
                           {`http://exampool.local:${systemSettings?.server_port || 8001}`}
                         </a>
                       </div>
-                      <div style={{ fontSize: "0.6875rem", color: "#166534", marginTop: "0.1rem" }}>
-                        Works immediately on iPhones, iPads, Android (12+), MacBooks, and Windows PCs on the same Wi-Fi.
+                      <div style={{ fontSize: "0.6875rem", color: "#374151", marginTop: "0.1rem" }}>
+                        Use a device on the school network. Availability depends on its local network configuration.
                       </div>
                     </div>
                     <Button
@@ -601,22 +601,22 @@ function SettingsContent() {
                   </div>
 
                   {/* Method 2: Custom Domain via Router DNS */}
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.65rem 0.85rem", background: "#EFF6FF", border: "1px solid #BFDBFE", borderRadius: "8px" }}>
+                  <div className={styles.accessRow}>
                     <div>
                       <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-                        <span style={{ fontSize: "0.8125rem", fontWeight: 700, color: "#1E40AF" }}>🌐 Custom Domain (Wi-Fi Router DNS):</span>
+                        <span style={{ fontSize: "0.8125rem", fontWeight: 700, color: "#92400E" }}>🌐 Custom Domain (Wi-Fi Router DNS):</span>
                         {systemSettings?.dns_active ? (
-                          <span style={{ fontSize: "0.6875rem", background: "#DBEAFE", color: "#1D4ED8", padding: "0.1rem 0.4rem", borderRadius: "4px", fontWeight: 600 }}>● Port 53 Active (Recursive)</span>
+                          <span style={{ fontSize: "0.6875rem", background: "#E5E7EB", color: "#92400E", padding: "0.1rem 0.4rem", borderRadius: "4px", fontWeight: 600 }}>● Port 53 Active (Recursive)</span>
                         ) : (
-                          <span style={{ fontSize: "0.6875rem", background: "#FEF3C7", color: "#B45309", padding: "0.1rem 0.4rem", borderRadius: "4px", fontWeight: 600 }}>○ Run As Admin</span>
+                          <span style={{ fontSize: "0.6875rem", background: "#FFFFFF", color: "#B45309", padding: "0.1rem 0.4rem", borderRadius: "4px", fontWeight: 600 }}>○ Run As Admin</span>
                         )}
                       </div>
-                      <div style={{ fontFamily: "monospace", fontSize: "0.8125rem", color: "#1E3A8A", marginTop: "0.15rem" }}>
-                        <a href={`http://${systemSettings?.custom_url || customUrlInput || "exampool.ng"}:${systemSettings?.server_port || 8001}`} target="_blank" rel="noreferrer" style={{ color: "#1D4ED8", textDecoration: "underline", fontWeight: 600 }}>
+                      <div style={{ fontFamily: "monospace", fontSize: "0.8125rem", color: "#78350F", marginTop: "0.15rem" }}>
+                        <a href={`http://${systemSettings?.custom_url || customUrlInput || "exampool.ng"}:${systemSettings?.server_port || 8001}`} target="_blank" rel="noreferrer" style={{ color: "#92400E", textDecoration: "underline", fontWeight: 600 }}>
                           {`http://${systemSettings?.custom_url || customUrlInput || "exampool.ng"}:${systemSettings?.server_port || 8001}`}
                         </a>
                       </div>
-                      <div style={{ fontSize: "0.6875rem", color: "#1E40AF", marginTop: "0.1rem" }}>
+                      <div style={{ fontSize: "0.6875rem", color: "#92400E", marginTop: "0.1rem" }}>
                         Works across all devices on Wi-Fi when router Primary DNS is set to <code>{networkInfo?.primary_ip || systemSettings?.server_ip || "SERVER_IP"}</code>.
                       </div>
                     </div>
@@ -630,14 +630,14 @@ function SettingsContent() {
                   </div>
 
                   {/* Method 3: Direct LAN IP */}
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.65rem 0.85rem", background: "var(--color-surface-2, #F8FAFC)", border: "1px solid var(--color-border)", borderRadius: "8px" }}>
+                  <div className={styles.accessRow}>
                     <div>
                       <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
                         <span style={{ fontSize: "0.8125rem", fontWeight: 700, color: "var(--color-text)" }}>📡 Direct LAN IP:</span>
                         <span style={{ fontSize: "0.6875rem", background: "#E2E8F0", color: "#475569", padding: "0.1rem 0.4rem", borderRadius: "4px", fontWeight: 600 }}>Universal Fallback</span>
                       </div>
                       <div style={{ fontFamily: "monospace", fontSize: "0.8125rem", color: "var(--color-text)", marginTop: "0.15rem" }}>
-                        <a href={`http://${networkInfo?.primary_ip || systemSettings?.server_ip || "127.0.0.1"}:${systemSettings?.server_port || 8001}`} target="_blank" rel="noreferrer" style={{ color: "#4F46E5", textDecoration: "underline", fontWeight: 600 }}>
+                        <a href={`http://${networkInfo?.primary_ip || systemSettings?.server_ip || "127.0.0.1"}:${systemSettings?.server_port || 8001}`} target="_blank" rel="noreferrer" style={{ color: "var(--color-primary, #EA580C)", textDecoration: "underline", fontWeight: 600 }}>
                           {`http://${networkInfo?.primary_ip || systemSettings?.server_ip || "127.0.0.1"}:${systemSettings?.server_port || 8001}`}
                         </a>
                       </div>
@@ -657,7 +657,7 @@ function SettingsContent() {
               </div>
 
               {/* Host Machine Local Setup Card */}
-              <div className={styles.card} style={{ borderLeft: "4px solid #4F46E5" }}>
+              <div className={styles.card} style={{ borderLeft: "0" }}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Host Computer Setup (Browsing from this PC)</div>
                   <div className={styles.cardSubtitle}>
@@ -669,7 +669,7 @@ function SettingsContent() {
                   <div style={{ color: "var(--color-text)" }}>
                     Open PowerShell or Command Prompt in the project folder and run:
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", background: "#0F172A", color: "#38BDF8", padding: "0.6rem 0.85rem", borderRadius: "6px", fontFamily: "monospace", fontSize: "0.8125rem" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", background: "#0F172A", color: "#F59E0B", padding: "0.6rem 0.85rem", borderRadius: "6px", fontFamily: "monospace", fontSize: "0.8125rem" }}>
                     <span style={{ flex: 1 }}>bun run hosts:setup</span>
                     <button
                       type="button"
@@ -699,7 +699,7 @@ function SettingsContent() {
                 <div className={styles.networkCard}>
                   <div className={styles.networkCardHeader}>
                     <span className={styles.networkCardTitle}>Primary LAN IP</span>
-                    <span className={styles.statusPill} style={{ background: "#EFF6FF", color: "#2563EB", border: "1px solid #BFDBFE" }}>IPv4</span>
+                    <span className={styles.statusPill} style={{ background: "#FFFFFF", color: "#92400E", border: "1px solid #E5E7EB" }}>IPv4</span>
                   </div>
                   <div>
                     <span className={styles.codeVal}>{networkInfo?.primary_ip || systemSettings?.server_ip || "Detecting…"}</span>
@@ -710,7 +710,7 @@ function SettingsContent() {
                 <div className={styles.networkCard}>
                   <div className={styles.networkCardHeader}>
                     <span className={styles.networkCardTitle}>Server Port</span>
-                    <span className={styles.statusPill} style={{ background: "#F0FDF4", color: "#16A34A", border: "1px solid #BBF7D0" }}>HTTP</span>
+                    <span className={styles.statusPill} style={{ background: "#FFFFFF", color: "#374151", border: "1px solid #E5E7EB" }}>HTTP</span>
                   </div>
                   <div>
                     <span className={styles.codeVal}>{systemSettings?.server_port || 8001}</span>
@@ -721,10 +721,10 @@ function SettingsContent() {
                 <div className={styles.networkCard}>
                   <div className={styles.networkCardHeader}>
                     <span className={styles.networkCardTitle}>DNS Masking</span>
-                    <span className={styles.statusPill} style={{ background: systemSettings?.dns_active ? "#ECFDF5" : "#FEF3C7", color: systemSettings?.dns_active ? "#059669" : "#D97706", border: `1px solid ${systemSettings?.dns_active ? "#A7F3D0" : "#FDE68A"}` }}>{systemSettings?.dns_active ? "Active" : "Standard LAN"}</span>
+                    <span className={styles.statusPill} style={{ background: systemSettings?.dns_active ? "#FFFFFF" : "#FFFFFF", color: systemSettings?.dns_active ? "#374151" : "#374151", border: `1px solid ${systemSettings?.dns_active ? "#E5E7EB" : "#E5E7EB"}` }}>{systemSettings?.dns_active ? "Active" : "Standard LAN"}</span>
                   </div>
                   <div>
-                    <span className={styles.codeVal} style={{ color: systemSettings?.dns_active ? "#059669" : "#D97706" }}>{systemSettings?.dns_active ? "✅ Port 53 Active" : "○ Port 53 Standard"}</span>
+                    <span className={styles.codeVal} style={{ color: systemSettings?.dns_active ? "#374151" : "#374151" }}>{systemSettings?.dns_active ? "Port 53 active" : "Port 53 standard"}</span>
                   </div>
                   <div style={{ fontSize: "0.6875rem", color: "var(--color-muted)", marginTop: "0.25rem" }}>Recursive pass-through for internet.</div>
                 </div>
@@ -732,10 +732,10 @@ function SettingsContent() {
                 <div className={styles.networkCard}>
                   <div className={styles.networkCardHeader}>
                     <span className={styles.networkCardTitle}>mDNS Zero-Config</span>
-                    <span className={styles.statusPill} style={{ background: "#ECFDF5", color: "#059669", border: "1px solid #A7F3D0" }}>Port 5353</span>
+                    <span className={styles.statusPill} style={{ background: "#FFFFFF", color: "#374151", border: "1px solid #E5E7EB" }}>Port 5353</span>
                   </div>
                   <div>
-                    <span className={styles.codeVal} style={{ color: "#059669" }}>✅ exampool.local</span>
+                    <span className={styles.codeVal} style={{ color: "#374151" }}>exampool.local</span>
                   </div>
                   <div style={{ fontSize: "0.6875rem", color: "var(--color-muted)", marginTop: "0.25rem" }}>Zero-config Wi-Fi multicast.</div>
                 </div>

@@ -4,19 +4,9 @@ import { useState, useEffect } from "react";
 import { api } from "../../lib/api";
 import { useAcademic } from "../context/AcademicContext";
 import {
-  CalendarIcon,
-  TrendingUpIcon,
   RefreshIcon,
   ChevronRightIcon,
-  CrownIcon,
-  SparklesIcon,
-  GraduationCapIcon,
-  UsersIcon,
-  BookIcon,
-  DocumentIcon,
-  CheckCircleIcon,
 } from "../icons/Icons";
-import { ActiveGoldBadge } from "../ui/ActiveGoldBadge";
 
 interface TermStat {
   term_id: number;
@@ -90,37 +80,37 @@ export function SessionSnapshotCard() {
     <div style={{
       background: "var(--color-surface, #FFFFFF)",
       border: "1px solid var(--color-border, #E2E8F0)",
-      borderRadius: "12px",
-      padding: "1.25rem",
+      borderRadius: "10px",
+      padding: "1.125rem 1.25rem",
       display: "flex",
       flexDirection: "column",
       gap: "0.875rem",
     }}>
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.5rem" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.45rem" }}>
-          <span className="text-indigo-600 flex items-center">
-            <TrendingUpIcon width="16" height="16" />
-          </span>
+        <div>
           <h2 style={{ fontSize: "0.9375rem", fontWeight: 600, margin: 0, color: "var(--color-text, #0F172A)", letterSpacing: "-0.01em" }}>
-            Session Analytics &amp; History
+            Academic Session Directory &amp; Archive
           </h2>
+          <p style={{ fontSize: "0.75rem", color: "#64748B", margin: "0.15rem 0 0" }}>
+            Historical cohort metrics, term completions, and annual progression records across sessions.
+          </p>
         </div>
 
         <button
           onClick={fetchSnapshots}
           style={{
-            fontSize: "0.6875rem",
+            fontSize: "0.75rem",
             fontWeight: 500,
-            padding: "0.25rem 0.55rem",
+            padding: "0.3rem 0.65rem",
             borderRadius: "6px",
             border: "1px solid var(--color-border, #E2E8F0)",
-            background: "transparent",
-            color: "var(--color-muted, #64748B)",
+            background: "#FFFFFF",
+            color: "var(--color-muted, #475569)",
             cursor: "pointer",
             display: "inline-flex",
             alignItems: "center",
-            gap: "0.3rem",
+            gap: "0.35rem",
           }}
           disabled={loading}
         >
@@ -170,14 +160,9 @@ export function SessionSnapshotCard() {
             <div
               key={snap.session_id}
               style={{
-                border: isSnapActive
-                  ? "1px solid var(--color-gold-border, rgba(202, 138, 4, 0.35))"
-                  : "1px solid var(--color-border, #E2E8F0)",
+                border: "1px solid var(--color-border, #E2E8F0)",
                 borderRadius: "8px",
                 background: "var(--color-surface, #FFFFFF)",
-                boxShadow: isSnapActive
-                  ? "0 2px 8px rgba(234, 179, 8, 0.08)"
-                  : "none",
                 overflow: "hidden",
               }}
             >
@@ -191,39 +176,34 @@ export function SessionSnapshotCard() {
                   justifyContent: "space-between",
                   cursor: "pointer",
                   userSelect: "none",
-                  background: isExpanded
-                    ? isSnapActive
-                      ? "rgba(254, 249, 195, 0.25)"
-                      : "var(--color-surface-2, #F8FAFC)"
-                    : "transparent",
+                  background: isExpanded ? "var(--color-surface-2, #F8FAFC)" : "transparent",
                   flexWrap: "wrap",
                   gap: "0.5rem",
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: "0.45rem", flexWrap: "wrap" }}>
-                  <span style={{ fontSize: "0.875rem", fontWeight: 600, color: "var(--color-text, #0F172A)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+                  <span style={{ fontSize: "0.875rem", fontWeight: 600, color: "var(--color-text, #0F172A)", fontVariantNumeric: "tabular-nums" }}>
                     {snap.session_name}
                   </span>
 
-                  {isSnapActive && (
-                    <ActiveGoldBadge
-                      type="session"
-                      label="Active Session"
-                      size="sm"
-                      glowing={true}
-                    />
-                  )}
+                  <span style={{
+                    fontSize: "0.75rem",
+                    fontWeight: 500,
+                    color: isSnapActive ? "#92400E" : "#64748B",
+                  }}>
+                    {isSnapActive ? "· Active Session" : "· Archived"}
+                  </span>
 
                   {isCurrentSelected && (
                     <span style={{
-                      fontSize: "0.625rem",
+                      fontSize: "0.6875rem",
                       fontWeight: 500,
-                      padding: "0.1rem 0.35rem",
+                      padding: "0.1rem 0.4rem",
                       borderRadius: "4px",
-                      background: "var(--color-surface-2, #F1F5F9)",
-                      color: "var(--color-muted, #64748B)",
+                      background: "#F1F5F9",
+                      color: "#475569",
                     }}>
-                      Filtered
+                      Viewing
                     </span>
                   )}
                 </div>
@@ -239,7 +219,7 @@ export function SessionSnapshotCard() {
                       style={{
                         fontSize: "0.6875rem",
                         fontWeight: 500,
-                        padding: "0.2rem 0.45rem",
+                        padding: "0.2rem 0.5rem",
                         borderRadius: "4px",
                         border: "1px solid var(--color-border, #E2E8F0)",
                         background: "var(--color-surface, #FFFFFF)",
@@ -247,7 +227,7 @@ export function SessionSnapshotCard() {
                         cursor: "pointer",
                       }}
                     >
-                      Filter View
+                      Inspect Period
                     </button>
                   )}
 
@@ -277,78 +257,77 @@ export function SessionSnapshotCard() {
                     marginBottom: "0.75rem",
                   }}>
                     <div style={{ padding: "0.5rem 0.65rem", borderRadius: "6px", background: "var(--color-surface-2, #F8FAFC)", border: "1px solid var(--color-border, #E2E8F0)" }}>
-                      <span style={{ fontSize: "0.625rem", color: "var(--color-muted, #64748B)", textTransform: "uppercase" }}>Students</span>
-                      <div style={{ fontSize: "1rem", fontWeight: 700, fontFamily: "var(--font-mono, monospace)", color: "var(--color-text, #0F172A)", marginTop: "0.15rem" }}>
+                      <span style={{ fontSize: "0.6875rem", color: "var(--color-muted, #64748B)", fontWeight: 500 }}>Students</span>
+                      <div style={{ fontSize: "1rem", fontWeight: 700, fontVariantNumeric: "tabular-nums", color: "var(--color-text, #0F172A)", marginTop: "0.15rem" }}>
                         {stats.total_students ?? 0}
                       </div>
                     </div>
 
                     <div style={{ padding: "0.5rem 0.65rem", borderRadius: "6px", background: "var(--color-surface-2, #F8FAFC)", border: "1px solid var(--color-border, #E2E8F0)" }}>
-                      <span style={{ fontSize: "0.625rem", color: "var(--color-muted, #64748B)", textTransform: "uppercase" }}>Teachers</span>
-                      <div style={{ fontSize: "1rem", fontWeight: 700, fontFamily: "var(--font-mono, monospace)", color: "var(--color-text, #0F172A)", marginTop: "0.15rem" }}>
+                      <span style={{ fontSize: "0.6875rem", color: "var(--color-muted, #64748B)", fontWeight: 500 }}>Teachers</span>
+                      <div style={{ fontSize: "1rem", fontWeight: 700, fontVariantNumeric: "tabular-nums", color: "var(--color-text, #0F172A)", marginTop: "0.15rem" }}>
                         {stats.total_teachers ?? 0}
                       </div>
                     </div>
 
                     <div style={{ padding: "0.5rem 0.65rem", borderRadius: "6px", background: "var(--color-surface-2, #F8FAFC)", border: "1px solid var(--color-border, #E2E8F0)" }}>
-                      <span style={{ fontSize: "0.625rem", color: "var(--color-muted, #64748B)", textTransform: "uppercase" }}>Subjects</span>
-                      <div style={{ fontSize: "1rem", fontWeight: 700, fontFamily: "var(--font-mono, monospace)", color: "var(--color-text, #0F172A)", marginTop: "0.15rem" }}>
+                      <span style={{ fontSize: "0.6875rem", color: "var(--color-muted, #64748B)", fontWeight: 500 }}>Subjects</span>
+                      <div style={{ fontSize: "1rem", fontWeight: 700, fontVariantNumeric: "tabular-nums", color: "var(--color-text, #0F172A)", marginTop: "0.15rem" }}>
                         {stats.total_subjects ?? 0}
                       </div>
                     </div>
 
                     <div style={{ padding: "0.5rem 0.65rem", borderRadius: "6px", background: "var(--color-surface-2, #F8FAFC)", border: "1px solid var(--color-border, #E2E8F0)" }}>
-                      <span style={{ fontSize: "0.625rem", color: "var(--color-muted, #64748B)", textTransform: "uppercase" }}>Exams Done</span>
-                      <div style={{ fontSize: "1rem", fontWeight: 700, fontFamily: "var(--font-mono, monospace)", color: "var(--color-text, #0F172A)", marginTop: "0.15rem" }}>
+                      <span style={{ fontSize: "0.6875rem", color: "var(--color-muted, #64748B)", fontWeight: 500 }}>Completed Exams</span>
+                      <div style={{ fontSize: "1rem", fontWeight: 700, fontVariantNumeric: "tabular-nums", color: "var(--color-text, #0F172A)", marginTop: "0.15rem" }}>
                         {stats.completed_exams ?? 0}
                       </div>
                     </div>
 
                     <div style={{ padding: "0.5rem 0.65rem", borderRadius: "6px", background: "var(--color-surface-2, #F8FAFC)", border: "1px solid var(--color-border, #E2E8F0)" }}>
-                      <span style={{ fontSize: "0.625rem", color: "var(--color-muted, #64748B)", textTransform: "uppercase" }}>Avg Score</span>
-                      <div style={{ fontSize: "1rem", fontWeight: 700, fontFamily: "var(--font-mono, monospace)", color: "var(--color-text, #0F172A)", marginTop: "0.15rem" }}>
+                      <span style={{ fontSize: "0.6875rem", color: "var(--color-muted, #64748B)", fontWeight: 500 }}>Cohort Mean</span>
+                      <div style={{ fontSize: "1rem", fontWeight: 700, fontVariantNumeric: "tabular-nums", color: "var(--color-text, #0F172A)", marginTop: "0.15rem" }}>
                         {stats.avg_exam_score != null ? `${stats.avg_exam_score}%` : "—"}
                       </div>
                     </div>
 
                     <div style={{ padding: "0.5rem 0.65rem", borderRadius: "6px", background: "var(--color-surface-2, #F8FAFC)", border: "1px solid var(--color-border, #E2E8F0)" }}>
-                      <span style={{ fontSize: "0.625rem", color: "var(--color-muted, #64748B)", textTransform: "uppercase" }}>Report Cards</span>
-                      <div style={{ fontSize: "1rem", fontWeight: 700, fontFamily: "var(--font-mono, monospace)", color: "var(--color-text, #0F172A)", marginTop: "0.15rem" }}>
+                      <span style={{ fontSize: "0.6875rem", color: "var(--color-muted, #64748B)", fontWeight: 500 }}>Report Cards</span>
+                      <div style={{ fontSize: "1rem", fontWeight: 700, fontVariantNumeric: "tabular-nums", color: "var(--color-text, #0F172A)", marginTop: "0.15rem" }}>
                         {stats.report_cards_count ?? 0}
                       </div>
                     </div>
                   </div>
 
-                  {/* Promotion & Term Rows */}
+                  {/* Neutral Progression & Term Breakdown (No non-error red or purple boxes) */}
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "0.625rem" }}>
-                    {/* Decisions */}
                     <div style={{
                       padding: "0.65rem",
                       borderRadius: "6px",
                       background: "var(--color-surface-2, #F8FAFC)",
                       border: "1px solid var(--color-border, #E2E8F0)",
                     }}>
-                      <div style={{ fontSize: "0.6875rem", fontWeight: 600, color: "var(--color-muted, #64748B)", textTransform: "uppercase", marginBottom: "0.4rem" }}>
-                        Annual Decisions
+                      <div style={{ fontSize: "0.6875rem", fontWeight: 600, color: "var(--color-muted, #64748B)", marginBottom: "0.4rem" }}>
+                        Annual Progression Summary
                       </div>
                       <div style={{ display: "flex", gap: "0.375rem" }}>
-                        <div style={{ flex: 1, textAlign: "center", padding: "0.35rem", borderRadius: "4px", background: "rgba(22, 163, 74, 0.06)", border: "1px solid rgba(22, 163, 74, 0.2)" }}>
-                          <div style={{ fontSize: "0.625rem", color: "#16A34A", fontWeight: 600 }}>Promoted</div>
-                          <div style={{ fontSize: "0.875rem", fontWeight: 700, fontFamily: "var(--font-mono, monospace)", color: "#16A34A" }}>
+                        <div style={{ flex: 1, textAlign: "center", padding: "0.4rem", borderRadius: "4px", background: "#FFFFFF", border: "1px solid #E2E8F0" }}>
+                          <div style={{ fontSize: "0.6875rem", color: "#64748B", fontWeight: 500 }}>Promoted</div>
+                          <div style={{ fontSize: "0.875rem", fontWeight: 700, fontVariantNumeric: "tabular-nums", color: "#0F172A", marginTop: "0.1rem" }}>
                             {stats.promoted_count ?? 0}
                           </div>
                         </div>
 
-                        <div style={{ flex: 1, textAlign: "center", padding: "0.35rem", borderRadius: "4px", background: "rgba(220, 38, 38, 0.06)", border: "1px solid rgba(220, 38, 38, 0.2)" }}>
-                          <div style={{ fontSize: "0.625rem", color: "#DC2626", fontWeight: 600 }}>Repeated</div>
-                          <div style={{ fontSize: "0.875rem", fontWeight: 700, fontFamily: "var(--font-mono, monospace)", color: "#DC2626" }}>
+                        <div style={{ flex: 1, textAlign: "center", padding: "0.4rem", borderRadius: "4px", background: "#FFFFFF", border: "1px solid #E2E8F0" }}>
+                          <div style={{ fontSize: "0.6875rem", color: "#64748B", fontWeight: 500 }}>Repeated</div>
+                          <div style={{ fontSize: "0.875rem", fontWeight: 700, fontVariantNumeric: "tabular-nums", color: "#0F172A", marginTop: "0.1rem" }}>
                             {stats.repeated_count ?? 0}
                           </div>
                         </div>
 
-                        <div style={{ flex: 1, textAlign: "center", padding: "0.35rem", borderRadius: "4px", background: "rgba(79, 70, 229, 0.06)", border: "1px solid rgba(79, 70, 229, 0.2)" }}>
-                          <div style={{ fontSize: "0.625rem", color: "#4F46E5", fontWeight: 600 }}>Graduated</div>
-                          <div style={{ fontSize: "0.875rem", fontWeight: 700, fontFamily: "var(--font-mono, monospace)", color: "#4F46E5" }}>
+                        <div style={{ flex: 1, textAlign: "center", padding: "0.4rem", borderRadius: "4px", background: "#FFFFFF", border: "1px solid #E2E8F0" }}>
+                          <div style={{ fontSize: "0.6875rem", color: "#64748B", fontWeight: 500 }}>Graduated</div>
+                          <div style={{ fontSize: "0.875rem", fontWeight: 700, fontVariantNumeric: "tabular-nums", color: "#0F172A", marginTop: "0.1rem" }}>
                             {stats.graduated_count ?? 0}
                           </div>
                         </div>
@@ -362,7 +341,7 @@ export function SessionSnapshotCard() {
                       background: "var(--color-surface-2, #F8FAFC)",
                       border: "1px solid var(--color-border, #E2E8F0)",
                     }}>
-                      <div style={{ fontSize: "0.6875rem", fontWeight: 600, color: "var(--color-muted, #64748B)", textTransform: "uppercase", marginBottom: "0.4rem" }}>
+                      <div style={{ fontSize: "0.6875rem", fontWeight: 600, color: "var(--color-muted, #64748B)", marginBottom: "0.4rem" }}>
                         Term Breakdown
                       </div>
 
@@ -377,22 +356,22 @@ export function SessionSnapshotCard() {
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "space-between",
-                                padding: "0.3rem 0.5rem",
+                                padding: "0.35rem 0.55rem",
                                 borderRadius: "4px",
-                                background: t.is_active ? "rgba(254, 249, 195, 0.35)" : "var(--color-surface, #FFFFFF)",
-                                border: t.is_active ? "1px solid var(--color-gold-border, rgba(202, 138, 4, 0.35))" : "1px solid var(--color-border, #E2E8F0)",
-                                fontSize: "0.6875rem",
+                                background: "#FFFFFF",
+                                border: "1px solid #E2E8F0",
+                                fontSize: "0.75rem",
                               }}
                             >
                               <div className="flex items-center gap-1.5">
-                                {t.is_active && (
-                                  <SparklesIcon width="11" height="11" style={{ color: "#CA8A04" }} />
-                                )}
-                                <span style={{ fontWeight: 600, color: t.is_active ? "#B45309" : "var(--color-text, #0F172A)" }}>{t.term_name}</span>
+                                <span style={{ fontWeight: t.is_active ? 600 : 500, color: "#0F172A" }}>
+                                  {t.term_name}
+                                  {t.is_active ? <span style={{ color: "#92400E", fontWeight: 500, marginLeft: "0.35rem", fontSize: "0.6875rem" }}>· Active</span> : null}
+                                </span>
                               </div>
-                              <div style={{ display: "flex", gap: "0.5rem", color: "var(--color-muted, #64748B)" }}>
-                                <span>Done: <strong style={{ fontFamily: "var(--font-mono, monospace)", color: "var(--color-text, #0F172A)" }}>{t.completed_exams ?? 0}</strong></span>
-                                <span>Avg: <strong style={{ fontFamily: "var(--font-mono, monospace)", color: "var(--color-text, #0F172A)" }}>{t.avg_score != null ? `${t.avg_score}%` : "—"}</strong></span>
+                              <div style={{ display: "flex", gap: "0.65rem", color: "#64748B", fontVariantNumeric: "tabular-nums" }}>
+                                <span>Exams: <strong style={{ color: "#0F172A" }}>{t.completed_exams ?? 0}</strong></span>
+                                <span>Mean: <strong style={{ color: "#0F172A" }}>{t.avg_score != null ? `${t.avg_score}%` : "—"}</strong></span>
                               </div>
                             </div>
                           ))}

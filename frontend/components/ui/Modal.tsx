@@ -1,7 +1,9 @@
 "use client";
 
 import React, { ReactNode } from "react";
+import * as Dialog from "@radix-ui/react-dialog";
 import { CloseIcon } from "../icons/Icons";
+import { X, useStudentIconScope } from "../icons/StudentIcons";
 import styles from "./Modal.module.css";
 
 export type ModalSize = "sm" | "md" | "lg" | "xl" | "full";
@@ -10,6 +12,7 @@ export type ModalProps = {
   open: boolean;
   onClose: () => void;
   title?: string;
+  description?: string;
   children: ReactNode;
   className?: string;
   size?: ModalSize;
@@ -20,34 +23,45 @@ export function Modal({
   open,
   onClose,
   title,
+  description,
   children,
   className = "",
   size = "md",
   hideCloseButton = false,
 }: ModalProps) {
-  if (!open) return null;
-
+  const descriptionId = React.useId();
+  const studentIcons = useStudentIconScope();
+  const returnFocusRef = React.useRef<HTMLElement | null>(null);
   return (
-    <div className={styles.overlay} onClick={onClose}>
-      <div
-        className={`${styles.modal} ${styles[`size-${size}`]} ${className}`.trim()}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {title && (
-          <div className="flex items-center justify-between p-4 border-b border-slate-100">
-            <h3 className="text-base font-semibold text-slate-800">{title}</h3>
-            {!hideCloseButton && (
-              <button
-                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-50 transition-colors"
-                onClick={onClose}
-              >
-                <CloseIcon width="16" height="16" />
-              </button>
-            )}
-          </div>
-        )}
-        <div className={styles.content}>{children}</div>
-      </div>
-    </div>
+    <Dialog.Root open={open} onOpenChange={(nextOpen) => { if (!nextOpen) onClose(); }}>
+      <Dialog.Portal>
+        <Dialog.Overlay className={styles.overlay}>
+          <Dialog.Content
+            className={`${styles.modal} ${styles[`size-${size}`]} ${className}`.trim()}
+            aria-describedby={description ? descriptionId : undefined}
+            onOpenAutoFocus={() => {
+              returnFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+            }}
+            onCloseAutoFocus={(event) => {
+              if (returnFocusRef.current?.isConnected) {
+                event.preventDefault();
+                returnFocusRef.current.focus();
+              }
+            }}
+          >
+            <div className={title ? styles.header : styles.visuallyHidden}>
+              <Dialog.Title className={styles.title}>{title || "Dialog"}</Dialog.Title>
+              {title && !hideCloseButton && (
+                <Dialog.Close className={styles.close} aria-label="Close dialog">
+                  {studentIcons ? <X size={18} /> : <CloseIcon width="18" height="18" />}
+                </Dialog.Close>
+              )}
+            </div>
+            {description && <Dialog.Description id={descriptionId} className={styles.description}>{description}</Dialog.Description>}
+            <div className={styles.content}>{children}</div>
+          </Dialog.Content>
+        </Dialog.Overlay>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 }

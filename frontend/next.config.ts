@@ -16,6 +16,7 @@ const nextConfig: NextConfig = {
     distDir: "dist",
   }),
   trailingSlash: true,
+  skipTrailingSlashRedirect: true,
   images: {
     unoptimized: true,
   },

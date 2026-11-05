@@ -57,28 +57,7 @@ function AnnouncementsList() {
       <div className={styles.headerRow}>
         <h1 className={styles.pageTitle}>Announcements</h1>
 
-        <button
-          type="button"
-          onClick={openChildSwitcher}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "0.35rem",
-            padding: "0.35rem 0.75rem",
-            borderRadius: "999px",
-            background: "var(--g-surface, #FFFFFF)",
-            border: "1px solid var(--g-border, #E2E8F0)",
-            fontSize: "0.75rem",
-            fontWeight: 700,
-            color: "var(--g-text-primary, #0F172A)",
-            cursor: "pointer"
-          }}
-        >
-          <span>Wards</span>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <polyline points="6 9 12 15 18 9" />
-          </svg>
-        </button>
+
       </div>
 
       {/* Category Tabs */}

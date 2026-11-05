@@ -2,16 +2,17 @@
   width: 100%;
   overflow-x: auto;
   border: 1px solid var(--color-border, #E2E8F0);
-  border-radius: var(--radius-md, 10px);
+  border-radius: 12px;
   background: var(--color-surface, #FFFFFF);
-  box-shadow: var(--shadow-xs, 0 1px 2px rgba(15, 23, 42, 0.03));
+  box-shadow: none;
+  border-color: var(--color-border);
 }
 
 .table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  font-size: 0.8625rem;
+  font-size: 0.8125rem;
   color: var(--color-text, #0F172A);
   text-align: left;
 }
@@ -21,11 +22,11 @@
 }
 
 .th {
-  padding: 0.75rem 1rem;
-  font-size: 0.75rem;
-  font-weight: 700;
+  padding: 0.65rem 1rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   color: var(--color-muted, #64748B);
   border-bottom: 1px solid var(--color-border, #E2E8F0);
   white-space: nowrap;
@@ -37,7 +38,7 @@
   transition: color 150ms ease;
 }
 .th.sortable:hover {
-  color: var(--color-primary, #4F46E5);
+  color: var(--color-primary, #EA580C);
 }
 
 .thContent {
@@ -52,7 +53,7 @@
 }
 
 .sortIcon.active {
-  color: var(--color-primary, #4F46E5);
+  color: var(--color-primary, #EA580C);
 }
 
 .tr {
@@ -64,11 +65,11 @@
 }
 
 .tbody .tr:hover {
-  background-color: rgba(241, 245, 249, 0.6);
+  background-color: var(--color-surface-2, #F8FAFC);
 }
 
 .td {
-  padding: 0.85rem 1rem;
+  padding: 0.75rem 1rem;
   color: var(--color-text-2, #334155);
   vertical-align: middle;
 }
@@ -109,3 +110,4 @@
   padding: 0.2rem 0.6rem;
   font-size: 0.75rem;
 }
+.th.sortable:focus-visible { outline:2px solid var(--color-primary); outline-offset:-3px; }

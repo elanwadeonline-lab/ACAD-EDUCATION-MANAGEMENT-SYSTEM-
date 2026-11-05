@@ -1,0 +1,8 @@
+.gradebook { color:var(--color-text); width:100%; min-width:0; }
+.statusText { color:var(--color-muted); font-size:.8125rem; font-weight:500; white-space:nowrap; }
+.gradebook table { font-size:.8125rem; }
+.gradebook th { background:#fafafa; font-weight:500; text-transform:none; letter-spacing:0; }
+.gradebook td { background:white; }
+.gradebook input, .gradebook select { border-radius:6px; box-shadow:none; min-height:36px; }
+.gradebook input:focus-visible, .gradebook select:focus-visible { outline:2px solid var(--color-primary); outline-offset:2px; }
+@media(max-width:600px) { .gradebook input,.gradebook select { font-size:1rem; min-height:44px; } }

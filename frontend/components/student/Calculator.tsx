@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { CloseIcon } from "../icons/StudentIcons";
 
 function tokenize(expr: string): string[] {
   const tokens: string[] = [];
@@ -144,7 +145,7 @@ export function Calculator({ onClose }: { onClose: () => void }) {
           style={{ background: "transparent", color: "#94A3B8", border: "none", cursor: "pointer", fontSize: "14px", padding: "2px 6px" }}
           aria-label="Close calculator"
         >
-          ✕
+          <CloseIcon size={16} />
         </button>
       </div>
 

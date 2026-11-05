@@ -81,29 +81,7 @@ function ExaminationsList() {
       <div className={styles.headerRow}>
         <h1 className={styles.pageTitle}>Examinations</h1>
 
-        <button
-          type="button"
-          onClick={openChildSwitcher}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "0.5rem",
-            padding: "0.35rem 0.75rem",
-            borderRadius: "999px",
-            background: "var(--g-surface, #FFFFFF)",
-            border: "1px solid var(--g-border, #E2E8F0)",
-            fontSize: "0.75rem",
-            fontWeight: 700,
-            color: "var(--g-text-primary, #0F172A)",
-            cursor: "pointer"
-          }}
-        >
-          <StudentAvatar name={activeWard.name} imageUrl={activeWard.image_url} size="xs" />
-          <span>{activeWard.name.split(" ")[0]}</span>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <polyline points="6 9 12 15 18 9" />
-          </svg>
-        </button>
+
       </div>
 
       {/* Tabs */}
@@ -237,8 +215,8 @@ function ExaminationsList() {
               </div>
 
               {selectedExam.instructions && (
-                <div style={{ background: "var(--g-primary-subtle, #EFF4FF)", border: "1px solid var(--g-primary-border, #DBEAFE)", borderRadius: "12px", padding: "0.85rem", fontSize: "0.8125rem", color: "var(--g-text-primary, #0F172A)" }}>
-                  <div style={{ fontWeight: 700, color: "var(--g-primary, #165AF6)", marginBottom: "0.2rem" }}>
+                <div style={{ background: "var(--g-primary-subtle, #FFFBEB)", border: "1px solid var(--g-primary-border, #FDE68A)", borderRadius: "12px", padding: "0.85rem", fontSize: "0.8125rem", color: "var(--g-text-primary, #0F172A)" }}>
+                  <div style={{ fontWeight: 700, color: "var(--g-primary-text, #92400E)", marginBottom: "0.2rem" }}>
                     Special Exam Instructions:
                   </div>
                   {selectedExam.instructions}

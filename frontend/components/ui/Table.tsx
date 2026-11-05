@@ -59,13 +59,16 @@ export function Table<T>({
               return (
                 <th
                   key={col.key}
-                  className={`${styles.th} ${getAlignClass(col.align)} ${col.sortable ? styles.sortable : ""}`}
+                  className={`${styles.th} ${getAlignClass(col.align)} ${col.sortable && onSort ? styles.sortable : ""}`}
                   style={col.width ? { width: col.width } : undefined}
+                  tabIndex={col.sortable && onSort ? 0 : undefined}
+                  aria-sort={col.sortable && onSort ? (isSorted ? sortDirection === "asc" ? "ascending" : "descending" : "none") : undefined}
+                  onKeyDown={event=>{if(col.sortable && onSort && (event.key === "Enter" || event.key === " ")){event.preventDefault();onSort(col.key);}}}
                   onClick={() => col.sortable && onSort?.(col.key)}
                 >
                   <span className={styles.thContent}>
                     {col.header}
-                    {col.sortable && (
+                    {col.sortable && onSort && (
                       <span className={`${styles.sortIcon} ${isSorted ? styles.active : ""}`}>
                         {isSorted ? (
                           sortDirection === "asc" ? "↑" : "↓"

@@ -290,7 +290,7 @@ function TimetableContent() {
         <div className={styles.statCard}>
           <div className={styles.statTop}>
             <span className={styles.statLabel}>Total Subjects</span>
-            <div className={styles.statIcon} style={{ color: "#06B6D4" }}><CalendarIcon width="15" height="15" /></div>
+            <div className={styles.statIcon}><CalendarIcon width="15" height="15" /></div>
           </div>
           <div>
             <div className={styles.statValue}>{stats.total}</div>
@@ -301,7 +301,7 @@ function TimetableContent() {
         <div className={styles.statCard}>
           <div className={styles.statTop}>
             <span className={styles.statLabel}>Scheduled Slots</span>
-            <div className={styles.statIcon} style={{ color: "#10B981" }}><CheckCircleIcon width="15" height="15" /></div>
+            <div className={styles.statIcon}><CheckCircleIcon width="15" height="15" /></div>
           </div>
           <div>
             <div className={styles.statValue}>{stats.scheduled}</div>
@@ -312,7 +312,7 @@ function TimetableContent() {
         <div className={styles.statCard}>
           <div className={styles.statTop}>
             <span className={styles.statLabel}>Open for Candidates</span>
-            <div className={styles.statIcon} style={{ color: "#F97316" }}><ClockIcon width="15" height="15" /></div>
+            <div className={styles.statIcon}><ClockIcon width="15" height="15" /></div>
           </div>
           <div>
             <div className={styles.statValue}>{stats.allowed}</div>
@@ -323,7 +323,7 @@ function TimetableContent() {
         <div className={styles.statCard}>
           <div className={styles.statTop}>
             <span className={styles.statLabel}>Unscheduled</span>
-            <div className={styles.statIcon} style={{ color: "#F59E0B" }}><WarningIcon width="15" height="15" /></div>
+            <div className={styles.statIcon}><WarningIcon width="15" height="15" /></div>
           </div>
           <div>
             <div className={styles.statValue}>{stats.pending}</div>

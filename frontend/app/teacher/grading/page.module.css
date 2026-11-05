@@ -6,6 +6,7 @@
   gap: 1.5rem;
   width: 100%;
   max-width: 100%;
+  font-family: var(--font-sans), 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 /* ── Minimalist KPI Metrics Row ─────────────────────────── */
@@ -17,18 +18,20 @@
 
 .statCard {
   background: var(--color-surface, #FFFFFF);
-  border: 1px solid var(--color-border, #E2E8F0);
-  border-radius: 12px;
-  padding: 1rem 1.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 22px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   gap: 0.5rem;
-  transition: border-color 150ms ease;
+  box-shadow: none;
+  transition: border-color var(--duration-fast, 120ms) ease, box-shadow var(--duration-fast, 120ms) ease;
 }
 
 .statCard:hover {
   border-color: var(--color-border-hover, #CBD5E1);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
 }
 
 .statTop {
@@ -47,31 +50,36 @@
 }
 
 .statIcon {
-  color: var(--color-muted-2, #94A3B8);
+  color: var(--color-muted);
   display: flex;
   align-items: center;
+  background: transparent;
+  border: 0;
 }
 
 .statValue {
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-size: 2rem;
+  font-weight: 600;
   font-family: var(--font-mono, monospace);
+  font-variant-numeric: tabular-nums;
   color: var(--color-text, #0F172A);
   line-height: 1.1;
-  letter-spacing: -0.03em;
+  letter-spacing: -.045em;
 }
 
 .statFootnote {
   font-size: 0.75rem;
   color: var(--color-muted, #64748B);
+  margin-top: 0.2rem;
 }
 
 /* ── Table Wrapper ──────────────────────────────────────── */
 .tableContainer {
   background: var(--color-surface, #FFFFFF);
   border: 1px solid var(--color-border, #E2E8F0);
-  border-radius: 12px;
+  border-radius: var(--radius-md, 8px);
   overflow: hidden;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
 }
 
 .codeBadge {
@@ -98,9 +106,9 @@
 }
 
 .statusApproved {
-  background: var(--color-surface-2, #F1F5F9);
-  color: var(--color-text, #0F172A);
-  border: 1px solid var(--color-border, #CBD5E1);
+  background: rgba(16, 185, 129, 0.08);
+  color: #065F46;
+  border: 1px solid rgba(16, 185, 129, 0.25);
 }
 
 .statusPending {
@@ -121,3 +129,16 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Decorative gold wave: no metric values encoded. */
+.statCard { background-color:var(--color-surface); background-image:url("/gold-card-wave.svg"); background-repeat:no-repeat; background-position:right bottom; background-size:220px auto; }
+
+/* Grade entry is a quiet work surface, not a decorative dashboard. */
+.statCard { background:none; background-image:none; border:0; border-right:1px solid var(--color-border); border-radius:0; box-shadow:none; padding:8px 20px 8px 0; }
+.statCard:last-child { border-right:0; }
+.statCard:hover { box-shadow:none; border-color:var(--color-border); }
+.statIcon { display:none; }
+.statLabel { font-size:.8125rem; font-weight:500; text-transform:none; letter-spacing:0; }
+.codeBadge { border:0; background:none; padding:0; }
+.tableContainer { border:0; border-radius:0; box-shadow:none; background:transparent; }
+.noticeCard, .studentCard { background-image:none; box-shadow:none; }

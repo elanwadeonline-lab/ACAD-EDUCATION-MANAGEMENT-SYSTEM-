@@ -404,7 +404,7 @@ function AcademicSessionsContent() {
                   type="checkbox"
                   checked={sessions.length > 0 && selectedSessionIds.size === sessions.length}
                   onChange={toggleSelectAll}
-                  style={{ width: "14px", height: "14px", accentColor: "#0F766E", cursor: "pointer" }}
+                  style={{ width: "14px", height: "14px", accentColor: "var(--color-primary, #EA580C)", cursor: "pointer" }}
                 />
                 Select All ({sessions.length})
               </label>
@@ -418,16 +418,16 @@ function AcademicSessionsContent() {
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            background: "linear-gradient(135deg, #1E293B 0%, #0F172A 100%)",
+            background: "var(--color-surface-dark, #0B0D11)",
             color: "#FFFFFF",
             padding: "0.75rem 1.25rem",
             borderRadius: "8px",
             marginBottom: "1rem",
-            border: "1px solid #334155",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
             boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-              <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "#38BDF8" }}>
+              <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--color-primary, #EA580C)" }}>
                 {selectedSessionIds.size} session{selectedSessionIds.size > 1 ? "s" : ""} selected
               </span>
             </div>
@@ -486,14 +486,14 @@ function AcademicSessionsContent() {
                     className={`${styles.timelineYearGroup} ${
                       isGroupActive ? styles.timelineYearGroupActive : ""
                     }`}
-                    style={isSelected ? { background: "rgba(15, 118, 110, 0.05)", borderRadius: "8px", padding: "0.5rem" } : undefined}
+                    style={isSelected ? { background: "rgba(234, 88, 12, 0.04)", borderRadius: "8px", padding: "0.5rem" } : undefined}
                   >
                     <div className={styles.timelineYearMarker}>
                       <input
                         type="checkbox"
                         checked={isSelected}
                         onChange={() => toggleSelectSession(s.id)}
-                        style={{ width: "15px", height: "15px", accentColor: "#0F766E", cursor: "pointer", marginRight: "0.35rem" }}
+                        style={{ width: "15px", height: "15px", accentColor: "var(--color-primary, #EA580C)", cursor: "pointer", marginRight: "0.35rem" }}
                         title={`Select session "${s.name}"`}
                       />
                       <div
@@ -528,7 +528,7 @@ function AcademicSessionsContent() {
                             background: "none",
                             border: "none",
                             cursor: "pointer",
-                            color: "#EF4444",
+                            color: "var(--color-danger, #DC2626)",
                             padding: "0.2rem",
                             borderRadius: "4px",
                             display: "flex",
@@ -571,7 +571,7 @@ function AcademicSessionsContent() {
                                     background: "none",
                                     border: "none",
                                     cursor: "pointer",
-                                    color: "#EF4444",
+                                    color: "var(--color-danger, #DC2626)",
                                     padding: "0.2rem",
                                     borderRadius: "4px",
                                     display: "flex",

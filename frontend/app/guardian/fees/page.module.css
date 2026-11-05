@@ -36,15 +36,15 @@
 
 .backBtn:hover {
   background: var(--g-surface-subtle, #F8FAFC);
-  border-color: var(--g-border-focus, #3B82F6);
+  border-color: var(--g-border-focus, #D97706);
 }
 
 .pageTitle {
-  font-size: 1.25rem;
-  font-weight: 800;
+  font-size: 1.375rem;
+  font-weight: 600;
   color: var(--g-text-primary, #0F172A);
   margin: 0;
-  letter-spacing: -0.02em;
+  letter-spacing: -.03em;
 }
 
 .periodDropdown {
@@ -64,19 +64,20 @@
 
 .periodDropdown:hover {
   background: var(--g-surface-subtle, #F8FAFC);
-  border-color: var(--g-border-focus, #3B82F6);
+  border-color: var(--g-border-focus, #D97706);
 }
 
 /* ── 1. Balance Card ── */
 .balanceCard {
   background: var(--g-surface, #FFFFFF);
   border: 1px solid var(--g-border, #E2E8F0);
-  border-radius: var(--g-radius-xl, 20px);
+  border-radius: 18px;
   padding: 1.35rem 1.25rem;
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
-  box-shadow: var(--g-shadow-sm, 0 1px 3px rgba(15, 23, 42, 0.03));
+  box-shadow: none;
+  border-color: var(--g-border);
 }
 
 .balanceLabel {
@@ -111,7 +112,7 @@
 .progressBar {
   height: 100%;
   border-radius: 999px;
-  background: var(--g-primary, #165AF6);
+  background: var(--g-primary, #92400E);
   transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -119,13 +120,13 @@
   margin-top: 0.85rem;
   padding: 0.85rem 1rem;
   border-radius: var(--g-radius-md, 12px);
-  background: var(--g-primary, #165AF6);
+  background: var(--g-primary, #92400E);
   color: #FFFFFF;
   border: none;
   font-size: 0.875rem;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 4px 14px var(--g-primary-glow, rgba(22, 90, 246, 0.28));
+  box-shadow: 0 4px 14px var(--g-primary-glow, rgba(217, 119, 6, 0.28));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -134,7 +135,7 @@
 }
 
 .payNowHeroBtn:hover {
-  background: var(--g-primary-hover, #1248C8);
+  background: var(--g-primary-hover, #78350F);
   transform: translateY(-1px);
 }
 
@@ -339,19 +340,19 @@
 }
 
 .inputField:focus {
-  border-color: var(--g-primary, #165AF6);
+  border-color: var(--g-primary, #92400E);
 }
 
 .payConfirmBtn {
   padding: 0.85rem 1rem;
   border-radius: var(--g-radius-md, 12px);
-  background: var(--g-primary, #165AF6);
+  background: var(--g-primary, #92400E);
   color: #FFFFFF;
   border: none;
   font-size: 0.875rem;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 4px 14px var(--g-primary-glow, rgba(22, 90, 246, 0.28));
+  box-shadow: 0 4px 14px var(--g-primary-glow, rgba(217, 119, 6, 0.28));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -360,5 +361,5 @@
 }
 
 .payConfirmBtn:hover {
-  background: var(--g-primary-hover, #1248C8);
+  background: var(--g-primary-hover, #78350F);
 }

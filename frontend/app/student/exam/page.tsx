@@ -18,11 +18,14 @@ import {
   DocumentIcon,
   SparklesIcon,
   ArrowRightIcon,
-} from "../../../components/icons/Icons";
+  CloseIcon,
+} from "../../../components/icons/StudentIcons";
+import { saveOfflineSubmission as offlineSaveOfflineSubmission } from "../../../lib/offlineSync";
 import { saveOfflineSubmission, getPackage } from "../../../lib/idb";
 import { Scratchpad } from "../../../components/student/Scratchpad";
 import { Calculator } from "../../../components/student/Calculator";
 import { ConfettiCelebration } from "../../../components/student/ConfettiCelebration";
+import { AcqadLogo } from "../../../components/brand/AcqadLogo";
 import { StudentReviewModal } from "../../../components/student/StudentReviewModal";
 import styles from "./page.module.css";
 
@@ -81,7 +84,7 @@ export default function StudentExamPage() {
       <Suspense
         fallback={
           <main className={styles.page} style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <div className="spinner" style={{ width: 28, height: 28, borderColor: "#E2E8F0", borderTopColor: "#165AF6" }} />
+            <div className="spinner" style={{ width: 28, height: 28, borderColor: "#E2E8F0", borderTopColor: "#92400E" }} />
           </main>
         }
       >
@@ -144,6 +147,7 @@ function ExamContent() {
     answered_questions?: number;
     total_questions?: number;
     result_status?: string;
+    offline?: boolean;
     result_policy?: string;
     result_release_time?: string | null;
     message?: string;
@@ -218,11 +222,39 @@ function ExamContent() {
           showToast("Submitted offline! Results saved locally.", "success");
         }
       } else {
-        res = await api.submitExamWithAnswers(examId!, buildAnswerPayload());
+        try {
+          res = await api.submitExamWithAnswers(examId!, buildAnswerPayload());
+        } catch (submitErr) {
+          // Online-first with offline fallback: network drop right at submit —
+          // cache the attempt locally; useOfflineAutoSync pushes it on reconnect.
+          console.warn("Online submit failed — caching locally for auto-sync:", submitErr);
+          try {
+            const nowIso = new Date().toISOString();
+            await offlineSaveOfflineSubmission({
+              subject_id: Number(subjectId),
+              start_time: timerSeed ? new Date(timerSeed).toISOString() : nowIso,
+              end_time: nowIso,
+              score: 0,
+              total_score: questions.length,
+              answers: buildAnswerPayload(),
+            });
+            res = {
+              score: 0,
+              total_score: questions.length,
+              answered_questions: Object.keys(answersRef.current).length,
+              total_questions: questions.length,
+              offline: true,
+              result_status: "hidden",
+            };
+            showToast("Connection lost — submission saved locally and will sync automatically.", "success");
+          } catch {
+            throw submitErr;
+          }
+        }
       }
       setScoreResult(res as any);
       setShowSubmitConfirm(false);
-      showToast("Exam submitted successfully", "success");
+      if (!res.offline) showToast(practiceId ? "Practice received by the school server" : "Assessment received by the school server", "success");
       setMode("completed");
     } catch (err) {
       showToast(err instanceof Error ? err.message : "Submit failed", "error");
@@ -237,9 +269,16 @@ function ExamContent() {
   const remaining = useMonotonicTimer(
     timerSeed,
     useCallback(() => {
+      // An unseeded timer is not an expired attempt. Only a started session can submit.
+      if (mode !== "in-progress" || !examId) return;
       handleSubmit().catch(() => undefined);
-    }, [handleSubmit])
+    }, [handleSubmit, mode, examId])
   );
+
+  // Resuming an already-expired attempt can retain the initial zero seed.
+  useEffect(() => {
+    if (mode === "in-progress" && examId && timerSeed <= 0) handleSubmit().catch(() => undefined);
+  }, [mode, examId, timerSeed, handleSubmit]);
 
   // Online detection
   useEffect(() => {
@@ -346,7 +385,10 @@ function ExamContent() {
           const fetched = ((await api.getQuestions(subjectForStart.id)) as any[]) ?? [];
           setQuestions(fetched);
         }
-        seedTimer(start.startTime ?? new Date().toISOString(), Number(subjectForStart.duration), start.server_time);
+        // Untimed coursework (assignments) gets a generous safety seed — there is
+        // no deadline, so never let the timer expire immediately (0 → instant onExpire).
+        const durForSeed = Number(subjectForStart.duration) > 0 ? Number(subjectForStart.duration) : 240;
+        seedTimer(start.startTime ?? new Date().toISOString(), durForSeed, start.server_time);
         setMode("in-progress");
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to start exam. The exam window might be closed.");
@@ -365,7 +407,7 @@ function ExamContent() {
         if (practiceId) {
           const parts = practiceId.split("_");
           setSubject({
-            name: `${parts[0]} ${parts[1]} - ${parts.slice(2).join(" ")}`,
+            name: parts.length > 2 ? `${parts[0]} ${parts[1]} · ${parts.slice(2).join(" ")}` : "Practice assessment",
             duration: 45,
             code: parts[0]?.toUpperCase() || "MOCK",
           });
@@ -453,7 +495,8 @@ function ExamContent() {
           const qs = ((await api.getQuestions(targetSubjectId)) as any[]) ?? [];
           if (!mounted) return;
           setQuestions(qs);
-          seedTimer(inProgress.start_time, Number(s.duration), serverTime);
+          const durForResume = Number(s.duration) > 0 ? Number(s.duration) : 240;
+          seedTimer(inProgress.start_time, durForResume, serverTime);
 
           if (Object.keys(mapped).length === 0) {
             if (!document.fullscreenElement) {
@@ -781,7 +824,7 @@ function ExamContent() {
               <span>← Back to Dashboard</span>
             </button>
             <span style={{ fontSize: "0.8125rem", color: "#64748B", fontWeight: 500 }}>
-              ACAD Examination Portal
+              <AcqadLogo size="md" wordmarkWeight={700}/>
             </span>
           </div>
 
@@ -800,16 +843,16 @@ function ExamContent() {
             <div className={styles.preflightMetaGrid}>
               <div className={styles.preflightMetaBox}>
                 <div className={styles.preflightMetaLabel}>Time Allowed</div>
-                <div className={styles.preflightMetaValue}>{subject?.duration || 120} Mins</div>
+                <div className={styles.preflightMetaValue}>{Number(subject?.duration) > 0 ? `${subject?.duration} Mins` : "Untimed"}</div>
               </div>
               <div className={styles.preflightMetaBox}>
                 <div className={styles.preflightMetaLabel}>Total Questions</div>
-                <div className={styles.preflightMetaValue}>{questions.length || subject?.question_count || "40"} Questions</div>
+                <div className={styles.preflightMetaValue}>{questions.length || subject?.question_count ? `${questions.length || subject?.question_count} Questions` : "Available when started"}</div>
               </div>
               <div className={styles.preflightMetaBox}>
                 <div className={styles.preflightMetaLabel}>Assessment Type</div>
                 <div className={styles.preflightMetaValue}>
-                  {isLearningMode ? "Practice & Solution Review" : "School Supervised"}
+                  {isLearningMode ? "Practice & Solution Review" : Number((subject as any)?.is_assignment) === 1 ? "Untimed Assignment" : "School Supervised"}
                 </div>
               </div>
             </div>
@@ -837,11 +880,11 @@ function ExamContent() {
                 {isLearningMode ? (
                   <>
                     <div className={styles.ruleItem}>
-                      <span className={styles.ruleDot} style={{ background: "#7C3AED" }} />
+                      <span className={styles.ruleDot} style={{ background: "#92400E" }} />
                       <span><strong>Solution Reveals:</strong> Up to 5 step-by-step solution reveals available during your sitting.</span>
                     </div>
                     <div className={styles.ruleItem}>
-                      <span className={styles.ruleDot} style={{ background: "#7C3AED" }} />
+                      <span className={styles.ruleDot} style={{ background: "#92400E" }} />
                       <span><strong>Answer First:</strong> Submit an attempt on a question to unlock its detailed worked explanation.</span>
                     </div>
                     <div className={styles.ruleItem}>
@@ -869,7 +912,11 @@ function ExamContent() {
                     </div>
                     <div className={styles.ruleItem}>
                       <span className={styles.ruleDot} />
-                      <span><strong>Monotonic Countdown:</strong> Your assessment will auto-submit when the allocated timer expires.</span>
+                      <span><strong>Online-First Submission:</strong> Submit instantly when connected — if you drop offline, your work is cached and auto-synced on reconnect.</span>
+                    </div>
+                    <div className={styles.ruleItem}>
+                      <span className={styles.ruleDot} />
+                      <span>{Number((subject as any)?.is_assignment) === 1 ? <><strong>Untimed Work:</strong> There is no countdown — finish at your own pace and submit when ready.</> : <><strong>Monotonic Countdown:</strong> Your assessment will auto-submit when the allocated timer expires.</>}</span>
                     </div>
                   </>
                 )}
@@ -922,15 +969,15 @@ function ExamContent() {
             </div>
 
             <p style={{ fontSize: "0.875rem", color: "#64748B", lineHeight: 1.6, margin: 0 }}>
-              You have <strong style={{ color: "#165AF6" }}>{Object.keys(answers).length}</strong> answered question(s) securely restored from your session.
+              You have <strong style={{ color: "#92400E" }}>{Object.keys(answers).length}</strong> answered question(s) securely restored from your session.
               {isLearningMode && (
                 <>
                   <br />
-                  Solution reveals remaining: <strong style={{ color: "#7C3AED" }}>{solutionRevealsRemaining} of 5</strong>
+                  Solution reveals remaining: <strong style={{ color: "#92400E" }}>{solutionRevealsRemaining} of 5</strong>
                 </>
               )}
               <br />
-              Time remaining: <strong style={{ color: "#0F172A", fontFamily: "var(--font-mono, monospace)" }}>{formatTime(remaining)}</strong>
+              {Number(subject?.duration) > 0 ? <>Time remaining: <strong style={{ color: "#0F172A", fontFamily: "var(--font-mono, monospace)" }}>{formatTime(remaining)}</strong></> : <span><strong style={{ color: "#BE185D" }}>Untimed</strong> — no countdown for this assignment.</span>}
             </p>
 
             <div className={styles.preflightActions}>
@@ -950,11 +997,25 @@ function ExamContent() {
 
   // ── Completion Screen with Result Release Policy Engine ──
   if (mode === "completed") {
+    // A local queue acknowledgement is not a server receipt or a graded result.
+    if (scoreResult?.offline) {
+      return (
+        <main className={styles.completionWrapper}>
+          <section className={styles.releaseHoldCard} aria-labelledby="queued-submission-title">
+            <div className={styles.releaseHoldBadgeManual}><ClockIcon width="16" height="16" /><span>Saved on this device</span></div>
+            <h2 id="queued-submission-title" className={styles.celebrationTitle}>Waiting for the school network</h2>
+            <p className={styles.celebrationSub}>Your answers are stored locally. The school server has not confirmed receipt yet. Return to your dashboard and reconnect to the school network to sync your work.</p>
+            <p className={styles.celebrationSub}>Your result is pending. Keep this browser's saved data until the submission has synced.</p>
+            <button type="button" className={styles.returnHomeBtn} onClick={() => router.replace("/student/dashboard")}>Return to dashboard</button>
+          </section>
+        </main>
+      );
+    }
     // 1. Manual Hold State
     if (scoreResult?.result_status === "hidden") {
       return (
         <main className={styles.completionWrapper}>
-          <div className={styles.releaseHoldCard}>
+          <div className={styles.releaseHoldCard}><div className={styles.receiptBrand}><AcqadLogo size="lg" wordmarkWeight={700}/></div>
             <div className={styles.releaseHoldBadgeManual}>
               <ClockIcon width="14" height="14" />
               <span>Results Pending Instructor Release</span>
@@ -989,7 +1050,7 @@ function ExamContent() {
               </button>
               <Link
                 href="/student/results"
-                style={{ fontSize: "0.8125rem", fontWeight: 700, color: "#165AF6", textDecoration: "none", padding: "0.4rem" }}
+                style={{ fontSize: "0.8125rem", fontWeight: 700, color: "#92400E", textDecoration: "none", padding: "0.4rem" }}
               >
                 View in Assessment Results →
               </Link>
@@ -1007,7 +1068,7 @@ function ExamContent() {
 
       return (
         <main className={styles.completionWrapper}>
-          <div className={styles.releaseHoldCard}>
+          <div className={styles.releaseHoldCard}><div className={styles.receiptBrand}><AcqadLogo size="lg" wordmarkWeight={700}/></div>
             <div className={styles.releaseHoldBadgeScheduled}>
               <ClockIcon width="14" height="14" />
               <span>Results Scheduled</span>
@@ -1022,7 +1083,7 @@ function ExamContent() {
 
             <div className={styles.releaseScheduleBox}>
               <span style={{ fontSize: "0.75rem", color: "#64748B", fontWeight: 600, textTransform: "uppercase" }}>Scheduled Publication</span>
-              <strong style={{ fontSize: "1.0625rem", color: "#165AF6" }}>{releaseDateStr}</strong>
+              <strong style={{ fontSize: "1.0625rem", color: "#92400E" }}>{releaseDateStr}</strong>
             </div>
 
             <div className={styles.breakdownGrid}>
@@ -1034,7 +1095,7 @@ function ExamContent() {
               </div>
               <div className={styles.breakdownItem}>
                 <div className={styles.breakdownLabel}>Release Policy</div>
-                <div className={styles.breakdownValue} style={{ color: "#165AF6" }}>
+                <div className={styles.breakdownValue} style={{ color: "#92400E" }}>
                   Scheduled Release
                 </div>
               </div>
@@ -1047,7 +1108,7 @@ function ExamContent() {
               </button>
               <Link
                 href="/student/results"
-                style={{ fontSize: "0.8125rem", fontWeight: 700, color: "#165AF6", textDecoration: "none", padding: "0.4rem" }}
+                style={{ fontSize: "0.8125rem", fontWeight: 700, color: "#92400E", textDecoration: "none", padding: "0.4rem" }}
               >
                 View in Assessment Results →
               </Link>
@@ -1066,9 +1127,9 @@ function ExamContent() {
 
     return (
       <main className={styles.completionWrapper}>
-        <ConfettiCelebration trigger={true} durationMs={5000} particleCount={160} />
+        
 
-        <div className={styles.celebrationCard}>
+        <div className={styles.celebrationCard}><div className={styles.receiptBrand}><AcqadLogo size="lg" wordmarkWeight={700}/></div>
           <div className={styles.celebrationBadge}>
             <SparklesIcon width="14" height="14" />
             <span>{isMastery ? "Mastery Achieved" : isPass ? "Assessment Passed" : "Attempt Recorded"}</span>
@@ -1160,19 +1221,19 @@ function ExamContent() {
                 width: "38px",
                 height: "38px",
                 borderRadius: "10px",
-                background: "#EFF4FF",
-                border: "1px solid #DBEAFE",
+                background: "#FFFBEB",
+                border: "1px solid #FDE68A",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                color: "#165AF6",
+                color: "#92400E",
                 flexShrink: 0,
               }}
             >
               <DocumentIcon width="20" height="20" />
             </div>
             <div>
-              <h2 className={styles.summaryTitle}>Final Attempt Summary</h2>
+              <div className={styles.receiptBrand}><AcqadLogo size="md" wordmarkWeight={700}/></div><h2 className={styles.summaryTitle}>Final Attempt Summary</h2>
               <p className={styles.summarySub}>Review your progress before committing final submission</p>
             </div>
           </div>
@@ -1199,7 +1260,7 @@ function ExamContent() {
             <div className={styles.summaryStatItem}>
               <div className={styles.summaryStatLabel}>Time Remaining</div>
               <div className={styles.summaryStatVal} style={{ color: "#0F172A" }}>
-                {formatTime(remaining)}
+                {Number(subject?.duration) > 0 ? formatTime(remaining) : "Untimed"}
               </div>
             </div>
           </div>
@@ -1228,7 +1289,7 @@ function ExamContent() {
             </button>
             <button
               className={styles.preflightStartBtn}
-              style={{ background: "#165AF6" }}
+              style={{ background: "#92400E" }}
               onClick={() => handleSubmit()}
               disabled={mode === "submitting"}
             >
@@ -1277,10 +1338,7 @@ function ExamContent() {
       {/* ── 2. Compact Focused Header ── */}
       <header className={styles.topbar}>
         <div className={styles.topbarLeft}>
-          <span className={styles.brandBadge}>
-            <SparklesIcon width="14" height="14" />
-            <span>ACAD</span>
-          </span>
+          <AcqadLogo size="lg" wordmarkWeight={700}/>
           <div className={styles.examMetaGroup}>
             <h1 className={styles.examTitle}>{practiceId ? "MOCK EXAM ASSESSMENT" : subject?.name || "Examination Paper"}</h1>
             <p className={styles.examSubtitle}>
@@ -1290,9 +1348,9 @@ function ExamContent() {
         </div>
 
         <div className={styles.topbarCenter}>
-          <div className={timerStyle}>
+          <div className={Number(subject?.duration) > 0 ? timerStyle : styles.timerPillNormal}>
             <ClockIcon width="14" height="14" />
-            <span>{formatTime(remaining)}</span>
+            <span>{Number(subject?.duration) > 0 ? formatTime(remaining) : "Untimed"}</span>
           </div>
 
           <div className={styles.statusIndicatorGroup}>
@@ -1317,15 +1375,6 @@ function ExamContent() {
               )}
               {saveStatus === "idle" && (
                 <>
-                  <span
-                    style={{
-                      display: "inline-block",
-                      width: "6px",
-                      height: "6px",
-                      borderRadius: "50%",
-                      background: online ? "#059669" : "#DC2626",
-                    }}
-                  />
                   <span>{online ? "Live" : "Offline"}</span>
                 </>
               )}
@@ -1413,7 +1462,7 @@ function ExamContent() {
 
           <div className={styles.navigatorLegend}>
             <span className={styles.legendPill}>
-              <span className={styles.legendDot} style={{ background: "#165AF6" }} />
+              <span className={styles.legendDot} style={{ background: "#92400E" }} />
               Current
             </span>
             <span className={styles.legendPill}>
@@ -1634,7 +1683,7 @@ function ExamContent() {
                 onClick={() => setShowSolutionDrawer(false)}
                 title="Close Drawer"
               >
-                ✕
+                <CloseIcon size={18} />
               </button>
             </div>
 
@@ -1650,7 +1699,7 @@ function ExamContent() {
             {/* Explanation Section */}
             <div className={styles.solutionSectionCard}>
               <div className={styles.solutionSectionTitle}>
-                <DocumentIcon width="14" height="14" style={{ color: "#165AF6" }} />
+                <DocumentIcon width="14" height="14" style={{ color: "#92400E" }} />
                 <span>Concept &amp; Explanation</span>
               </div>
               <div className={styles.solutionSectionBody}>
@@ -1659,12 +1708,12 @@ function ExamContent() {
             </div>
 
             {/* Step-by-Step Worked Solution Section */}
-            <div className={styles.solutionSectionCard} style={{ background: "#F5F3FF", borderColor: "#DDD6FE" }}>
-              <div className={styles.solutionSectionTitle} style={{ color: "#6D28D9" }}>
-                <SparklesIcon width="14" height="14" style={{ color: "#7C3AED" }} />
+            <div className={styles.solutionSectionCard} style={{ background: "#FFFBEB", borderColor: "#FDE68A" }}>
+              <div className={styles.solutionSectionTitle} style={{ color: "#29231B" }}>
+                <SparklesIcon width="14" height="14" style={{ color: "#92400E" }} />
                 <span>Step-by-Step Worked Solution</span>
               </div>
-              <div className={styles.solutionSectionBody} style={{ color: "#4C1D95" }}>
+              <div className={styles.solutionSectionBody} style={{ color: "#78350F" }}>
                 {activeSolutionData.solution || activeSolutionData.explanation || "Step-by-step solution provided by course instructor."}
               </div>
             </div>

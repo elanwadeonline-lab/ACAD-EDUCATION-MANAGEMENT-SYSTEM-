@@ -37,6 +37,9 @@ type Subject = {
   class?: string;
   grade_level_id?: number;
   session?: string;
+  exam_datetime?: string | null;
+  duration?: number;
+  window_duration?: number;
   is_published?: number;
   can_retake?: number;
   mode?: "test" | "exam" | "quiz";
@@ -68,6 +71,20 @@ type EnrolledStudent = {
   exam_status?: string;
 };
 
+// The DB stores this sentinel when a test/exam cycle has no date set yet.
+const UNSCHEDULED_SENTINEL = "2099-01-01T00:00";
+const isUnscheduledDatetime = (dt?: string | null) => {
+  if (!dt) return true;
+  const s = String(dt).trim().toLowerCase();
+  return s.startsWith("2099") || s === "unscheduled" || s === "tba" || s === "null" || s === "undefined";
+};
+const isExamCycleLive = (dt?: string | null, windowMins?: number) => {
+  if (!dt || isUnscheduledDatetime(dt)) return false;
+  const start = new Date(dt).getTime();
+  const end = start + Number(windowMins || 120) * 60_000;
+  return Date.now() >= start && Date.now() < end;
+};
+
 const emptyForm = {
   name: "",
   code: "",
@@ -81,6 +98,11 @@ const emptyForm = {
   result_policy: "immediate" as "immediate" | "manual" | "scheduled",
   result_release_time: "",
   teacher_id: "",
+  // Exam / Test cycle scheduling
+  exam_datetime: "",       // "" → unscheduled (Date TBA)
+  duration: "60",
+  window_duration: "120",
+  publish_now: false,
 };
 
 export default function OperatorSubjectsPage() {
@@ -200,7 +222,8 @@ function SubjectsContent() {
     const published = subjects.filter((s) => Number(s.is_published) === 1).length;
     const exams = subjects.filter((s) => (s.mode || "exam") === "exam").length;
     const teachersAssigned = new Set(subjects.map((s) => s.teacher_id).filter(Boolean)).size;
-    return { total, published, exams, teachersAssigned };
+    const scheduled = subjects.filter((s) => !isUnscheduledDatetime(s.exam_datetime)).length;
+    return { total, published, exams, teachersAssigned, scheduled };
   }, [subjects]);
 
   // Toggle Subject Publish Status
@@ -241,6 +264,10 @@ function SubjectsContent() {
       result_policy: (s.result_policy as any) || "immediate",
       result_release_time: s.result_release_time ? new Date(s.result_release_time).toISOString().slice(0, 16) : "",
       teacher_id: String(s.teacher_id ?? ""),
+      exam_datetime: isUnscheduledDatetime(s.exam_datetime) ? "" : String(s.exam_datetime).slice(0, 16),
+      duration: String(s.duration ?? 60),
+      window_duration: String(s.window_duration ?? 120),
+      publish_now: Number(s.is_published) === 1,
     });
     setModalOpen(true);
   };
@@ -256,6 +283,12 @@ function SubjectsContent() {
       const selectedGl = gradeLevels.find(
         (gl) => String(gl.id) === String(form.grade_level_id) || gl.name === form.class
       );
+      // Exam/Test cycle: "" = unscheduled (server stamps the 2099 TBA sentinel)
+      const schedFields = {
+        exam_datetime: form.exam_datetime ? form.exam_datetime : UNSCHEDULED_SENTINEL,
+        duration: Math.max(1, Number(form.duration) || 60),
+        window_duration: Math.max(1, Number(form.window_duration) || 120),
+      };
       const payload = {
         name: form.name,
         code: form.code,
@@ -267,17 +300,22 @@ function SubjectsContent() {
         mode: form.mode,
         assessment_type: form.assessment_type,
         result_policy: form.result_policy,
-        result_release_time: form.result_policy === "scheduled" && form.result_release_time ? new Date(form.result_release_time).toISOString() : null,
+        result_release_time: form.result_policy === "scheduled" && form.result_release_time && !isNaN(new Date(form.result_release_time).getTime()) ? new Date(form.result_release_time).toISOString() : null,
         teacher_id: Number(form.teacher_id),
         session_id: selectedSession?.id,
         term_id: selectedTerm?.id,
+        ...schedFields,
       };
 
       if (editing) {
-        await api.updateSubject(editing.id, payload);
+        await api.updateSubject(editing.id, { ...payload, is_published: form.publish_now ? 1 : 0 });
         showToast("success", `Subject "${form.name}" updated successfully.`);
       } else {
-        await api.createSubject(payload);
+        const created: any = await api.createSubject(payload);
+        const newId = Number(created?.id || 0);
+        if (form.publish_now && newId) {
+          await api.updateSubject(newId, { is_published: 1 });
+        }
         showToast("success", `Subject "${form.name}" created successfully.`);
       }
       setModalOpen(false);
@@ -425,7 +463,7 @@ function SubjectsContent() {
         <div className={styles.statCard}>
           <div className={styles.statTop}>
             <span className={styles.statLabel}>Configured Subjects</span>
-            <div className={styles.statIcon} style={{ color: "#06B6D4" }}><BookIcon width="15" height="15" /></div>
+            <div className={styles.statIcon}><BookIcon width="15" height="15" /></div>
           </div>
           <div>
             <div className={styles.statValue}>{stats.total}</div>
@@ -436,7 +474,7 @@ function SubjectsContent() {
         <div className={styles.statCard}>
           <div className={styles.statTop}>
             <span className={styles.statLabel}>Published & Active</span>
-            <div className={styles.statIcon} style={{ color: "#10B981" }}><CheckCircleIcon width="15" height="15" /></div>
+            <div className={styles.statIcon}><CheckCircleIcon width="15" height="15" /></div>
           </div>
           <div>
             <div className={styles.statValue}>{stats.published}</div>
@@ -446,19 +484,19 @@ function SubjectsContent() {
 
         <div className={styles.statCard}>
           <div className={styles.statTop}>
-            <span className={styles.statLabel}>Examination Modes</span>
-            <div className={styles.statIcon} style={{ color: "#F97316" }}><CalendarIcon width="15" height="15" /></div>
+            <span className={styles.statLabel}>Scheduled Cycles</span>
+            <div className={styles.statIcon}><CalendarIcon width="15" height="15" /></div>
           </div>
           <div>
-            <div className={styles.statValue}>{stats.exams}</div>
-            <div className={styles.statFootnote}>Official CBT exams</div>
+            <div className={styles.statValue}>{stats.scheduled}</div>
+            <div className={styles.statFootnote}>Exams & tests with a set date</div>
           </div>
         </div>
 
         <div className={styles.statCard}>
           <div className={styles.statTop}>
             <span className={styles.statLabel}>Faculty Appointed</span>
-            <div className={styles.statIcon} style={{ color: "#8B5CF6" }}><UsersIcon width="15" height="15" /></div>
+            <div className={styles.statIcon}><UsersIcon width="15" height="15" /></div>
           </div>
           <div>
             <div className={styles.statValue}>{stats.teachersAssigned}</div>
@@ -526,6 +564,7 @@ function SubjectsContent() {
                 <th>Mode</th>
                 <th>Class / Cohort</th>
                 <th>Assigned Teacher</th>
+                <th>Exam Cycle</th>
                 <th>Status</th>
                 <th style={{ textAlign: "right" }}>Actions</th>
               </tr>
@@ -533,13 +572,13 @@ function SubjectsContent() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={7} style={{ textAlign: "center", padding: "3rem", color: "var(--color-muted)" }}>
+                  <td colSpan={8} style={{ textAlign: "center", padding: "3rem", color: "var(--color-muted)" }}>
                     Loading subjects…
                   </td>
                 </tr>
               ) : filteredSubjects.length === 0 ? (
                 <tr>
-                  <td colSpan={7} style={{ textAlign: "center", padding: "3rem", color: "var(--color-muted)" }}>
+                  <td colSpan={8} style={{ textAlign: "center", padding: "3rem", color: "var(--color-muted)" }}>
                     No subjects found matching the filter.
                   </td>
                 </tr>
@@ -571,6 +610,17 @@ function SubjectsContent() {
                         </span>
                       </td>
                       <td>
+                        {isUnscheduledDatetime(s.exam_datetime) ? (
+                          <span className={styles.cycleTagUnscheduled}>Unscheduled · TBA</span>
+                        ) : isExamCycleLive(s.exam_datetime, s.window_duration) ? (
+                          <span className={styles.cycleTagLive}>Live now</span>
+                        ) : (
+                          <span className={styles.cycleTag}>
+                            🕒 {new Date(s.exam_datetime as string).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                          </span>
+                        )}
+                      </td>
+                      <td>
                         <button
                           type="button"
                           onClick={() => togglePublish(s)}
@@ -592,7 +642,7 @@ function SubjectsContent() {
                             Roster
                           </button>
                           <Link href="/ADMIN/timetable" className={styles.actionBtnSecondary}>
-                            Schedule
+                            Timetable
                           </Link>
                           <button
                             type="button"
@@ -709,7 +759,7 @@ function SubjectsContent() {
 
           {/* School Mode Result Policy Configuration */}
           {form.assessment_type.startsWith("school") && (
-            <div className={styles.formGrid2} style={{ background: "#F8FAFC", padding: "0.85rem", borderRadius: "10px", border: "1px solid #E2E8F0" }}>
+            <div className={styles.formGrid2} style={{ background: "var(--color-surface-2, #F8FAFC)", padding: "0.75rem", borderRadius: "6px", border: "1px solid var(--color-border, #E2E8F0)" }}>
               <div className={styles.formGroup}>
                 <label className={styles.formLabel}>
                   Result Release Policy <span className={styles.required}>*</span>
@@ -741,6 +791,87 @@ function SubjectsContent() {
               )}
             </div>
           )}
+
+          {/* Exam / Test Cycle Scheduling */}
+          <div style={{ background: "rgba(234, 88, 12, 0.04)", padding: "0.75rem", borderRadius: "6px", border: "1px solid rgba(234, 88, 12, 0.2)" }}>
+            <div className={styles.formGrid2}>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Exam / Test Cycle</label>
+                <select
+                  className={styles.formSelect}
+                  value={form.exam_datetime ? "scheduled" : "unscheduled"}
+                  onChange={(e) => {
+                    if (e.target.value === "scheduled") {
+                      const dl = new Date(Date.now() + 86400000);
+                      dl.setMinutes(0, 0, 0);
+                      const padded = (n: number) => String(n).padStart(2, "0");
+                      const localDefault = `${dl.getFullYear()}-${padded(dl.getMonth() + 1)}-${padded(dl.getDate())}T${padded(dl.getHours())}:${padded(dl.getMinutes())}`;
+                      setForm({ ...form, exam_datetime: form.exam_datetime || localDefault });
+                    } else {
+                      setForm({ ...form, exam_datetime: "" });
+                    }
+                  }}
+                >
+                  <option value="unscheduled">Unscheduled (Date TBA — hidden date until set)</option>
+                  <option value="scheduled">Scheduled (Pick exam date &amp; time)</option>
+                </select>
+              </div>
+
+              {form.exam_datetime && (
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>
+                    Exam Date &amp; Time <span className={styles.required}>*</span>
+                  </label>
+                  <input
+                    type="datetime-local"
+                    required
+                    className={styles.formInput}
+                    value={form.exam_datetime}
+                    onChange={(e) => setForm({ ...form, exam_datetime: e.target.value })}
+                  />
+                </div>
+              )}
+            </div>
+
+            {form.exam_datetime && (
+              <div className={styles.formGrid2} style={{ marginTop: "0.6rem" }}>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Duration (timer, minutes)</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={1440}
+                    className={styles.formInput}
+                    value={form.duration}
+                    onChange={(e) => setForm({ ...form, duration: e.target.value })}
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Access Window (minutes)</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={1440}
+                    className={styles.formInput}
+                    value={form.window_duration}
+                    onChange={(e) => setForm({ ...form, window_duration: e.target.value })}
+                  />
+                </div>
+              </div>
+            )}
+
+            <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginTop: "0.7rem", fontSize: "0.8125rem", fontWeight: 600, color: "var(--color-text)", cursor: "pointer" }}>
+              <input
+                type="checkbox"
+                checked={form.publish_now}
+                onChange={(e) => setForm({ ...form, publish_now: e.target.checked })}
+              />
+              Publish immediately — students see this on their dashboard
+            </label>
+            <p style={{ margin: "0.35rem 0 0", fontSize: "0.71875rem", color: "var(--color-muted)" }}>
+              Scheduled exams appear as <strong>Upcoming</strong> on the student dashboard from the date set, and unlock automatically when the window opens. Unscheduled exams show as <strong>Unscheduled (Date TBA)</strong> until you pick a date.
+            </p>
+          </div>
 
           <div className={styles.formGrid2}>
             <div className={styles.formGroup}>
@@ -854,9 +985,9 @@ function SubjectsContent() {
                   borderRadius: "6px",
                   fontSize: "0.75rem",
                   fontWeight: selectedRosterClass === "all" ? 700 : 500,
-                  border: `1px solid ${selectedRosterClass === "all" ? "#165AF6" : "var(--color-border)"}`,
-                  background: selectedRosterClass === "all" ? "#EFF4FF" : "var(--color-surface)",
-                  color: selectedRosterClass === "all" ? "#165AF6" : "var(--color-text)",
+                  border: `1px solid ${selectedRosterClass === "all" ? "var(--color-primary, #EA580C)" : "var(--color-border)"}`,
+                  background: selectedRosterClass === "all" ? "rgba(234, 88, 12, 0.08)" : "var(--color-surface)",
+                  color: selectedRosterClass === "all" ? "var(--color-primary, #EA580C)" : "var(--color-text)",
                   cursor: "pointer",
                 }}
               >
@@ -875,9 +1006,9 @@ function SubjectsContent() {
                       borderRadius: "6px",
                       fontSize: "0.75rem",
                       fontWeight: isSelected ? 700 : 500,
-                      border: `1px solid ${isSelected ? "#165AF6" : "var(--color-border)"}`,
-                      background: isSelected ? "#EFF4FF" : "var(--color-surface)",
-                      color: isSelected ? "#165AF6" : "var(--color-text)",
+                      border: `1px solid ${isSelected ? "var(--color-primary, #EA580C)" : "var(--color-border)"}`,
+                      background: isSelected ? "rgba(234, 88, 12, 0.08)" : "var(--color-surface)",
+                      color: isSelected ? "var(--color-primary, #EA580C)" : "var(--color-text)",
                       cursor: "pointer",
                     }}
                   >
@@ -889,7 +1020,7 @@ function SubjectsContent() {
           </div>
 
           {/* Cohort Summary & Quick Bulk Action */}
-          <div style={{ background: "#F8FAFC", border: "1px solid var(--color-border)", borderRadius: "8px", padding: "0.75rem 1rem", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
+          <div style={{ background: "var(--color-surface-2, #F8FAFC)", border: "1px solid var(--color-border, #E2E8F0)", borderRadius: "6px", padding: "0.75rem 1rem", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
             <div>
               <div style={{ fontWeight: 600, fontSize: "0.8125rem", color: "var(--color-text)" }}>
                 {selectedRosterClass === "all" ? "Cohort: All Candidates" : `Class: ${selectedRosterClass}`}
@@ -984,8 +1115,8 @@ function SubjectsContent() {
                                   fontWeight: 600,
                                   padding: "0.1rem 0.35rem",
                                   borderRadius: "4px",
-                                  background: isEnrolled ? "#ECFDF5" : "#F1F5F9",
-                                  color: isEnrolled ? "#059669" : "#64748B",
+                                  background: isEnrolled ? "rgba(22, 163, 74, 0.1)" : "var(--color-surface-2)",
+                                  color: isEnrolled ? "var(--color-success, #16A34A)" : "var(--color-muted)",
                                 }}
                               >
                                 {isEnrolled ? "Enrolled" : "Not Enrolled"}

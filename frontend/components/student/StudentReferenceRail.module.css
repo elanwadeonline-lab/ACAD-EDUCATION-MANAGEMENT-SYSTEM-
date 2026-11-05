@@ -1,0 +1,8 @@
+.rail { position: absolute; top: 270px; left: 20px; width: 62px; display: grid; gap: 18px; padding: 16px 8px; border: 1px solid var(--color-border); border-radius: 40px; background: white; }
+.rail a { display: grid; place-items: center; height: 44px; color: #84909b; border-radius: 50%; }
+.rail a[aria-current=page] { color: var(--color-primary); }
+.rail a:hover { background: var(--color-primary-subtle); }
+.rail a:focus-visible { outline: 2px solid var(--color-primary); }
+@media(max-width:700px) { .rail { position: fixed; top: auto; bottom: 12px; left: 16px; right: 16px; width: auto; display: flex; justify-content: space-around; padding: 6px; z-index: 50; border-radius: 24px; box-shadow: 0 4px 24px #0c0d1212; } .rail a { width: 48px; } }
+@media print { .rail { display:none; } }
+@media(min-width:701px) { .rail { position:relative; top:auto; left:auto; align-self:center; justify-self:center; margin:0; } }

@@ -1,0 +1,114 @@
+================================================================================
+ACQAD / eCard School Management Platform — Client Product Demonstration
+Narration Script & Voiceover Guide
+Target Total Duration: 07:40 (460 Seconds)
+Voice Persona: en-GB-RyanNeural (Senior Institutional Technology Consultant)
+Tone: Authoritative, Clear, Credible, Professional
+================================================================================
+
+[00:00 - 00:20] SCENE 01: WELCOME TO ACQAD / eCARD
+Duration: 20 Seconds | Words: 49 | Pace: ~147 WPM
+Screen: S01_brand_student-login_desktop.png -> S02_brand_admin-login_desktop.png
+VOICEOVER:
+"Welcome to ACQAD, an integrated academic coordination and computer-based examination ecosystem engineered for educational institutions. ACQAD unifies school administration, curriculum tracking, resilient offline assessment, and family engagement into a cohesive, high-performance platform designed to operate seamlessly on campus local networks and across cloud supervisory fleets."
+
+--------------------------------------------------------------------------------
+
+[00:20 - 01:00] SCENE 02: INSTITUTIONAL ADMINISTRATION & GOVERNANCE
+Duration: 40 Seconds | Words: 84 | Pace: ~126 WPM
+Screen: A01_admin_dashboard.png -> A02_admin_academic-sessions.png -> A06_admin_timetable.png -> A17_admin_system-settings.png
+VOICEOVER:
+"At the institutional core, administrators maintain end-to-end governance over the academic calendar. The administration portal enables school principals and registrars to configure academic sessions, activate active terms, enforce system-wide grading standards, and schedule institutional timetables. Real-time telemetry dashboards monitor daily attendance, active examination slots, and system operations across the entire campus."
+
+--------------------------------------------------------------------------------
+
+[01:00 - 01:35] SCENE 03: SCHOOL MANAGEMENT & CLASS STRUCTURES
+Duration: 35 Seconds | Words: 75 | Pace: ~128 WPM
+Screen: A03_admin_class-teachers.png -> A04_admin_subjects.png -> A05_admin_users.png -> A12_admin_annual-results.png
+VOICEOVER:
+"School management bridges administrative structure with daily learning. Leadership maps academic departments, assigns qualified form teachers to classes and arms, registers subjects, and enrolls student cohorts. Every student record maintains admission tracking, guardian linkage, and academic progression history, ensuring absolute accountability across Junior and Senior secondary tiers."
+
+--------------------------------------------------------------------------------
+
+[01:35 - 02:10] SCENE 04: TEACHER WORKSPACE & CURRICULUM AUTHORING
+Duration: 35 Seconds | Words: 75 | Pace: ~128 WPM
+Screen: T01_teacher_dashboard.png -> T02_teacher_subject-menu.png -> T03_teacher_question-bank.png -> T04_teacher_assignments.png
+VOICEOVER:
+"Teachers operate within a focused workspace tailored to their assigned curriculum. From their dashboard, educators author rich multi-format questions, curate institution-wide question banks, configure assessment rules, and schedule examinations. Automated shuffling, customizable duration controls, and pass mark definitions give teachers complete pedagogical control over classroom evaluations."
+
+--------------------------------------------------------------------------------
+
+[02:10 - 02:55] SCENE 05: AUTONOMOUS CBT ENGINE & EXAM HALL EXECUTION
+Duration: 45 Seconds | Words: 96 | Pace: ~128 WPM
+Screen: S06_exam_kiosk-terminal_desktop.png -> ST10_exam_instructions.png -> ST11_exam_active-question.png -> ST12_exam_answer-selected.png -> ST14_exam_submit-summary.png
+VOICEOVER:
+"ACQAD's flagship assessment engine delivers resilient computer-based testing even in air-gapped exam halls. When scheduled, assessments lock into tamper-resistant kiosk terminals. Students verify their seat and pin, review preflight instructions, and navigate questions with built-in scratchpads, scientific calculators, and visual timers. Responses are saved instantly to local storage, shielding examinees from power or network drops."
+
+--------------------------------------------------------------------------------
+
+[02:55 - 03:30] SCENE 06: STUDENT EXPERIENCE & INDEPENDENT LEARNING DESK
+Duration: 35 Seconds | Words: 76 | Pace: ~130 WPM
+Screen: ST01_student_dashboard.png -> ST02_student_examinations.png -> ST06_student_practice.png -> ST07_student_offline-assignments.png -> M10_student_dashboard_mobile.png
+VOICEOVER:
+"For students, the ACQAD portal is an engaging personal learning desk. Learners view upcoming assessments, review released grades, and access an extensive practice catalog featuring past WAEC and mock papers. Students can download encrypted offline assignment packs to their personal devices, complete homework without internet access, and synchronize scores automatically when reconnected."
+
+--------------------------------------------------------------------------------
+
+[03:30 - 04:15] SCENE 07: RESULTS COMPUTATION, BROADSHEETS & REPORT CARDS
+Duration: 45 Seconds | Words: 94 | Pace: ~125 WPM
+Screen: T06_teacher_grading-center.png -> T08_teacher_results.png -> T09_teacher_broadsheet.png -> A13_admin_report-cards.png -> ST04_student_results.png
+VOICEOVER:
+"Evaluation is instantaneous and comprehensive. Objective questions grade automatically upon exam submission, while subjective questions enter the teacher grading centre for rubric scoring. ACQAD automatically computes class averages, subject rankings, and term broadsheets. With one click, administrators generate tamper-evident digital report cards complete with principal remarks and grading keys."
+
+--------------------------------------------------------------------------------
+
+[04:15 - 04:50] SCENE 08: GUARDIAN EXPERIENCE & FAMILY MOBILE DESK
+Duration: 35 Seconds | Words: 76 | Pace: ~130 WPM
+Screen: G01_guardian_dashboard_desktop.png -> M20_guardian_dashboard_mobile.png -> M21_guardian_switch-child_mobile.png -> M23_guardian_performance_mobile.png -> M28_guardian_fees_mobile.png
+VOICEOVER:
+"Parents and guardians enjoy unprecedented visibility through a mobile-first portal. Guardians can monitor multiple siblings from a single account, reviewing real-time class attendance, published examination results, teacher remarks, and school fee payment statuses. This transparency deepens parent-school partnership and keeps families actively invested in their children's progress."
+
+--------------------------------------------------------------------------------
+
+[04:50 - 05:15] SCENE 09: COMMUNICATION & NOTIFICATIONS
+Duration: 25 Seconds | Words: 57 | Pace: ~136 WPM
+Screen: A15_admin_messages.png -> T13_teacher_messages.png -> M29_guardian_messages_mobile.png -> M30_guardian_announcements_mobile.png
+VOICEOVER:
+"Direct, authenticated communication keeps the school community synchronized. Administrators publish institution-wide announcements and emergency bulletins, while guardians and teachers exchange private messages regarding academic progress and pastoral care. All communication is securely archived within the institutional database, preserving institutional privacy."
+
+--------------------------------------------------------------------------------
+
+[05:15 - 05:50] SCENE 10: OFFLINE OPERATIONS & RESILIENCE
+Duration: 35 Seconds | Words: 74 | Pace: ~126 WPM
+Screen: S05_offline_fallback_desktop.png -> A18_admin_network-status.png -> A19_admin_backup-restore.png -> ST07_student_offline-assignments.png
+VOICEOVER:
+"A critical advantage of ACQAD is its uncompromising local-first design. Powered by a high-throughput Bun HTTP backend and SQLite write-ahead-logging, the platform continues delivering examinations and recording attendance even when public internet is completely down. Background synchronization queues hold operational transactions, uploading them securely to cloud endpoints once connectivity restores."
+
+--------------------------------------------------------------------------------
+
+[05:50 - 06:20] SCENE 11: CONTROL PLANE & SUPERVISORY FLEET MONITORING
+Duration: 30 Seconds | Words: 66 | Pace: ~132 WPM
+Screen: S90_controlplane_api-health_desktop.png -> A18_admin_network-status.png -> A20_admin_license-info.png
+VOICEOVER:
+"For multi-campus school groups and educational ministries, the ACQAD Control Plane provides centralised fleet management. Technical supervisors monitor server CPU health, memory usage, SQLite database sizes, and API latency across distributed campus nodes. Automated health beacons alert administrators to node degradation before students enter examination halls."
+
+--------------------------------------------------------------------------------
+
+[06:20 - 07:05] SCENE 12: END-TO-END ACADEMIC WORKFLOW IN ACTION
+Duration: 45 Seconds | Words: 98 | Pace: ~130 WPM
+Screen: T04_teacher_assignments.png -> ST11_exam_active-question.png -> T06_teacher_grading-center.png -> T09_teacher_broadsheet.png -> M25_guardian_reports_mobile.png
+VOICEOVER:
+"Experience the complete synergy of the ACQAD ecosystem. A physics teacher schedules a mid-term examination from their portal. Students sit for the assessment inside the secure exam kiosk. As soon as the final student submits, objective scores calculate automatically and populate the teacher gradebook. The school principal approves the term broadsheet, and within seconds, parents receive a notification on their mobile phones to view the verified report card."
+
+--------------------------------------------------------------------------------
+
+[07:05 - 07:40] SCENE 13: DEPLOYMENT MODELS & CALL TO ACTION
+Duration: 35 Seconds | Words: 73 | Pace: ~125 WPM
+Screen: A19_admin_backup-restore.png -> A20_admin_license-info.png -> S01_brand_student-login_desktop.png
+VOICEOVER:
+"ACQAD deploys flexibly as a self-contained on-premise server appliance, a private school LAN node, or a hybrid cloud-synchronized cluster. With military-grade data sovereignty, zero per-exam licensing penalties, and exceptional performance on standard school hardware, ACQAD is the definitive operating system for modern academic institutions. Partner with ACQAD today to transform your institution's digital future."
+
+================================================================================
+END OF SCRIPT — 13 SCENES | TOTAL WORDS: 954 | TOTAL SECONDS: 460 (07:40)
+================================================================================
+

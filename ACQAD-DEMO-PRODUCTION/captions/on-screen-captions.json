@@ -1,0 +1,119 @@
+[
+  {
+    "scene": 1,
+    "module": "Branding & Architecture",
+    "headline": "Welcome to ACQAD / eCard",
+    "subheadline": "Next-Generation School Management & Assessment Ecosystem",
+    "start_time": "00:00",
+    "end_time": "00:20",
+    "duration_sec": 20
+  },
+  {
+    "scene": 2,
+    "module": "Module 1: Administration",
+    "headline": "Institutional Administration & Governance",
+    "subheadline": "Academic Sessions, Term Controls, and Timetables",
+    "start_time": "00:20",
+    "end_time": "01:00",
+    "duration_sec": 40
+  },
+  {
+    "scene": 3,
+    "module": "Module 2: School Management",
+    "headline": "Academic Operations & Class Structures",
+    "subheadline": "Classes, Arms, Subject Allocation, and Student Rosters",
+    "start_time": "01:00",
+    "end_time": "01:35",
+    "duration_sec": 35
+  },
+  {
+    "scene": 4,
+    "module": "Module 3: Teacher Experience",
+    "headline": "Teacher Workspace & Question Banking",
+    "subheadline": "Course Rosters, Question Creation, and Assessment Authoring",
+    "start_time": "01:35",
+    "end_time": "02:10",
+    "duration_sec": 35
+  },
+  {
+    "scene": 5,
+    "module": "Module 6: Assessment & Examination",
+    "headline": "Autonomous CBT Engine & Kiosk Execution",
+    "subheadline": "Timed Delivery, Active Question Navigation, and Instant Submission",
+    "start_time": "02:10",
+    "end_time": "02:55",
+    "duration_sec": 45
+  },
+  {
+    "scene": 6,
+    "module": "Module 4: Student Experience",
+    "headline": "Student Learning Desk & Self-Paced Practice",
+    "subheadline": "Timetables, Learning Library, and Offline Assignment Packs",
+    "start_time": "02:55",
+    "end_time": "03:30",
+    "duration_sec": 35
+  },
+  {
+    "scene": 7,
+    "module": "Module 7: Results and Analytics",
+    "headline": "Grading Centre & Performance Broadsheets",
+    "subheadline": "Automated Grading, Term Broadsheets, and Digital Report Cards",
+    "start_time": "03:30",
+    "end_time": "04:15",
+    "duration_sec": 45
+  },
+  {
+    "scene": 8,
+    "module": "Module 5: Guardian Experience",
+    "headline": "Guardian Portal & Mobile Family Desk",
+    "subheadline": "Multi-Ward Monitoring, Attendance Records, and Fee Tracking",
+    "start_time": "04:15",
+    "end_time": "04:50",
+    "duration_sec": 35
+  },
+  {
+    "scene": 9,
+    "module": "Module 8: Communication & Notifications",
+    "headline": "School Announcements & Two-Way Messaging",
+    "subheadline": "Targeted Notices, Parent Inquiries, and Event Calendars",
+    "start_time": "04:50",
+    "end_time": "05:15",
+    "duration_sec": 25
+  },
+  {
+    "scene": 10,
+    "module": "Module 9: Offline Operations & Sync",
+    "headline": "Local-First Architecture & Network Resilience",
+    "subheadline": "Campus LAN Autonomy, SQLite WAL, and PWA Synchronization",
+    "start_time": "05:15",
+    "end_time": "05:50",
+    "duration_sec": 35
+  },
+  {
+    "scene": 11,
+    "module": "Module 10: Control Plane & Monitoring",
+    "headline": "Supervisory Fleet Control & Institutional Health",
+    "subheadline": "Node Telemetry, Schema Synchronisation, and Cluster Oversight",
+    "start_time": "05:50",
+    "end_time": "06:20",
+    "duration_sec": 30
+  },
+  {
+    "scene": 12,
+    "module": "End-to-End Workflow Integration",
+    "headline": "Connected Academic Workflow in Action",
+    "subheadline": "From Assessment Creation to Published Report Cards",
+    "start_time": "06:20",
+    "end_time": "07:05",
+    "duration_sec": 45
+  },
+  {
+    "scene": 13,
+    "module": "Deployment Options & Conclusion",
+    "headline": "Deployment Models & Enterprise Value",
+    "subheadline": "On-Premise LAN Appliances, Hybrid Cloud, and Sustainable Education",
+    "start_time": "07:05",
+    "end_time": "07:40",
+    "duration_sec": 35
+  }
+]

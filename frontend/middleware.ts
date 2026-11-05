@@ -43,7 +43,21 @@ export function middleware(request: NextRequest) {
   const isPublic = publicRoutes.some((r) => pathname === r || pathname === r + "/");
   if (isPublic) return NextResponse.next();
 
-  const token = request.cookies.get(COOKIE_NAME)?.value;
+  // Allow guest report card viewing when a cryptographic share token is supplied
+  if (pathname === "/student/report-card" && request.nextUrl.searchParams.has("token")) {
+    return NextResponse.next();
+  }
+
+  const matched = routeRoleMap.find((r) => r.pattern.test(pathname));
+  const roleCookieName = matched ? `${COOKIE_NAME}_${matched.role}` : null;
+  const token =
+    (roleCookieName ? request.cookies.get(roleCookieName)?.value : undefined) ||
+    request.cookies.get(COOKIE_NAME)?.value ||
+    request.cookies.get(`${COOKIE_NAME}_student`)?.value ||
+    request.cookies.get(`${COOKIE_NAME}_teacher`)?.value ||
+    request.cookies.get(`${COOKIE_NAME}_operator`)?.value ||
+    request.cookies.get(`${COOKIE_NAME}_guardian`)?.value;
+
   if (!token) {
     const url = request.nextUrl.clone();
     if (pathname.startsWith("/teacher")) {
@@ -80,18 +94,18 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  const matched = routeRoleMap.find((r) => r.pattern.test(pathname));
   if (matched && matched.role !== userRole) {
     const url = request.nextUrl.clone();
-    if (userRole === "teacher") {
-      url.pathname = "/teacher/dashboard/";
-    } else if (userRole === "operator") {
-      url.pathname = "/ADMIN/dashboard/";
-    } else if (userRole === "guardian") {
-      url.pathname = "/guardian/dashboard/";
+    if (matched.role === "teacher") {
+      url.pathname = "/teacher";
+    } else if (matched.role === "operator") {
+      url.pathname = "/ADMIN";
+    } else if (matched.role === "guardian") {
+      url.pathname = "/guardian";
     } else {
-      url.pathname = "/student/dashboard/";
+      url.pathname = "/";
     }
+    url.searchParams.set("redirect", pathname);
     return NextResponse.redirect(url);
   }
 

@@ -16,7 +16,7 @@ type NotificationItem = {
 const TYPE_META: Record<string, { icon: React.ReactNode; colour: string; label: string }> = {
   exam_submitted: {
     label: "Exam Submitted",
-    colour: "#6366F1",
+    colour: "#D97706",
     icon: (
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
@@ -45,7 +45,7 @@ const TYPE_META: Record<string, { icon: React.ReactNode; colour: string; label: 
   },
   info: {
     label: "Info",
-    colour: "#38bdf8",
+    colour: "#F59E0B",
     icon: (
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
         <circle cx="12" cy="12" r="10" />
@@ -84,7 +84,7 @@ interface GuardianNotificationBellProps {
 
 /**
  * GuardianNotificationBell — Displays unread count badge and opens a dropdown
- * with recent notifications. Uses the guardian indigo theme (#6366F1).
+ * with recent notifications. Uses the guardian indigo theme (#D97706).
  */
 export function GuardianNotificationBell({
   apiEndpoint = "/api/notifications",
@@ -145,7 +145,7 @@ export function GuardianNotificationBell({
           display: "inline-flex",
           alignItems: "center",
           padding: "0.5rem",
-          color: isOpen ? "#6366F1" : "#64748b",
+          color: isOpen ? "#D97706" : "#64748b",
           transition: "color 0.2s",
         }}
         title="Notifications"
@@ -157,7 +157,7 @@ export function GuardianNotificationBell({
               position: "absolute",
               top: 2,
               right: 2,
-              background: "#6366F1",
+              background: "#D97706",
               color: "white",
               fontSize: "0.65rem",
               fontWeight: "bold",
@@ -214,7 +214,7 @@ export function GuardianNotificationBell({
               onClick={() => setIsOpen(false)}
               style={{
                 fontSize: "0.8rem",
-                color: "#6366F1",
+                color: "#D97706",
                 textDecoration: "none",
                 fontWeight: 600,
               }}

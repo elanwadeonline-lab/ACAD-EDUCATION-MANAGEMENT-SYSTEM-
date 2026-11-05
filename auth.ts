@@ -189,9 +189,24 @@ export function revokeAllUserTokens(userId: number): void {
   }
 }
 
+export function getRoleCookieName(role: string): string {
+  const safeRole = String(role || "").toLowerCase().replace(/[^a-z0-9_]/g, "");
+  return `__exampool_session_${safeRole || "user"}`;
+}
+
 export function buildSessionCookie(token: string): string {
   const secure = Bun.env.IS_HTTPS === "true" ? "; Secure" : "";
   return `__exampool_session=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${SESSION_TTL_SECONDS}${secure}`;
+}
+
+export function buildRoleSessionCookie(token: string, role: string): string {
+  const secure = Bun.env.IS_HTTPS === "true" ? "; Secure" : "";
+  return `${getRoleCookieName(role)}=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${SESSION_TTL_SECONDS}${secure}`;
+}
+
+export function clearRoleSessionCookie(role: string): string {
+  const secure = Bun.env.IS_HTTPS === "true" ? "; Secure" : "";
+  return `${getRoleCookieName(role)}=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0${secure}`;
 }
 
 export function buildRefreshCookie(token: string): string {
@@ -221,32 +236,48 @@ export { ACCESS_TTL_SECONDS, REFRESH_TTL_SECONDS, SESSION_TTL_SECONDS, generateF
 
 // ── Compatibility shims for server.ts (simple session-token flow) ────────────
 // server.ts imports generateToken / verifyToken for its cookie-based login.
-// These wrap the newer pair-based API so the legacy call-sites work without
-// a Request object.
 
-/** Simple session token (8-hour TTL, no device fingerprint) — used by root server.ts. */
-export function generateToken(userId: number, role: string): string {
+export interface GeneratedSessionToken {
+  token: string;
+  jti: string;
+  expiresAt: string;
+  iat: number;
+  exp: number;
+}
+
+/** Generate a session token along with its JTI and ISO expiration timestamp for DB session tracking. */
+export function generateTokenWithMeta(userId: number, role: string): GeneratedSessionToken {
   const jti = randomBytes(16).toString("hex");
-  // Use SESSION_TTL_SECONDS (8h) — NOT generateAccessToken which uses 15-minute access tokens.
-  // The 15-minute TTL caused the middleware to redirect users back to login almost immediately.
+  const nowSec = Math.floor(Date.now() / 1000);
+  const expSec = nowSec + SESSION_TTL_SECONDS;
+  const expiresAt = new Date(expSec * 1000).toISOString();
   const header = toBase64Url(JSON.stringify({ alg: "HS256", typ: "JWT" }));
   const payload = toBase64Url(
     JSON.stringify({
       sub: userId,
       role,
       jti,
-      iat: Math.floor(Date.now() / 1000),
-      exp: Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS,
+      iat: nowSec,
+      exp: expSec,
     }),
   );
   const signingInput = `${header}.${payload}`;
   const signature = bufferToBase64Url(hmacSha256(signingInput));
-  return `${signingInput}.${signature}`;
+  return {
+    token: `${signingInput}.${signature}`,
+    jti,
+    expiresAt,
+    iat: nowSec,
+    exp: expSec,
+  };
 }
 
-/** Verify a simple session token produced by {@link generateToken}.
- *  Re-exports the internal verifyToken with a dummy Request so it
- *  accepts tokens issued without a fingerprint. */
+/** Simple session token (8-hour TTL, no device fingerprint) — used by root server.ts. */
+export function generateToken(userId: number, role: string): string {
+  return generateTokenWithMeta(userId, role).token;
+}
+
+/** Verify a simple session token produced by {@link generateToken}. */
 export function verifySimpleToken(token: string): { userId: number; role: string; jti: string } | null {
   try {
     const parts = token.split(".");

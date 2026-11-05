@@ -64,18 +64,7 @@ function ReportsList() {
     <div className={styles.container}>
       {/* ── Top Header Controls ── */}
       <div className={styles.topControlRow || styles.headerRow}>
-        <button
-          type="button"
-          className={styles.childSelectBtn || styles.addLinkBtn}
-          onClick={openChildSwitcher}
-          style={{ display: "flex", alignItems: "center", gap: "0.5rem", background: "var(--g-surface, #FFFFFF)", border: "1px solid var(--g-border, #E2E8F0)", borderRadius: "999px", padding: "0.35rem 0.75rem", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer", color: "var(--g-text-primary, #0F172A)" }}
-        >
-          <StudentAvatar name={activeWard.name} imageUrl={activeWard.image_url} size="xs" />
-          <span>{activeWard.name.split(" ")[0]}</span>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <polyline points="6 9 12 15 18 9" />
-          </svg>
-        </button>
+
 
         <button
           type="button"
@@ -115,8 +104,8 @@ function ReportsList() {
         ) : (
           reports.map((doc, idx) => {
             const icons = [
-              { bg: "#EFF4FF", color: "#165AF6", type: "document" },
-              { bg: "#F5F3FF", color: "#7C3AED", type: "clipboard" },
+              { bg: "#FFFBEB", color: "#92400E", type: "document" },
+              { bg: "#FFFBEB", color: "#92400E", type: "clipboard" },
               { bg: "#ECFDF5", color: "#059669", type: "calendar" },
               { bg: "#FFF1F2", color: "#E11D48", type: "shield" },
               { bg: "#FEF3C7", color: "#D97706", type: "trophy" },

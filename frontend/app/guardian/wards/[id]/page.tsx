@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense } from "react";
 import WardDetailContent from "./WardDetailContent";
 
 // Real ward detail is wired to live APIs; keep static params for pre-generation but data comes from backend
@@ -15,5 +15,5 @@ export function generateStaticParams() {
 }
 
 export default function WardProfilePage() {
-  return <WardDetailContent />;
+  return <Suspense fallback={<p>Loading child profile…</p>}><WardDetailContent /></Suspense>;
 }

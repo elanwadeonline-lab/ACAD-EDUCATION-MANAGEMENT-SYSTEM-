@@ -1,834 +1,725 @@
-/* ── ACAD MASTER STUDENT DASHBOARD CSS MODULE ── */
-/* Intentionality • Inter Typography Hierarchy • 8px Rhythm System */
+/* ==========================================================================
+   Student Dashboard — Editorial Institutional Design System (Parts A, B, C)
+   Restrained surfaces, purposeful hierarchy, tabular numerals, brand accents
+   ========================================================================== */
 
 .container {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-  width: 100%;
-  max-width: 880px;
+  max-width: 1380px;
   margin-inline: auto;
-}
-
-/* ── 1. Hero Welcome & Quick Stats Section ── */
-.heroSection {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1.5rem;
-  flex-wrap: wrap;
-}
-
-.heroLeft {
+  padding: 8px 0 32px;
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 24px;
 }
 
-.heroTitle {
-  font-size: 1.625rem;
-  font-weight: 700;
-  color: #0F172A;
-  letter-spacing: -0.025em;
-  margin: 0;
-  line-height: 1.2;
-}
-
-.nameHighlight {
-  color: #165AF6;
-}
-
-.waveEmoji {
-  display: inline-block;
-  transform-origin: 70% 70%;
-  animation: wave 2.5s infinite;
-}
-
-@keyframes wave {
-  0% { transform: rotate(0deg); }
-  10% { transform: rotate(14deg); }
-  20% { transform: rotate(-8deg); }
-  30% { transform: rotate(14deg); }
-  40% { transform: rotate(-4deg); }
-  50% { transform: rotate(10deg); }
-  60% { transform: rotate(0deg); }
-  100% { transform: rotate(0deg); }
-}
-
-.heroSubtitle {
-  font-size: 0.875rem;
-  font-weight: 400;
-  color: #64748B;
-  margin: 0;
-  line-height: 1.5;
-}
-
-/* Dual Stat Cards */
-.telemetryPillGroup {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.telemetryBadge {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1.15rem 1.45rem;
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  border-radius: 16px;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
-  min-width: 155px;
-  transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1);
-  cursor: default;
-}
-
-.telemetryBadge:hover {
-  transform: translateY(-2px);
-  border-color: #CBD5E1;
-  box-shadow: 0 6px 16px -2px rgba(15, 23, 42, 0.06);
-}
-
-.streakIconBox {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  background: #FFF7ED;
-  border: 1px solid #FFEDD5;
-  color: #EA580C;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  box-shadow: 0 2px 6px rgba(234, 88, 12, 0.12);
-  transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.telemetryBadge:hover .streakIconBox {
-  transform: scale(1.08);
-}
-
-.goalIconBox {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  background: #EFF4FF;
-  border: 1px solid #DBEAFE;
-  color: #165AF6;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  box-shadow: 0 2px 6px rgba(22, 90, 246, 0.12);
-  transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.cohortIconBox {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  background: #F0FDF4;
-  border: 1px solid #DCFCE7;
-  color: #16A34A;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  box-shadow: 0 2px 6px rgba(22, 163, 74, 0.12);
-  transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.telemetryBadge:hover .streakIconBox,
-.telemetryBadge:hover .goalIconBox,
-.telemetryBadge:hover .cohortIconBox {
-  transform: scale(1.08);
-}
-
-.telemetryBadgeContent {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.25;
-}
-
-.telemetryNumber {
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: #0F172A;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.01em;
-}
-
-.telemetryText {
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: #64748B;
-  white-space: nowrap;
-  margin-top: 0.1rem;
-}
-
-.telemetryCaption {
-  font-size: 0.6875rem;
-  font-weight: 500;
-  color: #94A3B8;
-  margin-top: 0.15rem;
-}
-
-/* Progress bar embedded in Goal card */
-.goalProgressWrap {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  margin-top: 0.3rem;
-}
-
-.goalProgressBarTrack {
-  width: 54px;
-  height: 5px;
-  background: #F1F5F9;
-  border-radius: 999px;
-  overflow: hidden;
-}
-
-.goalProgressBarFill {
-  height: 100%;
-  background: #165AF6;
-  border-radius: 999px;
-  transition: width 0.3s ease;
-}
-
-.goalProgressPct {
-  font-size: 0.625rem;
-  font-weight: 600;
-  color: #64748B;
-  font-variant-numeric: tabular-nums;
-}
-
-/* ── 2. Enrolled Academic Curriculum Track Container ── */
-.curriculumContainer {
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  border-radius: 18px;
-  padding: 1.75rem 2rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02);
-}
-
-.curriculumHeader {
+/* ── 1. Institutional Identity Header ── */
+.headerBar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1.25rem;
+  padding-bottom: 0;
+  border-bottom: 0;
   flex-wrap: wrap;
 }
 
-.curriculumTitleGroup {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-}
-
-.trackIconBadge {
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
-  background: #EFF4FF;
-  color: #165AF6;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  border: 1px solid #DBEAFE;
-}
-
-.trackDetails {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-}
-
-.curriculumEyebrow {
-  font-size: 0.6875rem;
-  font-weight: 600;
-  color: #64748B;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-.curriculumClassTitle {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #0F172A;
-  margin: 0;
-  line-height: 1.2;
-}
-
-.tabList {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-}
-
-.tabBtn {
-  position: relative;
-  padding: 0.35rem 0.25rem 0.55rem;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  color: #64748B;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  transition: color 180ms cubic-bezier(0.16, 1, 0.3, 1);
-  border-radius: 0;
-}
-
-.tabBtn:hover {
-  color: #0F172A;
-}
-
-.tabBtnActive {
-  color: #165AF6;
-  font-weight: 600;
-}
-
-.tabActiveUnderline {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 2.5px;
-  background: #165AF6;
-  border-radius: 999px;
-}
-
-/* Enrolled Subjects 4-Column Grid */
-.subjectGrid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
-}
-
-.subjectCard {
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  border-radius: 14px;
-  padding: 1.25rem 1.15rem;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 1rem;
-  transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.subjectCard:hover {
-  border-color: #CBD5E1;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px -2px rgba(15, 23, 42, 0.05);
-}
-
-.subjectCardLive {
-  border-color: #FDE68A;
-  background: #FFFDF5;
-}
-
-.subjectCardHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-}
-
-.subjectIconBox {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: #F1F5F9;
-  color: #0F172A;
-  border: 1px solid #E2E8F0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.subjectCard:hover .subjectIconBox {
-  transform: scale(1.06);
-}
-
-.coreBadge {
-  font-size: 0.625rem;
-  font-weight: 600;
-  color: #165AF6;
-  background: #EFF4FF;
-  border: 1px solid #DBEAFE;
-  padding: 0.15rem 0.45rem;
-  border-radius: 6px;
-  letter-spacing: 0.04em;
-}
-
-.subjectCardName {
-  font-size: 0.9375rem;
-  font-weight: 600;
-  color: #0F172A;
-  line-height: 1.35;
-  margin: 0;
-}
-
-.subjectCardFooter {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-}
-
-.subjectBtnPractice {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: #165AF6;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  transition: transform 150ms ease, opacity 150ms ease;
-}
-
-.subjectBtnPractice:hover {
-  transform: translateX(2px);
-  opacity: 0.85;
-}
-
-.subjectBtnLive {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: #D97706;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  transition: transform 150ms ease;
-}
-
-.subjectBtnLive:hover {
-  transform: translateX(2px);
-}
-
-.subjectBtnResult {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: #059669;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  transition: transform 150ms ease;
-}
-
-.subjectBtnResult:hover {
-  transform: translateX(2px);
-}
-
-/* 3D-Styled Illustrated Empty State */
-.emptySubjectsBox {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 2.5rem;
-  padding: 2.5rem 1.5rem;
-  text-align: left;
-}
-
-.emptyIllustrationWrapper {
-  flex-shrink: 0;
-  width: 140px;
-  height: 120px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.emptyTextCol {
+.headerIdentity {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  max-width: 380px;
 }
 
-.emptyTitle {
-  font-size: 1rem;
+.eyebrowRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.sessionBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #92400E;
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+  padding: 0.175rem 0.55rem;
+  border-radius: 6px;
+}
+
+.metaPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #475569;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  padding: 0.175rem 0.55rem;
+  border-radius: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+.pageTitle {
+  font-size: clamp(1.8rem, 3vw, 2.6rem);
   font-weight: 600;
   color: #0F172A;
+  letter-spacing: -.045em;
+  line-height: 1.25;
   margin: 0;
 }
 
-.emptySubtitle {
-  font-size: 0.8125rem;
-  font-weight: 400;
+.pageSubtitle {
+  font-size: .875rem;
   color: #64748B;
   margin: 0;
-  line-height: 1.5;
+  line-height: 1.45;
 }
 
-/* ── 3. 5-Tile Quick Action Matrix (Quick Action Cards) ── */
-.actionGrid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 0.85rem;
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  flex-wrap: wrap;
 }
 
-.actionTile {
+.secondaryBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.5rem 0.875rem;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #1E293B;
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 140ms ease, border-color 140ms ease;
+}
+
+.secondaryBtn:hover {
+  background: #F8FAFC;
+  border-color: #94A3B8;
+}
+
+.primaryBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.5rem 0.95rem;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #FFFFFF;
+  background: #92400E;
+  border: 1px solid #78350F;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 140ms ease;
+}
+
+.primaryBtn:hover {
+  background: #78350F;
+}
+
+/* ── 2. Primary Action Area (Immediate Next Step) ── */
+.primaryActionCard {
   background: #FFFFFF;
   border: 1px solid #E2E8F0;
-  border-radius: 16px;
-  padding: 1.35rem 1.15rem;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  text-align: left;
-  gap: 0.85rem;
-  text-decoration: none;
-  transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02);
-  position: relative;
-}
-
-.actionTile:hover {
-  border-color: #CBD5E1;
-  transform: translateY(-3px);
-  box-shadow: 0 8px 20px -4px rgba(15, 23, 42, 0.07);
-}
-
-.actionTileHeader {
+  border-left: 4px solid #92400E;
+  border-radius: 12px;
+  padding: 18px 22px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: 100%;
+  gap: 1.25rem;
+  box-shadow: none;
+  flex-wrap: wrap;
 }
 
-.actionTileIconBox {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
+.primaryActionLive {
+  border-left-color: #059669;
+  background: var(--color-surface);
+}
+
+.primaryActionLeft {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.actionTile:hover .actionTileIconBox {
-  transform: scale(1.08);
-}
-
-.sparkleDot {
-  font-size: 0.85rem;
-  opacity: 0.45;
-  user-select: none;
-}
-
-.actionTileBody {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+  align-items: flex-start;
+  gap: 0.95rem;
+  min-width: 0;
   flex: 1;
 }
 
-.actionTileTitle {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #0F172A;
-  line-height: 1.25;
-}
-
-.actionTileSubtitle {
-  font-size: 0.6875rem;
-  font-weight: 400;
-  color: #64748B;
-  line-height: 1.4;
-}
-
-.actionTileArrowCircle {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
+.primaryActionIcon {
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+  color: #92400E;
   display: flex;
   align-items: center;
   justify-content: center;
-  align-self: flex-end;
-  margin-top: auto;
-  transition: transform 150ms ease;
-}
-
-.actionTile:hover .actionTileArrowCircle {
-  transform: translateX(2px);
-}
-
-/* ── 4. Two-Column Activity & Schedule Section ── */
-.feedGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-}
-
-.feedCard {
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  border-radius: 18px;
-  padding: 1.5rem 1.65rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02);
-}
-
-.feedHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.feedTitleGroup {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-}
-
-.feedTitleGroup svg {
   flex-shrink: 0;
 }
 
-.feedHeading {
-  font-size: 0.9375rem;
-  font-weight: 600;
-  color: #0F172A;
-  margin: 0;
+.primaryActionIconLive {
+  background: #ECFDF5;
+  border-color: #A7F3D0;
+  color: #059669;
 }
 
-.feedViewAll {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #165AF6;
-  text-decoration: none;
-  transition: opacity 150ms ease;
-}
-
-.feedViewAll:hover {
-  opacity: 0.85;
-}
-
-.feedBody {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-/* Schedule Card Item */
-.scheduleItem {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.85rem;
-  padding: 0.85rem 0.95rem;
-  border-radius: 12px;
-  background: #F8FAFC;
-  border: 1px solid #F1F5F9;
-  transition: all 150ms ease;
-}
-
-.scheduleItem:hover {
-  background: #FFFFFF;
-  border-color: #E2E8F0;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
-}
-
-.scheduleLeft {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-  min-width: 0;
-}
-
-.dateBadge {
-  width: 44px;
-  height: 48px;
-  border-radius: 8px;
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  line-height: 1.1;
-  text-align: center;
-}
-
-.dateMonth {
-  font-size: 0.58rem;
-  font-weight: 700;
-  color: #165AF6;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.dateDay {
-  font-size: 0.9375rem;
-  font-weight: 700;
-  color: #0F172A;
-  font-family: var(--font-mono, monospace);
-}
-
-.dateWeekday {
-  font-size: 0.52rem;
-  font-weight: 600;
-  color: #64748B;
-  text-transform: uppercase;
-}
-
-.scheduleInfo {
+.primaryActionText {
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
   min-width: 0;
 }
 
-.scheduleTitleRow {
+.primaryActionStatusRow {
   display: flex;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.5rem;
   flex-wrap: wrap;
 }
 
-.scheduleTitle {
-  font-size: 0.875rem;
+.statusDotLive {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #059669;
+  display: inline-block;
+}
+
+.primaryActionEyebrow {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #92400E;
+}
+
+.primaryActionEyebrowLive {
+  color: #059669;
+}
+
+.primaryActionTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0;
+}
+
+.primaryActionDesc {
+  font-size: 0.8125rem;
+  color: #64748B;
+  margin: 0;
+}
+
+.primaryActionRight {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  flex-shrink: 0;
+}
+
+/* ── 3. Restrained 4-Metric Summary Strip (Part C Metric & Progress Contract) ── */
+
+.metricBadge {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  padding: 0.125rem 0.425rem;
+  border-radius: 5px;
+  background: #FFFBEB;
+  color: #92400E;
+  border: 1px solid #FDE68A;
+  font-variant-numeric: tabular-nums;
+}
+
+.slimProgressTrack {
+  flex: 1;
+  height: 5px;
+  background: #F1F5F9;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.slimProgressFill {
+  height: 100%;
+  background: #92400E;
+  border-radius: 999px;
+  transition: width 300ms ease;
+}
+
+/* ── 4. Academic Performance Analytics Component (Part A2) ── */
+
+.sectionCard {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 1.25rem 1.375rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  box-shadow: none;
+  border-color: var(--color-border);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.sectionTitleGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.sectionEyebrow {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #92400E;
+}
+
+.sectionTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0;
+  letter-spacing: -0.015em;
+}
+
+.sectionSubtitle {
+  font-size: 0.75rem;
+  color: #64748B;
+  margin: 0;
+}
+
+.sectionLink {
+  font-size: 0.75rem;
   font-weight: 600;
+  color: #92400E;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  white-space: nowrap;
+}
+
+.sectionLink:hover {
+  text-decoration: underline;
+}
+
+/* Subject Performance Bar List (Tremor BarList Pattern) */
+
+.gradePill {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  background: #F8FAFC;
+  color: #334155;
+  border: 1px solid #E2E8F0;
+  min-width: 1.85rem;
+  text-align: center;
+}
+
+.gradePillHigh {
+  background: #ECFDF5;
+  color: #047857;
+  border-color: #A7F3D0;
+}
+
+.gradePillMid {
+  background: #FFFBEB;
+  color: #92400E;
+  border-color: #FDE68A;
+}
+
+.gradePillLow {
+  background: #FEF2F2;
+  color: #B91C1C;
+  border-color: #FECACA;
+}
+
+/* Breakdown List in Analytics Right Card */
+
+/* ── 5. Learning Activity: Enrolled Curriculum & Schedule ── */
+.tabList {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  padding: 0.225rem;
+  border-radius: 8px;
+  flex-wrap: wrap;
+}
+
+.tabBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.675rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748B;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.tabBtn:hover {
+  color: #0F172A;
+}
+
+.tabCount {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  padding: 0.05rem 0.35rem;
+  border-radius: 999px;
+  background: #F1F5F9;
+  color: #475569;
+  font-variant-numeric: tabular-nums;
+}
+
+.subjectGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.subjectCard {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
+  padding: 1rem 1.125rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.85rem;
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.subjectCard:hover {
+  border-color: #CBD5E1;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+}
+
+.subjectCardLive {
+  border-color: #059669;
+  background: var(--color-surface);
+}
+
+.subjectCardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.subjectCodeTag {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  font-family: var(--font-mono, monospace);
+  color: #475569;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  padding: 0.15rem 0.45rem;
+  border-radius: 5px;
+}
+
+.subjectStatusBadge {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 0.15rem 0.475rem;
+  border-radius: 999px;
+  font-variant-numeric: tabular-nums;
+}
+
+.statusLive {
+  background: #ECFDF5;
+  color: #047857;
+  border: 1px solid #A7F3D0;
+}
+
+.statusScheduled {
+  background: #FFFBEB;
+  color: #92400E;
+  border: 1px solid #FDE68A;
+}
+
+.statusAssignment {
+  background: #F8FAFC;
+  color: #334155;
+  border: 1px solid #CBD5E1;
+}
+
+.statusCompleted {
+  background: #F1F5F9;
+  color: #475569;
+  border: 1px solid #E2E8F0;
+}
+
+.subjectCardName {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0;
+  line-height: 1.35;
+}
+
+.subjectMetaLine {
+  font-size: 0.75rem;
+  color: #64748B;
+  margin-top: 0.2rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.subjectCardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid #F1F5F9;
+}
+
+.subjectActionLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  width: 100%;
+  padding: 0.45rem 0.75rem;
+  border-radius: 7px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 140ms ease;
+}
+
+.actionPrimary {
+  background: #92400E;
+  color: #FFFFFF;
+  border: 1px solid #78350F;
+}
+
+.actionPrimary:hover {
+  background: #78350F;
+}
+
+.actionLive {
+  background: #059669;
+  color: #FFFFFF;
+  border: 1px solid #047857;
+}
+
+.actionLive:hover {
+  background: #047857;
+}
+
+.actionSubtle {
+  background: #F8FAFC;
+  color: #1E293B;
+  border: 1px solid #E2E8F0;
+}
+
+.actionSubtle:hover {
+  background: #F1F5F9;
+  border-color: #CBD5E1;
+}
+
+/* ── 6. Personal Progress & Milestones — Restrained Editorial Gamification (Part A3) ── */
+.gamificationGrid {
+  display: grid;
+  grid-template-columns: 1.45fr 1fr;
+  gap: 1rem;
+}
+
+.milestoneGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.milestoneCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem 0.875rem;
+  border-radius: 9px;
+  border: 1px solid #E2E8F0;
+  background: #FFFFFF;
+  transition: border-color 140ms ease;
+}
+
+.milestoneCardEarned {
+  background: #FFFBEB;
+  border-color: #FDE68A;
+}
+
+.milestoneCardLocked {
+  background: #F8FAFC;
+  opacity: 0.88;
+}
+
+.milestoneIconBox {
+  width: 32px;
+  height: 32px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: #F1F5F9;
+  color: #64748B;
+  border: 1px solid #E2E8F0;
+}
+
+.milestoneCardEarned .milestoneIconBox {
+  background: #FFFFFF;
+  color: #92400E;
+  border-color: #FDE68A;
+}
+
+.milestoneBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.milestoneTopRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+}
+
+.milestoneName {
+  font-size: 0.8125rem;
+  font-weight: 700;
   color: #0F172A;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.statusPillLive {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-size: 0.625rem;
-  font-weight: 700;
-  color: #059669;
-  background: #ECFDF5;
-  border: 1px solid #A7F3D0;
-  padding: 0.1rem 0.4rem;
-  border-radius: 999px;
-}
-
-.statusPillUpcoming {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-size: 0.625rem;
-  font-weight: 700;
-  color: #D97706;
-  background: #FFFBEB;
-  border: 1px solid #FDE68A;
-  padding: 0.1rem 0.4rem;
-  border-radius: 999px;
-}
-
-.scheduleMeta {
+.milestoneState {
   font-size: 0.6875rem;
-  font-weight: 400;
+  font-weight: 600;
+  color: #64748B;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.milestoneStateEarned {
+  color: #92400E;
+  font-weight: 700;
+}
+
+.milestoneDesc {
+  font-size: 0.725rem;
+  color: #64748B;
+  line-height: 1.3;
+}
+
+/* Cohort & XP Breakdown Panel */
+.xpBreakdownBar {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  padding: 0.65rem;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+}
+
+.xpBreakdownCol {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.xpBreakdownLabel {
+  font-size: 0.6875rem;
   color: #64748B;
 }
 
-.scheduleBtnPrimary {
-  padding: 0.45rem 0.95rem;
-  border-radius: 8px;
-  background: #165AF6;
-  color: #FFFFFF;
-  font-size: 0.75rem;
-  font-weight: 600;
-  border: none;
-  cursor: pointer;
-  text-decoration: none;
-  white-space: nowrap;
-  transition: all 150ms ease;
-  flex-shrink: 0;
-}
-
-.scheduleBtnPrimary:hover {
-  background: #1248C8;
-  transform: translateY(-1px);
-}
-
-.scheduleBtnSecondary {
-  padding: 0.45rem 0.95rem;
-  border-radius: 8px;
-  background: #FFFFFF;
-  color: #334155;
-  border: 1px solid #E2E8F0;
-  font-size: 0.75rem;
-  font-weight: 600;
-  cursor: pointer;
-  text-decoration: none;
-  white-space: nowrap;
-  transition: all 150ms ease;
-  flex-shrink: 0;
-}
-
-.scheduleBtnSecondary:hover {
-  background: #F8FAFC;
-  border-color: #CBD5E1;
+.xpBreakdownVal {
+  font-size: 0.875rem;
+  font-weight: 700;
   color: #0F172A;
+  font-variant-numeric: tabular-nums;
 }
 
-/* Recent Submissions Item */
-.submissionItem {
+.cohortList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.cohortRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  padding: 0.85rem 0.95rem;
-  border-radius: 12px;
-  background: #F8FAFC;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
   border: 1px solid #F1F5F9;
-  transition: all 150ms ease;
-}
-
-.submissionItem:hover {
   background: #FFFFFF;
-  border-color: #E2E8F0;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  font-size: 0.8125rem;
 }
 
-.submissionLeft {
+.cohortRowSelf {
+  background: #FFFBEB;
+  border-color: #FDE68A;
+}
+
+.cohortLeft {
   display: flex;
   align-items: center;
-  gap: 0.85rem;
+  gap: 0.6rem;
   min-width: 0;
 }
 
-.docIconBox {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
+.cohortRank {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: #F1F5F9;
+  color: #475569;
+  font-size: 0.75rem;
+  font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-variant-numeric: tabular-nums;
   flex-shrink: 0;
 }
 
-.submissionInfo {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  min-width: 0;
+.cohortRankTop {
+  background: #FFFBEB;
+  color: #92400E;
+  border: 1px solid #FDE68A;
 }
 
-.submissionSubject {
-  font-size: 0.875rem;
+.cohortName {
   font-weight: 600;
   color: #0F172A;
   white-space: nowrap;
@@ -836,326 +727,198 @@
   text-overflow: ellipsis;
 }
 
-.submissionDate {
+.cohortLevel {
   font-size: 0.6875rem;
-  font-weight: 400;
   color: #64748B;
 }
 
-.scoreChipCol {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.1rem;
+.cohortXp {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #0F172A;
+  font-variant-numeric: tabular-nums;
   flex-shrink: 0;
 }
 
-.scorePercentText {
-  font-size: 0.9375rem;
-  font-weight: 700;
-  color: #059669;
-  font-variant-numeric: tabular-nums;
+/* ── 7. Schedule & Recent Evaluations (Part A4 & C Result Tables) ── */
+.bottomGrid {
+  display: grid;
+  grid-template-columns: 1fr 1.45fr;
+  gap: 1rem;
 }
 
-.scoreLabelText {
-  font-size: 0.625rem;
-  font-weight: 500;
-  color: #94A3B8;
-  text-transform: uppercase;
+.scheduleList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
 }
 
-/* Empty Feeds */
-.emptyFeed {
+.scheduleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid #E2E8F0;
+  background: #FFFFFF;
+}
+
+.scheduleDateBox {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 2rem 1rem;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.scheduleMonth {
+  font-size: 0.5625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #92400E;
+  line-height: 1;
+}
+
+.scheduleDay {
+  font-size: 0.9375rem;
+  font-weight: 800;
+  color: #0F172A;
+  line-height: 1.15;
+}
+
+.scheduleInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.scheduleSubject {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #0F172A;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.scheduleMeta {
+  font-size: 0.725rem;
+  color: #64748B;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Structured Recent Results Table */
+.tableWrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.resultsTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+.resultsTable th {
+  text-align: left;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748B;
+  padding: 0.55rem 0.75rem;
+  border-bottom: 1px solid #E2E8F0;
+  background: #F8FAFC;
+}
+
+.resultsTable td {
+  padding: 0.65rem 0.75rem;
+  border-bottom: 1px solid #F1F5F9;
+  color: #1E293B;
+  vertical-align: middle;
+}
+
+.resultsTable tr:last-child td {
+  border-bottom: none;
+}
+
+.numCol {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.emptyStateBox {
+  padding: 2rem 1.25rem;
   text-align: center;
+  border: 1px dashed #E2E8F0;
+  border-radius: 10px;
   color: #64748B;
   font-size: 0.8125rem;
-  gap: 0.35rem;
-}
-
-/* ── 4. Solid #3D35B2 Academic Readiness & Examination Command Center ── */
-.commandCenterContainer {
-  background: #3D35B2;
-  border-radius: 22px;
-  padding: 1.85rem 2.25rem;
-  color: #FFFFFF;
-  box-shadow: 0 8px 26px -4px rgba(61, 53, 178, 0.35);
   display: flex;
   flex-direction: column;
-  gap: 1.35rem;
-  position: relative;
-  overflow: hidden;
-}
-
-.commandHeader {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1.25rem;
-  flex-wrap: wrap;
-}
-
-.commandTitleCol {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.commandBadge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.2rem 0.65rem;
-  background: rgba(253, 224, 71, 0.18);
-  border: 1px solid rgba(253, 224, 71, 0.35);
-  border-radius: 999px;
-  font-size: 0.6875rem;
-  font-weight: 700;
-  color: #FDE047;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  width: fit-content;
-}
-
-.commandTitle {
-  font-size: 1.3rem;
-  font-weight: 800;
-  color: #FFFFFF;
-  letter-spacing: -0.025em;
-  margin: 0;
-  line-height: 1.25;
-}
-
-.commandSub {
-  font-size: 0.8125rem;
-  color: #E0E7FF;
-  margin: 0;
-  line-height: 1.45;
-  max-width: 560px;
-}
-
-.commandTopAction {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.5rem 1rem;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 9px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #FFFFFF;
-  text-decoration: none;
-  transition: all 140ms ease;
-  white-space: nowrap;
-}
-
-.commandTopAction:hover {
-  background: rgba(255, 255, 255, 0.22);
-  border-color: rgba(255, 255, 255, 0.38);
-  transform: translateY(-1px);
-}
-
-.commandHighlightCard {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 16px;
-  padding: 1.25rem 1.6rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1.25rem;
-  flex-wrap: wrap;
-}
-
-.commandHighlightLeft {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-
-.commandLiveStatusPill {
-  display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  font-size: 0.6875rem;
-  font-weight: 700;
-  color: #86EFAC;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
 }
 
-.commandScheduledStatusPill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.6875rem;
-  font-weight: 700;
-  color: #FCD34D;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
+/* ── Responsive Breakpoints ── */
+@media (max-width: 1024px) {
 
-.commandCompleteStatusPill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.6875rem;
-  font-weight: 700;
-  color: #C7D2FE;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.commandLiveDot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #22C55E;
-  box-shadow: 0 0 8px #22C55E;
-  display: inline-block;
-}
-
-.commandHighlightTitle {
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: #FFFFFF;
-  margin: 0;
-}
-
-.commandMetaRow {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-  flex-wrap: wrap;
-  font-size: 0.75rem;
-  color: #C7D2FE;
-}
-
-.commandMetaTag {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.commandActionBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.75rem 1.4rem;
-  background: #FCD34D;
-  color: #1E1B4B;
-  border-radius: 11px;
-  font-size: 0.8125rem;
-  font-weight: 800;
-  text-decoration: none;
-  border: none;
-  cursor: pointer;
-  transition: all 150ms ease;
-  box-shadow: 0 2px 10px rgba(252, 211, 77, 0.32);
-  white-space: nowrap;
-}
-
-.commandActionBtn:hover {
-  background: #FDE047;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(252, 211, 77, 0.5);
-}
-
-.commandActionBtnSecondary {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.75rem 1.4rem;
-  background: #FFFFFF;
-  color: #3D35B2;
-  border-radius: 11px;
-  font-size: 0.8125rem;
-  font-weight: 800;
-  text-decoration: none;
-  border: none;
-  cursor: pointer;
-  transition: all 150ms ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
-  white-space: nowrap;
-}
-
-.commandActionBtnSecondary:hover {
-  background: #EEF2FF;
-  transform: translateY(-1px);
-}
-
-.commandUtilityRibbon {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding-top: 0.85rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.14);
-  flex-wrap: wrap;
-}
-
-.commandUtilityGroup {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  flex-wrap: wrap;
-}
-
-.commandUtilityLink {
-  color: #E0E7FF;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  transition: color 140ms ease;
-}
-
-.commandUtilityLink:hover {
-  color: #FFFFFF;
-  text-decoration: underline;
-}
-
-/* ── 5. Responsive Breakpoints ── */
-@media (max-width: 860px) {
-  .subjectGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .actionGrid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-  .feedGrid {
+  .gamificationGrid,
+  .bottomGrid {
     grid-template-columns: 1fr;
   }
-  .emptySubjectsBox {
-    flex-direction: column;
-    text-align: center;
-    gap: 1.5rem;
+  .subjectGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
   }
 }
 
 @media (max-width: 640px) {
-  .heroSection {
-    flex-direction: column;
-    align-items: flex-start;
+  .container {
+    padding: 8px 0 32px;
+    max-width: 1380px;
+    gap: 24px;
   }
-  .telemetryPillGroup {
-    width: 100%;
-  }
-  .telemetryBadge {
-    flex: 1;
-    min-width: 130px;
-  }
-  .actionGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .subjectGrid {
+
+  .subjectGrid,
+  .milestoneGrid {
     grid-template-columns: 1fr;
   }
+  .primaryActionCard {
+    flex-direction: column;
+    align-items: stretch;
+    box-shadow: none;
+    padding: 18px 22px;
+  }
 }
+
+/* Reference-led section navigation, retaining actual destinations. */
+.sectionNav { display: flex; gap: 10px; flex-wrap: wrap; }
+.sectionNav a { display: inline-flex; align-items: center; min-height: 42px; padding: 8px 20px; border: 1px solid var(--color-border); border-radius: 99px; color: var(--color-text-2); background: var(--color-surface); text-decoration: none; font-size: .8125rem; }
+.sectionNav a:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.sectionNav a:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 3px; }
+.tabBtn[data-state=active] { background: var(--color-surface); color: var(--color-primary); border-color: var(--color-border); box-shadow: 0 1px 2px rgba(12,13,18,.06); }
+.tabBtn:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.container section { scroll-margin-top: 100px; }
+@media (max-width: 640px) { .container { padding: 0 0 24px; } .headerBar { gap: 16px; } .headerActions { width: 100%; } .headerActions a { flex: 1; justify-content: center; } .sectionNav { flex-wrap: nowrap; overflow-x: auto; padding: 3px; } .sectionNav a { white-space: nowrap; padding-inline: 16px; } }
+/* Reference typography, soft pills and open white canvas. */
+.container { gap: 30px; }
+.pageTitle { font-size: clamp(2rem,4vw,3.4rem); font-weight: 650; line-height: 1.1; }
+.pageSubtitle { font-size: 1.1rem; margin-top: 8px; }
+.eyebrowRow { background: transparent; }
+.sessionBadge, .metaPill { border: 0; background: transparent; padding-inline:0; margin-right:10px; }
+.sectionNav { gap: 14px; }
+.sectionNav a { font-size: 1rem; min-height: 48px; padding-inline: 26px; border-color:#eee; }
+.sectionCard { border-radius: 22px; padding: 24px; border-color:#eee; }
+.primaryActionCard { border-radius: 18px; }
+@media(max-width:700px) { .sectionNav { gap:8px; } .sectionNav a { padding-inline:18px; font-size:.875rem; } .pageSubtitle { font-size:.95rem; } }
+.referenceDate { display:flex; align-items:center; gap:10px; font-size:1rem; color:var(--color-text); padding:12px 16px; border-radius:30px; background:#fafafa; }

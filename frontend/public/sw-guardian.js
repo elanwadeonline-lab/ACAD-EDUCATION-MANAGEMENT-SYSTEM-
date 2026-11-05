@@ -44,33 +44,20 @@ self.addEventListener('fetch', (event) => {
   if (event.request.url.includes('/api/')) return;
   if (event.request.url.includes('/_next/webpack-hmr')) return;
 
-  // For guardian routes, use cache first for better offline experience
+  // For guardian routes, use network-first so session switches never serve stale cached views
   if (event.request.url.includes('/guardian/')) {
     event.respondWith(
-      caches.match(event.request).then((cachedResponse) => {
-        if (cachedResponse) {
-          // Return cached version and update in background
-          fetch(event.request).then((networkResponse) => {
-            if (networkResponse && networkResponse.status === 200) {
-              caches.open(CACHE_NAME).then((cache) => {
-                cache.put(event.request, networkResponse);
-              });
-            }
+      fetch(event.request).then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200) {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
           });
-          return cachedResponse;
         }
-        
-        // If not in cache, fetch from network
-        return fetch(event.request).then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            const responseToCache = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, responseToCache);
-            });
-          }
-          return networkResponse;
-        }).catch(() => {
-          // If network fails and not in cache, return offline page
+        return networkResponse;
+      }).catch(() => {
+        return caches.match(event.request).then((cachedResponse) => {
+          if (cachedResponse) return cachedResponse;
           if (event.request.mode === 'navigate') {
             return caches.match('/offline.html');
           }
@@ -244,7 +231,8 @@ self.addEventListener('message', (event) => {
     });
   }
   
-  if (event.data.type === 'CLEAR_GUARDIAN_CACHE') {
+  if (event.data && (event.data.type === 'CLEAR_GUARDIAN_CACHE' || event.data.type === 'CLEAR_AUTH_CACHE')) {
     caches.delete(GUARDIAN_DATA_CACHE);
+    caches.delete(CACHE_NAME);
   }
 });

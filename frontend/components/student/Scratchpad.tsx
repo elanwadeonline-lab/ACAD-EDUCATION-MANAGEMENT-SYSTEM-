@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { RotateCcwIcon, CloseIcon } from "../icons/StudentIcons";
 
 export function Scratchpad({ onClose }: { onClose: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -143,9 +144,7 @@ export function Scratchpad({ onClose }: { onClose: () => void }) {
               fontWeight: 600,
               fontSize: "0.75rem",
             }}
-          >
-            Clear
-          </button>
+          ><span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}><RotateCcwIcon width={12} height={12} /> Clear</span></button>
           <button
             onClick={onClose}
             style={{
@@ -158,9 +157,7 @@ export function Scratchpad({ onClose }: { onClose: () => void }) {
               fontWeight: 600,
               fontSize: "0.75rem",
             }}
-          >
-            Close
-          </button>
+          ><span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}><CloseIcon width={12} height={12} /> Close</span></button>
         </div>
       </div>
       <div style={{ flex: 1, position: "relative" }}>

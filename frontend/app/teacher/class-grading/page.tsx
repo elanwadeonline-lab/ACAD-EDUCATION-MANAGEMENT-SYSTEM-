@@ -123,7 +123,7 @@ function ClassGradingCenter() {
         <div className={styles.statCard}>
           <div className={styles.statTop}>
             <span className={styles.statLabel}>Enrolled Candidates</span>
-            <div className={styles.statIcon} style={{ color: "#4F46E5" }}><UsersIcon width="15" height="15" /></div>
+            <div className={styles.statIcon} ><UsersIcon width="15" height="15" /></div>
           </div>
           <div>
             <div className={styles.statValue}>{data?.students?.length || 0}</div>
@@ -134,7 +134,7 @@ function ClassGradingCenter() {
         <div className={styles.statCard}>
           <div className={styles.statTop}>
             <span className={styles.statLabel}>Curriculum Courses</span>
-            <div className={styles.statIcon} style={{ color: "#06B6D4" }}><BookIcon width="15" height="15" /></div>
+            <div className={styles.statIcon} ><BookIcon width="15" height="15" /></div>
           </div>
           <div>
             <div className={styles.statValue}>{gradingSubjects.length}</div>
@@ -145,7 +145,7 @@ function ClassGradingCenter() {
         <div className={styles.statCard}>
           <div className={styles.statTop}>
             <span className={styles.statLabel}>Approved Gradebooks</span>
-            <div className={styles.statIcon} style={{ color: "#10B981" }}><CheckCircleIcon width="15" height="15" /></div>
+            <div className={styles.statIcon} ><CheckCircleIcon width="15" height="15" /></div>
           </div>
           <div>
             <div className={styles.statValue}>{approvedCount}</div>
@@ -156,7 +156,7 @@ function ClassGradingCenter() {
         <div className={styles.statCard}>
           <div className={styles.statTop}>
             <span className={styles.statLabel}>Roster Broadsheet</span>
-            <div className={styles.statIcon} style={{ color: "#F97316" }}><DocumentIcon width="15" height="15" /></div>
+            <div className={styles.statIcon} ><DocumentIcon width="15" height="15" /></div>
           </div>
           <div>
             <div className={styles.statValue} style={{ fontSize: "1.125rem" }}>
@@ -330,3 +330,4 @@ function ClassGradingCenter() {
     </div>
   );
 }
+

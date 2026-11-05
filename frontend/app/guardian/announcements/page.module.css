@@ -36,15 +36,15 @@
 
 .backBtn:hover {
   background: var(--g-surface-subtle, #F8FAFC);
-  border-color: var(--g-border-focus, #3B82F6);
+  border-color: var(--g-border-focus, #D97706);
 }
 
 .pageTitle {
-  font-size: 1.25rem;
-  font-weight: 800;
+  font-size: 1.375rem;
+  font-weight: 600;
   color: var(--g-text-primary, #0F172A);
   margin: 0;
-  letter-spacing: -0.02em;
+  letter-spacing: -.03em;
 }
 
 .tabList {
@@ -71,7 +71,7 @@
 
 .tabBtnActive {
   background: var(--g-surface, #FFFFFF) !important;
-  color: var(--g-primary, #165AF6) !important;
+  color: var(--g-primary-text, #92400E) !important;
   font-weight: 700 !important;
   box-shadow: var(--g-shadow-sm, 0 1px 3px rgba(15, 23, 42, 0.08));
 }
@@ -85,18 +85,19 @@
 .announcementCard {
   background: var(--g-surface, #FFFFFF);
   border: 1px solid var(--g-border, #E2E8F0);
-  border-radius: var(--g-radius-lg, 16px);
+  border-radius: 18px;
   padding: 1.15rem;
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
-  box-shadow: var(--g-shadow-sm, 0 1px 3px rgba(15, 23, 42, 0.03));
+  box-shadow: none;
   cursor: pointer;
   transition: all var(--g-duration, 180ms) ease;
+  border-color: var(--g-border);
 }
 
 .announcementCard:hover {
-  border-color: var(--g-border-focus, #3B82F6);
+  border-color: var(--g-border-focus, #D97706);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
 }
 
@@ -115,15 +116,15 @@
 }
 
 .catSchool {
-  background: var(--g-primary-subtle, #EFF4FF);
-  color: var(--g-primary, #165AF6);
-  border: 1px solid var(--g-primary-border, #DBEAFE);
+  background: var(--g-primary-subtle, #FFFBEB);
+  color: var(--g-primary-text, #92400E);
+  border: 1px solid var(--g-primary-border, #FDE68A);
 }
 
 .catAcademic {
-  background: var(--g-purple-subtle, #F5F3FF);
-  color: var(--g-purple, #7C3AED);
-  border: 1px solid var(--g-purple-border, #DDD6FE);
+  background: var(--g-purple-subtle, #FFFBEB);
+  color: var(--g-purple, #92400E);
+  border: 1px solid var(--g-purple-border, #FDE68A);
 }
 
 .dateStr {
@@ -149,7 +150,7 @@
 .readMoreLink {
   font-size: 0.75rem;
   font-weight: 700;
-  color: var(--g-primary, #165AF6);
+  color: var(--g-primary-text, #92400E);
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;

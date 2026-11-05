@@ -162,7 +162,7 @@ describe("ExamPool Complete System Integrity & Workflow Audit", () => {
   // ───────────────────────────────────────────────────────────────────────────
   test("2.1 Essay Question Creation with Structured Marking Guide / Rubric", () => {
     const sEssay = queries.createSubject.run(
-      "Economics", `ECO_${TS}`, "Third Term", 45, teacher1Id, 1, "Economics Essay", "SS2", null, `Session_2026_${TS}`, "exam", "Explain in detail", 1, session2026Id, term3Id, "school_exam", "immediate", null
+      "Economics", `ECO_${TS}`, "Third Term", 45, teacher1Id, 1, "Economics Essay", "SS2", null, `Session_2026_${TS}`, "exam", "Explain in detail", 1, 0, session2026Id, term3Id, "school_exam", "immediate", null
     ) as any;
     essaySubjectId = Number(sEssay.lastInsertRowid);
 
@@ -229,7 +229,7 @@ describe("ExamPool Complete System Integrity & Workflow Audit", () => {
   test("3.1 Publishing an exam locks questions from alteration", () => {
     // Create draft math subject
     const sDraft = queries.createSubject.run(
-      "Further Math", `FMTH_${TS}`, "Third Term", 60, teacher1Id, 1, "FM", "SS2", null, `Session_2026_${TS}`, "exam", "None", 1, session2026Id, term3Id, "school_exam", "immediate", null
+      "Further Math", `FMTH_${TS}`, "Third Term", 60, teacher1Id, 1, "FM", "SS2", null, `Session_2026_${TS}`, "exam", "None", 1, 0, session2026Id, term3Id, "school_exam", "immediate", null
     ) as any;
     const draftSubId = Number(sDraft.lastInsertRowid);
 
@@ -255,7 +255,7 @@ describe("ExamPool Complete System Integrity & Workflow Audit", () => {
     // When Question Q is used in Subject 1 (2026 T1) and copied/imported into Subject 2 (2026 T3),
     // editing Subject 2's question creates an isolated copy with subject_id = Subject 2
     const sNew = queries.createSubject.run(
-      "Further Math Re-test", `FMTH_RET_${TS}`, "Third Term", 60, teacher1Id, 1, "FM Retest", "SS2", null, `Session_2026_${TS}`, "exam", "None", 1, session2026Id, term3Id, "school_exam", "immediate", null
+      "Further Math Re-test", `FMTH_RET_${TS}`, "Third Term", 60, teacher1Id, 1, "FM Retest", "SS2", null, `Session_2026_${TS}`, "exam", "None", 1, 0, session2026Id, term3Id, "school_exam", "immediate", null
     ) as any;
     const newSubId = Number(sNew.lastInsertRowid);
 
@@ -276,7 +276,7 @@ describe("ExamPool Complete System Integrity & Workflow Audit", () => {
   test("4.1 Combined Filtering (Session + Term + Section/Class + Subject) isolates records strictly", () => {
     // Create Math Subject for Term 1
     const subMathT1 = queries.createSubject.run(
-      "Core Mathematics", `CMTH_${TS}`, "First Term", 60, teacher1Id, 1, "Math", "SS2", null, `Session_2026_${TS}`, "exam", "None", 1, session2026Id, term1Id, "school_exam", "immediate", null
+      "Core Mathematics", `CMTH_${TS}`, "First Term", 60, teacher1Id, 1, "Math", "SS2", null, `Session_2026_${TS}`, "exam", "None", 1, 0, session2026Id, term1Id, "school_exam", "immediate", null
     ) as any;
     mathT1SubjectId = Number(subMathT1.lastInsertRowid);
 

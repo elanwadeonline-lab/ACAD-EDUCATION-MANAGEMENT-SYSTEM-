@@ -40,7 +40,7 @@ function PerformanceContent() {
     return <div style={{ padding: "2rem", textAlign: "center", color: "var(--g-text-secondary, #64748B)" }}>No active ward selected.</div>;
   }
 
-  const wardAvg = perfData?.average_score || activeWard.average_score || 0;
+  const wardAvg = perfData?.average_score ?? activeWard.average_score ?? 0;
   const scoreDelta = perfData?.score_delta || activeWard.score_delta || "+0.0";
 
   // Circular gauge calculations (SVG circumference)
@@ -58,18 +58,7 @@ function PerformanceContent() {
     <div className={styles.container}>
       {/* ── Top Header Controls ── */}
       <div className={styles.topControlRow}>
-        <button
-          type="button"
-          className={styles.childSelectBtn}
-          onClick={openChildSwitcher}
-          style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
-        >
-          <StudentAvatar name={activeWard.name} imageUrl={activeWard.image_url} size="xs" />
-          <span className={styles.childSelectName}>{activeWard.name}</span>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <polyline points="6 9 12 15 18 9" />
-          </svg>
-        </button>
+
 
         <button
           type="button"
@@ -100,7 +89,7 @@ function PerformanceContent() {
               cy="48"
               r={radius}
               fill="transparent"
-              stroke="var(--g-primary, #165AF6)"
+              stroke="var(--g-primary, #92400E)"
               strokeWidth="9"
               strokeDasharray={circumference}
               strokeDashoffset={strokeDashoffset}
@@ -142,7 +131,7 @@ function PerformanceContent() {
             subjects.map((sub: any, idx: number) => {
               const letter = sub.grade || (sub.score >= 80 ? "A" : sub.score >= 70 ? "B" : sub.score >= 60 ? "C" : sub.score >= 50 ? "D" : "F");
               const gradeClass = letter.startsWith("A") ? styles.gradeA : letter.startsWith("B") ? styles.gradeB : styles.gradeC;
-              const barColor = sub.color || (letter.startsWith("A") ? "var(--g-success, #059669)" : letter.startsWith("B") ? "var(--g-primary, #165AF6)" : "var(--g-warning, #D97706)");
+              const barColor = sub.color || (letter.startsWith("A") ? "var(--g-success, #059669)" : letter.startsWith("B") ? "var(--g-primary, #92400E)" : "var(--g-warning, #D97706)");
 
               return (
                 <div key={idx} className={styles.subjectItem}>

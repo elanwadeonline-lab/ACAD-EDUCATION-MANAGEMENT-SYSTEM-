@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import Tabs from "@mui/material/Tabs";
+import Tab from "@mui/material/Tab";
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { RequireRole } from "../../../../components/auth/RequireRole";
 import { useGuardian } from "../../../../components/guardian/GuardianContext";
 import { StudentAvatar } from "../../../../components/guardian/StudentAvatar";
@@ -12,17 +14,20 @@ import styles from "./page.module.css";
 export default function WardDetailContent() {
   const params = useParams();
   const router = useRouter();
-  const rawId = params?.id as string;
-  const { wards, guardianName, setActiveWardId } = useGuardian();
+  const query = useSearchParams();
+  const rawId = (params?.id as string) || query.get("id") || "";
+  const { wards, guardianName, setActiveWardId, loading } = useGuardian();
   const [activeTab, setActiveTab] = useState<"overview" | "academics" | "attendance" | "info">("overview");
 
-  const ward = wards.find((w) => String(w.id) === String(rawId) || String(w.student_id) === String(rawId)) || wards[0];
+  const ward = wards.find((w) => String(w.id) === String(rawId) || String(w.student_id) === String(rawId));
 
   useEffect(() => {
     if (ward) {
       setActiveWardId(ward.student_id || ward.id);
     }
   }, [ward, setActiveWardId]);
+
+  if (loading) return <div role="status" className={styles.container}>Loading child profile…</div>;
 
   if (!ward) {
     return (
@@ -76,37 +81,10 @@ export default function WardDetailContent() {
         </section>
 
         {/* ── 2. Segmented Navigation Tabs ── */}
-        <div className={styles.tabList}>
-          <button
-            type="button"
-            className={`${styles.tabBtn} ${activeTab === "overview" ? styles.tabBtnActive : ""}`}
-            onClick={() => setActiveTab("overview")}
-          >
-            Overview
-          </button>
-          <button
-            type="button"
-            className={`${styles.tabBtn} ${activeTab === "academics" ? styles.tabBtnActive : ""}`}
-            onClick={() => setActiveTab("academics")}
-          >
-            Academics
-          </button>
-          <button
-            type="button"
-            className={`${styles.tabBtn} ${activeTab === "attendance" ? styles.tabBtnActive : ""}`}
-            onClick={() => setActiveTab("attendance")}
-          >
-            Attendance
-          </button>
-          <button
-            type="button"
-            className={`${styles.tabBtn} ${activeTab === "info" ? styles.tabBtnActive : ""}`}
-            onClick={() => setActiveTab("info")}
-          >
-            Info
-          </button>
-        </div>
-
+        <Tabs value={activeTab} onChange={(_,value)=>setActiveTab(value)} variant="scrollable" scrollButtons="auto" aria-label="Child profile sections" sx={{ borderBottom: "1px solid var(--g-border)", minHeight:48 }}>
+          {[{value:"overview",label:"Overview"},{value:"academics",label:"Academics"},{value:"attendance",label:"Attendance"},{value:"info",label:"Info"}].map(tab=><Tab key={tab.value} value={tab.value} label={tab.label} id={`ward-tab-${tab.value}`} aria-controls={`ward-panel-${tab.value}`} sx={{textTransform:"none", minHeight:48, fontWeight:500}}/>)}
+        </Tabs>
+        <div role="tabpanel" id={`ward-panel-${activeTab}`} aria-labelledby={`ward-tab-${activeTab}`}>
         {/* ── 3. Tab Content ── */}
         {activeTab === "overview" && (
           <>
@@ -128,7 +106,7 @@ export default function WardDetailContent() {
             </section>
 
             <div className={styles.actionLinks}>
-              <Link href={`/guardian/messages?ward_id=${ward.student_id || ward.id}`} className={styles.actionBtn} style={{ background: "var(--g-primary-subtle, #EFF4FF)", borderColor: "var(--g-primary-border, #BFDBFE)", color: "var(--g-primary, #165AF6)", fontWeight: 700 }}>
+              <Link href={`/guardian/messages?ward_id=${ward.student_id || ward.id}`} className={styles.actionBtn} style={{ background: "var(--g-primary-subtle, #FFFBEB)", borderColor: "var(--g-primary-border, #FDE68A)", color: "var(--g-primary-text, #92400E)", fontWeight: 700 }}>
                 <span>💬 Message Form Teacher & Admin</span>
                 <span>→</span>
               </Link>
@@ -164,7 +142,7 @@ export default function WardDetailContent() {
                 (ward.subjects_performance || []).slice(0, 5).map((s, idx) => (
                   <div key={idx} className={styles.infoRow}>
                     <span className={styles.infoKey}>{s.subject_name}</span>
-                    <span className={styles.infoValue} style={{ color: "var(--g-primary, #165AF6)" }}>
+                    <span className={styles.infoValue} style={{ color: "var(--g-primary-text, #92400E)" }}>
                       {s.score}% ({s.grade})
                     </span>
                   </div>
@@ -231,16 +209,17 @@ export default function WardDetailContent() {
               <div className={styles.infoList}>
                 <div className={styles.infoRow}>
                   <span className={styles.infoKey}>Blood Group</span>
-                  <span className={styles.infoValue}>{ward.blood_group || "O+"}</span>
+                  <span className={styles.infoValue}>{ward.blood_group || "Not provided"}</span>
                 </div>
                 <div className={styles.infoRow}>
                   <span className={styles.infoKey}>Emergency Contact</span>
-                  <span className={styles.infoValue}>{ward.emergency_contact || "+234 802 987 6543"}</span>
+                  <span className={styles.infoValue}>{ward.emergency_contact || "Not provided"}</span>
                 </div>
               </div>
             </section>
           </>
         )}
+        </div>
       </div>
     </RequireRole>
   );

@@ -1,14 +1,14 @@
-/* ── Minimalist Timetable & Schedule Design (Neutral-First) ── */
+/* ── Minimalist Timetable & Schedule Design (ACQAD Refined) ── */
 
 .container {
   display: flex;
   flex-direction: column;
-  gap: 1.75rem;
+  gap: 1.5rem;
   width: 100%;
   max-width: 100%;
 }
 
-/* ── Minimalist KPI Metrics Row ─────────────────────────── */
+/* ── Minimalist KPI Metrics Row ────────────────────────── */
 .statsGrid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -17,14 +17,15 @@
 
 .statCard {
   background: var(--color-surface, #FFFFFF);
-  border: 1px solid var(--color-border, #E2E8F0);
-  border-radius: 12px;
-  padding: 1rem 1.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 22px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   gap: 0.5rem;
-  transition: border-color 150ms ease;
+  box-shadow: none;
+  transition: border-color var(--duration-fast, 150ms) ease;
 }
 
 .statCard:hover {
@@ -43,22 +44,26 @@
   font-weight: 600;
   color: var(--color-muted, #64748B);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
 }
 
 .statIcon {
-  color: var(--color-muted-2, #94A3B8);
+  color: var(--color-muted);
   display: flex;
   align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 0;
 }
 
 .statValue {
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-size: 2rem;
+  font-weight: 600;
   font-family: var(--font-mono, monospace);
+  font-variant-numeric: tabular-nums;
   color: var(--color-text, #0F172A);
   line-height: 1.1;
-  letter-spacing: -0.03em;
+  letter-spacing: -.045em;
 }
 
 .statFootnote {
@@ -66,7 +71,7 @@
   color: var(--color-muted, #64748B);
 }
 
-/* ── Filter Strip ───────────────────────────────────────── */
+/* ── Filter Strip ─────────────────────────────────────── */
 .filterStrip {
   display: flex;
   align-items: center;
@@ -78,23 +83,25 @@
 .searchBox {
   position: relative;
   flex: 1;
-  min-width: 240px;
+  min-width: 220px;
 }
 
 .searchInput {
   width: 100%;
   padding: 0.45rem 0.75rem 0.45rem 2rem;
-  font-size: 0.8125rem;
+  font-size: .875rem;
   color: var(--color-text, #0F172A);
   background: var(--color-surface, #FFFFFF);
   border: 1px solid var(--color-border, #E2E8F0);
   border-radius: 8px;
   outline: none;
-  transition: border-color 150ms ease;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+  min-height: 42px;
 }
 
 .searchInput:focus {
-  border-color: var(--color-border-hover, #CBD5E1);
+  border-color: var(--color-primary, #EA580C);
+  box-shadow: 0 0 0 2px var(--color-primary-glow, rgba(234, 88, 12, 0.12));
 }
 
 .searchIcon {
@@ -107,21 +114,32 @@
 }
 
 .selectFilter {
-  padding: 0.45rem 0.75rem;
-  font-size: 0.8125rem;
+  padding: 0.45rem 2rem 0.45rem 0.75rem;
+  font-size: .875rem;
   color: var(--color-text, #0F172A);
   background: var(--color-surface, #FFFFFF);
   border: 1px solid var(--color-border, #E2E8F0);
   border-radius: 8px;
   outline: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6 9L12 15L18 9' stroke='%2364748B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.65rem center;
+  min-height: 42px;
 }
 
-/* ── Table Card ─────────────────────────────────────────── */
+.selectFilter:focus {
+  border-color: var(--color-primary, #EA580C);
+  box-shadow: 0 0 0 2px var(--color-primary-glow, rgba(234, 88, 12, 0.12));
+}
+
+/* ── Table Card ───────────────────────────────────────── */
 .tableCard {
-  background: var(--color-surface, #FFFFFF);
-  border: 1px solid var(--color-border, #E2E8F0);
-  border-radius: 12px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
   overflow: hidden;
+  box-shadow: none;
 }
 
 .tableWrapper {
@@ -143,12 +161,13 @@
   font-size: 0.6875rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  padding: 0.65rem 1.125rem;
+  padding: 0.65rem 1rem;
   border-bottom: 1px solid var(--color-border, #E2E8F0);
+  white-space: nowrap;
 }
 
 .tbl td {
-  padding: 0.75rem 1.125rem;
+  padding: 0.75rem 1rem;
   border-bottom: 1px solid var(--color-border, #E2E8F0);
   color: var(--color-text, #0F172A);
   vertical-align: middle;
@@ -159,7 +178,7 @@
 }
 
 .tbl tbody tr:hover {
-  background: rgba(241, 245, 249, 0.5);
+  background: var(--color-surface-2, #F8FAFC);
 }
 
 .tbl tbody tr:last-child td {
@@ -187,6 +206,7 @@
   font-family: var(--font-mono, monospace);
   font-size: 0.75rem;
   color: var(--color-text, #0F172A);
+  font-variant-numeric: tabular-nums;
 }
 
 .durationTag {
@@ -203,21 +223,21 @@
   align-items: center;
   gap: 0.35rem;
   font-size: 0.6875rem;
-  font-weight: 500;
+  font-weight: 600;
   padding: 0.15rem 0.5rem;
-  border-radius: 6px;
+  border-radius: 9999px;
 }
 
 .statusAllowed {
-  background: var(--color-surface-2, #F1F5F9);
-  color: var(--color-text, #0F172A);
-  border: 1px solid var(--color-border, #CBD5E1);
+  background: rgba(22, 163, 74, 0.08);
+  color: var(--color-success, #16A34A);
+  border: 1px solid rgba(22, 163, 74, 0.2);
 }
 
 .statusLocked {
-  background: transparent;
+  background: var(--color-surface-2, #F8FAFC);
   color: var(--color-muted, #64748B);
-  border: 1px dashed var(--color-border, #E2E8F0);
+  border: 1px dashed var(--color-border, #CBD5E1);
 }
 
 .actionBtnGroup {
@@ -229,17 +249,18 @@
 
 .actionBtn {
   font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--color-primary, #4F46E5);
+  font-weight: 500;
+  color: var(--color-primary, #EA580C);
   background: transparent;
   border: none;
   cursor: pointer;
   padding: 0.2rem 0.45rem;
   border-radius: 4px;
+  transition: background 150ms ease;
 }
 
 .actionBtn:hover {
-  background: var(--color-surface-2, #F1F5F9);
+  background: rgba(234, 88, 12, 0.06);
 }
 
 .actionBtnDanger {
@@ -251,39 +272,40 @@
   cursor: pointer;
   padding: 0.2rem 0.45rem;
   border-radius: 4px;
+  transition: all 150ms ease;
 }
 
 .actionBtnDanger:hover {
   color: var(--color-danger, #DC2626);
-  background: var(--color-surface-2, #F1F5F9);
+  background: rgba(220, 38, 38, 0.06);
 }
 
-/* ── Toast ──────────────────────────────────────────────── */
+/* ── Toast ─────────────────────────────────────────────── */
 .toast {
   position: fixed;
   bottom: 1.5rem;
   right: 1.5rem;
   padding: 0.65rem 1rem;
-  border-radius: 8px;
+  border-radius: 6px;
   font-size: 0.8125rem;
-  font-weight: 600;
+  font-weight: 500;
   z-index: 1100;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+  box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.15);
   background: var(--color-text, #0F172A);
   color: #FFFFFF;
 }
 
-/* ── Form & Modal ───────────────────────────────────────── */
+/* ── Form & Modal ──────────────────────────────────────── */
 .formGrid {
   display: flex;
   flex-direction: column;
-  gap: 1.125rem;
+  gap: 1rem;
 }
 
 .formGrid2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+  gap: 0.875rem;
 }
 
 .formGrid3 {
@@ -314,13 +336,14 @@
   border: 1px solid var(--color-border, #CBD5E1);
   border-radius: 6px;
   outline: none;
-  transition: border-color 150ms ease;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
   font-family: inherit;
 }
 
 .formInput:focus,
 .formSelect:focus {
-  border-color: var(--color-primary, #4F46E5);
+  border-color: var(--color-primary, #EA580C);
+  box-shadow: 0 0 0 2px var(--color-primary-glow, rgba(234, 88, 12, 0.12));
 }
 
 .radioGroup {
@@ -340,7 +363,7 @@
 }
 
 .radioInput {
-  accent-color: var(--color-primary, #0F172A);
+  accent-color: var(--color-primary, #EA580C);
   cursor: pointer;
 }
 
@@ -355,11 +378,11 @@
 }
 
 .checkboxInput {
-  accent-color: var(--color-primary, #0F172A);
+  accent-color: var(--color-primary, #EA580C);
   cursor: pointer;
 }
 
-/* ── Responsive ─────────────────────────────────────────── */
+/* ── Responsive ────────────────────────────────────────── */
 @media (max-width: 1024px) {
   .statsGrid {
     grid-template-columns: repeat(2, 1fr);

@@ -1,0 +1,40 @@
+{
+  "expo": {
+    "name": "ACQAD Guardian",
+    "slug": "acqad-guardian",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "acqad-guardian",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#111014"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.acqad.guardian"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#111014"
+      },
+      "package": "com.acqad.guardian"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
+

@@ -1,7 +1,10 @@
+/* ── Minimalist Teacher Messages CSS — ACQAD ── */
+
 .container {
-  padding: 1.5rem;
+  padding: 0 0 3rem 0;
   max-width: 1200px;
   margin: 0 auto;
+  font-family: var(--font-sans), 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 .headerRow {
@@ -15,6 +18,7 @@
   font-size: 1.5rem;
   font-weight: 700;
   color: var(--color-text, #0F172A);
+  letter-spacing: -0.02em;
   margin: 0;
 }
 
@@ -24,8 +28,8 @@
   gap: 0.5rem;
   background: var(--color-surface, #FFFFFF);
   border: 1px solid var(--color-border, #E2E8F0);
-  border-radius: 10px;
-  padding: 0.6rem 0.85rem;
+  border-radius: var(--radius-sm, 6px);
+  padding: 0.5rem 0.85rem;
   margin-bottom: 1.25rem;
 }
 
@@ -33,9 +37,12 @@
   border: none;
   background: transparent;
   outline: none;
-  font-size: 0.875rem;
+  font-size: .875rem;
+  font-family: inherit;
   width: 100%;
   color: var(--color-text, #0F172A);
+  min-height: 42px;
+  border-radius: 8px;
 }
 
 .threadsGrid {
@@ -44,9 +51,10 @@
   gap: 1.25rem;
   background: var(--color-surface, #FFFFFF);
   border: 1px solid var(--color-border, #E2E8F0);
-  border-radius: 14px;
+  border-radius: var(--radius-md, 8px);
   overflow: hidden;
   min-height: 580px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
 }
 
 @media (max-width: 768px) {
@@ -63,13 +71,14 @@
 }
 
 .threadItem {
-  padding: 1rem;
+  padding: 0.875rem 1rem;
   border-bottom: 1px solid var(--color-border, #E2E8F0);
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: background var(--duration-fast, 120ms) ease;
   display: flex;
   gap: 0.75rem;
   align-items: flex-start;
+  border-left: 3px solid transparent;
 }
 
 .threadItem:hover {
@@ -77,21 +86,22 @@
 }
 
 .threadItemActive {
-  background: #EFF6FF;
-  border-left: 3px solid #165AF6;
+  background: rgba(234, 88, 12, 0.05);
+  border-left-color: var(--color-primary, #EA580C);
 }
 
 .avatar {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background: #DBEAFE;
-  color: #1D4ED8;
+  background: #0B0D11;
+  color: #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.9375rem;
+  font-size: 0.8125rem;
   flex-shrink: 0;
 }
 
@@ -103,12 +113,13 @@
 .threadNameRow {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: baseline;
   margin-bottom: 0.2rem;
+  gap: 0.5rem;
 }
 
 .senderName {
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: #0F172A;
   white-space: nowrap;
@@ -117,20 +128,30 @@
 }
 
 .timeLabel {
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   color: #94A3B8;
+  font-variant-numeric: tabular-nums;
   flex-shrink: 0;
 }
 
 .wardLabel {
-  font-size: 0.75rem;
-  color: #64748B;
+  font-size: 0.6875rem;
+  color: var(--color-primary, #EA580C);
+  background: rgba(234, 88, 12, 0.08);
+  border: 1px solid rgba(234, 88, 12, 0.15);
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  display: inline-block;
   margin-bottom: 0.25rem;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .lastMsg {
-  font-size: 0.8125rem;
-  color: #475569;
+  font-size: 0.75rem;
+  color: #64748B;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -141,6 +162,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  background: #FFFFFF;
 }
 
 .chatHeader {
@@ -150,14 +172,16 @@
 }
 
 .chatHeaderTitle {
-  font-size: 1rem;
+  font-size: 0.9375rem;
   font-weight: 700;
+  letter-spacing: -0.01em;
   color: #0F172A;
 }
 
 .chatHeaderSub {
   font-size: 0.75rem;
   color: #64748B;
+  margin-top: 0.15rem;
 }
 
 .chatMessages {
@@ -173,12 +197,14 @@
 
 .bubbleTeacher {
   align-self: flex-end;
-  background: #165AF6;
+  background: var(--color-primary, #EA580C);
   color: #FFFFFF;
   padding: 0.75rem 1rem;
-  border-radius: 12px 12px 2px 12px;
+  border-radius: 8px 8px 2px 8px;
   max-width: 75%;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  box-shadow: 0 2px 6px rgba(234, 88, 12, 0.2);
 }
 
 .bubbleGuardian {
@@ -187,42 +213,54 @@
   color: #0F172A;
   border: 1px solid #E2E8F0;
   padding: 0.75rem 1rem;
-  border-radius: 12px 12px 12px 2px;
+  border-radius: 8px 8px 8px 2px;
   max-width: 75%;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 .chatInputRow {
-  padding: 1rem 1.25rem;
+  padding: 0.875rem 1.25rem;
   background: #FFFFFF;
   border-top: 1px solid var(--color-border, #E2E8F0);
   display: flex;
   gap: 0.75rem;
+  align-items: center;
 }
 
 .chatInput {
   flex: 1;
-  padding: 0.6rem 0.85rem;
+  padding: 0.55rem 0.85rem;
   border: 1px solid var(--color-border, #CBD5E1);
   border-radius: 8px;
-  font-size: 0.875rem;
+  font-size: .875rem;
+  font-family: inherit;
   outline: none;
+  transition: border-color var(--duration-fast, 120ms) ease, box-shadow var(--duration-fast, 120ms) ease;
+  min-height: 42px;
 }
 
 .chatInput:focus {
-  border-color: #165AF6;
+  border-color: var(--color-primary, #EA580C);
+  box-shadow: 0 0 0 3px var(--color-primary-glow, rgba(234, 88, 12, 0.12));
 }
 
 .sendBtn {
-  padding: 0.6rem 1.25rem;
-  background: #165AF6;
+  padding: 0.55rem 1.25rem;
+  background: var(--color-primary, #EA580C);
   color: #FFFFFF;
   border: none;
-  border-radius: 8px;
-  font-size: 0.875rem;
+  border-radius: var(--radius-sm, 6px);
+  font-size: 0.8125rem;
+  font-family: inherit;
   font-weight: 600;
   cursor: pointer;
+  transition: background var(--duration-fast, 120ms) ease;
+}
+
+.sendBtn:hover:not(:disabled) {
+  background: #C2410C;
 }
 
 .sendBtn:disabled {

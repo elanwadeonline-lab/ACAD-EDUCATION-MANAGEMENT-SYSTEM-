@@ -1,0 +1,191 @@
+[
+  {
+    "page": "frontend\\app\\ADMIN\\academic-sessions\\page.tsx",
+    "components": [
+      "timelineCard"
+    ],
+    "hasApi": true,
+    "hasForms": true
+  },
+  {
+    "page": "frontend\\app\\ADMIN\\annual-results\\page.tsx",
+    "components": [
+      "KPI cards",
+      "form controls",
+      "tableCard"
+    ],
+    "hasApi": true,
+    "hasForms": false
+  },
+  {
+    "page": "frontend\\app\\ADMIN\\content\\page.tsx",
+    "components": [
+      "KPI cards",
+      "contentCard",
+      "form controls"
+    ],
+    "hasApi": false,
+    "hasForms": true
+  },
+  {
+    "page": "frontend\\app\\ADMIN\\dashboard\\page.tsx",
+    "components": [
+      "KPI cards",
+      "tableCard"
+    ],
+    "hasApi": true,
+    "hasForms": false
+  },
+  {
+    "page": "frontend\\app\\ADMIN\\license\\page.tsx",
+    "components": [
+      "heroCard",
+      "fingerprintCard",
+      "uploadCard"
+    ],
+    "hasApi": false,
+    "hasForms": false
+  },
+  {
+    "page": "frontend\\app\\ADMIN\\messages\\page.tsx",
+    "components": [
+      "form controls"
+    ],
+    "hasApi": true,
+    "hasForms": true
+  },
+  {
+    "page": "frontend\\app\\ADMIN\\settings\\page.tsx",
+    "components": [
+      "card",
+      "form controls"
+    ],
+    "hasApi": true,
+    "hasForms": false
+  },
+  {
+    "page": "frontend\\app\\ADMIN\\subjects\\page.tsx",
+    "components": [
+      "KPI cards",
+      "form controls",
+      "tableCard"
+    ],
+    "hasApi": true,
+    "hasForms": true
+  },
+  {
+    "page": "frontend\\app\\ADMIN\\timetable\\page.tsx",
+    "components": [
+      "KPI cards",
+      "form controls",
+      "tableCard"
+    ],
+    "hasApi": true,
+    "hasForms": true
+  },
+  {
+    "page": "frontend\\app\\ADMIN\\users\\page.tsx",
+    "components": [
+      "form controls"
+    ],
+    "hasApi": true,
+    "hasForms": true
+  },
+  {
+    "page": "frontend\\app\\teacher\\assignments\\page.tsx",
+    "components": [
+      "KPI cards",
+      "courseCard"
+    ],
+    "hasApi": true,
+    "hasForms": true
+  },
+  {
+    "page": "frontend\\app\\teacher\\attendance\\page.tsx",
+    "components": [
+      "KPI cards",
+      "rosterCard"
+    ],
+    "hasApi": true,
+    "hasForms": false
+  },
+  {
+    "page": "frontend\\app\\teacher\\class-grading\\page.tsx",
+    "components": [
+      "KPI cards",
+      "studentCard"
+    ],
+    "hasApi": true,
+    "hasForms": false
+  },
+  {
+    "page": "frontend\\app\\teacher\\content\\page.tsx",
+    "components": [
+      "KPI cards",
+      "form controls",
+      "packageCard",
+      "editorCard"
+    ],
+    "hasApi": true,
+    "hasForms": false
+  },
+  {
+    "page": "frontend\\app\\teacher\\dashboard\\page.tsx",
+    "components": [
+      "courseCard",
+      "studentCard",
+      "inquiryCard"
+    ],
+    "hasApi": true,
+    "hasForms": false
+  },
+  {
+    "page": "frontend\\app\\teacher\\grading\\page.tsx",
+    "components": [
+      "KPI cards"
+    ],
+    "hasApi": true,
+    "hasForms": true
+  },
+  {
+    "page": "frontend\\app\\teacher\\messages\\page.tsx",
+    "components": [
+      "form controls"
+    ],
+    "hasApi": true,
+    "hasForms": true
+  },
+  {
+    "page": "frontend\\app\\teacher\\questions\\page.tsx",
+    "components": [
+      "KPI cards",
+      "qCard"
+    ],
+    "hasApi": true,
+    "hasForms": true
+  },
+  {
+    "page": "frontend\\app\\teacher\\results\\page.tsx",
+    "components": [
+      "KPI cards"
+    ],
+    "hasApi": true,
+    "hasForms": false
+  },
+  {
+    "page": "frontend\\app\\teacher\\settings\\page.tsx",
+    "components": [
+      "card"
+    ],
+    "hasApi": false,
+    "hasForms": false
+  },
+  {
+    "page": "frontend\\app\\teacher\\students\\page.tsx",
+    "components": [
+      "KPI cards"
+    ],
+    "hasApi": true,
+    "hasForms": true
+  }
+]

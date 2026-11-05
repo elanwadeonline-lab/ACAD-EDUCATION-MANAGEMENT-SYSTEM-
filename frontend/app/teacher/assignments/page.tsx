@@ -150,7 +150,7 @@ function TeacherAssignments() {
         <div className={styles.statCard}>
           <div className={styles.statTop}>
             <span className={styles.statLabel}>Configured Tasks</span>
-            <div className={styles.statIcon} style={{ color: "#06B6D4" }}><BookIcon width="15" height="15" /></div>
+            <div className={styles.statIcon} ><BookIcon width="15" height="15" /></div>
           </div>
           <div>
             <div className={styles.statValue}>{subjects.length}</div>
@@ -161,7 +161,7 @@ function TeacherAssignments() {
         <div className={styles.statCard}>
           <div className={styles.statTop}>
             <span className={styles.statLabel}>Published Tasks</span>
-            <div className={styles.statIcon} style={{ color: "#10B981" }}><CheckCircleIcon width="15" height="15" /></div>
+            <div className={styles.statIcon} ><CheckCircleIcon width="15" height="15" /></div>
           </div>
           <div>
             <div className={styles.statValue}>{published}</div>
@@ -172,7 +172,7 @@ function TeacherAssignments() {
         <div className={styles.statCard}>
           <div className={styles.statTop}>
             <span className={styles.statLabel}>Draft Items</span>
-            <div className={styles.statIcon} style={{ color: "#6366F1" }}><SubjectIcon width="15" height="15" /></div>
+            <div className={styles.statIcon} ><SubjectIcon width="15" height="15" /></div>
           </div>
           <div>
             <div className={styles.statValue}>{drafts}</div>
@@ -183,7 +183,7 @@ function TeacherAssignments() {
         <div className={styles.statCard}>
           <div className={styles.statTop}>
             <span className={styles.statLabel}>Assessment Mode</span>
-            <div className={styles.statIcon} style={{ color: "#F97316" }}><UsersIcon width="15" height="15" /></div>
+            <div className={styles.statIcon} ><UsersIcon width="15" height="15" /></div>
           </div>
           <div>
             <div className={styles.statValue} style={{ fontSize: "1.125rem" }}>
@@ -363,3 +363,4 @@ function TeacherAssignments() {
     </div>
   );
 }
+

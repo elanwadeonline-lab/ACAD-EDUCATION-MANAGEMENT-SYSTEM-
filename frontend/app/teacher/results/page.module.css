@@ -1,4 +1,4 @@
-/* ── Minimalist Teacher Results CSS (Neutral-First) ── */
+/* ── Minimalist Teacher Results CSS — ACQAD ── */
 
 .container {
   display: flex;
@@ -6,6 +6,7 @@
   gap: 1.5rem;
   width: 100%;
   max-width: 100%;
+  font-family: var(--font-sans), 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 /* ── Minimalist KPI Metrics Row ─────────────────────────── */
@@ -17,18 +18,20 @@
 
 .statCard {
   background: var(--color-surface, #FFFFFF);
-  border: 1px solid var(--color-border, #E2E8F0);
-  border-radius: 12px;
-  padding: 1rem 1.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 22px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   gap: 0.5rem;
-  transition: border-color 150ms ease;
+  box-shadow: none;
+  transition: border-color var(--duration-fast, 120ms) ease, box-shadow var(--duration-fast, 120ms) ease;
 }
 
 .statCard:hover {
   border-color: var(--color-border-hover, #CBD5E1);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
 }
 
 .statTop {
@@ -47,31 +50,36 @@
 }
 
 .statIcon {
-  color: var(--color-muted-2, #94A3B8);
+  color: var(--color-muted);
   display: flex;
   align-items: center;
+  background: transparent;
+  border: 0;
 }
 
 .statValue {
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-size: 2rem;
+  font-weight: 600;
   font-family: var(--font-mono, monospace);
+  font-variant-numeric: tabular-nums;
   color: var(--color-text, #0F172A);
   line-height: 1.1;
-  letter-spacing: -0.03em;
+  letter-spacing: -.045em;
 }
 
 .statFootnote {
   font-size: 0.75rem;
   color: var(--color-muted, #64748B);
+  margin-top: 0.2rem;
 }
 
 /* ── Table Container ────────────────────────────────────── */
 .tableContainer {
   background: var(--color-surface, #FFFFFF);
   border: 1px solid var(--color-border, #E2E8F0);
-  border-radius: 12px;
+  border-radius: var(--radius-md, 8px);
   overflow: hidden;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
 }
 
 .studentCell {
@@ -84,14 +92,14 @@
   width: 28px;
   height: 28px;
   border-radius: 6px;
-  background: var(--color-surface-2, #F1F5F9);
-  border: 1px solid var(--color-border, #E2E8F0);
+  background: #0B0D11;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 0.75rem;
   font-weight: 700;
-  color: var(--color-text, #0F172A);
+  color: #FFFFFF;
   flex-shrink: 0;
 }
 
@@ -103,12 +111,14 @@
 
 .scoreMono {
   font-family: var(--font-mono, monospace);
+  font-variant-numeric: tabular-nums;
   font-weight: 600;
   color: var(--color-text, #0F172A);
 }
 
 .scoreTotalMono {
   font-family: var(--font-mono, monospace);
+  font-variant-numeric: tabular-nums;
   font-size: 0.75rem;
   color: var(--color-muted, #64748B);
 }
@@ -124,7 +134,7 @@
 
 .pctFill {
   height: 100%;
-  background: var(--color-text, #0F172A);
+  background: var(--color-primary, #EA580C);
   border-radius: 2px;
 }
 
@@ -155,7 +165,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--color-primary, #0F172A);
+  background: var(--color-primary, #EA580C);
   opacity: 0.8;
 }
 
@@ -171,3 +181,13 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Decorative gold wave: no metric values encoded. */
+.statCard { background-color:var(--color-surface); background-image:url("/gold-card-wave.svg"); background-repeat:no-repeat; background-position:right bottom; background-size:220px auto; }
+.ledgerHeader { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:18px 0; }
+.ledgerHeader h2 { font-size:1rem; font-weight:500; }
+.ledgerHeader span { font-size:.8125rem; color:var(--color-muted); }
+.tableContainer { border:0; box-shadow:none; background:none; }
+.scoreCell { gap:8px; }
+.pctBar { display:none; }
+.gradeBadge { background:none; border:0; font-weight:500; }

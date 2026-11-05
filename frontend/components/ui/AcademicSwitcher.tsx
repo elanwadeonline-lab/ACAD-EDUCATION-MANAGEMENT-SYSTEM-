@@ -8,8 +8,14 @@ import {
   CheckIcon,
 } from "../icons/Icons";
 import styles from "./AcademicSwitcher.module.css";
+import { CalendarDays, ChevronDown, Check, useStudentIconScope } from "../icons/StudentIcons";
+
+const defaultIcons = { CalendarIcon, ChevronDownIcon, CheckIcon };
 
 export function AcademicSwitcher() {
+  const studentIcons = useStudentIconScope();
+  const {CalendarIcon, ChevronDownIcon, CheckIcon} = studentIcons
+    ? {CalendarIcon: CalendarDays, ChevronDownIcon: ChevronDown, CheckIcon: Check} : defaultIcons;
   const {
     sessions,
     terms,
@@ -24,7 +30,6 @@ export function AcademicSwitcher() {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Close when clicking outside
   useEffect(() => {
     const handleOutsideClick = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
@@ -42,7 +47,7 @@ export function AcademicSwitcher() {
 
   return (
     <div className={styles.container} ref={containerRef}>
-      {/* Sleek Minimalist Trigger Button */}
+      {/* Interactive Period Switcher Control */}
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
@@ -54,6 +59,7 @@ export function AcademicSwitcher() {
           <CalendarIcon width="12" height="12" className={styles.triggerIcon} />
         </span>
 
+        <span style={{ fontSize: "0.6875rem", color: "#64748B", fontWeight: 500 }}>Period:</span>
         <span className={styles.labelSession}>{sessionName}</span>
         <span className={styles.separator}>·</span>
         <span className={styles.labelTerm}>{termName}</span>
@@ -68,9 +74,8 @@ export function AcademicSwitcher() {
       {/* Popover Dropdown Panel */}
       {open && (
         <div className={styles.dropdownPanel}>
-          {/* Header */}
           <div className={styles.panelHeader}>
-            <span className={styles.panelTitle}>Academic Session &amp; Term</span>
+            <span className={styles.panelTitle}>Switch Academic Period</span>
           </div>
 
           {/* Sessions Column */}

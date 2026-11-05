@@ -1,0 +1,9 @@
+.wrapper { --avatar-size: 48px; position: relative; display: inline-flex; width: var(--avatar-size); height: var(--avatar-size); flex-shrink: 0; vertical-align: middle; }
+.wrapper[data-size=xs] { --avatar-size: 28px; }
+.wrapper[data-size=sm] { --avatar-size: 36px; }
+.wrapper[data-size=lg] { --avatar-size: 64px; }
+.wrapper[data-size=xl] { --avatar-size: 88px; }
+.avatar { display: inline-flex; align-items: center; justify-content: center; width: 100%; height: 100%; border-radius: 50%; overflow: hidden; background: var(--g-primary-subtle, #FFFBEB); color: var(--g-primary, #92400E); border: 1px solid var(--g-border, #E5E7EB); }
+.image { width: 100%; height: 100%; object-fit: cover; }
+.fallback { font-size: calc(var(--avatar-size) * .32); font-weight: 500; line-height: 1; }
+.badge { position: absolute; right: 0; bottom: 0; height: 8px; width: 8px; border-radius: 50%; background: var(--g-success); border: 2px solid var(--g-surface); }

@@ -168,7 +168,7 @@ describe("Academic & Grading HTTP API Level Audit", () => {
 
   test("API-4: Timetables API Scoping by Session & Term", async () => {
     // Create Subject and Timetable
-    const sub = queries.createSubject.run("Physics", `PHY_${TS}`, "First Term", 60, teacherId, 1, "Physics", `Class_${TS}`, null, `Session_${TS}`, "exam", "None", 1, sessionId, term1Id) as any;
+    const sub = queries.createSubject.run("Physics", `PHY_${TS}`, "First Term", 60, teacherId, 1, "Physics", `Class_${TS}`, null, `Session_${TS}`, "exam", "None", 1, 0, sessionId, term1Id, "school_exam", "immediate", null) as any;
     const subId = Number(sub.lastInsertRowid);
 
     queries.createTimetable.run(subId, `Class_${TS}`, null, "A", "2026-12-11", "10:00", "11:00", 60, "CBT", 1);
@@ -189,5 +189,8 @@ describe("Academic & Grading HTTP API Level Audit", () => {
 
     const closedTerm = queries.getAcademicTermById.get(term1Id) as any;
     expect(closedTerm.status).toBe("archived");
+
+    // Re-activate term2Id so subsequent test files in the suite have an active academic term
+    queries.activateAcademicTerm.run(term2Id);
   });
 });

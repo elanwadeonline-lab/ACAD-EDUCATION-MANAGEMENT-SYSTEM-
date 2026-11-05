@@ -1,6 +1,22 @@
 import type { User, Subject, Question, ExamResult, ActiveExamData, Config, AuditLog, EnrolledStudent } from "./types";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || ""; // Supports external backends on Vercel
+const API_BASE = (() => {
+  const envUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
+  if (envUrl) {
+    if (typeof window !== "undefined") {
+      // If configured URL is loopback (localhost/127.0.0.1), but browser is visiting
+      // via LAN IP, mDNS, or domain name (e.g. 10.x.x.x, exampool.local, exampool.com),
+      // hardcoding localhost will break all LAN clients and trigger browser PNA blocking.
+      // Therefore, in the browser, always use relative "" when on the same host.
+      const isLoopbackConfig = /^(https?:\/\/)?(localhost|127\.0\.0\.1)(:\d+)?$/i.test(envUrl);
+      if (isLoopbackConfig) {
+        return "";
+      }
+    }
+    return envUrl;
+  }
+  return "";
+})();
 
 export { API_BASE };
 
@@ -29,6 +45,148 @@ export type SessionInfo = {
   setupRequired: boolean;
 };
 
+export type ActiveSessionItem = {
+  jti: string;
+  device_id: number | null;
+  device_name: string | null;
+  ip: string | null;
+  user_agent: string | null;
+  last_used: string | null;
+  created_at: string;
+  expires_at: string;
+  is_current: boolean;
+};
+
+const TAB_TOKEN_KEY = "exampool_tab_token";
+const TAB_ROLE_KEY = "exampool_tab_role";
+const TAB_SESSION_ID_KEY = "exampool_tab_session_id";
+
+export function inferPortalRoleFromPath(pathname?: string): SessionUser["role"] | null {
+  const p = pathname ?? (typeof window !== "undefined" ? window.location.pathname : "");
+  if (!p) return null;
+  if (p.startsWith("/ADMIN") || p.startsWith("/operator")) return "operator";
+  if (p.startsWith("/teacher")) return "teacher";
+  if (p.startsWith("/guardian")) return "guardian";
+  if (p.startsWith("/student") || p === "/" || p === "") return "student";
+  return null;
+}
+
+export function getPortalLoginRoute(role?: SessionUser["role"] | null): string {
+  const effectiveRole = role ?? inferPortalRoleFromPath();
+  if (effectiveRole === "operator") return "/ADMIN/";
+  if (effectiveRole === "teacher") return "/teacher/";
+  if (effectiveRole === "guardian") return "/guardian/";
+  return "/";
+}
+
+export function getTabToken(role?: SessionUser["role"] | null): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const portalRole = role ?? inferPortalRoleFromPath();
+    if (portalRole) {
+      const roleToken = window.sessionStorage.getItem(`${TAB_TOKEN_KEY}_${portalRole}`);
+      if (roleToken) return roleToken;
+      const activeRole = window.sessionStorage.getItem(TAB_ROLE_KEY);
+      if (activeRole === portalRole) {
+        return window.sessionStorage.getItem(TAB_TOKEN_KEY);
+      }
+      return null;
+    }
+    return window.sessionStorage.getItem(TAB_TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function getTabRole(): SessionUser["role"] | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const r = window.sessionStorage.getItem(TAB_ROLE_KEY);
+    if (r === "student" || r === "teacher" || r === "operator" || r === "guardian") return r;
+    return inferPortalRoleFromPath();
+  } catch {
+    return inferPortalRoleFromPath();
+  }
+}
+
+export function setTabSession(
+  token?: string | null,
+  role?: SessionUser["role"] | null,
+  sessionId?: string | null,
+): void {
+  if (typeof window === "undefined") return;
+  try {
+    if (token) {
+      window.sessionStorage.setItem(TAB_TOKEN_KEY, token);
+      if (role) {
+        window.sessionStorage.setItem(`${TAB_TOKEN_KEY}_${role}`, token);
+      }
+    }
+    if (role) {
+      window.sessionStorage.setItem(TAB_ROLE_KEY, role);
+    }
+    if (sessionId) {
+      window.sessionStorage.setItem(TAB_SESSION_ID_KEY, sessionId);
+      if (role) {
+        window.sessionStorage.setItem(`${TAB_SESSION_ID_KEY}_${role}`, sessionId);
+      }
+    }
+  } catch {}
+}
+
+export function clearTabSession(role?: SessionUser["role"] | null): void {
+  if (typeof window === "undefined") return;
+  try {
+    const targetRole = role ?? inferPortalRoleFromPath() ?? getTabRole();
+    if (targetRole) {
+      window.sessionStorage.removeItem(`${TAB_TOKEN_KEY}_${targetRole}`);
+      window.sessionStorage.removeItem(`${TAB_SESSION_ID_KEY}_${targetRole}`);
+      if (window.sessionStorage.getItem(TAB_ROLE_KEY) === targetRole) {
+        window.sessionStorage.removeItem(TAB_TOKEN_KEY);
+        window.sessionStorage.removeItem(TAB_ROLE_KEY);
+        window.sessionStorage.removeItem(TAB_SESSION_ID_KEY);
+      }
+    } else {
+      window.sessionStorage.removeItem(TAB_TOKEN_KEY);
+      window.sessionStorage.removeItem(TAB_ROLE_KEY);
+      window.sessionStorage.removeItem(TAB_SESSION_ID_KEY);
+    }
+  } catch {}
+}
+
+export function buildAuthHeaders(
+  extra?: HeadersInit,
+  explicitPortalRole?: SessionUser["role"] | null,
+  includeJsonContentType = true,
+): Record<string, string> {
+  const headers: Record<string, string> = {};
+  if (includeJsonContentType) {
+    headers["Content-Type"] = "application/json";
+  }
+  const portalRole = explicitPortalRole ?? inferPortalRoleFromPath() ?? getTabRole();
+  if (portalRole) {
+    headers["X-Portal-Role"] = portalRole;
+  }
+  const tabToken = getTabToken(portalRole);
+  if (tabToken) {
+    headers["Authorization"] = `Bearer ${tabToken}`;
+  }
+  if (extra) {
+    if (extra instanceof Headers) {
+      extra.forEach((v, k) => {
+        headers[k] = v;
+      });
+    } else if (Array.isArray(extra)) {
+      for (const [k, v] of extra) {
+        headers[k] = v;
+      }
+    } else {
+      Object.assign(headers, extra);
+    }
+  }
+  return headers;
+}
+
 function isSessionUser(value: unknown): value is SessionUser {
   if (!value || typeof value !== "object") return false;
   const o = value as Record<string, unknown>;
@@ -42,18 +200,33 @@ function isSessionUser(value: unknown): value is SessionUser {
 }
 
 /** Session probe: never navigates. Used on initial load and /setup so 401/503 do not cause redirect loops. */
-export async function getSession(): Promise<SessionInfo> {
-  const res = await fetch(API_BASE + "/api/auth/me", {
-    credentials: "include",
-    cache: "no-store",
-    headers: { "Content-Type": "application/json" },
-  });
+export async function getSession(explicitPortalRole?: SessionUser["role"] | null): Promise<SessionInfo> {
+  // Never hang the app boot: abort after 10s so AuthProvider.init() always
+  // settles (callers treat abort as logged-out, login page shows server status).
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
+  let res: Response;
+  try {
+    res = await fetch(API_BASE + "/api/auth/me", {
+      credentials: "include",
+      cache: "no-store",
+      headers: buildAuthHeaders(undefined, explicitPortalRole),
+      signal: controller.signal,
+    });
+  } catch (err) {
+    clearTimeout(timeoutId);
+    throw new Error(err instanceof DOMException && err.name === "AbortError" ? "Server did not respond in time" : "Server unreachable");
+  }
+  clearTimeout(timeoutId);
   if (res.status === 503) {
     const body = await res.json().catch(() => ({}));
     const setup = (body as { setup?: boolean }).setup;
     return { user: null, setupRequired: setup !== false };
   }
-  if (res.status === 401) return { user: null, setupRequired: false };
+  if (res.status === 401) {
+    clearTabSession(explicitPortalRole);
+    return { user: null, setupRequired: false };
+  }
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: "Unknown error" }));
     throw new Error((err as { error?: string }).error || `HTTP ${res.status}`);
@@ -77,15 +250,13 @@ export async function fetchWithAuth<T = any>(url: string, options: RequestInit =
     ...options,
     credentials: "include",
     cache: "no-store",
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
+    headers: buildAuthHeaders(options.headers),
   });
 
   if (res.status === 401) {
     if (redirectOn401) {
-      if (!isSetupRoute()) window.location.href = "/";
+      clearTabSession();
+      if (!isSetupRoute()) window.location.href = getPortalLoginRoute();
       return null as unknown as T;
     }
     // redirectOn401 is false (e.g. login endpoint): throw with the server's error message
@@ -145,7 +316,15 @@ export const api = {
   register: (data: any) => fetchWithAuth<any>("/api/auth/register", { method: "POST", body: JSON.stringify(data) }),
   login: (data: any) => fetchWithAuth<any>("/api/auth/login", { method: "POST", body: JSON.stringify(data) }, { redirectOn401: false }),
   me: () => getSession().then((s) => s.user),
-  logout: () => fetchWithAuth<any>("/api/auth/logout", { method: "POST" }),
+  logout: () => fetchWithAuth<any>("/api/auth/logout", { method: "POST" }, { redirectOn401: false }),
+  getActiveSessions: () => fetchWithAuth<{ sessions: ActiveSessionItem[] }>("/api/auth/sessions"),
+  revokeSession: (jti: string) =>
+    fetchWithAuth<{ revoked: boolean; jti: string }>(`/api/auth/sessions/${encodeURIComponent(jti)}`, { method: "DELETE" }),
+  logoutAllSessions: (keepCurrent = false) =>
+    fetchWithAuth<{ revoked_all: boolean; keep_current: boolean }>("/api/auth/logout-all", {
+      method: "POST",
+      body: JSON.stringify({ keep_current: keepCurrent }),
+    }),
   getSubjects: (sessionId?: number, termId?: number) => fetchWithAuth<Subject[]>(`/api/subjects${buildAcademicQuery(sessionId, termId)}`),
   getSubjectsWithCounts: (sessionId?: number, termId?: number) => fetchWithAuth<(Subject & { question_count: number })[]>(`/api/subjects/with-question-counts${buildAcademicQuery(sessionId, termId)}`),
   getActiveAcademic: () => fetchWithAuth<{ activeSession: any; activeTerm: any }>("/api/academic/active"),
@@ -404,12 +583,17 @@ export const api = {
     // [SECURITY FIX VULN-13] Use credentials: "include" so the HttpOnly session cookie
     // is sent automatically. Removed localStorage.getItem("exampool_token") — storing
     // JWTs in localStorage exposes them to any XSS, including VULN-12 payloads.
-    const res = await fetch(process.env.NEXT_PUBLIC_API_URL ? `${process.env.NEXT_PUBLIC_API_URL}/api/upload` : "/api/upload", {
+    const targetUploadUrl = API_BASE ? `${API_BASE}/api/upload` : "/api/upload";
+    const res = await fetch(targetUploadUrl, {
       method: "POST",
       credentials: "include",
+      headers: buildAuthHeaders(undefined, undefined, false),
       body: formData,
     });
-    if (!res.ok) throw new Error("Upload failed");
+    if (!res.ok) {
+      const errJson = await res.json().catch(() => null);
+      throw new Error(errJson?.error || "Upload failed");
+    }
     const json = await res.json();
     return json.data as { url: string };
   },

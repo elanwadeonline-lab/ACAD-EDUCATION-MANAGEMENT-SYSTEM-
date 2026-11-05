@@ -4,9 +4,9 @@ import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "../../hooks/useAuth";
-import { fetchWithAuth, API_BASE } from "../../lib/api";
+import { fetchWithAuth, buildAuthHeaders, API_BASE } from "../../lib/api";
 import { DigitalClock } from "./DigitalClock";
-import { AcadBrandIcon } from "../icons/Icons";
+import { AcadBrandIcon, BellIcon, ChevronDownIcon, SettingsIcon, LogOutIcon, StudentNotificationSymbol } from "../icons/StudentIcons";
 import styles from "./StudentTopBar.module.css";
 
 type StudentNotification = {
@@ -28,24 +28,17 @@ function timeAgo(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
 }
 
-function getNotificationIcon(type: string): string {
-  switch (type) {
-    case "exam":
-    case "subject_published":
-      return "📝";
-    case "exam_submitted":
-      return "✅";
-    case "results":
-    case "result_released":
-      return "📊";
-    case "attendance":
-      return "📅";
-    case "remark_added":
-      return "💬";
-    default:
-      return "📢";
-  }
+function getNotificationIcon(type: string): React.ReactNode {
+  return <StudentNotificationSymbol type={type} size={15} />;
 }
+
+const STUDENT_NAV_ITEMS = [
+  { href: "/student/dashboard", label: "Overview" },
+  { href: "/student/results", label: "Results & Analytics" },
+  { href: "/student/report-card", label: "Report Card" },
+  { href: "/student/practice", label: "Practice" },
+  { href: "/student/offline-assignments", label: "Offline Hub" },
+];
 
 export function StudentTopBar() {
   const { user, logout } = useAuth();
@@ -92,6 +85,7 @@ export function StudentTopBar() {
       try {
         const response = await fetch(`${API_BASE}/api/notifications/stream`, {
           credentials: "include",
+          headers: buildAuthHeaders(undefined, "student", false),
           signal: controller.signal,
         });
 
@@ -213,14 +207,39 @@ export function StudentTopBar() {
   return (
     <header className={styles.navbar}>
       <div className={styles.navContainer}>
-        {/* Left: Brand Identity */}
+        {/* Left: Brand Identity & Primary Portal Navigation */}
         <div className={styles.brandGroup}>
           <Link href="/student/dashboard" className={styles.brandLink}>
             <div className={styles.brandIcon}>
-              <AcadBrandIcon width={18} height={18} stroke="#FFFFFF" color="#FFFFFF" />
+              <AcadBrandIcon width={26} height={26} />
             </div>
-            <span className={styles.brandText}>ACAD</span>
+            <span className={styles.brandText}>Acqad</span>
           </Link>
+
+          <nav aria-label="Student portal navigation" className={styles.portalNav}>
+            {STUDENT_NAV_ITEMS.map((item) => {
+              const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  style={{
+                    fontSize: "0.8125rem",
+                    fontWeight: isActive ? 600 : 500,
+                    color: isActive ? "#92400E" : "#475569",
+                    background: isActive ? "rgba(146, 64, 14, 0.08)" : "transparent",
+                    padding: "0.375rem 0.6875rem",
+                    borderRadius: "6px",
+                    textDecoration: "none",
+                    transition: "background 120ms ease, color 120ms ease",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
         </div>
 
         {/* Right: Real-Time Clock, Notifications & Candidate Account Options */}
@@ -240,10 +259,7 @@ export function StudentTopBar() {
               aria-expanded={notifyMenuOpen}
               onClick={() => setNotifyMenuOpen((v) => !v)}
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-              </svg>
+              <BellIcon width={16} height={16} />
               {unreadCount > 0 && (
                 <span className={styles.notifyBadge}>
                   {unreadCount > 99 ? "99+" : unreadCount}
@@ -302,7 +318,7 @@ export function StudentTopBar() {
                   <Link
                     href="/student/notifications"
                     onClick={() => setNotifyMenuOpen(false)}
-                    style={{ fontSize: "0.75rem", fontWeight: 600, color: "#165AF6", textDecoration: "none" }}
+                    style={{ fontSize: "0.75rem", fontWeight: 600, color: "#92400E", textDecoration: "none" }}
                   >
                     View all notifications →
                   </Link>
@@ -331,17 +347,7 @@ export function StudentTopBar() {
                   <span className={styles.userGradeSub}>{user.grade}</span>
                 )}
               </div>
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className={`${styles.chevron} ${userMenuOpen ? styles.chevronOpen : ""}`}
-              >
-                <polyline points="6 9 12 15 18 9" />
-              </svg>
+              <ChevronDownIcon width={12} height={12} className={`${styles.chevron} ${userMenuOpen ? styles.chevronOpen : ""}`} />
             </button>
 
             {userMenuOpen && (
@@ -361,10 +367,7 @@ export function StudentTopBar() {
                   className={styles.menuItem}
                   onClick={() => setUserMenuOpen(false)}
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="12" cy="12" r="3" />
-                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-                  </svg>
+                  <SettingsIcon width={14} height={14} />
                   Profile &amp; Settings
                 </Link>
                 <button
@@ -376,11 +379,7 @@ export function StudentTopBar() {
                     window.location.href = "/";
                   }}
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                    <polyline points="16 17 21 12 16 7" />
-                    <line x1="21" y1="12" x2="9" y2="12" />
-                  </svg>
+                  <LogOutIcon width={14} height={14} />
                   Sign out
                 </button>
               </div>

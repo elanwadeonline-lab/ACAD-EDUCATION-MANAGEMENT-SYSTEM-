@@ -1,4 +1,5 @@
 "use client";
+import { AcqadLogo } from "../../components/brand/AcqadLogo";
 
 import { FormEvent, useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -114,17 +115,9 @@ function RegisterContent() {
     <main className={styles.page}>
       <div className={styles.container}>
         <div className={styles.leftPane}>
-          <div className={styles.brand}>
-            <div className={styles.brandIcon}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-              </svg>
-            </div>
-            ExamPool
-          </div>
+          <div className={styles.brand}><AcqadLogo size="lg" showSubtitle wordmarkWeight={500}/></div>
           <div className={styles.heroText}>
-            <h1>Start your journey with ExamPool.</h1>
+            <h1>Start your journey with Acqad.</h1>
             <p>Join thousands of students, educators, and guardians collaborating for academic excellence.</p>
           </div>
           <div className={styles.decorativeCircles}>
@@ -135,15 +128,7 @@ function RegisterContent() {
 
         <div className={styles.rightPane}>
           <div className={styles.formWrapper}>
-            <div className={styles.mobileBrand}>
-              <div className={styles.brandIconMobile}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-                </svg>
-              </div>
-              ExamPool
-            </div>
+            <div className={styles.mobileBrand}><AcqadLogo size="lg" showSubtitle wordmarkWeight={500}/></div>
             <h2>Create an account</h2>
 
             {successRegId ? (

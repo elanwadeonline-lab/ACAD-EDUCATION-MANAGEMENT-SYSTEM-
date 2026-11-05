@@ -1,3 +1,5 @@
+"use client";
+import { Modal } from "../ui/Modal";
 import { useState, useEffect } from "react";
 import { api } from "../../lib/api";
 
@@ -74,18 +76,7 @@ export function ReviewModal({
   };
 
   return (
-    <div className="overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="modal" style={{ maxWidth: 680, maxHeight: "85vh", overflowY: "auto" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1rem" }}>
-          <div>
-            <h2>Exam Review</h2>
-            <p style={{ color: "var(--color-muted)", fontSize: "0.85rem" }}>
-              {studentName} — {activeSubjectName}
-            </p>
-          </div>
-          <button className="btn btn-ghost btn-sm" onClick={onClose}>✕</button>
-        </div>
-        
+    <Modal open onClose={onClose} title="Review submission" description={`${studentName} · ${activeSubjectName}`} size="lg">
         {error && (
           <div style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 8, padding: "0.6rem 1rem", marginBottom: "1rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <span style={{ color: "var(--color-danger)", fontSize: "0.85rem" }}>{error}</span>
@@ -191,7 +182,6 @@ export function ReviewModal({
             )}
           </>
         ) : null}
-      </div>
-    </div>
+    </Modal>
   );
 }

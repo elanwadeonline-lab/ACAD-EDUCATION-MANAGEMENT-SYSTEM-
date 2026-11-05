@@ -264,8 +264,8 @@ function QuestionsContent() {
       showToast("error", "Please select an image file (PNG, JPG, GIF, WebP).");
       return;
     }
-    if (file.size > 10 * 1024 * 1024) {
-      showToast("error", "Image must be smaller than 10MB.");
+    if (file.size > 30 * 1024 * 1024) {
+      showToast("error", "Image must be smaller than 30MB.");
       return;
     }
     try {
@@ -285,8 +285,8 @@ function QuestionsContent() {
       showToast("error", "Please select an image file (JPG, PNG, GIF, WebP).");
       return;
     }
-    if (file.size > 10 * 1024 * 1024) {
-      showToast("error", "Image must be smaller than 10MB.");
+    if (file.size > 30 * 1024 * 1024) {
+      showToast("error", "Image must be smaller than 30MB.");
       return;
     }
     try {
@@ -316,8 +316,8 @@ function QuestionsContent() {
   const handleDocFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 10 * 1024 * 1024) {
-        showToast("error", "Document must be smaller than 10MB");
+      if (file.size > 30 * 1024 * 1024) {
+        showToast("error", "Document must be smaller than 30MB");
         return;
       }
       try {
@@ -360,7 +360,8 @@ function QuestionsContent() {
 
   const openEditSubject = () => {
     if (isLocked || !subject) return;
-    setSubjDatetime(subject.exam_datetime ? new Date(subject.exam_datetime).toISOString().slice(0, 16) : "");
+    const isUnscheduled = !subject.exam_datetime || String(subject.exam_datetime).startsWith("2099");
+    setSubjDatetime(isUnscheduled ? "" : new Date(subject.exam_datetime as string).toISOString().slice(0, 16));
     setSubjDuration(subject.duration ?? 60);
     setSubjInstructions(subject.instructions ?? "");
     setSubjCanRetake(subject.can_retake !== 0);
@@ -373,13 +374,29 @@ function QuestionsContent() {
     e.preventDefault();
     setSaving(true);
     try {
+      let safeExamDatetime = "2099-01-01T00:00";
+      if (subjDatetime && !subjDatetime.startsWith("2099")) {
+        const d = new Date(subjDatetime);
+        if (!isNaN(d.getTime())) {
+          safeExamDatetime = d.toISOString();
+        }
+      }
+
+      let safeReleaseTime: string | null = null;
+      if (subjResultPolicy === "scheduled" && subjReleaseTime) {
+        const d = new Date(subjReleaseTime);
+        if (!isNaN(d.getTime())) {
+          safeReleaseTime = d.toISOString();
+        }
+      }
+
       await api.updateSubject(subjectId, {
-        exam_datetime: new Date(subjDatetime).toISOString(),
-        duration: Number(subjDuration),
+        exam_datetime: safeExamDatetime,
+        duration: Math.max(1, Number(subjDuration) || 60),
         instructions: subjInstructions,
         can_retake: subjCanRetake ? 1 : 0,
         result_policy: subjResultPolicy,
-        result_release_time: subjResultPolicy === "scheduled" && subjReleaseTime ? new Date(subjReleaseTime).toISOString() : null,
+        result_release_time: safeReleaseTime,
       });
       showToast("success", "Subject settings saved.");
       setEditSubjectOpen(false);
@@ -683,7 +700,7 @@ function QuestionsContent() {
               ) : (
                 <div className={styles.candidatePreviewBox}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem", paddingBottom: "0.5rem", borderBottom: "1px solid var(--color-border)" }}>
-                    <span style={{ fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--color-primary, #4F46E5)" }}>
+                    <span style={{ fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--color-primary, #92400E)" }}>
                       Candidate View Simulation
                     </span>
                     <span style={{ fontSize: "0.75rem", color: "var(--color-muted)", fontFamily: "var(--font-mono, monospace)" }}>
@@ -835,7 +852,7 @@ function QuestionsContent() {
                         ? "Diagram loaded — click to replace"
                         : "Click to browse image or drag and drop"}
                     </div>
-                    <div style={{ fontSize: "0.6875rem", color: "var(--color-muted)" }}>PNG, JPG, WebP · Max 10MB</div>
+                    <div style={{ fontSize: "0.6875rem", color: "var(--color-muted)" }}>PNG, JPG, WebP · Max 30MB</div>
                   </div>
                   {imageUrl && (
                     <Button
@@ -997,7 +1014,7 @@ function QuestionsContent() {
 
               {/* Supplementary Document */}
               <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Attach Reading PDF (Optional)</label>
+                <label className={styles.formLabel}>Attach Reading PDF (Optional) — Max 30MB</label>
                 <input
                   type="file"
                   ref={docInputRef}
@@ -1138,7 +1155,7 @@ function QuestionsContent() {
         <div className={styles.statCard}>
           <div className={styles.statTop}>
             <span className={styles.statLabel}>Configured Items</span>
-            <div className={styles.statIcon} style={{ color: "#06B6D4" }}><BookIcon width="15" height="15" /></div>
+            <div className={styles.statIcon} ><BookIcon width="15" height="15" /></div>
           </div>
           <div>
             <div className={styles.statValue}>{questions.length}</div>
@@ -1149,7 +1166,7 @@ function QuestionsContent() {
         <div className={styles.statCard}>
           <div className={styles.statTop}>
             <span className={styles.statLabel}>Maximum Score</span>
-            <div className={styles.statIcon} style={{ color: "#10B981" }}><CheckCircleIcon width="15" height="15" /></div>
+            <div className={styles.statIcon} ><CheckCircleIcon width="15" height="15" /></div>
           </div>
           <div>
             <div className={styles.statValue}>{totalScore}</div>
@@ -1160,7 +1177,7 @@ function QuestionsContent() {
         <div className={styles.statCard}>
           <div className={styles.statTop}>
             <span className={styles.statLabel}>Assessment Duration</span>
-            <div className={styles.statIcon} style={{ color: "#F97316" }}><ClockIcon width="15" height="15" /></div>
+            <div className={styles.statIcon} ><ClockIcon width="15" height="15" /></div>
           </div>
           <div>
             <div className={styles.statValue}>{subject?.duration || 60}m</div>
@@ -1301,29 +1318,67 @@ function QuestionsContent() {
           <form onSubmit={onSubmitSubject} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
               <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Exam Date & Time *</label>
-                <input
+                <label className={styles.formLabel}>Schedule Status</label>
+                <select
                   className={styles.formInput}
-                  type="datetime-local"
-                  value={subjDatetime}
-                  onChange={(e) => setSubjDatetime(e.target.value)}
-                  required
-                />
+                  value={subjDatetime ? "scheduled" : "unscheduled"}
+                  onChange={(e) => {
+                    if (e.target.value === "scheduled") {
+                      const dl = new Date(Date.now() + 86400000);
+                      dl.setMinutes(0, 0, 0);
+                      const padded = (n: number) => String(n).padStart(2, "0");
+                      setSubjDatetime(`${dl.getFullYear()}-${padded(dl.getMonth() + 1)}-${padded(dl.getDate())}T${padded(dl.getHours())}:${padded(dl.getMinutes())}`);
+                    } else {
+                      setSubjDatetime("");
+                    }
+                  }}
+                >
+                  <option value="unscheduled">Unscheduled (Date TBA)</option>
+                  <option value="scheduled">Scheduled (Set Date &amp; Time)</option>
+                </select>
               </div>
 
+              {subjDatetime ? (
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Exam Date &amp; Time *</label>
+                  <input
+                    className={styles.formInput}
+                    type="datetime-local"
+                    value={subjDatetime}
+                    onChange={(e) => setSubjDatetime(e.target.value)}
+                    required
+                  />
+                </div>
+              ) : (
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Duration (Minutes) *</label>
+                  <input
+                    className={styles.formInput}
+                    type="number"
+                    min={1}
+                    max={1440}
+                    value={subjDuration}
+                    onChange={(e) => setSubjDuration(Number(e.target.value))}
+                    required
+                  />
+                </div>
+              )}
+            </div>
+
+            {subjDatetime && (
               <div className={styles.formGroup}>
                 <label className={styles.formLabel}>Duration (Minutes) *</label>
                 <input
                   className={styles.formInput}
                   type="number"
                   min={1}
-                  max={360}
+                  max={1440}
                   value={subjDuration}
                   onChange={(e) => setSubjDuration(Number(e.target.value))}
                   required
                 />
               </div>
-            </div>
+            )}
 
             <div className={styles.formGroup}>
               <label className={styles.formLabel}>Exam Guidelines & Candidate Instructions</label>
@@ -1402,3 +1457,4 @@ function QuestionsContent() {
     </div>
   );
 }
+

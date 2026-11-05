@@ -43,7 +43,7 @@ function WardsList() {
             {/* Top Identity Row */}
             <div
               className={styles.childCardTop}
-              onClick={() => handleSelectWard(ward.id, `/guardian/wards/${ward.id}`)}
+              onClick={() => handleSelectWard(ward.student_id || ward.id, `/guardian/wards/profile?id=${ward.student_id || ward.id}`)}
               style={{ cursor: "pointer" }}
             >
               <div className={styles.childIdentityGroup}>
@@ -80,21 +80,21 @@ function WardsList() {
               <button
                 type="button"
                 className={styles.quickActionBtn}
-                onClick={() => handleSelectWard(ward.id, "/guardian/performance")}
+                onClick={() => handleSelectWard(ward.student_id || ward.id, "/guardian/performance")}
               >
                 Performance
               </button>
               <button
                 type="button"
                 className={styles.quickActionBtn}
-                onClick={() => handleSelectWard(ward.id, "/guardian/attendance")}
+                onClick={() => handleSelectWard(ward.student_id || ward.id, "/guardian/attendance")}
               >
                 Attendance
               </button>
               <button
                 type="button"
                 className={styles.quickActionBtn}
-                onClick={() => handleSelectWard(ward.id, `/guardian/wards/${ward.id}`)}
+                onClick={() => handleSelectWard(ward.student_id || ward.id, `/guardian/wards/profile?id=${ward.student_id || ward.id}`)}
               >
                 Full Profile
               </button>

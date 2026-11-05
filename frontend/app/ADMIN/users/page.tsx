@@ -1085,8 +1085,8 @@ function UsersContent() {
                 marginTop: "0.5rem",
                 padding: "0.6rem 0.8rem",
                 borderRadius: "6px",
-                background: "rgba(22, 90, 246, 0.08)",
-                border: "1px solid rgba(22, 90, 246, 0.2)",
+                background: "rgba(217, 119, 6, 0.08)",
+                border: "1px solid rgba(217, 119, 6, 0.2)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between"

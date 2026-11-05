@@ -165,6 +165,10 @@ function ContentLibraryContent() {
       setError("Please select a PDF question paper to upload.");
       return;
     }
+    if (selectedFile.size > 30 * 1024 * 1024) {
+      setError("PDF question paper exceeds the 30MB limit.");
+      return;
+    }
     if (!pdfMeta.exam_body.trim() || !pdfMeta.subject_code.trim()) {
       setError("Please fill in Exam Body and Subject Code.");
       return;
@@ -268,7 +272,7 @@ function ContentLibraryContent() {
       {/* ── KPI Summary Cards (Neutral-first Palette) ── */}
       <div className={styles.kpiGrid}>
         <div className={styles.kpiCard}>
-          <div className={styles.kpiIconWrapper} style={{ color: "#06B6D4" }}>
+          <div className={styles.kpiIconWrapper} style={{ color: "#D97706" }}>
             <LayersIcon width="20" height="20" />
           </div>
           <div className={styles.kpiContent}>
@@ -278,7 +282,7 @@ function ContentLibraryContent() {
         </div>
 
         <div className={styles.kpiCard}>
-          <div className={styles.kpiIconWrapper} style={{ color: "#6366F1" }}>
+          <div className={styles.kpiIconWrapper} style={{ color: "#D97706" }}>
             <BookIcon width="20" height="20" />
           </div>
           <div className={styles.kpiContent}>
@@ -288,7 +292,7 @@ function ContentLibraryContent() {
         </div>
 
         <div className={styles.kpiCard}>
-          <div className={styles.kpiIconWrapper} style={{ color: "#8B5CF6" }}>
+          <div className={styles.kpiIconWrapper} style={{ color: "#D97706" }}>
             <ShieldCheckIcon width="20" height="20" />
           </div>
           <div className={styles.kpiContent}>
@@ -591,7 +595,7 @@ function ContentLibraryContent() {
               <div className={styles.dropzoneSub}>
                 {selectedFile
                   ? `${(selectedFile.size / 1024).toFixed(1)} KB — Ready to parse`
-                  : "Standard PDF with numbered questions and options (A-E), max 10MB"}
+                  : "Standard PDF with numbered questions and options (A-E), max 30MB"}
               </div>
             </div>
           </div>

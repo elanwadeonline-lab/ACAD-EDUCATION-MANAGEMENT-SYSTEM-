@@ -270,7 +270,7 @@ function LicenseDashboard() {
           <div className={styles.fingerprintCard}>
             <div className={styles.cardHeader}>
               <div className={styles.cardHeaderLeft}>
-                <SchoolIcon width="20" height="20" style={{ color: "#6366F1" }} />
+                <SchoolIcon width="20" height="20" style={{ color: "#D97706" }} />
                 <div>
                   <h3 className={styles.cardTitle}>Physical Host Hardware Identity</h3>
                   <p className={styles.cardSubtitle}>

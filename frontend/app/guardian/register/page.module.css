@@ -35,7 +35,7 @@
 
 /* ── Left Informational Column ── */
 .leftPane {
-  background: linear-gradient(145deg, #1E1B4B 0%, #312E81 100%);
+  background: linear-gradient(145deg, #29231B 0%, #29231B 100%);
   padding: 3rem 2.5rem;
   display: flex;
   flex-direction: column;
@@ -78,7 +78,7 @@
 
 .heroText p {
   font-size: 0.875rem;
-  color: #C7D2FE;
+  color: #FDE68A;
   line-height: 1.55;
   margin: 0;
 }
@@ -111,7 +111,7 @@
 .featureItem span {
   display: block;
   font-size: 0.75rem;
-  color: #C7D2FE;
+  color: #FDE68A;
   line-height: 1.35;
 }
 
@@ -127,6 +127,9 @@
 .formCard {
   width: 100%;
   max-width: 420px;
+  border-radius: 18px;
+  box-shadow: none;
+  border-color: var(--g-border);
 }
 
 .header h2 {
@@ -144,7 +147,7 @@
 }
 
 .link {
-  color: #165AF6;
+  color: #92400E;
   font-weight: 600;
   text-decoration: none;
 }
@@ -210,8 +213,8 @@
 
 .input:focus,
 .select:focus {
-  border-color: #165AF6;
-  box-shadow: 0 0 0 3px rgba(22, 90, 246, 0.12);
+  border-color: #92400E;
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.12);
 }
 
 .input::placeholder {
@@ -223,18 +226,18 @@
   padding: 0.85rem;
   border-radius: 10px;
   border: none;
-  background: #165AF6;
+  background: #92400E;
   color: #FFFFFF;
   font-size: 0.875rem;
   font-weight: 700;
   cursor: pointer;
   margin-top: 0.5rem;
-  box-shadow: 0 4px 12px rgba(22, 90, 246, 0.25);
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.25);
   transition: transform 140ms ease, background 140ms ease;
 }
 
 .submitBtn:hover:not(:disabled) {
-  background: #1248C8;
+  background: #78350F;
   transform: translateY(-1px);
 }
 
@@ -281,11 +284,11 @@
 .regIdBox {
   display: inline-block;
   padding: 0.75rem 1.5rem;
-  background: #EFF4FF;
-  border: 1px dashed #165AF6;
+  background: #FFFBEB;
+  border: 1px dashed #92400E;
   border-radius: 12px;
-  color: #165AF6;
-  font-family: monospace;
+  color: #92400E;
+  font-family: var(--font-system);
   font-size: 1.125rem;
   font-weight: 800;
   letter-spacing: 0.05em;
@@ -297,3 +300,4 @@
   color: #059669 !important;
   margin-bottom: 1.5rem !important;
 }
+.mobileBrand { display:none; color:var(--color-text); margin-bottom:28px; } @media(max-width:860px) { .mobileBrand { display:block; } }

@@ -36,27 +36,27 @@
 
 .backBtn:hover {
   background: var(--g-surface-subtle, #F8FAFC);
-  border-color: var(--g-border-focus, #3B82F6);
+  border-color: var(--g-border-focus, #D97706);
 }
 
 .pageTitle {
-  font-size: 1.25rem;
-  font-weight: 800;
+  font-size: 1.375rem;
+  font-weight: 600;
   color: var(--g-text-primary, #0F172A);
   margin: 0;
-  letter-spacing: -0.02em;
+  letter-spacing: -.03em;
 }
 
 /* ── 1. Overall Summary Banner ── */
 .summaryBanner {
-  background: linear-gradient(135deg, var(--g-primary, #165AF6) 0%, #0D47C9 100%);
+  background: linear-gradient(135deg, var(--g-primary, #92400E) 0%, #78350F 100%);
   border-radius: var(--g-radius-xl, 20px);
   padding: 1.35rem 1.25rem;
   color: #FFFFFF;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  box-shadow: 0 8px 24px -4px var(--g-primary-glow, rgba(22, 90, 246, 0.35));
+  box-shadow: 0 8px 24px -4px var(--g-primary-glow, rgba(217, 119, 6, 0.35));
 }
 
 .summaryLeftCol {
@@ -191,9 +191,9 @@
 }
 
 .gradeB {
-  background: var(--g-primary-subtle, #EFF4FF);
-  color: var(--g-primary, #165AF6);
-  border: 1px solid var(--g-primary-border, #DBEAFE);
+  background: var(--g-primary-subtle, #FFFBEB);
+  color: var(--g-primary-text, #92400E);
+  border: 1px solid var(--g-primary-border, #FDE68A);
 }
 
 .gradeC {
@@ -230,18 +230,18 @@
   gap: 0.5rem;
   padding: 0.85rem 1.25rem;
   border-radius: var(--g-radius-md, 12px);
-  background: var(--g-primary, #165AF6);
+  background: var(--g-primary, #92400E);
   color: #FFFFFF;
   border: none;
   font-size: 0.875rem;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 4px 14px var(--g-primary-glow, rgba(22, 90, 246, 0.28));
+  box-shadow: 0 4px 14px var(--g-primary-glow, rgba(217, 119, 6, 0.28));
   transition: all var(--g-duration, 180ms) ease;
 }
 
 .openModalBtn:hover {
-  background: var(--g-primary-hover, #1248C8);
+  background: var(--g-primary-hover, #78350F);
   transform: translateY(-1px);
 }
 
@@ -263,8 +263,8 @@
 
 .shareBtn:hover {
   background: var(--g-surface-subtle, #F8FAFC);
-  border-color: var(--g-border-focus, #3B82F6);
-  color: var(--g-primary, #165AF6);
+  border-color: var(--g-border-focus, #D97706);
+  color: var(--g-primary-text, #92400E);
 }
 
 /* ── 4. Full Broadsheet Modal ── */
@@ -328,11 +328,13 @@
 .broadsheetCard {
   background: var(--g-surface-subtle, #F8FAFC);
   border: 1px solid var(--g-border, #E2E8F0);
-  border-radius: var(--g-radius-md, 12px);
+  border-radius: 18px;
   padding: 1rem;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  box-shadow: none;
+  border-color: var(--g-border);
 }
 
 .broadsheetHeader {

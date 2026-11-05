@@ -11,9 +11,9 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.6rem 1rem;
-  font-size: 0.8625rem;
-  font-weight: 600;
+  padding: 0.6rem 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
   color: var(--color-muted, #64748B);
   background: transparent;
   border: none;
@@ -30,14 +30,15 @@
 }
 
 .tab.active {
-  color: var(--color-primary, #4F46E5);
-  border-bottom-color: var(--color-primary, #4F46E5);
+  color: var(--color-primary, #EA580C);
+  border-bottom-color: var(--color-primary, #EA580C);
+  font-weight: 600;
 }
 
 .badge {
-  font-size: 0.7rem;
-  font-weight: 700;
-  padding: 0.1rem 0.45rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 0.1rem 0.4rem;
   border-radius: 9999px;
   background: var(--color-surface-2, #F1F5F9);
   color: var(--color-muted, #64748B);
@@ -45,6 +46,6 @@
 }
 
 .tab.active .badge {
-  background: rgba(79, 70, 229, 0.12);
-  color: var(--color-primary, #4F46E5);
+  background: rgba(234, 88, 12, 0.1);
+  color: var(--color-primary, #EA580C);
 }

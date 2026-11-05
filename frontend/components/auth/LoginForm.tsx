@@ -23,27 +23,55 @@ export default function LoginForm({ expectedRole }: { expectedRole: "student" | 
   useEffect(() => {
     let cancelled = false;
     const checkServer = async () => {
+      // 1. Primary check: Probe relative /api/auth/me (works on localhost, 127.0.0.1, LAN IP, mDNS, custom domain)
+      const primaryUrl = API_BASE ? `${API_BASE}/api/auth/me` : "/api/auth/me";
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3000);
-        const res = await fetch(`${API_BASE}/api/auth/me`, {
+        const timeoutId = setTimeout(() => controller.abort(), 4000);
+        await fetch(primaryUrl, {
           credentials: "include",
           cache: "no-store",
           signal: controller.signal,
         });
         clearTimeout(timeoutId);
-        if (!cancelled) setServerOnline(true);
-      } catch {
+        if (!cancelled) {
+          setServerOnline(true);
+          return;
+        }
+      } catch {}
+
+      // 2. Dev mode fallback: If running on Next.js dev server (port 3000), probe port 8001 directly
+      if (typeof window !== "undefined" && window.location.port === "3000") {
         try {
           const directRes = await fetch("http://127.0.0.1:8001/api/auth/me", {
             credentials: "include",
             cache: "no-store",
           });
-          if (!cancelled) setServerOnline(true);
-        } catch {
-          if (!cancelled) setServerOnline(false);
-        }
+          if (!cancelled) {
+            setServerOnline(true);
+            return;
+          }
+        } catch {}
       }
+
+      // 3. Fallback: probe origin explicitly if different from primaryUrl
+      if (typeof window !== "undefined") {
+        try {
+          const originProbe = `${window.location.origin}/api/auth/me`;
+          if (originProbe !== primaryUrl) {
+            await fetch(originProbe, {
+              credentials: "include",
+              cache: "no-store",
+            });
+            if (!cancelled) {
+              setServerOnline(true);
+              return;
+            }
+          }
+        } catch {}
+      }
+
+      if (!cancelled) setServerOnline(false);
     };
 
     checkServer();
@@ -62,11 +90,13 @@ export default function LoginForm({ expectedRole }: { expectedRole: "student" | 
     }
     if (!isAuthenticated || !user) return;
 
-    // Strict Role Enforcement
+    // Strict Role Isolation: Never destroy another role's session on portal visit.
+    // Only redirect when the active session matches this portal's expectedRole.
     if (user.role !== expectedRole) {
-      logout().then(() => {
-        setError("Please use the correct portal to log in for your role.");
-      });
+      if (submitting) {
+        setSubmitting(false);
+        setError(`This account has the "${user.role}" role. Please sign in with a ${expectedRole} account for this portal.`);
+      }
       return;
     }
 
@@ -78,29 +108,9 @@ export default function LoginForm({ expectedRole }: { expectedRole: "student" | 
       return;
     }
 
-    // Smart Login & Auto-Routing for students
+    // Successful sign-in returns to Home; assessment entry remains an explicit choice.
     if (user.role === "student") {
-      api.getSubjects().then(subjectsData => {
-        api.getResults().then(resultsData => {
-          const now = Date.now();
-          const activeOne = (subjectsData as any[]).find(s => {
-            if (!s.exam_datetime) return false;
-            const start = new Date(s.exam_datetime).getTime();
-            const end = start + Number(s.window_duration || 120) * 60_000;
-            const isTaken = (resultsData as any[]).some(r => Number(r.subject_id) === Number(s.id));
-            return !isTaken && now >= start && now < end;
-          });
-          if (activeOne) {
-            window.location.href = `/student/exam?subjectId=${activeOne.id}`;
-          } else {
-            window.location.href = "/student/dashboard/";
-          }
-        }).catch(() => {
-          window.location.href = "/student/dashboard/";
-        });
-      }).catch(() => {
-        window.location.href = "/student/dashboard/";
-      });
+      window.location.href = "/student/dashboard/";
     } else if (user.role === "teacher") {
       window.location.href = "/teacher/dashboard/";
     } else if (user.role === "guardian") {
