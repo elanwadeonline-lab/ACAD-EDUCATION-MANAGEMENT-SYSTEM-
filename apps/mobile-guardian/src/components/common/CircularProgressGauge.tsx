@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from "react-native";
 import Svg, { Circle, Defs, LinearGradient, Stop } from "react-native-svg";
 import { GraduationCap, ArrowUpRight } from "lucide-react-native";
 import { Colors, Spacing, Radii, Typography } from "../../theme/tokens";
+import { BaseSlidingNumber } from "../base-sliding-number";
 
 interface CircularProgressGaugeProps {
   percentage: number | null;
@@ -67,7 +68,16 @@ export function CircularProgressGauge({
             <GraduationCap size={24} color={Colors.primary} strokeWidth={2.2} />
           </View>
           <Text style={styles.labelText}>{label}</Text>
-          <Text style={styles.percentText}>{percentage === null ? '—' : `${percentage.toFixed(1)}%`}</Text>
+          {percentage === null ? (
+            <Text style={styles.percentText}>—</Text>
+          ) : (
+            <BaseSlidingNumber
+              value={percentage / 100}
+              format={{ style: "percent", minimumFractionDigits: 1, maximumFractionDigits: 1 }}
+              fontSize={32}
+              color={Colors.ink}
+            />
+          )}
           {!!trendText && <View style={styles.trendChip}>
             <ArrowUpRight size={13} color={Colors.success} strokeWidth={2.4} />
             <Text style={styles.trendChipText}>{trendText}</Text>

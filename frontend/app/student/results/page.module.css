@@ -548,3 +548,58 @@
     grid-template-columns: 1fr;
   }
 }
+
+
+/* ── Dark Theme Overrides for Student Results ── */
+:global([data-theme="dark"]) .heroTitle,
+:global(.dark) .heroTitle,
+:global([data-theme="dark"]) .telemetryNumber,
+:global(.dark) .telemetryNumber,
+:global([data-theme="dark"]) .statNumber,
+:global(.dark) .statNumber,
+:global([data-theme="dark"]) .cardTitle,
+:global(.dark) .cardTitle,
+:global([data-theme="dark"]) .dataTable td,
+:global(.dark) .dataTable td {
+  color: var(--color-text);
+}
+
+:global([data-theme="dark"]) .heroSubtitle,
+:global(.dark) .heroSubtitle,
+:global([data-theme="dark"]) .telemetryText,
+:global(.dark) .telemetryText,
+:global([data-theme="dark"]) .statLabel,
+:global(.dark) .statLabel,
+:global([data-theme="dark"]) .cardDesc,
+:global(.dark) .cardDesc {
+  color: var(--color-muted);
+}
+
+:global([data-theme="dark"]) .telemetryBadge,
+:global(.dark) .telemetryBadge,
+:global([data-theme="dark"]) .statCard,
+:global(.dark) .statCard,
+:global([data-theme="dark"]) .resultCard,
+:global(.dark) .resultCard,
+:global([data-theme="dark"]) .analyticsCard,
+:global(.dark) .analyticsCard {
+  background: var(--color-surface);
+  border-color: var(--color-border);
+}
+
+:global([data-theme="dark"]) .dataTable th,
+:global(.dark) .dataTable th {
+  background: var(--color-surface-2);
+  color: var(--color-muted);
+  border-bottom-color: var(--color-border);
+}
+
+:global([data-theme="dark"]) .dataTable td,
+:global(.dark) .dataTable td {
+  border-bottom-color: var(--color-border);
+}
+
+:global([data-theme="dark"]) .dataTable tr:hover td,
+:global(.dark) .dataTable tr:hover td {
+  background: var(--color-surface-hover);
+}

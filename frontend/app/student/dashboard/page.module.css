@@ -90,21 +90,23 @@
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  padding: 0.5rem 0.875rem;
-  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  border-radius: 99px;
   font-size: 0.8125rem;
   font-weight: 600;
-  color: #1E293B;
-  background: #FFFFFF;
-  border: 1px solid #CBD5E1;
+  color: var(--color-text-2);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   text-decoration: none;
   cursor: pointer;
-  transition: background 140ms ease, border-color 140ms ease;
+  transition: background 140ms ease, border-color 140ms ease, color 140ms ease;
+  white-space: nowrap;
 }
 
 .secondaryBtn:hover {
-  background: #F8FAFC;
-  border-color: #94A3B8;
+  background: var(--color-surface-hover);
+  border-color: var(--color-border-hover);
+  color: var(--color-text);
 }
 
 .primaryBtn {
@@ -902,23 +904,164 @@
 }
 
 /* Reference-led section navigation, retaining actual destinations. */
-.sectionNav { display: flex; gap: 10px; flex-wrap: wrap; }
-.sectionNav a { display: inline-flex; align-items: center; min-height: 42px; padding: 8px 20px; border: 1px solid var(--color-border); border-radius: 99px; color: var(--color-text-2); background: var(--color-surface); text-decoration: none; font-size: .8125rem; }
-.sectionNav a:hover { border-color: var(--color-primary); color: var(--color-primary); }
-.sectionNav a:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 3px; }
-.tabBtn[data-state=active] { background: var(--color-surface); color: var(--color-primary); border-color: var(--color-border); box-shadow: 0 1px 2px rgba(12,13,18,.06); }
-.tabBtn:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
-.container section { scroll-margin-top: 100px; }
-@media (max-width: 640px) { .container { padding: 0 0 24px; } .headerBar { gap: 16px; } .headerActions { width: 100%; } .headerActions a { flex: 1; justify-content: center; } .sectionNav { flex-wrap: nowrap; overflow-x: auto; padding: 3px; } .sectionNav a { white-space: nowrap; padding-inline: 16px; } }
-/* Reference typography, soft pills and open white canvas. */
-.container { gap: 30px; }
-.pageTitle { font-size: clamp(2rem,4vw,3.4rem); font-weight: 650; line-height: 1.1; }
-.pageSubtitle { font-size: 1.1rem; margin-top: 8px; }
-.eyebrowRow { background: transparent; }
-.sessionBadge, .metaPill { border: 0; background: transparent; padding-inline:0; margin-right:10px; }
-.sectionNav { gap: 14px; }
-.sectionNav a { font-size: 1rem; min-height: 48px; padding-inline: 26px; border-color:#eee; }
-.sectionCard { border-radius: 22px; padding: 24px; border-color:#eee; }
-.primaryActionCard { border-radius: 18px; }
-@media(max-width:700px) { .sectionNav { gap:8px; } .sectionNav a { padding-inline:18px; font-size:.875rem; } .pageSubtitle { font-size:.95rem; } }
-.referenceDate { display:flex; align-items:center; gap:10px; font-size:1rem; color:var(--color-text); padding:12px 16px; border-radius:30px; background:#fafafa; }
+.sectionNav {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 4px;
+}
+.sectionNav::-webkit-scrollbar {
+  display: none;
+}
+.sectionNav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 8px 22px;
+  border: 1px solid var(--color-border);
+  border-radius: 99px;
+  color: var(--color-text-2);
+  background: var(--color-surface);
+  text-decoration: none;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: all 140ms ease;
+}
+.sectionNav a:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+.sectionNav a:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+}
+.tabBtn[data-state=active] {
+  background: var(--color-surface);
+  color: var(--color-primary);
+  border-color: var(--color-border);
+  box-shadow: 0 1px 2px rgba(12,13,18,.06);
+}
+.tabBtn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+.container section {
+  scroll-margin-top: 100px;
+}
+
+/* Reference typography, soft pills and responsive canvas. */
+.container {
+  gap: 24px;
+}
+.pageTitle {
+  font-size: clamp(1.75rem, 3.5vw, 2.75rem);
+  font-weight: 650;
+  line-height: 1.15;
+  color: var(--color-text);
+  letter-spacing: -0.04em;
+}
+.pageSubtitle {
+  font-size: 1rem;
+  margin-top: 6px;
+  color: var(--color-muted);
+}
+.eyebrowRow {
+  background: transparent;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.sessionBadge {
+  border: 0;
+  background: transparent;
+  padding-inline: 0;
+  color: var(--color-primary);
+  font-weight: 600;
+  font-size: 0.8125rem;
+}
+.metaPill {
+  border: 0;
+  background: transparent;
+  padding-inline: 0;
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+.sectionCard {
+  border-radius: 22px;
+  padding: 24px;
+  border-color: var(--color-border);
+  background: var(--color-surface);
+}
+.primaryActionCard {
+  border-radius: 18px;
+  background: var(--color-surface);
+  border-color: var(--color-border);
+}
+.referenceDate {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text);
+  padding: 8px 16px;
+  border-radius: 99px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+
+/* Mobile responsive layout optimizations (<768px) */
+@media (max-width: 768px) {
+  .container {
+    padding: 0 0 24px;
+    gap: 18px;
+  }
+  .headerBar {
+    gap: 14px;
+  }
+  .pageTitle {
+    font-size: clamp(1.5rem, 6vw, 2.1rem);
+  }
+  .pageSubtitle {
+    font-size: 0.875rem;
+  }
+  .headerActions {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .headerActions a,
+  .headerActions button {
+    font-size: 0.75rem !important;
+    padding: 6px 11px !important;
+    min-height: 34px !important;
+    height: 34px !important;
+  }
+  .referenceDate {
+    font-size: 0.75rem;
+    padding: 6px 11px;
+    min-height: 34px;
+    gap: 6px;
+  }
+  .referenceDate svg {
+    width: 15px !important;
+    height: 15px !important;
+  }
+  .sectionNav {
+    gap: 8px;
+    padding-bottom: 6px;
+  }
+  .sectionNav a {
+    min-height: 34px;
+    padding: 6px 14px;
+    font-size: 0.8125rem;
+  }
+}

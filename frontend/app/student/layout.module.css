@@ -1,6 +1,7 @@
 .wrapper {
   min-height: 100dvh;
   background-color: var(--color-bg);
+  color: var(--color-text);
   display: flex;
   flex-direction: column;
 }
@@ -25,13 +26,63 @@
   }
 }
 
-.referenceFrame { position: relative; max-width: 1500px; margin: 40px auto; min-height: calc(100dvh - 80px); border: 1px solid #d7d7d5; border-radius: 32px; background: #fff; box-shadow: 0 8px 45px #92400e0c; padding-left: 82px; overflow: clip; }
-.referenceFrame .mainContent { padding: 54px 40px 40px 24px; }
-@media(max-width: 1000px) { .referenceFrame { margin: 16px; } .referenceFrame .mainContent { padding: 32px 24px 40px 16px; } }
-@media(max-width:700px) { .referenceFrame { margin: 0; border: 0; border-radius: 0; padding: 0; } .referenceFrame .mainContent { padding: 28px 20px 100px; } }
-@media print { .referenceFrame { margin:0; padding:0; border:0; box-shadow:none; max-width:none; } .referenceFrame .mainContent { padding:0; } }
-/* Fixed navigation column; only the learning workspace scrolls. */
-.referenceFrame { display:grid; grid-template-columns:88px minmax(0,1fr); width:100%; max-width:1320px; height:100dvh; min-height:0; margin:0 auto; padding:0; border:0; border-radius:0; overflow:hidden; box-shadow:none; }
-.referenceFrame .mainContent { min-width:0; width:100%; max-width:1200px; height:100dvh; min-height:0; overflow-y:auto; overscroll-behavior-y:contain; padding:40px 32px 48px; scrollbar-gutter:stable; }
-@media(max-width:700px) { .referenceFrame { display:block; max-width:none; } .referenceFrame .mainContent { padding:28px 20px 108px; } }
-@media print { .referenceFrame { display:block; height:auto; overflow:visible; } .referenceFrame .mainContent { height:auto; max-width:none; overflow:visible; padding:0; } }
+/* Institutional Reference Layout Frame */
+.referenceFrame {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  width: 100%;
+  max-width: 1360px;
+  height: 100dvh;
+  min-height: 0;
+  margin: 0 auto;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  overflow: hidden;
+  box-shadow: none;
+  background-color: var(--color-bg);
+}
+
+.referenceFrame .mainContent {
+  min-width: 0;
+  width: 100%;
+  max-width: 1240px;
+  height: 100dvh;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  padding: 36px 32px 48px;
+  scrollbar-gutter: stable;
+}
+
+@media (max-width: 700px) {
+  .referenceFrame {
+    display: block;
+    max-width: none;
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+
+  .referenceFrame .mainContent {
+    height: auto;
+    min-height: 100dvh;
+    overflow-y: visible;
+    padding: 20px 16px 112px;
+  }
+}
+
+@media print {
+  .referenceFrame {
+    display: block;
+    height: auto;
+    overflow: visible;
+  }
+
+  .referenceFrame .mainContent {
+    height: auto;
+    max-width: none;
+    overflow: visible;
+    padding: 0;
+  }
+}

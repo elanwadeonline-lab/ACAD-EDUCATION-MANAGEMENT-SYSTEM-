@@ -1,4 +1,6 @@
 import React from "react";
+import '../globals.css';
+import {GluestackUIProvider} from '../src/components/ui/gluestack-ui-provider';
 import { Stack } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { GuardianAuthProvider } from "../src/context/GuardianAuthContext";
@@ -16,7 +18,7 @@ export default function RootLayout() {
   if(!fontsLoaded&&!fontError)return null;
   guardianBaseTheme.fonts.semibold='Geist_600SemiBold';
   return (
-    <BaseThemeProvider theme={guardianBaseTheme}><GestureHandlerRootView style={{flex:1,backgroundColor:Colors.canvas}}><SafeAreaProvider>
+    <GluestackUIProvider mode="light"><BaseThemeProvider theme={guardianBaseTheme}><GestureHandlerRootView style={{flex:1,backgroundColor:Colors.canvas}}><SafeAreaProvider>
       <GuardianAuthProvider>
         <ActiveWardProvider>
           <BottomSheetModalProvider><Stack screenOptions={{ headerShown: false,contentStyle:{backgroundColor:Colors.canvas},animation:'slide_from_right' }} />
@@ -24,7 +26,7 @@ export default function RootLayout() {
           </BottomSheetModalProvider>
         </ActiveWardProvider>
       </GuardianAuthProvider>
-    </SafeAreaProvider></GestureHandlerRootView></BaseThemeProvider>
+    </SafeAreaProvider></GestureHandlerRootView></BaseThemeProvider></GluestackUIProvider>
   );
 }
 

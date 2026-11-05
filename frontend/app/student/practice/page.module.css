@@ -427,3 +427,39 @@
     grid-template-columns: 1fr;
   }
 }
+
+
+/* ── Dark Theme Overrides for Student Practice ── */
+:global([data-theme="dark"]) .heroTitle,
+:global(.dark) .heroTitle,
+:global([data-theme="dark"]) .cardTitle,
+:global(.dark) .cardTitle,
+:global([data-theme="dark"]) .telemetryNumber,
+:global(.dark) .telemetryNumber,
+:global([data-theme="dark"]) .paperName,
+:global(.dark) .paperName,
+:global([data-theme="dark"]) .emptyState h3,
+:global(.dark) .emptyState h3 {
+  color: var(--color-text);
+}
+
+:global([data-theme="dark"]) .heroSubtitle,
+:global(.dark) .heroSubtitle,
+:global([data-theme="dark"]) .cardDesc,
+:global(.dark) .cardDesc,
+:global([data-theme="dark"]) .telemetryText,
+:global(.dark) .telemetryText,
+:global([data-theme="dark"]) .emptyState p,
+:global(.dark) .emptyState p {
+  color: var(--color-muted);
+}
+
+:global([data-theme="dark"]) .telemetryBadge,
+:global(.dark) .telemetryBadge,
+:global([data-theme="dark"]) .configCard,
+:global(.dark) .configCard,
+:global([data-theme="dark"]) .paperCard,
+:global(.dark) .paperCard {
+  background: var(--color-surface);
+  border-color: var(--color-border);
+}

@@ -9,12 +9,21 @@ import {Link,LinkText} from '../ui/link';
 import {Toast,ToastTitle,useToast} from '../ui/toast';
 export {Card} from '../ui/card';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import {ChevronLeft,ChevronRight,RefreshCw} from 'lucide-react-native';
+import {AlertCircle,ChevronLeft,ChevronRight,Inbox,RefreshCw} from 'lucide-react-native';
 import {Colors as C} from '../../theme/tokens';
 import {API_BASE_URL,requestData} from '../../api/client';
 import {BaseSkeleton} from '../base-skeleton';
 import {BaseHeader} from '../base-header';
 import {BaseListRow} from '../base-list-row';
+import {BaseEmptyState} from '../base-empty-state';
+import {BaseAlert} from '../base-alert';
+export {BaseEmptyState} from '../base-empty-state';
+export {BaseAlert} from '../base-alert';
+export {BaseSeparator} from '../base-separator';
+export {BaseSlidingNumber} from '../base-sliding-number';
+export {BaseSelect} from '../base-select';
+export {BaseDialog} from '../base-dialog';
+export {BaseToggleGroup} from '../base-toggle-group';
 
 export function useRemote<T>(path:string|null,identity:string|number=''){
   const [data,setData]=useState<T|null>(null),[error,setError]=useState(''),[loading,setLoading]=useState(!!path),[revision,setRevision]=useState(0);
@@ -32,10 +41,10 @@ export function useNotice(){
   const toast=useToast();
   return (message:string)=>toast.show({placement:'top',duration:3000,render:({id})=><Toast nativeID={`guardian-toast-${id}`} action="success" style={{margin:16,borderRadius:14,backgroundColor:C.card,borderColor:C.cardBorder,borderWidth:1,padding:16}}><ToastTitle style={{color:C.ink,fontFamily:'Geist_500Medium',fontSize:14}}>{message}</ToastTitle></Toast>});
 }
-export function Feedback({loading,error,onRetry,empty}:{loading?:boolean;error?:string;onRetry?:()=>void;empty?:string}){
+export function Feedback({loading,error,onRetry,empty,emptyTitle='No records available',emptyIcon}:{loading?:boolean;error?:string;onRetry?:()=>void;empty?:string;emptyTitle?:string;emptyIcon?:React.ReactNode}){
   if(loading)return <View style={{gap:12,paddingVertical:16}} accessibilityLiveRegion="polite" accessibilityLabel="Loading school records"><BaseSkeleton width="72%" height={18}/><BaseSkeleton width="100%" height={64} radius={14}/><BaseSkeleton width="88%" height={16}/><Text style={ui.small}>Loading school records…</Text></View>;
-  if(error)return <View style={ui.feedback} accessibilityRole="alert"><Text style={ui.muted}>{error}</Text>{onRetry&&<Button label="Try again" onPress={onRetry} quiet/>}</View>;
-  return empty?<View style={ui.feedback}><Text style={ui.muted}>{empty}</Text></View>:null;
+  if(error)return <BaseAlert variant="destructive" icon={<AlertCircle size={18} color={C.danger}/>} title="Unable to load school records" description={error} action={onRetry?<Button label="Try again" onPress={onRetry} quiet/>:undefined}/>;
+  return empty?<BaseEmptyState icon={emptyIcon||<Inbox size={26} color={C.primary}/>} title={emptyTitle} description={empty}/>:null;
 }
 export function Page({title,children,onBack,right,refreshing,onRefresh}:{title?:string;children:React.ReactNode;onBack?:()=>void;right?:React.ReactNode;refreshing?:boolean;onRefresh?:()=>void}){
   return <SafeAreaView edges={['top','left','right']} style={ui.safe}>{title&&<BaseHeader title={title} onBack={onBack} actions={right} align="left"/>}<ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={ui.content} refreshControl={onRefresh?<RefreshControl refreshing={!!refreshing} onRefresh={onRefresh} tintColor={C.primary}/>:undefined}>{children}</ScrollView></SafeAreaView>;

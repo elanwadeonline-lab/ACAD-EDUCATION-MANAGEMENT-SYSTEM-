@@ -16,6 +16,7 @@ import { useAcademic } from "../../../components/context/AcademicContext";
 import { useToast } from "../../../hooks/useToast";
 import { scorePct, letterGrade } from "../../../lib/gradeUtils";
 import { CalendarIcon, GraduationCapIcon, AwardIcon } from "../../../components/icons/StudentIcons";
+import { StudentThemeToggle } from "../../../components/student/StudentThemeToggle";
 import { useOfflineAutoSync } from "../../../hooks/useOfflineAutoSync";
 import styles from "./page.module.css";
 
@@ -309,6 +310,7 @@ function DashboardContent() {
             <AwardIcon width="15" height="15" />
             <span>All Results ({completedResults.length})</span>
           </Link>
+          <StudentThemeToggle />
         </div>
       </header>
 

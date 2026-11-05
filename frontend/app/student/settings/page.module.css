@@ -233,3 +233,46 @@
     grid-template-columns: 1fr;
   }
 }
+
+
+/* ── Dark Theme Overrides for Student Settings ── */
+:global([data-theme="dark"]) .heroTitle,
+:global(.dark) .heroTitle,
+:global([data-theme="dark"]) .cardTitle,
+:global(.dark) .cardTitle,
+:global([data-theme="dark"]) .telemetryNumber,
+:global(.dark) .telemetryNumber,
+:global([data-theme="dark"]) .fieldInput,
+:global(.dark) .fieldInput {
+  color: var(--color-text);
+}
+
+:global([data-theme="dark"]) .heroSubtitle,
+:global(.dark) .heroSubtitle,
+:global([data-theme="dark"]) .cardDesc,
+:global(.dark) .cardDesc,
+:global([data-theme="dark"]) .telemetryText,
+:global(.dark) .telemetryText,
+:global([data-theme="dark"]) .fieldLabel,
+:global(.dark) .fieldLabel {
+  color: var(--color-muted);
+}
+
+:global([data-theme="dark"]) .telemetryBadge,
+:global(.dark) .telemetryBadge,
+:global([data-theme="dark"]) .settingsCard,
+:global(.dark) .settingsCard {
+  background: var(--color-surface);
+  border-color: var(--color-border);
+}
+
+:global([data-theme="dark"]) .fieldInput,
+:global(.dark) .fieldInput {
+  background: var(--color-surface-2);
+  border-color: var(--color-border);
+}
+
+:global([data-theme="dark"]) .actionRow,
+:global(.dark) .actionRow {
+  border-top-color: var(--color-border);
+}

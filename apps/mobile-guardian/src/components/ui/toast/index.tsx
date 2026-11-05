@@ -248,3 +248,5 @@ Toast.displayName = 'Toast';
 ToastTitle.displayName = 'ToastTitle';
 ToastDescription.displayName = 'ToastDescription';
 
+export { Toast, ToastDescription, ToastTitle, useToast };
+

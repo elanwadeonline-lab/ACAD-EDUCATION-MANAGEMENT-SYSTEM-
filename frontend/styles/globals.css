@@ -192,6 +192,105 @@
 }
 
 /* ══════════════════════════════════════════════════════════════════
+   DARK THEME TOKENS
+   ══════════════════════════════════════════════════════════════════ */
+[data-theme="dark"],
+.dark {
+  /* ── Semantic Color Tokens ──────────────────────── */
+  /* Background layers */
+  --color-bg:            #0A0D14;
+  --color-surface:       #111622;
+  --color-surface-2:     #171E2D;
+  --color-surface-3:     #1F293D;
+  --color-surface-hover: #1A2234;
+
+  /* Borders */
+  --color-border:         #232B3C;
+  --color-border-hover:   #34415A;
+  --color-border-strong:  #4B5C7E;
+
+  /* Text */
+  --color-text:     #F8FAFC;
+  --color-text-2:   #E2E8F0;
+  --color-text-3:   #CBD5E1;
+  --color-muted:    #94A3B8;
+  --color-muted-2:  #64748B;
+  --color-muted-3:  #475569;
+
+  /* Primary — Acqad Luminous Amber in Dark Mode */
+  --color-brand:            #F59E0B;
+  --color-brand-mid:        #D97706;
+  --color-brand-deep:       #B45309;
+  --color-carbon:           #0A0D14;
+  --color-primary:          #F59E0B;
+  --color-primary-dark:     #D97706;
+  --color-primary-hover:    #FBBF24;
+  --color-primary-light:    #FDE68A;
+  --color-primary-subtle:   rgba(245, 158, 11, 0.14);
+  --color-primary-glow:     rgba(245, 158, 11, 0.25);
+  --color-primary-border:   rgba(245, 158, 11, 0.35);
+
+  /* Semantic states */
+  --color-success:        #22C55E;
+  --color-success-dark:   #16A34A;
+  --color-success-bg:     rgba(34, 197, 94, 0.12);
+  --color-success-border: rgba(34, 197, 94, 0.28);
+
+  --color-warning:        #F59E0B;
+  --color-warning-dark:   #D97706;
+  --color-warning-bg:     rgba(245, 158, 11, 0.12);
+  --color-warning-border: rgba(245, 158, 11, 0.28);
+
+  --color-danger:         #EF4444;
+  --color-danger-dark:    #DC2626;
+  --color-danger-bg:      rgba(239, 68, 68, 0.12);
+  --color-danger-border:  rgba(239, 68, 68, 0.28);
+
+  --color-info:           #38BDF8;
+  --color-info-dark:      #0284C7;
+  --color-info-bg:        rgba(56, 189, 248, 0.12);
+  --color-info-border:    rgba(56, 189, 248, 0.28);
+
+  /* Legacy gold tokens */
+  --color-gold:             #F59E0B;
+  --color-gold-dark:        #D97706;
+  --color-gold-text:        #FDE68A;
+  --color-gold-bg:          rgba(245, 158, 11, 0.14);
+  --color-gold-border:      rgba(245, 158, 11, 0.32);
+  --color-gold-glow:        0 0 16px rgba(245, 158, 11, 0.25);
+
+  /* ── Sidebar ────────────────────────────────────── */
+  --sidebar-bg:             #0D111A;
+  --sidebar-elevated:       #131824;
+  --sidebar-border:         #232B3C;
+  --sidebar-item-hover:     #171F2E;
+  --sidebar-item-active:    #1F293D;
+  --sidebar-item-active-border: rgba(245, 158, 11, 0.70);
+  --sidebar-text:           #94A3B8;
+  --sidebar-text-hover:     #F8FAFC;
+  --sidebar-text-active:    #F8FAFC;
+  --sidebar-brand-name:     #F8FAFC;
+  --sidebar-section-label:  #64748B;
+
+  /* ── TopBar ─────────────────────────────────────── */
+  --topbar-bg:              rgba(13, 17, 26, 0.92);
+  --topbar-border:          #232B3C;
+
+  /* ── Shadows ─────────────────────────────────────── */
+  --shadow-xs:  0 1px 2px rgba(0, 0, 0, 0.6);
+  --shadow-sm:  0 1px 3px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md:  0 4px 16px -2px rgba(0, 0, 0, 0.6), 0 2px 6px -2px rgba(0, 0, 0, 0.4);
+  --shadow-lg:  0 12px 32px -4px rgba(0, 0, 0, 0.7), 0 4px 12px -4px rgba(0, 0, 0, 0.5);
+  --shadow-xl:  0 24px 56px -8px rgba(0, 0, 0, 0.8), 0 12px 24px -8px rgba(0, 0, 0, 0.6);
+  --shadow-brand: 0 4px 16px -2px rgba(245, 158, 11, 0.25), 0 2px 8px -2px rgba(245, 158, 11, 0.15);
+
+  /* ── Glass effects ───────────────────────────────── */
+  --glass-bg:     rgba(17, 22, 34, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+/* ══════════════════════════════════════════════════════════════════
    RESET & BASE
    ══════════════════════════════════════════════════════════════════ */
 *, *::before, *::after {
