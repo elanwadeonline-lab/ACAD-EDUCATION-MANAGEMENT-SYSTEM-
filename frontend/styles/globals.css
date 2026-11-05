@@ -14,6 +14,16 @@
    CSS DESIGN TOKENS
    ══════════════════════════════════════════════════════════════════ */
 :root {
+  color-scheme: light;
+  --color-on-primary: #FFFFFF;
+  --icon-orange: #D97706;
+  --icon-blue: #0284C7;
+  --icon-green: #16A34A;
+  --icon-purple: #7C3AED;
+  --icon-pink: #DB2777;
+  --icon-gold: #CA8A04;
+  --icon-danger: #DC2626;
+  --icon-muted: var(--color-muted);
   /* ── Typography ─────────────────────────────────── */
   --font-sans:    system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-system:  var(--font-sans);
@@ -196,6 +206,15 @@
    ══════════════════════════════════════════════════════════════════ */
 [data-theme="dark"],
 .dark {
+  color-scheme: dark;
+  --color-on-primary: #111622;
+  --icon-orange: #FB923C;
+  --icon-blue: #38BDF8;
+  --icon-green: #4ADE80;
+  --icon-purple: #A78BFA;
+  --icon-pink: #F472B6;
+  --icon-gold: #FBBF24;
+  --icon-danger: #F87171;
   /* ── Semantic Color Tokens ──────────────────────── */
   /* Background layers */
   --color-bg:            #0A0D14;

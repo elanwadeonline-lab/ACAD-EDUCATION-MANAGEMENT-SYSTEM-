@@ -12,8 +12,8 @@
 
 /* ── 1. Anti-Cheat & Focus Warning Banner ── */
 .focusWarningBanner {
-  background: #FEF2F2;
-  border-bottom: 2px solid #DC2626;
+  background: var(--color-danger-bg);
+  border-bottom: 2px solid var(--color-danger);
   box-shadow: 0 4px 12px rgba(220, 38, 38, 0.12);
   position: sticky;
   top: 0;
@@ -33,14 +33,14 @@
   padding: 0.75rem 1.5rem;
   max-width: 1200px;
   margin: 0 auto;
-  color: #991B1B;
+  color: var(--color-danger);
   font-size: 0.8125rem;
   font-weight: 600;
   width: 100%;
 }
 
 .focusWarningContent svg {
-  color: #DC2626;
+  color: var(--color-danger);
   flex-shrink: 0;
 }
 
@@ -50,7 +50,7 @@
   font-size: 0.75rem;
   font-weight: 700;
   border-radius: 8px;
-  background: #DC2626;
+  background: var(--color-danger);
   color: #FFFFFF;
   border: none;
   cursor: pointer;
@@ -59,7 +59,7 @@
 }
 
 .reenterBtn:hover {
-  background: #B91C1C;
+  background: var(--color-danger);
 }
 
 /* ── 2. Topbar & Header ── */
@@ -68,7 +68,7 @@
   top: 0;
   z-index: 50;
   background: var(--color-surface);
-  border-bottom: 1px solid #E2E8F0;
+  border-bottom: 1px solid var(--color-border);
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
   display: flex;
   align-items: center;
@@ -93,7 +93,7 @@
   gap: 0.35rem;
   font-size: 1.25rem;
   font-weight: 800;
-  color: #92400E;
+  color: var(--color-primary);
   letter-spacing: -0.02em;
   padding: 0.25rem 0.6rem;
   text-decoration: none;
@@ -120,7 +120,7 @@
 .examSubtitle {
   font-size: 0.6875rem;
   font-weight: 600;
-  color: #64748B;
+  color: var(--color-muted);
   font-family: var(--font-mono, monospace);
   margin: 0;
 }
@@ -139,9 +139,9 @@
   gap: 0.45rem;
   padding: 0.4rem 0.95rem;
   border-radius: 999px;
-  background: #FFFBEB;
-  border: 1px solid #FDE68A;
-  color: #92400E;
+  background: var(--color-primary-subtle);
+  border: 1px solid var(--color-primary-border);
+  color: var(--color-primary);
   font-size: 0.875rem;
   font-weight: 700;
   font-family: var(--font-mono, monospace);
@@ -155,8 +155,8 @@
   gap: 0.45rem;
   padding: 0.4rem 0.95rem;
   border-radius: 999px;
-  background: #FEF3C7;
-  border: 1px solid #FDE68A;
+  background: var(--color-warning-bg);
+  border: 1px solid var(--color-primary-border);
   color: #D97706;
   font-size: 0.875rem;
   font-weight: 700;
@@ -170,9 +170,9 @@
   gap: 0.45rem;
   padding: 0.4rem 0.95rem;
   border-radius: 999px;
-  background: #FEF2F2;
-  border: 1px solid #FECACA;
-  color: #DC2626;
+  background: var(--color-danger-bg);
+  border: 1px solid var(--color-danger-border);
+  color: var(--color-danger);
   font-size: 0.875rem;
   font-weight: 700;
   font-family: var(--font-mono, monospace);
@@ -191,11 +191,11 @@
   gap: 0.35rem;
   padding: 0.35rem 0.75rem;
   background: var(--color-surface);
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--color-border);
   border-radius: 999px;
   font-size: 0.6875rem;
   font-weight: 600;
-  color: #64748B;
+  color: var(--color-muted);
 }
 
 .topbarRight {
@@ -212,7 +212,7 @@
   padding: 0.4rem 0.85rem;
   font-size: 0.75rem;
   font-weight: 600;
-  color: #475569;
+  color: var(--color-text-3);
   cursor: pointer;
   transition: all 0.15s ease;
   background: transparent;
@@ -224,8 +224,8 @@
 }
 
 .toolBtnActive {
-  border-color: #FDE68A;
-  color: #475569;
+  border-color: var(--color-primary-border);
+  color: var(--color-text-3);
   font-weight: 600;
 }
 
@@ -254,7 +254,7 @@
 /* ── 3. Horizontal Question Navigator Rail ── */
 .navigatorRail {
   background: var(--color-surface);
-  border-bottom: 1px solid #E2E8F0;
+  border-bottom: 1px solid var(--color-border);
   padding: 0.65rem 1.75rem;
   display: flex;
   align-items: center;
@@ -269,7 +269,7 @@
   gap: 0.4rem;
   font-size: 0.75rem;
   font-weight: 600;
-  color: #64748B;
+  color: var(--color-muted);
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -295,9 +295,9 @@
   height: 32px;
   padding: 0 0.45rem;
   border-radius: 8px;
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--color-border);
   background: var(--color-surface);
-  color: #475569;
+  color: var(--color-text-3);
   font-size: 0.75rem;
   font-weight: 600;
   display: inline-flex;
@@ -317,21 +317,21 @@
 .navPillCurrent {
   background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%) !important;
   border-color: #F59E0B !important;
-  color: #0F172A !important;
+  color: var(--color-text) !important;
   font-weight: 800;
   box-shadow: 0 0 12px rgba(245, 158, 11, 0.45);
 }
 
 .navPillAnswered {
-  background: #ECFDF5;
-  border-color: #A7F3D0;
-  color: #059669;
+  background: var(--color-success-bg);
+  border-color: var(--color-success-border);
+  color: var(--color-success);
   font-weight: 700;
 }
 
 .navPillFlagged {
-  background: #FFFBEB;
-  border-color: #FDE68A;
+  background: var(--color-primary-subtle);
+  border-color: var(--color-primary-border);
   color: #D97706;
 }
 
@@ -359,7 +359,7 @@
   gap: 0.3rem;
   font-size: 0.6875rem;
   font-weight: 500;
-  color: #64748B;
+  color: var(--color-muted);
 }
 
 .legendDot {
@@ -388,7 +388,7 @@
 
 .questionCard {
   background: var(--color-surface);
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--color-border);
   border-radius: 18px;
   padding: 2rem 2.25rem;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02);
@@ -402,7 +402,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  border-bottom: 1px solid #F1F5F9;
+  border-bottom: 1px solid var(--color-surface-2);
   padding-bottom: 1rem;
 }
 
@@ -415,7 +415,7 @@
 .questionNumberTag {
   font-size: 0.75rem;
   font-weight: 700;
-  color: #92400E;
+  color: var(--color-primary);
   padding: 0.2rem 0.6rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -424,7 +424,7 @@
 .questionMarksTag {
   font-size: 0.75rem;
   font-weight: 600;
-  color: #64748B;
+  color: var(--color-muted);
 }
 
 .flagToggleBtn {
@@ -433,9 +433,9 @@
   gap: 0.35rem;
   font-size: 0.75rem;
   font-weight: 600;
-  color: #64748B;
+  color: var(--color-muted);
   background: transparent;
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   padding: 0.25rem 0.65rem;
   cursor: pointer;
@@ -443,14 +443,14 @@
 }
 
 .flagToggleBtn:hover {
-  background: #FFFBEB;
-  border-color: #FDE68A;
+  background: var(--color-primary-subtle);
+  border-color: var(--color-primary-border);
   color: #D97706;
 }
 
 .flagToggleBtnActive {
-  background: #FFFBEB;
-  border-color: #FDE68A;
+  background: var(--color-primary-subtle);
+  border-color: var(--color-primary-border);
   color: #D97706;
   font-weight: 700;
 }
@@ -466,7 +466,7 @@
 .questionMediaBox {
   border-radius: 12px;
   overflow: hidden;
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--color-border);
   max-height: 320px;
   display: flex;
   align-items: center;
@@ -494,19 +494,19 @@
   gap: 1rem;
   padding: 1rem 1.25rem;
   background: var(--color-surface);
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--color-border);
   border-radius: 12px;
   cursor: pointer;
   text-align: left;
   transition: all 180ms cubic-bezier(0.16, 1, 0.3, 1);
-  color: #334155;
+  color: var(--color-text-2);
   font-size: 0.9375rem;
   line-height: 1.45;
   width: 100%;
 }
 
 .optionButton:hover {
-  border-color: #CBD5E1;
+  border-color: var(--color-border-hover);
   background: var(--color-surface);
   transform: translateY(-1px);
 }
@@ -516,8 +516,8 @@
   align-items: center;
   gap: 1rem;
   padding: 1rem 1.25rem;
-  background: #FFFBEB;
-  border: 1.5px solid #92400E;
+  background: var(--color-primary-subtle);
+  border: 1.5px solid var(--color-primary);
   border-radius: 12px;
   cursor: pointer;
   text-align: left;
@@ -526,29 +526,29 @@
   font-weight: 600;
   line-height: 1.45;
   width: 100%;
-  box-shadow: 0 0 0 1px #92400E;
+  box-shadow: 0 0 0 1px var(--color-primary);
 }
 
 .optionLetterBadge {
   width: 32px;
   height: 32px;
   border-radius: 8px;
-  background: #F1F5F9;
-  border: 1px solid #E2E8F0;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 0.8125rem;
   font-weight: 700;
-  color: #475569;
+  color: var(--color-text-3);
   flex-shrink: 0;
   transition: all 150ms ease;
 }
 
 .optionButtonSelected .optionLetterBadge {
-  background: #92400E;
-  border-color: #92400E;
-  color: #FFFFFF;
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-on-primary);
 }
 
 .optionText {
@@ -561,7 +561,7 @@
   min-height: 200px;
   padding: 1rem 1.25rem;
   border-radius: 12px;
-  border: 1.5px solid #CBD5E1;
+  border: 1.5px solid var(--color-border-hover);
   background: var(--color-surface);
   color: var(--color-text);
   resize: vertical;
@@ -573,7 +573,7 @@
 
 .essayTextarea:focus {
   outline: none;
-  border-color: #92400E;
+  border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.15);
 }
 
@@ -593,8 +593,8 @@
   padding: 0.75rem 1.4rem;
   border-radius: 10px;
   background: var(--color-surface);
-  border: 1px solid #E2E8F0;
-  color: #334155;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-2);
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
@@ -603,7 +603,7 @@
 
 .actionBtnSecondary:hover:not(:disabled) {
   background: var(--color-surface);
-  border-color: #CBD5E1;
+  border-color: var(--color-border-hover);
   color: var(--color-text);
 }
 
@@ -618,9 +618,9 @@
   gap: 0.45rem;
   padding: 0.75rem 1.6rem;
   border-radius: 10px;
-  background: #92400E;
+  background: var(--color-primary);
   border: none;
-  color: #FFFFFF;
+  color: var(--color-on-primary);
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
@@ -629,7 +629,7 @@
 }
 
 .actionBtnPrimary:hover:not(:disabled) {
-  background: #78350F;
+  background: var(--color-primary);
   transform: translateY(-1px);
   box-shadow: 0 4px 10px rgba(217, 119, 6, 0.3);
 }
@@ -666,7 +666,7 @@
   gap: 0.4rem;
   font-size: 0.8125rem;
   font-weight: 600;
-  color: #64748B;
+  color: var(--color-muted);
   background: transparent;
   border: none;
   cursor: pointer;
@@ -676,13 +676,13 @@
 }
 
 .backBtn:hover {
-  background: #FFFBEB;
-  color: #92400E;
+  background: var(--color-primary-subtle);
+  color: var(--color-primary);
 }
 
 .preflightCard {
   background: var(--color-surface);
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--color-border);
   border-radius: 18px;
   padding: 2.25rem 2.5rem;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02);
@@ -705,9 +705,9 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #92400E;
-  background: #FFFBEB;
-  border: 1px solid #FDE68A;
+  color: var(--color-primary);
+  background: var(--color-primary-subtle);
+  border: 1px solid var(--color-primary-border);
   padding: 0.2rem 0.55rem;
   border-radius: 6px;
   align-self: flex-start;
@@ -724,7 +724,7 @@
 
 .preflightSubjectCode {
   font-size: 0.8125rem;
-  color: #64748B;
+  color: var(--color-muted);
   font-family: var(--font-mono, monospace);
   font-weight: 600;
 }
@@ -738,7 +738,7 @@
 
 .preflightMetaBox {
   background: var(--color-surface);
-  border: 1px solid #F1F5F9;
+  border: 1px solid var(--color-surface-2);
   border-radius: 14px;
   padding: 1.15rem 1.25rem;
   display: flex;
@@ -749,7 +749,7 @@
 .preflightMetaLabel {
   font-size: 0.6875rem;
   font-weight: 600;
-  color: #64748B;
+  color: var(--color-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -762,8 +762,8 @@
 }
 
 .preflightCandidateBox {
-  background: #FFFBEB;
-  border: 1px solid #FDE68A;
+  background: var(--color-primary-subtle);
+  border: 1px solid var(--color-primary-border);
   border-radius: 12px;
   padding: 0.85rem 1.15rem;
   display: flex;
@@ -782,7 +782,7 @@
 .preflightRulesTitle {
   font-size: 0.75rem;
   font-weight: 700;
-  color: #64748B;
+  color: var(--color-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -795,11 +795,11 @@
 
 .ruleItem {
   background: var(--color-surface);
-  border: 1px solid #F1F5F9;
+  border: 1px solid var(--color-surface-2);
   border-radius: 10px;
   padding: 0.85rem 1rem;
   font-size: 0.8125rem;
-  color: #334155;
+  color: var(--color-text-2);
   line-height: 1.45;
   display: flex;
   align-items: flex-start;
@@ -810,7 +810,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #92400E;
+  background: var(--color-primary);
   margin-top: 0.45rem;
   flex-shrink: 0;
 }
@@ -821,16 +821,16 @@
   justify-content: flex-end;
   gap: 0.85rem;
   padding-top: 1rem;
-  border-top: 1px solid #F1F5F9;
+  border-top: 1px solid var(--color-surface-2);
 }
 
 .preflightCancelBtn {
   padding: 0.65rem 1.25rem;
   font-size: 0.8125rem;
   font-weight: 600;
-  color: #475569;
+  color: var(--color-text-3);
   background: var(--color-surface);
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   cursor: pointer;
   transition: all 150ms ease;
@@ -848,8 +848,8 @@
   padding: 0.65rem 1.45rem;
   font-size: 0.875rem;
   font-weight: 700;
-  color: #FFFFFF;
-  background: #92400E;
+  color: var(--color-on-primary);
+  background: var(--color-primary);
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -858,7 +858,7 @@
 }
 
 .preflightStartBtn:hover {
-  background: #78350F;
+  background: var(--color-primary);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3);
 }
@@ -876,7 +876,7 @@
 
 .summaryModal {
   background: var(--color-surface);
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--color-border);
   border-radius: 18px;
   padding: 2rem 2.25rem;
   max-width: 540px;
@@ -896,7 +896,7 @@
 
 .summarySub {
   font-size: 0.8125rem;
-  color: #64748B;
+  color: var(--color-muted);
   margin: 0.15rem 0 0;
 }
 
@@ -908,7 +908,7 @@
 
 .summaryStatItem {
   background: var(--color-surface);
-  border: 1px solid #F1F5F9;
+  border: 1px solid var(--color-surface-2);
   border-radius: 12px;
   padding: 0.85rem 1rem;
   display: flex;
@@ -919,7 +919,7 @@
 .summaryStatLabel {
   font-size: 0.6875rem;
   font-weight: 600;
-  color: #64748B;
+  color: var(--color-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -933,7 +933,7 @@
 /* ── 10. Post-Exam Celebration Screen ── */
 .celebrationCard {
   background: var(--color-surface);
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--color-border);
   border-radius: 20px;
   padding: 2.75rem 2.5rem;
   max-width: 520px;
@@ -952,9 +952,9 @@
   gap: 0.4rem;
   font-size: 0.75rem;
   font-weight: 700;
-  color: #059669;
-  background: #ECFDF5;
-  border: 1px solid #A7F3D0;
+  color: var(--color-success);
+  background: var(--color-success-bg);
+  border: 1px solid var(--color-success-border);
   padding: 0.25rem 0.75rem;
   border-radius: 999px;
 }
@@ -969,7 +969,7 @@
 
 .celebrationSub {
   font-size: 0.875rem;
-  color: #64748B;
+  color: var(--color-muted);
   margin: 0.35rem 0 0;
 }
 
@@ -977,8 +977,8 @@
   width: 120px;
   height: 120px;
   border-radius: 50%;
-  background: #FFFBEB;
-  border: 3px solid #92400E;
+  background: var(--color-primary-subtle);
+  border: 3px solid var(--color-primary);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -989,7 +989,7 @@
 .scoreValueMain {
   font-size: 1.75rem;
   font-weight: 800;
-  color: #92400E;
+  color: var(--color-primary);
   font-family: var(--font-mono, monospace);
   line-height: 1;
 }
@@ -997,7 +997,7 @@
 .scoreTotalSub {
   font-size: 0.6875rem;
   font-weight: 600;
-  color: #64748B;
+  color: var(--color-muted);
   margin-top: 0.25rem;
 }
 
@@ -1010,7 +1010,7 @@
 
 .breakdownItem {
   background: var(--color-surface);
-  border: 1px solid #F1F5F9;
+  border: 1px solid var(--color-surface-2);
   border-radius: 12px;
   padding: 0.75rem;
   display: flex;
@@ -1020,7 +1020,7 @@
 
 .breakdownLabel {
   font-size: 0.6875rem;
-  color: #64748B;
+  color: var(--color-muted);
   font-weight: 600;
   text-transform: uppercase;
 }
@@ -1047,8 +1047,8 @@
   padding: 0.75rem 1.75rem;
   font-size: 0.875rem;
   font-weight: 700;
-  color: #FFFFFF;
-  background: #92400E;
+  color: var(--color-on-primary);
+  background: var(--color-primary);
   border: none;
   border-radius: 10px;
   cursor: pointer;
@@ -1058,7 +1058,7 @@
 }
 
 .returnHomeBtn:hover {
-  background: #78350F;
+  background: var(--color-primary);
   transform: translateY(-1px);
 }
 
@@ -1069,9 +1069,9 @@
   gap: 0.45rem;
   padding: 0.75rem 1.4rem;
   border-radius: 10px;
-  background: #FFFBEB;
-  border: 1px solid #FDE68A;
-  color: #29231B;
+  background: var(--color-primary-subtle);
+  border: 1px solid var(--color-primary-border);
+  color: var(--color-text);
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
@@ -1079,8 +1079,8 @@
 }
 
 .solutionActionBtn:hover:not(:disabled) {
-  background: #FEF3C7;
-  border-color: #FDE68A;
+  background: var(--color-warning-bg);
+  border-color: var(--color-primary-border);
   transform: translateY(-1px);
 }
 
@@ -1090,9 +1090,9 @@
 }
 
 .solutionActionBtnActive {
-  background: #ECFDF5;
-  border-color: #A7F3D0;
-  color: #059669;
+  background: var(--color-success-bg);
+  border-color: var(--color-success-border);
+  color: var(--color-success);
 }
 
 .solutionCounterTag {
@@ -1102,8 +1102,8 @@
   font-weight: 700;
   padding: 0.15rem 0.5rem;
   border-radius: 999px;
-  background: #FDE68A;
-  color: #92400E;
+  background: var(--color-primary-border);
+  color: var(--color-primary);
   margin-left: 0.25rem;
 }
 
@@ -1148,31 +1148,31 @@
   justify-content: space-between;
   gap: 1rem;
   padding-bottom: 1.25rem;
-  border-bottom: 1px solid #E2E8F0;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .solutionDrawerCloseBtn {
   background: transparent;
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   width: 32px;
   height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #64748B;
+  color: var(--color-muted);
   cursor: pointer;
   transition: all 150ms ease;
 }
 
 .solutionDrawerCloseBtn:hover {
-  background: #F1F5F9;
+  background: var(--color-surface-2);
   color: var(--color-text);
 }
 
 .solutionSectionCard {
   background: var(--color-surface);
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--color-border);
   border-radius: 14px;
   padding: 1.25rem;
   display: flex;
@@ -1193,18 +1193,18 @@
 
 .solutionSectionBody {
   font-size: 0.9375rem;
-  color: #334155;
+  color: var(--color-text-2);
   line-height: 1.6;
   white-space: pre-wrap;
 }
 
 .solutionLimitWarning {
-  background: #FFFBEB;
-  border: 1px solid #FDE68A;
+  background: var(--color-primary-subtle);
+  border: 1px solid var(--color-primary-border);
   border-radius: 10px;
   padding: 0.75rem 1rem;
   font-size: 0.8125rem;
-  color: #92400E;
+  color: var(--color-primary);
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -1223,7 +1223,7 @@
 
 .celebrationCard {
   background: var(--color-surface);
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--color-border);
   border-radius: 24px;
   padding: 2.75rem 2.5rem;
   width: 100%;
@@ -1242,9 +1242,9 @@
   gap: 0.4rem;
   font-size: 0.75rem;
   font-weight: 700;
-  color: #92400E;
-  background: #FFFBEB;
-  border: 1px solid #FDE68A;
+  color: var(--color-primary);
+  background: var(--color-primary-subtle);
+  border: 1px solid var(--color-primary-border);
   padding: 0.3rem 0.85rem;
   border-radius: 999px;
   text-transform: uppercase;
@@ -1262,7 +1262,7 @@
 
 .celebrationSub {
   font-size: 0.875rem;
-  color: #64748B;
+  color: var(--color-muted);
   margin: 0;
   line-height: 1.5;
 }
@@ -1271,8 +1271,8 @@
   width: 140px;
   height: 140px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #FFFBEB 0%, #FDE68A 100%);
-  border: 4px solid #92400E;
+  background: linear-gradient(135deg, var(--color-primary-subtle) 0%, var(--color-primary-border) 100%);
+  border: 4px solid var(--color-primary);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1284,7 +1284,7 @@
 .scoreValueMain {
   font-size: 2.25rem;
   font-weight: 800;
-  color: #92400E;
+  color: var(--color-primary);
   line-height: 1;
   letter-spacing: -0.03em;
 }
@@ -1292,7 +1292,7 @@
 .scoreTotalSub {
   font-size: 0.75rem;
   font-weight: 700;
-  color: #475569;
+  color: var(--color-text-3);
   margin-top: 0.3rem;
 }
 
@@ -1305,7 +1305,7 @@
 
 .breakdownItem {
   background: var(--color-surface);
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--color-border);
   border-radius: 14px;
   padding: 0.9rem 1rem;
   text-align: center;
@@ -1313,7 +1313,7 @@
 
 .breakdownLabel {
   font-size: 0.75rem;
-  color: #64748B;
+  color: var(--color-muted);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -1341,8 +1341,8 @@
   gap: 0.5rem;
   width: 100%;
   padding: 0.85rem 1.4rem;
-  background: #92400E;
-  color: #FFFFFF;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
   border: none;
   border-radius: 12px;
   font-size: 0.875rem;
@@ -1353,7 +1353,7 @@
 }
 
 .returnHomeBtn:hover {
-  background: #78350F;
+  background: var(--color-primary);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(217, 119, 6, 0.35);
 }
@@ -1363,9 +1363,9 @@
   align-items: center;
   justify-content: center;
   gap: 0.45rem;
-  background: #FFFBEB;
-  color: #92400E;
-  border: 1px solid #FDE68A;
+  background: var(--color-primary-subtle);
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary-border);
   border-radius: 12px;
   padding: 0.85rem 1.4rem;
   font-size: 0.875rem;
@@ -1376,15 +1376,15 @@
 }
 
 .reviewBreakdownBtn:hover {
-  background: #FDE68A;
-  border-color: #FDE68A;
+  background: var(--color-primary-border);
+  border-color: var(--color-primary-border);
   transform: translateY(-1px);
 }
 
 .linkBtn {
   font-size: 0.8125rem;
   font-weight: 700;
-  color: #92400E;
+  color: var(--color-primary);
   text-decoration: none;
   padding: 0.4rem 0.6rem;
   border-radius: 6px;
@@ -1392,14 +1392,14 @@
 }
 
 .linkBtn:hover {
-  background: #FFFBEB;
+  background: var(--color-primary-subtle);
   text-decoration: underline;
 }
 
 /* ── 14. Result Release Hold States ── */
 .releaseHoldCard {
   background: var(--color-surface);
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--color-border);
   border-radius: 20px;
   padding: 2.5rem 2rem;
   width: 100%;
@@ -1419,8 +1419,8 @@
   font-size: 0.75rem;
   font-weight: 700;
   color: #D97706;
-  background: #FFFBEB;
-  border: 1px solid #FDE68A;
+  background: var(--color-primary-subtle);
+  border: 1px solid var(--color-primary-border);
   padding: 0.25rem 0.75rem;
   border-radius: 999px;
 }
@@ -1431,16 +1431,16 @@
   gap: 0.4rem;
   font-size: 0.75rem;
   font-weight: 700;
-  color: #92400E;
-  background: #FFFBEB;
-  border: 1px solid #FDE68A;
+  color: var(--color-primary);
+  background: var(--color-primary-subtle);
+  border: 1px solid var(--color-primary-border);
   padding: 0.25rem 0.75rem;
   border-radius: 999px;
 }
 
 .releaseScheduleBox {
   background: var(--color-surface);
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--color-border);
   border-radius: 12px;
   padding: 1rem 1.25rem;
   width: 100%;

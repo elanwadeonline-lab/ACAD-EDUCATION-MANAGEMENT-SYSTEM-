@@ -1,148 +1,127 @@
 "use client";
-
 import React, { createContext, forwardRef, useContext } from 'react';
 import type { ReactNode } from 'react';
-import {
-  Activity as LucideActivity,
-  AlertCircle as LucideAlertCircle,
-  ArrowRight as LucideArrowRight,
-  ArrowUpRight as LucideArrowUpRight,
-  Award as LucideAward,
-  Bell as LucideBell,
-  BookOpen as LucideBookOpen,
-  Calculator as LucideCalculator,
-  CalendarDays as LucideCalendar,
-  ChartNoAxesCombined as LucideChart,
-  Check as LucideCheck,
-  CircleCheck as LucideCircleCheck,
-  CircleX as LucideCircleX,
-  ChevronDown as LucideChevronDown,
-  ChevronRight as LucideChevronRight,
-  ClipboardList as LucideClipboard,
-  Clock3 as LucideClock,
-  Copy as LucideCopy,
-  Crown as LucideCrown,
-  Download as LucideDownload,
-  FileText as LucideFileText,
-  Flag as LucideFlag,
-  Flame as LucideFlame,
-  Gamepad2 as LucideGamepad,
-  Gem as LucideGem,
-  GraduationCap as LucideGraduation,
-  House as LucideHome,
-  Inbox as LucideInbox,
-  Layers as LucideLayers,
-  LockKeyhole as LucideLock,
-  LogOut as LucideLogOut,
-  Medal as LucideMedal,
-  MessageSquare as LucideMessage,
-  Monitor as LucideMonitor,
-  Mountain as LucideMountain,
-  Pencil as LucidePencil,
-  Play as LucidePlay,
-  RefreshCw as LucideRefresh,
-  RotateCcw as LucideRotateCcw,
-  School as LucideSchool,
-  Search as LucideSearch,
-  Settings as LucideSettings,
-  ShieldCheck as LucideShield,
-  Sparkles as LucideSparkles,
-  Swords as LucideSwords,
-  Target as LucideTarget,
-  Trash2 as LucideTrash,
-  TrendingUp as LucideTrending,
-  TriangleAlert as LucideAlert,
-  Trophy as LucideTrophy,
-  UserRound as LucideUser,
-  Users as LucideUsers,
-  X as LucideX,
-} from 'lucide-react';
-import type { LucideIcon, LucideProps } from 'lucide-react';
+import type { LucideProps } from 'lucide-react';
+import type { Icon } from '@phosphor-icons/react';
 import { AcqadMark } from '../brand/AcqadLogo';
-
-export type StudentIconProps = LucideProps & {
-  width?: string | number;
-  height?: string | number;
-};
-
-// Geometry comes exclusively from official external Lucide vector library.
-// Zero handwritten approximate SVG paths.
-function studentIcon(Component: LucideIcon, defaultSize = 20) {
-  const Icon = forwardRef<SVGSVGElement, StudentIconProps>((props, ref) => {
-    const { width, height, size, strokeWidth = 1.75, ...rest } = props;
-    const resolvedSize = size ?? width ?? height ?? defaultSize;
-    const labelled = Boolean(props['aria-label'] || props['aria-labelledby']);
-    return (
-      <Component
-        ref={ref}
-        size={resolvedSize}
-        strokeWidth={strokeWidth}
-        focusable="false"
-        aria-hidden={labelled ? undefined : true}
-        role={labelled ? 'img' : undefined}
-        data-icon-source="lucide"
-        {...rest}
-      />
-    );
-  });
-  Icon.displayName = `Student${Component.displayName || 'Icon'}`;
-  return Icon;
+import {ArrowCounterClockwiseIcon as PhosphorArrowCounterClockwise} from '@phosphor-icons/react/dist/csr/ArrowCounterClockwise';
+import {ArrowRightIcon as PhosphorArrowRight} from '@phosphor-icons/react/dist/csr/ArrowRight';
+import {ArrowUpRightIcon as PhosphorArrowUpRight} from '@phosphor-icons/react/dist/csr/ArrowUpRight';
+import {ArrowsClockwiseIcon as PhosphorArrowsClockwise} from '@phosphor-icons/react/dist/csr/ArrowsClockwise';
+import {BellIcon as PhosphorBell} from '@phosphor-icons/react/dist/csr/Bell';
+import {BookOpenTextIcon as PhosphorBookOpenText} from '@phosphor-icons/react/dist/csr/BookOpenText';
+import {BuildingsIcon as PhosphorBuildings} from '@phosphor-icons/react/dist/csr/Buildings';
+import {CalculatorIcon as PhosphorCalculator} from '@phosphor-icons/react/dist/csr/Calculator';
+import {CalendarDotsIcon as PhosphorCalendarDots} from '@phosphor-icons/react/dist/csr/CalendarDots';
+import {CaretDownIcon as PhosphorCaretDown} from '@phosphor-icons/react/dist/csr/CaretDown';
+import {CaretRightIcon as PhosphorCaretRight} from '@phosphor-icons/react/dist/csr/CaretRight';
+import {ChartLineUpIcon as PhosphorChartLineUp} from '@phosphor-icons/react/dist/csr/ChartLineUp';
+import {ChatCircleDotsIcon as PhosphorChatCircleDots} from '@phosphor-icons/react/dist/csr/ChatCircleDots';
+import {CheckCircleIcon as PhosphorCheckCircle} from '@phosphor-icons/react/dist/csr/CheckCircle';
+import {CheckFatIcon as PhosphorCheckFat} from '@phosphor-icons/react/dist/csr/CheckFat';
+import {ClipboardTextIcon as PhosphorClipboardText} from '@phosphor-icons/react/dist/csr/ClipboardText';
+import {ClockIcon as PhosphorClock} from '@phosphor-icons/react/dist/csr/Clock';
+import {CopyIcon as PhosphorCopy} from '@phosphor-icons/react/dist/csr/Copy';
+import {CrownIcon as PhosphorCrown} from '@phosphor-icons/react/dist/csr/Crown';
+import {DesktopIcon as PhosphorDesktop} from '@phosphor-icons/react/dist/csr/Desktop';
+import {DiamondIcon as PhosphorDiamond} from '@phosphor-icons/react/dist/csr/Diamond';
+import {DownloadSimpleIcon as PhosphorDownloadSimple} from '@phosphor-icons/react/dist/csr/DownloadSimple';
+import {FileTextIcon as PhosphorFileText} from '@phosphor-icons/react/dist/csr/FileText';
+import {FireIcon as PhosphorFire} from '@phosphor-icons/react/dist/csr/Fire';
+import {FlagIcon as PhosphorFlag} from '@phosphor-icons/react/dist/csr/Flag';
+import {GameControllerIcon as PhosphorGameController} from '@phosphor-icons/react/dist/csr/GameController';
+import {GearSixIcon as PhosphorGearSix} from '@phosphor-icons/react/dist/csr/GearSix';
+import {GraduationCapIcon as PhosphorGraduationCap} from '@phosphor-icons/react/dist/csr/GraduationCap';
+import {HouseIcon as PhosphorHouse} from '@phosphor-icons/react/dist/csr/House';
+import {LockKeyIcon as PhosphorLockKey} from '@phosphor-icons/react/dist/csr/LockKey';
+import {MagnifyingGlassIcon as PhosphorMagnifyingGlass} from '@phosphor-icons/react/dist/csr/MagnifyingGlass';
+import {MedalIcon as PhosphorMedal} from '@phosphor-icons/react/dist/csr/Medal';
+import {MountainsIcon as PhosphorMountains} from '@phosphor-icons/react/dist/csr/Mountains';
+import {PencilSimpleIcon as PhosphorPencilSimple} from '@phosphor-icons/react/dist/csr/PencilSimple';
+import {PlayCircleIcon as PhosphorPlayCircle} from '@phosphor-icons/react/dist/csr/PlayCircle';
+import {PulseIcon as PhosphorPulse} from '@phosphor-icons/react/dist/csr/Pulse';
+import {ShieldCheckIcon as PhosphorShieldCheck} from '@phosphor-icons/react/dist/csr/ShieldCheck';
+import {SignOutIcon as PhosphorSignOut} from '@phosphor-icons/react/dist/csr/SignOut';
+import {SparkleIcon as PhosphorSparkle} from '@phosphor-icons/react/dist/csr/Sparkle';
+import {StackIcon as PhosphorStack} from '@phosphor-icons/react/dist/csr/Stack';
+import {SwordIcon as PhosphorSword} from '@phosphor-icons/react/dist/csr/Sword';
+import {TargetIcon as PhosphorTarget} from '@phosphor-icons/react/dist/csr/Target';
+import {TrashIcon as PhosphorTrash} from '@phosphor-icons/react/dist/csr/Trash';
+import {TrayIcon as PhosphorTray} from '@phosphor-icons/react/dist/csr/Tray';
+import {TrendUpIcon as PhosphorTrendUp} from '@phosphor-icons/react/dist/csr/TrendUp';
+import {TrophyIcon as PhosphorTrophy} from '@phosphor-icons/react/dist/csr/Trophy';
+import {UserCircleIcon as PhosphorUserCircle} from '@phosphor-icons/react/dist/csr/UserCircle';
+import {UsersThreeIcon as PhosphorUsersThree} from '@phosphor-icons/react/dist/csr/UsersThree';
+import {WarningIcon as PhosphorWarning} from '@phosphor-icons/react/dist/csr/Warning';
+import {WarningCircleIcon as PhosphorWarningCircle} from '@phosphor-icons/react/dist/csr/WarningCircle';
+import {XIcon as PhosphorX} from '@phosphor-icons/react/dist/csr/X';
+import {XCircleIcon as PhosphorXCircle} from '@phosphor-icons/react/dist/csr/XCircle';
+export type StudentIconProps = LucideProps & {width?: string | number;height?: string | number};
+// Official filled paths, imported individually to keep unused icons out of the bundle.
+function studentIcon(Component: Icon, tone='muted', defaultSize=20) {
+ const Result=forwardRef<SVGSVGElement,StudentIconProps>((props,ref)=>{
+  const {width,height,size,strokeWidth,absoluteStrokeWidth,stroke,fill,color,style,...rest}=props;
+  const labelled=Boolean(props['aria-label']||props['aria-labelledby']);
+  return <Component {...rest} ref={ref} size={size??width??height??defaultSize} weight="fill"
+   style={{color:color??`var(--icon-${tone}, currentColor)`,...style}} focusable="false"
+   aria-hidden={labelled?undefined:true} role={labelled?'img':undefined} data-icon-source="phosphor" data-icon-weight="fill"/>;
+ });
+ Result.displayName='StudentFilledIcon';return Result;
 }
-
-export const Activity = studentIcon(LucideActivity);
-export const AlertCircle = studentIcon(LucideAlertCircle);
-export const ArrowRight = studentIcon(LucideArrowRight);
-export const ArrowUpRight = studentIcon(LucideArrowUpRight);
-export const Award = studentIcon(LucideAward);
-export const Bell = studentIcon(LucideBell);
-export const BookOpen = studentIcon(LucideBookOpen);
-export const Calculator = studentIcon(LucideCalculator);
-export const CalendarDays = studentIcon(LucideCalendar);
-export const ChartNoAxesCombined = studentIcon(LucideChart);
-export const Check = studentIcon(LucideCheck);
-export const CircleCheck = studentIcon(LucideCircleCheck);
-export const CheckCircle2 = studentIcon(LucideCircleCheck);
-export const CircleX = studentIcon(LucideCircleX);
-export const ChevronDown = studentIcon(LucideChevronDown);
-export const ChevronRight = studentIcon(LucideChevronRight);
-export const ClipboardList = studentIcon(LucideClipboard);
-export const Clock3 = studentIcon(LucideClock);
-export const Copy = studentIcon(LucideCopy);
-export const Crown = studentIcon(LucideCrown);
-export const Download = studentIcon(LucideDownload);
-export const FileText = studentIcon(LucideFileText);
-export const Flag = studentIcon(LucideFlag);
-export const Flame = studentIcon(LucideFlame);
-export const Gamepad2 = studentIcon(LucideGamepad);
-export const Gem = studentIcon(LucideGem);
-export const GraduationCap = studentIcon(LucideGraduation);
-export const Home = studentIcon(LucideHome);
-export const Inbox = studentIcon(LucideInbox);
-export const Layers = studentIcon(LucideLayers);
-export const Lock = studentIcon(LucideLock);
-export const LogOut = studentIcon(LucideLogOut);
-export const Medal = studentIcon(LucideMedal);
-export const MessageSquare = studentIcon(LucideMessage);
-export const Monitor = studentIcon(LucideMonitor);
-export const Mountain = studentIcon(LucideMountain);
-export const Pencil = studentIcon(LucidePencil);
-export const Play = studentIcon(LucidePlay);
-export const RefreshCw = studentIcon(LucideRefresh);
-export const RotateCcw = studentIcon(LucideRotateCcw);
-export const School = studentIcon(LucideSchool);
-export const Search = studentIcon(LucideSearch);
-export const Settings = studentIcon(LucideSettings);
-export const ShieldCheck = studentIcon(LucideShield);
-export const Sparkles = studentIcon(LucideSparkles);
-export const Swords = studentIcon(LucideSwords);
-export const Target = studentIcon(LucideTarget);
-export const Trash2 = studentIcon(LucideTrash);
-export const TrendingUp = studentIcon(LucideTrending);
-export const TriangleAlert = studentIcon(LucideAlert);
-export const Trophy = studentIcon(LucideTrophy);
-export const UserRound = studentIcon(LucideUser);
-export const Users = studentIcon(LucideUsers);
-export const X = studentIcon(LucideX);
+export const Activity = studentIcon(PhosphorPulse, 'muted');
+export const AlertCircle = studentIcon(PhosphorWarningCircle, 'danger');
+export const ArrowRight = studentIcon(PhosphorArrowRight, 'muted');
+export const ArrowUpRight = studentIcon(PhosphorArrowUpRight, 'muted');
+export const Award = studentIcon(PhosphorMedal, 'gold');
+export const Bell = studentIcon(PhosphorBell, 'pink');
+export const BookOpen = studentIcon(PhosphorBookOpenText, 'blue');
+export const Calculator = studentIcon(PhosphorCalculator, 'muted');
+export const CalendarDays = studentIcon(PhosphorCalendarDots, 'pink');
+export const ChartNoAxesCombined = studentIcon(PhosphorChartLineUp, 'purple');
+export const Check = studentIcon(PhosphorCheckFat, 'green');
+export const CircleCheck = studentIcon(PhosphorCheckCircle, 'green');
+export const CircleX = studentIcon(PhosphorXCircle, 'danger');
+export const ChevronDown = studentIcon(PhosphorCaretDown, 'muted');
+export const ChevronRight = studentIcon(PhosphorCaretRight, 'muted');
+export const ClipboardList = studentIcon(PhosphorClipboardText, 'green');
+export const Clock3 = studentIcon(PhosphorClock, 'pink');
+export const Copy = studentIcon(PhosphorCopy, 'muted');
+export const Crown = studentIcon(PhosphorCrown, 'gold');
+export const Download = studentIcon(PhosphorDownloadSimple, 'muted');
+export const FileText = studentIcon(PhosphorFileText, 'purple');
+export const Flag = studentIcon(PhosphorFlag, 'muted');
+export const Flame = studentIcon(PhosphorFire, 'orange');
+export const Gamepad2 = studentIcon(PhosphorGameController, 'blue');
+export const Gem = studentIcon(PhosphorDiamond, 'purple');
+export const GraduationCap = studentIcon(PhosphorGraduationCap, 'purple');
+export const Home = studentIcon(PhosphorHouse, 'orange');
+export const Inbox = studentIcon(PhosphorTray, 'muted');
+export const Layers = studentIcon(PhosphorStack, 'muted');
+export const Lock = studentIcon(PhosphorLockKey, 'muted');
+export const LogOut = studentIcon(PhosphorSignOut, 'muted');
+export const Medal = studentIcon(PhosphorMedal, 'gold');
+export const MessageSquare = studentIcon(PhosphorChatCircleDots, 'purple');
+export const Monitor = studentIcon(PhosphorDesktop, 'muted');
+export const Mountain = studentIcon(PhosphorMountains, 'green');
+export const Pencil = studentIcon(PhosphorPencilSimple, 'muted');
+export const Play = studentIcon(PhosphorPlayCircle, 'blue');
+export const RefreshCw = studentIcon(PhosphorArrowsClockwise, 'muted');
+export const RotateCcw = studentIcon(PhosphorArrowCounterClockwise, 'muted');
+export const School = studentIcon(PhosphorBuildings, 'muted');
+export const Search = studentIcon(PhosphorMagnifyingGlass, 'muted');
+export const Settings = studentIcon(PhosphorGearSix, 'muted');
+export const ShieldCheck = studentIcon(PhosphorShieldCheck, 'green');
+export const Sparkles = studentIcon(PhosphorSparkle, 'gold');
+export const Swords = studentIcon(PhosphorSword, 'purple');
+export const Target = studentIcon(PhosphorTarget, 'pink');
+export const Trash2 = studentIcon(PhosphorTrash, 'muted');
+export const TrendingUp = studentIcon(PhosphorTrendUp, 'purple');
+export const TriangleAlert = studentIcon(PhosphorWarning, 'gold');
+export const Trophy = studentIcon(PhosphorTrophy, 'gold');
+export const UserRound = studentIcon(PhosphorUserCircle, 'blue');
+export const Users = studentIcon(PhosphorUsersThree, 'blue');
+export const X = studentIcon(PhosphorX, 'muted');
+export const CheckCircle2=CircleCheck;
 
 // Institutional Brand Mark
 export const AcadBrandIcon = ({
@@ -227,40 +206,12 @@ export function StudentIconProvider({ children }: { children: ReactNode }) {
 }
 export const useStudentIconScope = () => useContext(studentScope);
 
-// Gamification achievement badges mapped to distinct Lucide iconography
-const achievements: Record<string, typeof LucideMedal> = {
-  first_exam: LucideGraduation,
-  exam_5: LucideMountain,
-  high_scorer: LucideTarget,
-  perfect: LucideGem,
-  streak_7: LucideFlame,
-  practice_50: LucideBookOpen,
-  top_rank: LucideCrown,
-  level_5: LucideMedal,
-  mastery_quest: LucideSwords,
-  speed_solver: LucideClock,
-  perfect_attendance: LucideCalendar,
-  champion: LucideTrophy,
-};
-
-export function AchievementSymbol({ id, size = 28, strokeWidth = 1.75 }: { id: string; size?: number; strokeWidth?: number }) {
-  const Icon = achievements[id] || LucideMedal;
-  return <Icon size={size} strokeWidth={strokeWidth} aria-hidden="true" focusable="false" data-icon-source="lucide" />;
-}
-
-// Student notification categorization symbols
-export function StudentNotificationSymbol({ type, size = 16, strokeWidth = 1.75 }: { type: string; size?: number; strokeWidth?: number }) {
-  const icons: Record<string, typeof LucideBell> = {
-    exam: LucideClipboard,
-    subject_published: LucideBookOpen,
-    exam_submitted: LucideCircleCheck,
-    results: LucideChart,
-    result_released: LucideChart,
-    attendance: LucideCalendar,
-    remark_added: LucideMessage,
-  };
-  const Icon = icons[type] || LucideBell;
-  return <Icon size={size} strokeWidth={strokeWidth} aria-hidden="true" focusable="false" data-icon-source="lucide" />;
+// Semantic filled achievements retain the existing badge IDs and data.
+const achievements:Record<string,typeof Medal>={first_exam:GraduationCap,exam_5:Mountain,high_scorer:Target,perfect:Gem,streak_7:Flame,practice_50:BookOpen,top_rank:Crown,level_5:Medal,mastery_quest:Swords,speed_solver:Clock3,perfect_attendance:CalendarDays,champion:Trophy};
+export function AchievementSymbol({id,size=28}:{id:string;size?:number;strokeWidth?:number}){const Icon=achievements[id]||Medal;return <Icon size={size}/>;}
+export function StudentNotificationSymbol({type,size=16}:{type:string;size?:number;strokeWidth?:number}){
+ const icons:Record<string,typeof Bell>={exam:ClipboardList,subject_published:BookOpen,exam_submitted:CircleCheck,results:ChartNoAxesCombined,result_released:ChartNoAxesCombined,attendance:CalendarDays,remark_added:MessageSquare};
+ const Icon=icons[type]||Bell;return <Icon size={size}/>;
 }
 
 export const studentReportIcons = {

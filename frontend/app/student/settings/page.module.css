@@ -37,7 +37,7 @@
 .heroSubtitle {
   font-size: 0.875rem;
   font-weight: 400;
-  color: #64748B;
+  color: var(--color-muted);
   margin: 0;
   line-height: 1.5;
 }
@@ -55,7 +55,7 @@
   gap: 1rem;
   padding: 1.15rem 1.45rem;
   background: var(--color-surface);
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--color-border);
   border-radius: 16px;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
   min-width: 155px;
@@ -65,7 +65,7 @@
 
 .telemetryBadge:hover {
   transform: translateY(-2px);
-  border-color: #CBD5E1;
+  border-color: var(--color-border-hover);
   box-shadow: 0 6px 16px -2px rgba(15, 23, 42, 0.06);
 }
 
@@ -73,8 +73,8 @@
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: #FEF3C7;
-  border: 1px solid #FDE68A;
+  background: var(--color-warning-bg);
+  border: 1px solid var(--color-primary-border);
   color: #D97706;
   display: flex;
   align-items: center;
@@ -104,7 +104,7 @@
 .telemetryText {
   font-size: 0.75rem;
   font-weight: 500;
-  color: #64748B;
+  color: var(--color-muted);
   white-space: nowrap;
   margin-top: 0.1rem;
 }
@@ -112,7 +112,7 @@
 /* ── 2. Candidate Identity Card ── */
 .card {
   background: var(--color-surface);
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--color-border);
   border-radius: 18px;
   padding: 1.75rem 2rem;
   display: flex;
@@ -131,14 +131,14 @@
   width: 52px;
   height: 52px;
   border-radius: 14px;
-  background: #FFFBEB;
-  border: 1px solid #FDE68A;
+  background: var(--color-primary-subtle);
+  border: 1px solid var(--color-primary-border);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.25rem;
   font-weight: 700;
-  color: #92400E;
+  color: var(--color-primary);
   flex-shrink: 0;
 }
 
@@ -151,7 +151,7 @@
 
 .email {
   font-size: 0.8125rem;
-  color: #64748B;
+  color: var(--color-muted);
   margin-top: 0.15rem;
 }
 
@@ -160,9 +160,9 @@
   margin-top: 0.35rem;
   font-size: 0.6875rem;
   font-weight: 600;
-  color: #92400E;
-  background: #FFFBEB;
-  border: 1px solid #FDE68A;
+  color: var(--color-primary);
+  background: var(--color-primary-subtle);
+  border: 1px solid var(--color-primary-border);
   padding: 0.15rem 0.5rem;
   border-radius: 6px;
   letter-spacing: 0.02em;
@@ -176,7 +176,7 @@
 
 .fieldItem {
   background: var(--color-surface);
-  border: 1px solid #F1F5F9;
+  border: 1px solid var(--color-surface-2);
   border-radius: 12px;
   padding: 0.85rem 1rem;
   display: flex;
@@ -187,7 +187,7 @@
 .fieldLabel {
   font-size: 0.6875rem;
   font-weight: 600;
-  color: #64748B;
+  color: var(--color-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -205,7 +205,7 @@
   justify-content: space-between;
   gap: 1rem;
   padding: 1rem 0;
-  border-top: 1px solid #F1F5F9;
+  border-top: 1px solid var(--color-surface-2);
 }
 
 .actionRow:first-child {

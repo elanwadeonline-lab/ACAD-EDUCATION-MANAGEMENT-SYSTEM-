@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { Sun, Moon } from "lucide-react";
+import { SunIcon as Sun } from '@phosphor-icons/react/dist/csr/Sun';
+import { MoonIcon as Moon } from '@phosphor-icons/react/dist/csr/Moon';
 import { useStudentTheme } from "../context/StudentThemeContext";
 
 interface StudentThemeToggleProps {
@@ -30,9 +31,9 @@ export function StudentThemeToggle({ className = "", compact = false }: StudentT
         borderRadius: "99px",
         fontSize: "0.8125rem",
         fontWeight: 600,
-        color: isDark ? "#F8FAFC" : "#1E293B",
-        backgroundColor: isDark ? "#1E2533" : "#FFFFFF",
-        border: isDark ? "1px solid #333E54" : "1px solid #CBD5E1",
+        color: "var(--color-text)",
+        backgroundColor: "var(--color-surface)",
+        border: "1px solid var(--color-border)",
         cursor: "pointer",
         transition: "all 150ms ease",
         whiteSpace: "nowrap",
@@ -40,12 +41,12 @@ export function StudentThemeToggle({ className = "", compact = false }: StudentT
     >
       {isDark ? (
         <>
-          <Sun size={16} color="#FBBF24" strokeWidth={2.2} />
+          <Sun size={16} weight="fill" color="var(--icon-gold)" />
           {!compact && <span>Light</span>}
         </>
       ) : (
         <>
-          <Moon size={15} color="#64748B" strokeWidth={2.2} />
+          <Moon size={15} weight="fill" color="var(--icon-purple)" />
           {!compact && <span>Dark</span>}
         </>
       )}

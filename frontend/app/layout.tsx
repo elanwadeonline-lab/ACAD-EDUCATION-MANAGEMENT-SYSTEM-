@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <meta httpEquiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
         <meta httpEquiv="Pragma" content="no-cache" />
@@ -27,6 +27,14 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         />
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#92400E" />
+        <script dangerouslySetInnerHTML={{__html:`try {
+          var key=location.pathname.startsWith('/student')?'acqad_student_theme':location.pathname.startsWith('/guardian')?'acad_guardian_theme':'acqad_theme';
+          var saved=localStorage.getItem(key)||localStorage.getItem('acqad_theme');
+          var theme=saved==='dark'||saved==='light'?saved:matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+          document.documentElement.dataset.theme=theme;
+          document.documentElement.classList.toggle('dark',theme==='dark');
+          document.documentElement.style.colorScheme=theme;
+        } catch(e) {}`}}/>
         <script
           dangerouslySetInnerHTML={{
             __html: `

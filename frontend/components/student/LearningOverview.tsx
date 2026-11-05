@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowUpRight, AchievementSymbol } from "../icons/StudentIcons";
-import { Award, Check, Clock as Clock3 } from "../icons";
+import { ArrowUpRight, AchievementSymbol, Award, Check, Clock3 } from "../icons/StudentIcons";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../ui/Card";
 import { type AcademicChartPoint } from "../ui/AcademicChart";
 import { ProgressBar } from "../ui/MetricCard";

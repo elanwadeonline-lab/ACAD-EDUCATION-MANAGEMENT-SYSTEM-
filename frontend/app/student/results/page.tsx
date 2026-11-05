@@ -223,28 +223,28 @@ function StudentResults() {
                   Percentage attainment across recent released assessments.
                 </p>
               </div>
-              <TrendingUpIcon width="16" height="16" style={{ color: "#92400E" }} />
+              <TrendingUpIcon width="16" height="16" style={{ color: "var(--color-primary)" }} />
             </div>
             <div style={{ width: "100%", height: 195 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData} margin={{ top: 8, right: 8, left: -22, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-surface-2)" vertical={false} />
                   <XAxis
                     dataKey="name"
-                    tick={{ fontSize: 11, fill: "#64748B" }}
-                    axisLine={{ stroke: "#E2E8F0" }}
+                    tick={{ fontSize: 11, fill: "var(--color-muted)" }}
+                    axisLine={{ stroke: "var(--color-border)" }}
                     tickLine={false}
                   />
                   <YAxis
                     domain={[0, 100]}
-                    tick={{ fontSize: 11, fill: "#64748B" }}
+                    tick={{ fontSize: 11, fill: "var(--color-muted)" }}
                     axisLine={false}
                     tickLine={false}
                   />
                   <Tooltip
                     contentStyle={{
                       background: "var(--color-surface)",
-                      border: "1px solid #E2E8F0",
+                      border: "1px solid var(--color-border)",
                       borderRadius: "8px",
                       fontSize: "0.75rem",
                     }}
@@ -258,7 +258,7 @@ function StudentResults() {
                       <Cell
                         key={entry.id}
                         fill={
-                          entry.pct >= 70 ? "#059669" : entry.pct >= 50 ? "#92400E" : "#D97706"
+                          entry.pct >= 70 ? "var(--color-success)" : entry.pct >= 50 ? "var(--color-primary)" : "#D97706"
                         }
                       />
                     ))}
@@ -282,12 +282,12 @@ function StudentResults() {
                 {
                   label: "Distinction & Credit (70% – 100%)",
                   count: chartData.filter((d) => d.pct >= 70).length,
-                  color: "#059669",
+                  color: "var(--color-success)",
                 },
                 {
                   label: "Pass Band (50% – 69%)",
                   count: chartData.filter((d) => d.pct >= 50 && d.pct < 70).length,
-                  color: "#92400E",
+                  color: "var(--color-primary)",
                 },
                 {
                   label: "Needs Improvement (< 50%)",
@@ -300,7 +300,7 @@ function StudentResults() {
                 return (
                   <div key={band.label} style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem" }}>
-                      <span style={{ fontWeight: 600, color: "#334155" }}>{band.label}</span>
+                      <span style={{ fontWeight: 600, color: "var(--color-text-2)" }}>{band.label}</span>
                       <span style={{ fontWeight: 700, color: "var(--color-text-2)", fontVariantNumeric: "tabular-nums" }}>
                         {band.count} ({bandPct}%)
                       </span>
@@ -394,20 +394,20 @@ function StudentResults() {
 
         {loading ? (
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "3rem", gap: "0.75rem", color: "var(--color-text-2)", fontSize: "0.875rem" }}>
-            <div className="spinner" style={{ width: 22, height: 22, borderColor: "#E2E8F0", borderTopColor: "#92400E" }} />
+            <div className="spinner" style={{ width: 22, height: 22, borderColor: "var(--color-border)", borderTopColor: "var(--color-primary)" }} />
             <span>Loading examination results…</span>
           </div>
         ) : filteredResults.length === 0 ? (
           <div
             style={{
               background: "var(--color-surface)",
-              border: "1px dashed #E2E8F0",
+              border: "1px dashed var(--color-border)",
               borderRadius: "16px",
               padding: "3.5rem 2rem",
               textAlign: "center",
             }}
           >
-            <AwardIcon width="36" height="36" style={{ color: "#94A3B8", margin: "0 auto 0.75rem" }} />
+            <AwardIcon width="36" height="36" style={{ color: "var(--color-muted)", margin: "0 auto 0.75rem" }} />
             <div style={{ fontWeight: 700, color: "var(--color-text-2)", fontSize: "0.9375rem", marginBottom: "0.25rem" }}>
               No Matching Evaluation Submissions
             </div>
@@ -495,7 +495,7 @@ function StudentResults() {
                           style={{
                             fontSize: "0.75rem",
                             fontWeight: 600,
-                            color: !isReleased ? "#D97706" : pct >= 50 ? "#059669" : "#DC2626",
+                            color: !isReleased ? "#D97706" : pct >= 50 ? "var(--color-success)" : "var(--color-danger)",
                           }}
                         >
                           {!isReleased ? "Pending Release" : pct >= 50 ? "Pass" : "Below Pass"}
@@ -575,12 +575,12 @@ function StudentResults() {
                           alignItems: "center",
                           gap: "0.35rem",
                           padding: "0.3rem 0.65rem",
-                          background: "#FFFBEB",
-                          border: "1px solid #FDE68A",
+                          background: "var(--color-primary-subtle)",
+                          border: "1px solid var(--color-primary-border)",
                           borderRadius: "999px",
                           fontSize: "0.75rem",
                           fontWeight: 700,
-                          color: r.result_status === "scheduled" ? "#92400E" : "#D97706",
+                          color: r.result_status === "scheduled" ? "var(--color-primary)" : "#D97706",
                         }}
                       >
                         <ClockIcon width="12" height="12" />
@@ -598,11 +598,11 @@ function StudentResults() {
                       style={{
                         width: isReleased ? `${Math.min(pct, 100)}%` : "100%",
                         background: !isReleased
-                          ? "#CBD5E1"
+                          ? "var(--color-border-hover)"
                           : pct >= 70
-                          ? "#059669"
+                          ? "var(--color-success)"
                           : pct >= 50
-                          ? "#92400E"
+                          ? "var(--color-primary)"
                           : "#D97706",
                       }}
                     />
@@ -629,7 +629,7 @@ function StudentResults() {
                             ? styles.gradeC
                             : styles.gradeF
                         }`}
-                        style={!isReleased ? { background: "#F1F5F9", color: "var(--color-text-2)" } : undefined}
+                        style={!isReleased ? { background: "var(--color-surface-2)", color: "var(--color-text-2)" } : undefined}
                       >
                         {grade}
                       </span>
@@ -639,7 +639,7 @@ function StudentResults() {
                       <span
                         className={styles.metricValue}
                         style={{
-                          color: !isReleased ? "#D97706" : pct >= 50 ? "#059669" : "#DC2626",
+                          color: !isReleased ? "#D97706" : pct >= 50 ? "var(--color-success)" : "var(--color-danger)",
                         }}
                       >
                         {!isReleased ? "Under Review" : pct >= 50 ? "Pass" : "Fail"}

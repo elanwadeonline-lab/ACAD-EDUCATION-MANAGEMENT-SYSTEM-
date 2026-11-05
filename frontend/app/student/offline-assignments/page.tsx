@@ -223,7 +223,7 @@ function AssignmentContent() {
   if (loading) {
     return (
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "320px", gap: "0.75rem", color: "var(--color-text-2)", fontSize: "0.875rem" }}>
-        <div className="spinner" style={{ width: 22, height: 22, borderColor: "#E2E8F0", borderTopColor: "#92400E" }} />
+        <div className="spinner" style={{ width: 22, height: 22, borderColor: "var(--color-border)", borderTopColor: "var(--color-primary)" }} />
         <span>Loading offline assignments…</span>
       </div>
     );
@@ -333,7 +333,7 @@ function AssignmentContent() {
 
           {assignments.length === 0 ? (
             <div className={styles.emptyState}>
-              <DocumentIcon width="36" height="36" style={{ color: "#94A3B8" }} />
+              <DocumentIcon width="36" height="36" style={{ color: "var(--color-muted)" }} />
               <h3>No assignments downloaded</h3>
               <p>Click the download button above while connected to the school network.</p>
             </div>
@@ -434,7 +434,7 @@ function AssignmentContent() {
               <DocumentIcon width="18" height="18" />
               <div>
                 <strong>Attached Resource</strong>
-                <a href={q.attached_file_url} target="_blank" rel="noreferrer" className="link" style={{ display: "block", fontSize: "0.85rem", color: "#92400E" }}>
+                <a href={q.attached_file_url} target="_blank" rel="noreferrer" className="link" style={{ display: "block", fontSize: "0.85rem", color: "var(--color-primary)" }}>
                   Download PDF/Document
                 </a>
               </div>
@@ -476,7 +476,7 @@ function AssignmentContent() {
               <div>
                 <textarea
                   className="input"
-                  style={{ minHeight: "150px", width: "100%", padding: "0.85rem", borderRadius: "10px", border: "1px solid #CBD5E1", fontSize: "0.875rem" }}
+                  style={{ minHeight: "150px", width: "100%", padding: "0.85rem", borderRadius: "10px", border: "1px solid var(--color-border-hover)", fontSize: "0.875rem" }}
                   placeholder="Type your answer here..."
                   value={answers[q.id] || ""}
                   onChange={(e) => handleEssayInput(q.id, e.target.value)}
@@ -499,7 +499,7 @@ function AssignmentContent() {
                   }}
                 />
                 {files[q.id] && (
-                  <div style={{ marginTop: "0.4rem", color: "#059669", fontSize: "0.8125rem", fontWeight: 600 }}>
+                  <div style={{ marginTop: "0.4rem", color: "var(--color-success)", fontSize: "0.8125rem", fontWeight: 600 }}>
                     ✓ Attached: {files[q.id].name}
                   </div>
                 )}

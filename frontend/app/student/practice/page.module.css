@@ -37,7 +37,7 @@
 .heroSubtitle {
   font-size: 0.875rem;
   font-weight: 400;
-  color: #64748B;
+  color: var(--color-muted);
   margin: 0;
   line-height: 1.5;
 }
@@ -55,7 +55,7 @@
   gap: 1rem;
   padding: 1.15rem 1.45rem;
   background: var(--color-surface);
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--color-border);
   border-radius: 16px;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
   min-width: 155px;
@@ -65,7 +65,7 @@
 
 .telemetryBadge:hover {
   transform: translateY(-2px);
-  border-color: #CBD5E1;
+  border-color: var(--color-border-hover);
   box-shadow: 0 6px 16px -2px rgba(15, 23, 42, 0.06);
 }
 
@@ -73,8 +73,8 @@
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: #ECFDF5;
-  border: 1px solid #A7F3D0;
+  background: var(--color-success-bg);
+  border: 1px solid var(--color-success-border);
   color: #10B981;
   display: flex;
   align-items: center;
@@ -105,7 +105,7 @@
 .telemetryText {
   font-size: 0.75rem;
   font-weight: 500;
-  color: #64748B;
+  color: var(--color-muted);
   white-space: nowrap;
   margin-top: 0.1rem;
 }
@@ -113,7 +113,7 @@
 /* ── 2. Selected Package Readiness Banner ── */
 .readinessBanner {
   background: var(--color-surface);
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--color-border);
   border-radius: 16px;
   padding: 1.25rem 1.5rem;
   display: flex;
@@ -134,9 +134,9 @@
   width: 38px;
   height: 38px;
   border-radius: 10px;
-  background: #FFFBEB;
-  color: #92400E;
-  border: 1px solid #FDE68A;
+  background: var(--color-primary-subtle);
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary-border);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -153,7 +153,7 @@
 
 .readinessSubtitle {
   font-size: 0.75rem;
-  color: #64748B;
+  color: var(--color-muted);
   margin-top: 0.15rem;
 }
 
@@ -171,8 +171,8 @@
   padding: 0.55rem 1rem;
   border-radius: 8px;
   background: var(--color-surface);
-  color: #334155;
-  border: 1px solid #E2E8F0;
+  color: var(--color-text-2);
+  border: 1px solid var(--color-border);
   font-size: 0.8125rem;
   font-weight: 600;
   cursor: pointer;
@@ -181,7 +181,7 @@
 
 .downloadBtn:hover:not(:disabled) {
   background: var(--color-surface);
-  border-color: #CBD5E1;
+  border-color: var(--color-border-hover);
   color: var(--color-text);
 }
 
@@ -191,8 +191,8 @@
   gap: 0.45rem;
   padding: 0.55rem 1.15rem;
   border-radius: 8px;
-  background: #92400E;
-  color: #FFFFFF;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
   font-size: 0.8125rem;
   font-weight: 600;
   border: none;
@@ -202,14 +202,14 @@
 }
 
 .launchBtn:hover {
-  background: #78350F;
+  background: var(--color-primary);
   transform: translateY(-1px);
 }
 
 /* ── 3. Enrolled Practice Repository Container ── */
 .repositoryContainer {
   background: var(--color-surface);
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--color-border);
   border-radius: 18px;
   padding: 1.75rem 2rem;
   display: flex;
@@ -236,19 +236,19 @@
   width: 42px;
   height: 42px;
   border-radius: 12px;
-  background: #ECFDF5;
+  background: var(--color-success-bg);
   color: #10B981;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  border: 1px solid #A7F3D0;
+  border: 1px solid var(--color-success-border);
 }
 
 .repoEyebrow {
   font-size: 0.6875rem;
   font-weight: 600;
-  color: #64748B;
+  color: var(--color-muted);
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
@@ -271,18 +271,18 @@
 .filterSelect {
   padding: 0.45rem 0.85rem;
   border-radius: 8px;
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--color-border);
   background: var(--color-surface);
   font-size: 0.8125rem;
   font-weight: 500;
-  color: #334155;
+  color: var(--color-text-2);
   cursor: pointer;
   outline: none;
   transition: all 150ms ease;
 }
 
 .filterSelect:hover, .filterSelect:focus {
-  border-color: #92400E;
+  border-color: var(--color-primary);
 }
 
 /* Past Question Paper Grid */
@@ -294,7 +294,7 @@
 
 .paperCard {
   background: var(--color-surface);
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--color-border);
   border-radius: 14px;
   padding: 1.25rem 1.15rem;
   display: flex;
@@ -306,15 +306,15 @@
 }
 
 .paperCard:hover {
-  border-color: #CBD5E1;
+  border-color: var(--color-border-hover);
   transform: translateY(-2px);
   box-shadow: 0 6px 16px -2px rgba(15, 23, 42, 0.05);
 }
 
 .paperCardSelected {
-  border-color: #92400E !important;
+  border-color: var(--color-primary) !important;
   background: #FAFCFF;
-  box-shadow: 0 0 0 1px #92400E;
+  box-shadow: 0 0 0 1px var(--color-primary);
 }
 
 .paperCardHeader {
@@ -328,9 +328,9 @@
   width: 34px;
   height: 34px;
   border-radius: 8px;
-  background: #F1F5F9;
+  background: var(--color-surface-2);
   color: var(--color-text);
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--color-border);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -340,9 +340,9 @@
 .paperBadge {
   font-size: 0.6875rem;
   font-weight: 600;
-  color: #92400E;
-  background: #FFFBEB;
-  border: 1px solid #FDE68A;
+  color: var(--color-primary);
+  background: var(--color-primary-subtle);
+  border: 1px solid var(--color-primary-border);
   padding: 0.15rem 0.45rem;
   border-radius: 6px;
   letter-spacing: 0.02em;
@@ -359,14 +359,14 @@
 .paperMeta {
   display: block;
   font-size: 0.6875rem;
-  color: #64748B;
+  color: var(--color-muted);
   margin-top: 0.25rem;
 }
 
 .paperActionBtn {
   font-size: 0.8125rem;
   font-weight: 600;
-  color: #92400E;
+  color: var(--color-primary);
   background: transparent;
   border: none;
   cursor: pointer;
@@ -401,7 +401,7 @@
 
 .emptyState p {
   font-size: 0.8125rem;
-  color: #64748B;
+  color: var(--color-muted);
   margin: 0;
 }
 

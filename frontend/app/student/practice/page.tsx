@@ -146,7 +146,7 @@ function PracticeSandbox() {
   if (loading) {
     return (
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "320px", gap: "0.75rem", color: "var(--color-text-2)", fontSize: "0.875rem" }}>
-        <div className="spinner" style={{ width: 22, height: 22, borderColor: "#E2E8F0", borderTopColor: "#92400E" }} />
+        <div className="spinner" style={{ width: 22, height: 22, borderColor: "var(--color-border)", borderTopColor: "var(--color-primary)" }} />
         <span>Loading practice catalog…</span>
       </div>
     );

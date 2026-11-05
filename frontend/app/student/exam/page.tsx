@@ -60,7 +60,7 @@ function renderFormattedContent(text: string) {
           maxHeight: "360px",
           borderRadius: "8px",
           objectFit: "contain",
-          border: "1px solid #E2E8F0",
+          border: "1px solid var(--color-border)",
         }}
       />
     );
@@ -84,7 +84,7 @@ export default function StudentExamPage() {
       <Suspense
         fallback={
           <main className={styles.page} style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <div className="spinner" style={{ width: 28, height: 28, borderColor: "#E2E8F0", borderTopColor: "#92400E" }} />
+            <div className="spinner" style={{ width: 28, height: 28, borderColor: "var(--color-border)", borderTopColor: "var(--color-primary)" }} />
           </main>
         }
       >
@@ -799,9 +799,9 @@ function ExamContent() {
     return (
       <main className={styles.errorState}>
         <div className={styles.modalBox}>
-          <WarningIcon width="40" height="40" style={{ color: "#DC2626", margin: "0 auto 1rem" }} />
+          <WarningIcon width="40" height="40" style={{ color: "var(--color-danger)", margin: "0 auto 1rem" }} />
           <h3 style={{ fontSize: "1.25rem", fontWeight: 800, margin: "0 0 0.5rem", color: "var(--color-text-2)" }}>Examination Error</h3>
-          <p style={{ color: "#DC2626", fontSize: "0.875rem", fontWeight: 600, margin: "0 0 1.5rem" }}>{error}</p>
+          <p style={{ color: "var(--color-danger)", fontSize: "0.875rem", fontWeight: 600, margin: "0 0 1.5rem" }}>{error}</p>
           <button className={styles.preflightCancelBtn} style={{ width: "100%" }} onClick={() => router.push("/student/dashboard")}>
             ← Return to Dashboard
           </button>
@@ -880,11 +880,11 @@ function ExamContent() {
                 {isLearningMode ? (
                   <>
                     <div className={styles.ruleItem}>
-                      <span className={styles.ruleDot} style={{ background: "#92400E" }} />
+                      <span className={styles.ruleDot} style={{ background: "var(--color-primary)" }} />
                       <span><strong>Solution Reveals:</strong> Up to 5 step-by-step solution reveals available during your sitting.</span>
                     </div>
                     <div className={styles.ruleItem}>
-                      <span className={styles.ruleDot} style={{ background: "#92400E" }} />
+                      <span className={styles.ruleDot} style={{ background: "var(--color-primary)" }} />
                       <span><strong>Answer First:</strong> Submit an attempt on a question to unlock its detailed worked explanation.</span>
                     </div>
                     <div className={styles.ruleItem}>
@@ -924,7 +924,7 @@ function ExamContent() {
             </div>
 
             {subject?.instructions && (
-              <div style={{ background: "var(--color-surface)", border: "1px solid #E2E8F0", borderRadius: "12px", padding: "1rem 1.15rem", fontSize: "0.8125rem", color: "#334155", lineHeight: 1.5 }}>
+              <div style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: "12px", padding: "1rem 1.15rem", fontSize: "0.8125rem", color: "var(--color-text-2)", lineHeight: 1.5 }}>
                 <strong style={{ color: "var(--color-text-2)" }}>Special Instructions: </strong>
                 {subject.instructions}
               </div>
@@ -969,15 +969,15 @@ function ExamContent() {
             </div>
 
             <p style={{ fontSize: "0.875rem", color: "var(--color-text-2)", lineHeight: 1.6, margin: 0 }}>
-              You have <strong style={{ color: "#92400E" }}>{Object.keys(answers).length}</strong> answered question(s) securely restored from your session.
+              You have <strong style={{ color: "var(--color-primary)" }}>{Object.keys(answers).length}</strong> answered question(s) securely restored from your session.
               {isLearningMode && (
                 <>
                   <br />
-                  Solution reveals remaining: <strong style={{ color: "#92400E" }}>{solutionRevealsRemaining} of 5</strong>
+                  Solution reveals remaining: <strong style={{ color: "var(--color-primary)" }}>{solutionRevealsRemaining} of 5</strong>
                 </>
               )}
               <br />
-              {Number(subject?.duration) > 0 ? <>Time remaining: <strong style={{ color: "var(--color-text-2)", fontFamily: "var(--font-mono, monospace)" }}>{formatTime(remaining)}</strong></> : <span><strong style={{ color: "#BE185D" }}>Untimed</strong> — no countdown for this assignment.</span>}
+              {Number(subject?.duration) > 0 ? <>Time remaining: <strong style={{ color: "var(--color-text-2)", fontFamily: "var(--font-mono, monospace)" }}>{formatTime(remaining)}</strong></> : <span><strong style={{ color: "var(--icon-pink)" }}>Untimed</strong> — no countdown for this assignment.</span>}
             </p>
 
             <div className={styles.preflightActions}>
@@ -1050,7 +1050,7 @@ function ExamContent() {
               </button>
               <Link
                 href="/student/results"
-                style={{ fontSize: "0.8125rem", fontWeight: 700, color: "#92400E", textDecoration: "none", padding: "0.4rem" }}
+                style={{ fontSize: "0.8125rem", fontWeight: 700, color: "var(--color-primary)", textDecoration: "none", padding: "0.4rem" }}
               >
                 View in Assessment Results →
               </Link>
@@ -1083,7 +1083,7 @@ function ExamContent() {
 
             <div className={styles.releaseScheduleBox}>
               <span style={{ fontSize: "0.75rem", color: "var(--color-text-2)", fontWeight: 600, textTransform: "uppercase" }}>Scheduled Publication</span>
-              <strong style={{ fontSize: "1.0625rem", color: "#92400E" }}>{releaseDateStr}</strong>
+              <strong style={{ fontSize: "1.0625rem", color: "var(--color-primary)" }}>{releaseDateStr}</strong>
             </div>
 
             <div className={styles.breakdownGrid}>
@@ -1095,7 +1095,7 @@ function ExamContent() {
               </div>
               <div className={styles.breakdownItem}>
                 <div className={styles.breakdownLabel}>Release Policy</div>
-                <div className={styles.breakdownValue} style={{ color: "#92400E" }}>
+                <div className={styles.breakdownValue} style={{ color: "var(--color-primary)" }}>
                   Scheduled Release
                 </div>
               </div>
@@ -1108,7 +1108,7 @@ function ExamContent() {
               </button>
               <Link
                 href="/student/results"
-                style={{ fontSize: "0.8125rem", fontWeight: 700, color: "#92400E", textDecoration: "none", padding: "0.4rem" }}
+                style={{ fontSize: "0.8125rem", fontWeight: 700, color: "var(--color-primary)", textDecoration: "none", padding: "0.4rem" }}
               >
                 View in Assessment Results →
               </Link>
@@ -1160,7 +1160,7 @@ function ExamContent() {
             </div>
             <div className={styles.breakdownItem}>
               <div className={styles.breakdownLabel}>Academic Status</div>
-              <div className={styles.breakdownValue} style={{ color: isPass ? "#059669" : "#DC2626" }}>
+              <div className={styles.breakdownValue} style={{ color: isPass ? "var(--color-success)" : "var(--color-danger)" }}>
                 {isPass ? "Passed" : "Under Review"}
               </div>
             </div>
@@ -1221,12 +1221,12 @@ function ExamContent() {
                 width: "38px",
                 height: "38px",
                 borderRadius: "10px",
-                background: "#FFFBEB",
-                border: "1px solid #FDE68A",
+                background: "var(--color-primary-subtle)",
+                border: "1px solid var(--color-primary-border)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                color: "#92400E",
+                color: "var(--color-primary)",
                 flexShrink: 0,
               }}
             >
@@ -1241,13 +1241,13 @@ function ExamContent() {
           <div className={styles.summaryStatsGrid}>
             <div className={styles.summaryStatItem}>
               <div className={styles.summaryStatLabel}>Answered</div>
-              <div className={styles.summaryStatVal} style={{ color: "#059669" }}>
+              <div className={styles.summaryStatVal} style={{ color: "var(--color-success)" }}>
                 {answeredCount} / {questions.length}
               </div>
             </div>
             <div className={styles.summaryStatItem}>
               <div className={styles.summaryStatLabel}>Unanswered</div>
-              <div className={styles.summaryStatVal} style={{ color: questions.length - answeredCount > 0 ? "#DC2626" : "#64748B" }}>
+              <div className={styles.summaryStatVal} style={{ color: questions.length - answeredCount > 0 ? "var(--color-danger)" : "var(--color-muted)" }}>
                 {questions.length - answeredCount}
               </div>
             </div>
@@ -1269,10 +1269,10 @@ function ExamContent() {
             <div
               style={{
                 padding: "0.75rem 1rem",
-                background: "#FEF2F2",
-                border: "1px solid #FECACA",
+                background: "var(--color-danger-bg)",
+                border: "1px solid var(--color-danger-border)",
                 borderRadius: "10px",
-                color: "#DC2626",
+                color: "var(--color-danger)",
                 fontSize: "0.8125rem",
                 fontWeight: 600,
                 textAlign: "center",
@@ -1289,7 +1289,7 @@ function ExamContent() {
             </button>
             <button
               className={styles.preflightStartBtn}
-              style={{ background: "#92400E" }}
+              style={{ background: "var(--color-primary)" }}
               onClick={() => handleSubmit()}
               disabled={mode === "submitting"}
             >
@@ -1363,8 +1363,8 @@ function ExamContent() {
               )}
               {saveStatus === "saved" && (
                 <>
-                  <CheckCircleIcon width="12" height="12" style={{ color: "#059669" }} />
-                  <span style={{ color: "#059669" }}>Saved</span>
+                  <CheckCircleIcon width="12" height="12" style={{ color: "var(--color-success)" }} />
+                  <span style={{ color: "var(--color-success)" }}>Saved</span>
                 </>
               )}
               {saveStatus === "offline" && (
@@ -1462,11 +1462,11 @@ function ExamContent() {
 
           <div className={styles.navigatorLegend}>
             <span className={styles.legendPill}>
-              <span className={styles.legendDot} style={{ background: "#92400E" }} />
+              <span className={styles.legendDot} style={{ background: "var(--color-primary)" }} />
               Current
             </span>
             <span className={styles.legendPill}>
-              <span className={styles.legendDot} style={{ background: "#059669" }} />
+              <span className={styles.legendDot} style={{ background: "var(--color-success)" }} />
               Answered
             </span>
             <span className={styles.legendPill}>
@@ -1474,7 +1474,7 @@ function ExamContent() {
               Flagged
             </span>
             <span className={styles.legendPill}>
-              <span className={styles.legendDot} style={{ background: "#CBD5E1" }} />
+              <span className={styles.legendDot} style={{ background: "var(--color-border-hover)" }} />
               Unanswered
             </span>
           </div>
@@ -1540,7 +1540,7 @@ function ExamContent() {
                               padding: "1rem 1.25rem",
                               fontSize: "1rem",
                               borderRadius: "12px",
-                              border: "1.5px solid #CBD5E1",
+                              border: "1.5px solid var(--color-border-hover)",
                             }}
                             placeholder="Type your short answer…"
                             value={(answers[current.id] as string) || ""}
@@ -1579,7 +1579,7 @@ function ExamContent() {
             </div>
           ) : (
             <div className={styles.questionCard}>
-              <p style={{ color: "#DC2626", fontWeight: 600 }}>No questions found in this assessment paper.</p>
+              <p style={{ color: "var(--color-danger)", fontWeight: 600 }}>No questions found in this assessment paper.</p>
             </div>
           )}
 
@@ -1699,7 +1699,7 @@ function ExamContent() {
             {/* Explanation Section */}
             <div className={styles.solutionSectionCard}>
               <div className={styles.solutionSectionTitle}>
-                <DocumentIcon width="14" height="14" style={{ color: "#92400E" }} />
+                <DocumentIcon width="14" height="14" style={{ color: "var(--color-primary)" }} />
                 <span>Concept &amp; Explanation</span>
               </div>
               <div className={styles.solutionSectionBody}>
@@ -1708,12 +1708,12 @@ function ExamContent() {
             </div>
 
             {/* Step-by-Step Worked Solution Section */}
-            <div className={styles.solutionSectionCard} style={{ background: "#FFFBEB", borderColor: "#FDE68A" }}>
-              <div className={styles.solutionSectionTitle} style={{ color: "#29231B" }}>
-                <SparklesIcon width="14" height="14" style={{ color: "#92400E" }} />
+            <div className={styles.solutionSectionCard} style={{ background: "var(--color-primary-subtle)", borderColor: "var(--color-primary-border)" }}>
+              <div className={styles.solutionSectionTitle} style={{ color: "var(--color-text)" }}>
+                <SparklesIcon width="14" height="14" style={{ color: "var(--color-primary)" }} />
                 <span>Step-by-Step Worked Solution</span>
               </div>
-              <div className={styles.solutionSectionBody} style={{ color: "#78350F" }}>
+              <div className={styles.solutionSectionBody} style={{ color: "var(--color-primary)" }}>
                 {activeSolutionData.solution || activeSolutionData.explanation || "Step-by-step solution provided by course instructor."}
               </div>
             </div>

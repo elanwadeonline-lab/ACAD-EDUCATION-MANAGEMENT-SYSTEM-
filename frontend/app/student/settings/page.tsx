@@ -93,7 +93,7 @@ function StudentSettings() {
   if (loading) {
     return (
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "320px", gap: "0.75rem", color: "var(--color-text-2)", fontSize: "0.875rem" }}>
-        <div className="spinner" style={{ width: 22, height: 22, borderColor: "#E2E8F0", borderTopColor: "#92400E" }} />
+        <div className="spinner" style={{ width: 22, height: 22, borderColor: "var(--color-border)", borderTopColor: "var(--color-primary)" }} />
         <span>Loading candidate profile…</span>
       </div>
     );
@@ -175,7 +175,7 @@ function StudentSettings() {
       {/* ── 3. Security & Authentication Card ────────────────── */}
       <section className={styles.card}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.9375rem", fontWeight: 700, color: "var(--color-text-2)" }}>
-          <LockIcon width="16" height="16" style={{ color: "#92400E" }} />
+          <LockIcon width="16" height="16" style={{ color: "var(--color-primary)" }} />
           <span>Security &amp; Authentication</span>
         </div>
 
@@ -218,7 +218,7 @@ function StudentSettings() {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.9375rem", fontWeight: 700, color: "var(--color-text-2)" }}>
-              <MonitorIcon width="16" height="16" style={{ color: "#92400E" }} />
+              <MonitorIcon width="16" height="16" style={{ color: "var(--color-primary)" }} />
               <span>Active Sessions &amp; Devices</span>
             </div>
             <div style={{ fontSize: "0.75rem", color: "var(--color-text-2)", marginTop: "0.2rem" }}>
@@ -257,8 +257,8 @@ function StudentSettings() {
                   gap: "1rem",
                   padding: "0.75rem 0.875rem",
                   borderRadius: "8px",
-                  border: s.is_current ? "1px solid rgba(146, 64, 14, 0.28)" : "1px solid #E2E8F0",
-                  background: s.is_current ? "#FFFBEB" : "#F8FAFC",
+                  border: s.is_current ? "1px solid rgba(146, 64, 14, 0.28)" : "1px solid var(--color-border)",
+                  background: s.is_current ? "var(--color-primary-subtle)" : "var(--color-surface-2)",
                 }}
               >
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem", minWidth: 0 }}>
@@ -271,7 +271,7 @@ function StudentSettings() {
                         style={{
                           fontSize: "0.6875rem",
                           fontWeight: 700,
-                          color: "#92400E",
+                          color: "var(--color-primary)",
                           background: "rgba(217, 119, 6, 0.14)",
                           padding: "0.1rem 0.45rem",
                           borderRadius: "999px",

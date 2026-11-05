@@ -321,10 +321,10 @@ function DashboardContent() {
         <div
           style={{
             padding: "0.75rem 1rem",
-            background: "#FEF2F2",
-            color: "#B91C1C",
+            background: "var(--color-danger-bg)",
+            color: "var(--color-danger)",
             borderRadius: "8px",
-            border: "1px solid #FECACA",
+            border: "1px solid var(--color-danger-border)",
             fontSize: "0.8125rem",
           }}
         >

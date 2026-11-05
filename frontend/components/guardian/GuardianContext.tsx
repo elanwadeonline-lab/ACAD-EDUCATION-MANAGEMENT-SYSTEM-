@@ -200,9 +200,13 @@ export function GuardianProvider({ children }: { children: React.ReactNode }) {
       if (savedTheme) {
         setThemeState(savedTheme);
         document.documentElement.setAttribute("data-theme", savedTheme);
+        document.documentElement.classList.toggle("dark", savedTheme === "dark");
+        document.documentElement.style.colorScheme = savedTheme;
       } else if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
         setThemeState("dark");
         document.documentElement.setAttribute("data-theme", "dark");
+        document.documentElement.classList.add("dark");
+        document.documentElement.style.colorScheme = "dark";
       }
     } catch {}
   }, []);
@@ -212,6 +216,8 @@ export function GuardianProvider({ children }: { children: React.ReactNode }) {
     try {
       localStorage.setItem("acad_guardian_theme", newTheme);
       document.documentElement.setAttribute("data-theme", newTheme);
+      document.documentElement.classList.toggle("dark", newTheme === "dark");
+      document.documentElement.style.colorScheme = newTheme;
     } catch {}
   }, []);
 

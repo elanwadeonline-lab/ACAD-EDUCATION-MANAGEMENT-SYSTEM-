@@ -3,6 +3,7 @@ import { existsSync } from "fs";
 import fs from "fs";
 import crypto, { timingSafeEqual } from "node:crypto";
 import db, { EXAMPOOL_DB_PATH, initializeDatabase, queries, bootstrap_v5_migration } from "./db";
+import { bootstrapDefaultSystemAccounts } from "./server/bootstrap-seed";
 import {
   buildRoleSessionCookie,
   buildSessionCookie,
@@ -226,6 +227,9 @@ export function checkSetupRequired(): boolean {
 }
 
 let setupRequired = checkSetupRequired();
+// Automatically bootstrap default accounts (guardian, operator, student) on deployment if empty
+await bootstrapDefaultSystemAccounts();
+setupRequired = checkSetupRequired();
 
 // ── In-Memory Log Ring Buffer ─────────────────────────────────────────────
 // Captures last 200 console.log/warn/error lines so /api/system/logs can
@@ -1075,7 +1079,7 @@ function isApiExemptWhileSetup(pathname: string, method: string): boolean {
   if (clean === "/api/health" || clean === "/health" || clean === "/api" || clean.includes("health")) return true;
   // [SECURITY FIX VULN-14] /api/server-info is no longer exempt from auth.
   // The setup wizard uses /api/setup (POST) which is still exempt below.
-  if (method === "POST" && (clean === "/api/setup" || clean === "/api/setup/complete")) return true;
+  if (method === "POST" && (clean === "/api/setup" || clean === "/api/setup/complete" || clean === "/api/auth/bootstrap")) return true;
   return false;
 }
 
@@ -1345,6 +1349,11 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
         ],
       },
     );
+  }
+
+  if (method === "POST" && pathname === "/api/auth/bootstrap") {
+    await bootstrapDefaultSystemAccounts();
+    return apiSuccess({ message: "Default system accounts verified and seeded." });
   }
 
   if (method === "POST" && pathname === "/api/auth/login") {

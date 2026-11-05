@@ -1,0 +1,4 @@
+Trophy illustration: Microsoft Fluent Emoji (Flat).
+Source: https://github.com/microsoft/fluentui-emoji/blob/main/assets/Trophy/Flat/trophy_flat.svg
+Copyright (c) Microsoft Corporation. MIT license; see LICENSE.txt.
+Adaptation: base fill changed from #6D4534 to #7C3AED to match the approved gold/purple brief. Paths unchanged.
