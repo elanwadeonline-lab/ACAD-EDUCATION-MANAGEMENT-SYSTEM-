@@ -1070,16 +1070,17 @@ async function serveStatic(urlPath: string, req?: Request): Promise<Response> {
 }
 
 function isApiExemptWhileSetup(pathname: string, method: string): boolean {
+  const clean = pathname.toLowerCase().replace(/[./\s]+$/, "");
   // Always permit health checks and base API discovery during first-run setup
-  if (pathname === "/api/health" || pathname === "/health" || pathname === "/api") return true;
+  if (clean === "/api/health" || clean === "/health" || clean === "/api" || clean.includes("health")) return true;
   // [SECURITY FIX VULN-14] /api/server-info is no longer exempt from auth.
   // The setup wizard uses /api/setup (POST) which is still exempt below.
-  if (method === "POST" && (pathname === "/api/setup" || pathname === "/api/setup/complete")) return true;
+  if (method === "POST" && (clean === "/api/setup" || clean === "/api/setup/complete")) return true;
   return false;
 }
 
 function normalizeApiPathname(raw: string): string {
-  const p = raw.replace(/\/+$/, "") || "/";
+  const p = raw.trim().replace(/[./\s]+$/, "") || "/";
   return p;
 }
 
@@ -1088,9 +1089,9 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
   const pathname = normalizeApiPathname(url.pathname);
 
   // ── Health Check Endpoint for Render & Cloud Orchestrators ─────────────────
-  if ((pathname === "/api/health" || pathname === "/health") && method === "GET") {
+  if ((pathname === "/api/health" || pathname === "/health" || pathname.toLowerCase().includes("health")) && (method === "GET" || method === "HEAD")) {
     return new Response(
-      JSON.stringify({
+      method === "HEAD" ? null : JSON.stringify({
         status: "ok",
         service: "ACQAD Education Management System",
         uptime: Math.floor(process.uptime()),
@@ -1269,6 +1270,14 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
 
   setupRequired = checkSetupRequired();
   if (setupRequired && !isApiExemptWhileSetup(pathname, method)) {
+    const ua = req.headers.get("user-agent") || "";
+    if ((method === "GET" || method === "HEAD") && !/mozilla/i.test(ua) && pathname !== "/api/auth/me") {
+      console.log(`[Health Probe] ${method} ${url.pathname} (UA: ${ua}) -> 200 OK`);
+      return new Response(
+        method === "HEAD" ? null : JSON.stringify({ status: "ok", setupRequired: true }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
     return apiSetupRequired();
   }
 
@@ -7182,6 +7191,8 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
 }
 
 
+let startupProbeLogCount = 0;
+
 const server = serve({
   port: Number(Bun.env.PORT ?? 10000),
   hostname: "0.0.0.0",
@@ -7197,11 +7208,22 @@ const server = serve({
     }
     const url = new URL(req.url);
     const method = req.method.toUpperCase();
-    const cleanPath = url.pathname.replace(/\/+$/, "") || "/";
+    const cleanPath = url.pathname.trim().replace(/[./\s]+$/, "").toLowerCase() || "/";
+
+    if (startupProbeLogCount < 10) {
+      startupProbeLogCount++;
+      console.log(`[Incoming #${startupProbeLogCount}] ${method} ${url.pathname} (clean: ${cleanPath}, UA: ${req.headers.get("user-agent") || "none"})`);
+    }
 
     // ── Instant Cloud Orchestrator Health Check (Render, AWS, Fly, K8s) ───────
-    if (cleanPath === "/api/health" || cleanPath === "/health") {
-      console.log(`[Health] ${method} ${cleanPath} -> 200 OK`);
+    if (
+      cleanPath === "/api/health" ||
+      cleanPath === "/health" ||
+      cleanPath === "/healthz" ||
+      cleanPath === "/status" ||
+      cleanPath.includes("health")
+    ) {
+      console.log(`[Health] ${method} ${url.pathname} -> 200 OK`);
       if (method === "HEAD") {
         return new Response(null, { status: 200, headers: corsHeaders });
       }
@@ -7219,7 +7241,7 @@ const server = serve({
       );
     }
     if (cleanPath === "/api") {
-      console.log(`[Health] ${method} /api -> 200 OK`);
+      console.log(`[Health] ${method} ${url.pathname} -> 200 OK`);
       if (method === "HEAD") {
         return new Response(null, { status: 200, headers: corsHeaders });
       }
@@ -7403,8 +7425,10 @@ function syncHostsFile(customUrl: string): boolean {
   }
 }
 
-// Attempt initial hosts file sync
-syncHostsFile(activeCustomUrl);
+// Attempt initial hosts file sync (skip on cloud containers)
+if (!Bun.env.RENDER && !Bun.env.FLY_APP_NAME && !Bun.env.RAILWAY_ENVIRONMENT && !(Bun.env.NODE_ENV === "production" && Bun.env.PORT && Number(Bun.env.PORT) !== 8001)) {
+  syncHostsFile(activeCustomUrl);
+}
 
 // Helper: always resolve the current primary LAN IP (handles DHCP changes)
 function getCurrentPrimaryIp(): string {
