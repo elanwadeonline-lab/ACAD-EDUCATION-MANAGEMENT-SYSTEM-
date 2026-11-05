@@ -7,6 +7,7 @@ import { RequireRole } from "../../../components/auth/RequireRole";
 import { useGuardian } from "../../../components/guardian/GuardianContext";
 import { StudentAvatar } from "../../../components/guardian/StudentAvatar";
 import { api } from "../../../lib/api";
+import {useGuardianPageView} from "../../../components/guardian/useGuardianPageView";
 import styles from "./page.module.css";
 
 interface FeeItem {
@@ -39,7 +40,9 @@ function FeesContent() {
   const router = useRouter();
   const [feeData, setFeeData] = useState<FeeData | null>(null);
   const [loading, setLoading] = useState(false);
-  const [showPayModal, setShowPayModal] = useState(false);
+  const [pageView,setPageView]=useGuardianPageView();
+  const showPayModal=pageView==="payment";
+  const setShowPayModal=(open:boolean)=>setPageView(open?"payment":"");
   const [payAmount, setPayAmount] = useState<number>(0);
   const [cardNumber, setCardNumber] = useState("4000 1234 5678 9010");
   const [cardExpiry, setCardExpiry] = useState("12/28");
@@ -224,11 +227,11 @@ function FeesContent() {
       <AnimatePresence>
         {showPayModal && (
           <motion.div
-            className={styles.modalBackdrop}
+            className={styles.modalBackdrop} data-guardian-detail="true"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => setShowPayModal(false)}
+            
           >
             <motion.div
               className={styles.checkoutModal}

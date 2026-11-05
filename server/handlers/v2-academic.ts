@@ -353,15 +353,21 @@ export function buildRichWardPayload(studentId: number, guardianId: number, term
 
     // 1. Subjects & Performance
     const results = queries.getStudentTermResultsForReportCard.all(studentId) as any[];
-    const termResults = results.filter((r: any) => Number(r.term_id) === Number(tid) && Number(r.session_id) === Number(sid));
+    let termResults = results.filter((r: any) => Number(r.term_id) === Number(tid) && Number(r.session_id) === Number(sid));
     
-    let averageScore = 0;
+    // If student has no results in current active term, fall back to their most recent term with results
+    if (termResults.length === 0 && results.length > 0) {
+      const latest = results[results.length - 1];
+      termResults = results.filter((r: any) => Number(r.term_id) === Number(latest.term_id) && Number(r.session_id) === Number(latest.session_id));
+    }
+
+    let averageScore: number | null = null;
     if (termResults.length > 0) {
       const sum = termResults.reduce((acc: number, r: any) => acc + publishedScorePercent(r), 0);
       averageScore = Math.round((sum / termResults.length) * 10) / 10;
     } else {
       const examsAvg = db.prepare("SELECT ROUND(AVG(CASE WHEN status='completed' AND total_score>0 THEN CAST(score AS REAL)/total_score*100 END), 1) as avg FROM exams WHERE student_id = ?").get(studentId) as any;
-      averageScore = Number(examsAvg?.avg || 0);
+      averageScore = examsAvg?.avg !== null && examsAvg?.avg !== undefined ? Number(examsAvg.avg) : null;
     }
 
     let classPosition = "1st of 1";

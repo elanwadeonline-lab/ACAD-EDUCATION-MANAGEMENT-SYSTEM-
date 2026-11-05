@@ -7,8 +7,20 @@ const DIST_DIR = join(import.meta.dir, "dist");
 
 const server = serve({
   port: PORT,
-  fetch(req) {
+  async fetch(req) {
     const url = new URL(req.url);
+
+    // Proxy API requests directly to the running backend on port 8001
+    if (url.pathname.startsWith("/api/")) {
+      const backendUrl = new URL(url.pathname + url.search, "http://localhost:8001");
+      const body = req.method !== "GET" && req.method !== "HEAD" ? await req.text() : undefined;
+      return fetch(backendUrl.toString(), {
+        method: req.method,
+        headers: req.headers,
+        body,
+      });
+    }
+
     let pathname = decodeURIComponent(url.pathname);
     if (pathname === "/") pathname = "/index.html";
 

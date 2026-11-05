@@ -7,6 +7,7 @@ import { RequireRole } from "../../../components/auth/RequireRole";
 import { useGuardian, type WardExamEvent } from "../../../components/guardian/GuardianContext";
 import { StudentAvatar } from "../../../components/guardian/StudentAvatar";
 import { api } from "../../../lib/api";
+import {useGuardianRecordPage} from "../../../components/guardian/useGuardianPageView";
 import styles from "./page.module.css";
 
 export default function GuardianExaminationsPage() {
@@ -22,7 +23,7 @@ function ExaminationsList() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"all" | "upcoming" | "completed">("all");
   const [events, setEvents] = useState<WardExamEvent[]>([]);
-  const [selectedExam, setSelectedExam] = useState<WardExamEvent | null>(null);
+  const [selectedExam, setSelectedExam] = useGuardianRecordPage(events);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -46,8 +47,8 @@ function ExaminationsList() {
               venue: e.venue || "CBT Center",
               status: e.status || "upcoming",
               instructions: e.instructions || "Arrive 15 minutes before the start time with valid student registration slip.",
-              duration_minutes: e.duration_minutes || 60,
-              total_questions: e.total_questions || 40,
+              duration_minutes: e.duration_minutes ?? null,
+              total_questions: e.total_questions ?? null,
             };
           });
           setEvents(formatted);
@@ -125,7 +126,7 @@ function ExaminationsList() {
             <div
               key={ev.id}
               className={styles.examCard}
-              onClick={() => setSelectedExam(ev)}
+              role="button" tabIndex={0} onKeyDown={e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();e.currentTarget.click();}}} onClick={() => setSelectedExam(ev)}
             >
               <div className={styles.cardMainRow}>
                 <div className={styles.dateBox}>
@@ -166,11 +167,11 @@ function ExaminationsList() {
       <AnimatePresence>
         {selectedExam && (
           <motion.div
-            className={styles.modalBackdrop}
+            className={styles.modalBackdrop} data-guardian-detail="true"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => setSelectedExam(null)}
+            
           >
             <motion.div
               className={styles.sheetContent}
@@ -185,7 +186,7 @@ function ExaminationsList() {
                 <h3 className={styles.sheetTitle}>{selectedExam.title}</h3>
                 <button
                   type="button"
-                  onClick={() => setSelectedExam(null)}
+                  
                   style={{ background: "none", border: "none", color: "var(--g-text-muted, #64748B)", cursor: "pointer" }}
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -210,7 +211,7 @@ function ExaminationsList() {
                 </div>
                 <div className={styles.gridItem}>
                   <span className={styles.gridLabel}>Duration</span>
-                  <span className={styles.gridVal}>{selectedExam.duration_minutes || 60} Minutes</span>
+                  <span className={styles.gridVal}>{selectedExam.duration_minutes != null ? `${selectedExam.duration_minutes} minutes` : "Not specified"}</span>
                 </div>
               </div>
 

@@ -7,7 +7,7 @@ import BottomNavigation from "@mui/material/BottomNavigation";
 import BottomNavigationAction from "@mui/material/BottomNavigationAction";
 import SwipeableDrawer from "@mui/material/SwipeableDrawer";
 import ListItemButton from "@mui/material/ListItemButton";
-import { ArrowLeft, Home, Users, FileText, MessageCircle, MoreHorizontal, Bell, Sun, Moon, Plus, Check, X, ChevronDown, CalendarDays, Wallet, ClipboardCheck, Megaphone, Link2 } from "lucide-react";
+import { ArrowLeft, Home, Users, FileText, MessageCircle, MoreHorizontal, Bell, Sun, Moon, Plus, Check, X, ChevronDown, CalendarDays, Wallet, ClipboardCheck, Megaphone, Link2 } from "./GuardianSolidIcons";
 import { useGuardian } from "./GuardianContext";
 import { StudentAvatar } from "./StudentAvatar";
 import { AcqadLogo } from "../brand/AcqadLogo";
@@ -18,7 +18,7 @@ const navigation = [
   { href: "/guardian/wards", label: "My children", Icon: Users, paths: ["/guardian/wards"] },
   { href: "/guardian/results", label: "Results", Icon: FileText, paths: ["/guardian/results", "/guardian/reports", "/guardian/performance", "/guardian/examinations"] },
   { href: "/guardian/messages", label: "Messages", Icon: MessageCircle, paths: ["/guardian/messages"] },
-  { href: "/guardian/settings", label: "More", Icon: MoreHorizontal, paths: ["/guardian/settings", "/guardian/fees", "/guardian/attendance", "/guardian/calendar", "/guardian/announcements", "/guardian/links", "/guardian/notifications"] },
+  { href: "/guardian/more", label: "More", Icon: MoreHorizontal, paths: ["/guardian/more", "/guardian/settings", "/guardian/fees", "/guardian/attendance", "/guardian/calendar", "/guardian/announcements", "/guardian/links", "/guardian/notifications"] },
 ];
 const tools = [
   { href: "/guardian/attendance", label: "Attendance", Icon: ClipboardCheck },
@@ -33,7 +33,7 @@ export function GuardianMobileShell({ children }: { children: React.ReactNode })
   const { activeWard, wards, guardianName, setActiveWardId, childSwitcherOpen, openChildSwitcher, closeChildSwitcher,
     unreadNotificationCount, unreadMessageCount, theme, toggleTheme } = useGuardian();
   const isHome = pathname === "/guardian/dashboard";
-  const pageTitles: Record<string,string> = { wards:"My children",results:"Results",reports:"Reports",performance:"Progress",examinations:"Examinations",messages:"Messages",settings:"Your account",fees:"Fees & receipts",attendance:"Attendance",calendar:"School calendar",announcements:"School notices",links:"Manage children",notifications:"Notifications" };
+  const pageTitles: Record<string,string> = { "select-child":"Choose a child",more:"School tools",wards:"My children",results:"Results",reports:"Reports",performance:"Progress",examinations:"Examinations",messages:"Messages",settings:"Your account",fees:"Fees & receipts",attendance:"Attendance",calendar:"School calendar",announcements:"School notices",links:"Manage children",notifications:"Notifications" };
   const pageTitle = pageTitles[pathname.split("/")[2]] || "Your family";
   const selectedId = activeWard ? activeWard.student_id || activeWard.id : null;
   const matches = (paths: string[]) => paths.some(p => pathname === p || pathname.startsWith(p + "/"));
@@ -43,7 +43,7 @@ export function GuardianMobileShell({ children }: { children: React.ReactNode })
     <aside className={styles.desktopSidebar} aria-label="Guardian workspace">
       <Link href="/guardian/dashboard" className={styles.brandLink}><AcqadLogo size="lg" wordmarkWeight={700}/></Link>
       <p className={styles.navSection}>Your family</p>
-      <nav aria-label="Desktop navigation">{navigation.map(({ href, label, Icon, paths }) => <Link key={href} href={href} className={`${styles.desktopNavItem} ${matches(paths) ? styles.desktopNavActive : ""}`} aria-current={matches(paths) ? "page" : undefined}><Icon size={18} /><span>{label === "More" ? "Settings" : label}</span></Link>)}</nav>
+      <nav aria-label="Desktop navigation">{navigation.map(({ href, label, Icon, paths }) => <Link key={href} href={href} className={`${styles.desktopNavItem} ${matches(paths) ? styles.desktopNavActive : ""}`} aria-current={matches(paths) ? "page" : undefined}><Icon size={18} /><span>{label}</span></Link>)}</nav>
       <p className={styles.navSection}>School tools</p>
       <nav aria-label="School tools">{tools.map(({ href, label, Icon }) => <Link key={href} href={href} className={styles.desktopNavItem} aria-current={pathname === href ? "page" : undefined}><Icon size={18} /><span>{label}</span></Link>)}</nav>
       <p className={styles.sidebarFoot}>Stay connected to their school day.</p>
@@ -52,7 +52,7 @@ export function GuardianMobileShell({ children }: { children: React.ReactNode })
       <header className={styles.mobileHeader}>
         {isHome ? (<Link href="/guardian/dashboard" className={styles.greetingLink}><span className={styles.parentAvatar}>{guardianName?.trim().charAt(0) || <Users size={20} />}</span><span className={styles.parentGreeting}><small>Hello,</small><strong>{guardianName || "Your family"}</strong></span></Link>) : <div className={styles.subpageHeading}><Link href="/guardian/dashboard" className={styles.iconButton} aria-label="Back to home"><ArrowLeft size={20}/></Link><strong>{pageTitle}</strong></div>}
         <div className={styles.headerRight}>
-          {activeWard && !isHome && <button type="button" className={styles.childSelectorPill} onClick={openChildSwitcher} aria-label={`Switch child, currently ${activeWard.name}`} aria-haspopup="dialog" aria-expanded={childSwitcherOpen}><StudentAvatar name={activeWard.name} imageUrl={activeWard.image_url} size="xs" /><span className={styles.childSelectorName}>{activeWard.name.split(" ")[0]}</span><ChevronDown size={14} /></button>}
+          {activeWard && !isHome && <button type="button" className={styles.childSelectorPill} onClick={openChildSwitcher} aria-label={`Switch child, currently ${activeWard.name}`} ><StudentAvatar name={activeWard.name} imageUrl={activeWard.image_url} size="xs" /><span className={styles.childSelectorName}>{activeWard.name.split(" ")[0]}</span><ChevronDown size={14} /></button>}
           <button type="button" className={styles.iconButton} onClick={toggleTheme} aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}>{theme === "light" ? <Moon size={19} /> : <Sun size={19} />}</button>
           <Link href="/guardian/notifications" className={styles.iconButton} aria-label={`Notifications${unreadNotificationCount ? `, ${unreadNotificationCount} unread` : ""}`}><Bell size={20} />{unreadNotificationCount > 0 && <span className={styles.notifyDot}>{unreadNotificationCount > 99 ? "99+" : unreadNotificationCount}</span>}</Link>
         </div>
@@ -66,9 +66,6 @@ export function GuardianMobileShell({ children }: { children: React.ReactNode })
         {navigation.map(({ href, label, Icon, paths }, index) => <BottomNavigationAction key={href} value={index} component={Link} href={href} label={label} aria-current={matches(paths) ? "page" : undefined} icon={<span className={styles.navIconBox}><Icon size={21} />{href === "/guardian/messages" && unreadMessageCount > 0 && <span className={styles.navBadge} />}</span>} />)}
       </BottomNavigation>
     </div>
-    <SwipeableDrawer anchor="bottom" open={childSwitcherOpen} onOpen={openChildSwitcher} onClose={closeChildSwitcher} disableSwipeToOpen slotProps={{ paper: { role: "dialog", "aria-labelledby": "ward-picker-title", "aria-describedby": "ward-picker-description", sx: { maxWidth: 520, mx: "auto", borderRadius: "24px 24px 0 0", bgcolor: "var(--g-surface)", color: "var(--g-text-primary)" } } }}>
-      <div className={styles.sheetBody}><div className={styles.sheetHandle} /><div className={styles.sheetHeader}><h2 id="ward-picker-title" className={styles.sheetTitle}>Choose a child</h2><button type="button" className={styles.iconButton} onClick={closeChildSwitcher} aria-label="Close child selector"><X size={20}/></button></div><p id="ward-picker-description" className={styles.sheetDescription}>Results, attendance and messages will follow your selection.</p>
-      <div className={styles.wardList}>{wards.map(ward=>{const id=ward.student_id||ward.id;return <ListItemButton component="button" key={id} className={styles.wardCardOption} selected={selectedId===id} aria-pressed={selectedId===id} onClick={()=>setActiveWardId(id)}><StudentAvatar name={ward.name} imageUrl={ward.image_url} size="sm"/><span className={styles.wardMeta}><strong>{ward.name}</strong><small>{ward.grade} · {ward.admission_number||ward.reg_id||"Registration unavailable"}</small></span>{selectedId===id&&<Check size={20}/>}</ListItemButton>;})}</div><Link href="/guardian/links" className={styles.linkNewWardBtn} onClick={closeChildSwitcher}><Plus size={18}/>Link another child</Link></div>
-    </SwipeableDrawer>
+
   </div>;
 }

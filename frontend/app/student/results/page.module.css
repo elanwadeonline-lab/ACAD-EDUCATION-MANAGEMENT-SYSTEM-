@@ -29,7 +29,7 @@
 .heroTitle {
   font-size: 1.625rem;
   font-weight: 700;
-  color: #0F172A;
+  color: var(--color-text);
   letter-spacing: -0.025em;
   margin: 0;
   line-height: 1.2;
@@ -55,7 +55,7 @@
   align-items: center;
   gap: 1rem;
   padding: 1.15rem 1.45rem;
-  background: #FFFFFF;
+  background: var(--color-surface);
   border: 1px solid #E2E8F0;
   border-radius: 16px;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
@@ -98,7 +98,7 @@
 .telemetryNumber {
   font-size: 1.125rem;
   font-weight: 700;
-  color: #0F172A;
+  color: var(--color-text);
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.01em;
 }
@@ -119,7 +119,7 @@
 }
 
 .statCard {
-  background: #FFFFFF;
+  background: var(--color-surface);
   border: 1px solid #E2E8F0;
   border-radius: 16px;
   padding: 1.25rem 1.5rem;
@@ -148,14 +148,14 @@
   font-size: 1.5rem;
   font-weight: 700;
   font-family: var(--font-mono, monospace);
-  color: #0F172A;
+  color: var(--color-text);
   line-height: 1.1;
   letter-spacing: -0.02em;
 }
 
 /* ── 3. Enclosed Assessment Results Container ── */
 .resultsContainer {
-  background: #FFFFFF;
+  background: var(--color-surface);
   border: 1px solid #E2E8F0;
   border-radius: 18px;
   padding: 1.75rem 2rem;
@@ -203,7 +203,7 @@
 .resultsClassTitle {
   font-size: 1.125rem;
   font-weight: 600;
-  color: #0F172A;
+  color: var(--color-text);
   margin: 0;
   line-height: 1.2;
 }
@@ -233,7 +233,7 @@
 }
 
 .tabBtn:hover {
-  color: #0F172A;
+  color: var(--color-text);
 }
 
 .tabBtnActive {
@@ -264,7 +264,7 @@
 }
 
 .resultCard {
-  background: #FFFFFF;
+  background: var(--color-surface);
   border: 1px solid #E2E8F0;
   border-radius: 14px;
   padding: 1.35rem 1.25rem;
@@ -290,7 +290,7 @@
 .subjectTitle {
   font-size: 0.9375rem;
   font-weight: 600;
-  color: #0F172A;
+  color: var(--color-text);
   line-height: 1.3;
 }
 
@@ -313,7 +313,7 @@
 .scoreNumber {
   font-size: 1.125rem;
   font-weight: 700;
-  color: #0F172A;
+  color: var(--color-text);
   font-family: var(--font-mono, monospace);
 }
 
@@ -341,7 +341,7 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 0.5rem;
-  background: #F8FAFC;
+  background: var(--color-surface);
   border: 1px solid #F1F5F9;
   border-radius: 10px;
   padding: 0.65rem 0.75rem;
@@ -364,7 +364,7 @@
 .metricValue {
   font-size: 0.875rem;
   font-weight: 700;
-  color: #0F172A;
+  color: var(--color-text);
   font-family: var(--font-mono, monospace);
 }
 
@@ -402,7 +402,7 @@
 }
 
 .analyticsCard {
-  background: #FFFFFF;
+  background: var(--color-surface);
   border: 1px solid #E2E8F0;
   border-radius: 14px;
   padding: 1.25rem 1.375rem;
@@ -421,7 +421,7 @@
 .analyticsTitle {
   font-size: 0.9375rem;
   font-weight: 700;
-  color: #0F172A;
+  color: var(--color-text);
   margin: 0;
 }
 
@@ -444,8 +444,8 @@
   border-radius: 8px;
   border: 1px solid #CBD5E1;
   font-size: 0.8125rem;
-  color: #0F172A;
-  background: #FFFFFF;
+  color: var(--color-text);
+  background: var(--color-surface);
   min-width: 210px;
 }
 
@@ -475,7 +475,7 @@
 }
 
 .viewToggleBtnActive {
-  background: #FFFFFF;
+  background: var(--color-surface);
   color: #92400E;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
 }
@@ -500,7 +500,7 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: #64748B;
-  background: #F8FAFC;
+  background: var(--color-surface);
   padding: 0.65rem 0.875rem;
   border-bottom: 1px solid #E2E8F0;
 }
@@ -508,7 +508,7 @@
 .dataTable td {
   padding: 0.75rem 0.875rem;
   border-bottom: 1px solid #F1F5F9;
-  color: #1E293B;
+  color: var(--color-text);
   vertical-align: middle;
 }
 
@@ -517,7 +517,7 @@
 }
 
 .dataTable tr:hover td {
-  background: #F8FAFC;
+  background: var(--color-surface);
 }
 
 .numCell {

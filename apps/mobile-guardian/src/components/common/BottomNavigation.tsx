@@ -1,7 +1,12 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { Home, BookOpen, CreditCard, LayoutGrid } from "lucide-react-native";
-import { Colors, Spacing } from "../../theme/tokens";
+import { View, Text, TouchableOpacity, StyleSheet, Platform } from "react-native";
+import {
+  SolidHome,
+  SolidGraduationCap,
+  SolidWallet,
+  SolidGrid,
+} from "./SolidIcons";
+import { Colors } from "../../theme/tokens";
 
 export type TabName = "Home" | "Academics" | "Payments" | "More";
 
@@ -11,18 +16,57 @@ interface BottomNavigationProps {
 }
 
 export function BottomNavigation({ activeTab, onTabPress }: BottomNavigationProps) {
-  const tabs: Array<{ name: TabName; label: string; icon: any }> = [
-    { name: "Home", label: "Home", icon: Home },
-    { name: "Academics", label: "Academics", icon: BookOpen },
-    { name: "Payments", label: "Payments", icon: CreditCard },
-    { name: "More", label: "More", icon: LayoutGrid },
+  const tabs = [
+    {
+      name: "Home" as TabName,
+      label: "Home",
+      renderIcon: () => (
+        <SolidHome
+          size={22}
+          color="#000000"
+          secondaryColor="#000000"
+        />
+      ),
+    },
+    {
+      name: "Academics" as TabName,
+      label: "Academics",
+      renderIcon: () => (
+        <SolidGraduationCap
+          size={22}
+          color="#000000"
+          secondaryColor="#000000"
+        />
+      ),
+    },
+    {
+      name: "Payments" as TabName,
+      label: "Payments",
+      renderIcon: () => (
+        <SolidWallet
+          size={22}
+          color="#000000"
+          secondaryColor="#000000"
+        />
+      ),
+    },
+    {
+      name: "More" as TabName,
+      label: "More",
+      renderIcon: () => (
+        <SolidGrid
+          size={22}
+          color="#000000"
+          secondaryColor="#000000"
+        />
+      ),
+    },
   ];
 
   return (
     <View style={styles.tabBar}>
       {tabs.map((tab) => {
         const isActive = activeTab === tab.name;
-        const IconComponent = tab.icon;
 
         return (
           <TouchableOpacity
@@ -30,29 +74,24 @@ export function BottomNavigation({ activeTab, onTabPress }: BottomNavigationProp
             activeOpacity={0.75}
             accessibilityRole="tab"
             accessibilityLabel={tab.label}
-            accessibilityState={{selected:isActive}}
+            accessibilityState={{ selected: isActive }}
             onPress={() => onTabPress(tab.name)}
-            style={styles.tabItem}
+            style={[styles.tabItem, !isActive && styles.tabItemInactive]}
           >
-            <IconComponent
-              size={22}
-              color={isActive ? Colors.primary : Colors.muted}
-              strokeWidth={isActive ? 2.4 : 1.8}
-            />
-            <Text
-              style={[
-                styles.tabLabel,
-                isActive ? styles.tabLabelActive : styles.tabLabelInactive,
-              ]}
-            >
+            {tab.renderIcon()}
+            <Text style={styles.tabLabel}>
               {tab.label}
             </Text>
+            {isActive && <View style={styles.activeDot} />}
           </TouchableOpacity>
         );
       })}
     </View>
   );
 }
+
+const MANROPE_MEDIUM =
+  Platform.OS === 'web' ? 'Manrope_500Medium, Manrope, sans-serif' : 'Manrope_500Medium';
 
 const styles = StyleSheet.create({
   tabBar: {
@@ -62,30 +101,43 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-around",
     borderTopWidth: 1,
-    borderTopColor: Colors.cardBorder,
+    borderTopColor: "#F1F5F9",
     paddingBottom: 4,
-    shadowColor: "#000",
+    shadowColor: "#0F172A",
     shadowOffset: { width: 0, height: -3 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
     elevation: 8,
+    ...(Platform.OS === 'web'
+      ? {
+          boxShadow: '0 -4px 16px -2px rgba(15, 23, 42, 0.05)',
+        }
+      : {}),
   },
   tabItem: {
     alignItems: "center",
     justifyContent: "center",
-    gap: 4,
+    gap: 3,
     flex: 1,
+    paddingVertical: 6,
+    ...(Platform.OS === 'web' ? ({ cursor: 'pointer' } as any) : {}),
+  },
+  tabItemInactive: {
+    opacity: 0.5,
   },
   tabLabel: {
     fontSize: 11,
-    fontWeight: "600",
+    letterSpacing: -0.1,
+    color: "#000000",
+    fontWeight: "500",
+    fontFamily: MANROPE_MEDIUM,
   },
-  tabLabelActive: {
-    color: Colors.primary,
-    fontWeight: "700",
-  },
-  tabLabelInactive: {
-    color: Colors.muted,
+  activeDot: {
+    width: 14,
+    height: 2.5,
+    borderRadius: 2,
+    backgroundColor: "#000000",
+    marginTop: 1,
   },
 });
 

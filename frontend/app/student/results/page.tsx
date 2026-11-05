@@ -243,7 +243,7 @@ function StudentResults() {
                   />
                   <Tooltip
                     contentStyle={{
-                      background: "#FFFFFF",
+                      background: "var(--color-surface)",
                       border: "1px solid #E2E8F0",
                       borderRadius: "8px",
                       fontSize: "0.75rem",
@@ -301,7 +301,7 @@ function StudentResults() {
                   <div key={band.label} style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem" }}>
                       <span style={{ fontWeight: 600, color: "#334155" }}>{band.label}</span>
-                      <span style={{ fontWeight: 700, color: "#0F172A", fontVariantNumeric: "tabular-nums" }}>
+                      <span style={{ fontWeight: 700, color: "var(--color-text-2)", fontVariantNumeric: "tabular-nums" }}>
                         {band.count} ({bandPct}%)
                       </span>
                     </div>
@@ -393,14 +393,14 @@ function StudentResults() {
         </div>
 
         {loading ? (
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "3rem", gap: "0.75rem", color: "#64748B", fontSize: "0.875rem" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "3rem", gap: "0.75rem", color: "var(--color-text-2)", fontSize: "0.875rem" }}>
             <div className="spinner" style={{ width: 22, height: 22, borderColor: "#E2E8F0", borderTopColor: "#92400E" }} />
             <span>Loading examination results…</span>
           </div>
         ) : filteredResults.length === 0 ? (
           <div
             style={{
-              background: "#FFFFFF",
+              background: "var(--color-surface)",
               border: "1px dashed #E2E8F0",
               borderRadius: "16px",
               padding: "3.5rem 2rem",
@@ -408,10 +408,10 @@ function StudentResults() {
             }}
           >
             <AwardIcon width="36" height="36" style={{ color: "#94A3B8", margin: "0 auto 0.75rem" }} />
-            <div style={{ fontWeight: 700, color: "#0F172A", fontSize: "0.9375rem", marginBottom: "0.25rem" }}>
+            <div style={{ fontWeight: 700, color: "var(--color-text-2)", fontSize: "0.9375rem", marginBottom: "0.25rem" }}>
               No Matching Evaluation Submissions
             </div>
-            <div style={{ color: "#64748B", fontSize: "0.8125rem" }}>
+            <div style={{ color: "var(--color-text-2)", fontSize: "0.8125rem" }}>
               Completed formal test sittings and practice sessions will appear here.
             </div>
           </div>
@@ -450,7 +450,7 @@ function StudentResults() {
 
                   return (
                     <tr key={r.id}>
-                      <td style={{ fontWeight: 600, color: "#0F172A" }}>
+                      <td style={{ fontWeight: 600, color: "var(--color-text-2)" }}>
                         {r.subject_name || `Subject #${r.subject_id}`}
                       </td>
                       <td>
@@ -458,7 +458,7 @@ function StudentResults() {
                           {isPractice ? "PRACTICE" : subject?.code || "EXAM"}
                         </span>
                       </td>
-                      <td style={{ color: "#64748B", fontVariantNumeric: "tabular-nums" }}>
+                      <td style={{ color: "var(--color-text-2)", fontVariantNumeric: "tabular-nums" }}>
                         {r.end_time
                           ? new Date(r.end_time).toLocaleDateString("en-GB", {
                               day: "2-digit",
@@ -629,7 +629,7 @@ function StudentResults() {
                             ? styles.gradeC
                             : styles.gradeF
                         }`}
-                        style={!isReleased ? { background: "#F1F5F9", color: "#64748B" } : undefined}
+                        style={!isReleased ? { background: "#F1F5F9", color: "var(--color-text-2)" } : undefined}
                       >
                         {grade}
                       </span>

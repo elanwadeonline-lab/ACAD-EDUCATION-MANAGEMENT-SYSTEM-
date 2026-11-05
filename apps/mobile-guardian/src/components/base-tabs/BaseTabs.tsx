@@ -216,6 +216,14 @@ function TabTrigger({
         accessibilityRole="tab"
         accessibilityState={{ selected: active }}
         aria-selected={active}
+        {...(Platform.OS === 'web'
+          ? {
+              onClick: (e: any) => {
+                e?.stopPropagation?.();
+                onPress();
+              },
+            }
+          : {})}
         {...baseActivationProps(onPress)}
         style={{
           flex: 1,
@@ -224,6 +232,7 @@ function TabTrigger({
           alignItems: 'center',
           justifyContent: 'center',
           paddingHorizontal: 8,
+          ...(Platform.OS === 'web' ? ({ cursor: 'pointer' } as any) : {}),
         }}
       >
         <Animated.Text

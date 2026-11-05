@@ -302,3 +302,12 @@
 .submitBtn:hover {
   background: var(--g-primary-hover, #78350F);
 }
+
+/* URL-addressed detail page, within the shared app shell. */
+.container:has([data-guardian-detail]) > :not([data-guardian-detail]) { display:none; }
+.modalBackdrop { position:static; inset:auto; background:transparent; backdrop-filter:none; padding:0; display:block; z-index:auto; }
+.modalContent { width:100%; max-width:900px; max-height:none; margin:0 auto; border:0; border-radius:12px; box-shadow:none; transform:none; }
+
+.container:has([data-guardian-detail]) > :not([data-guardian-detail]),.page:has([data-guardian-detail]) > :not([data-guardian-detail]) { display:none; }
+.modalBackdrop { position:static; inset:auto; background:transparent; backdrop-filter:none; padding:0; display:block; z-index:auto; }
+.modalContent,.sheetContent,.contactPickerModal { width:100%; max-width:900px; max-height:none; margin:0 auto; border:0; border-radius:12px; box-shadow:none; }

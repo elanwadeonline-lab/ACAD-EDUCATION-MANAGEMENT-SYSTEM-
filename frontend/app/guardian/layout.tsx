@@ -7,6 +7,7 @@ import { GuardianProvider } from "../../components/guardian/GuardianContext";
 import { GuardianMaterialProvider } from "../../components/guardian/GuardianMaterialProvider";
 import { GuardianMobileShell } from "../../components/guardian/GuardianMobileShell";
 import "./design-tokens.css";
+import "./app-pages.css";
 
 export default function GuardianLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -25,4 +26,5 @@ export default function GuardianLayout({ children }: { children: ReactNode }) {
     </AcademicProvider>
   );
 }
+
 

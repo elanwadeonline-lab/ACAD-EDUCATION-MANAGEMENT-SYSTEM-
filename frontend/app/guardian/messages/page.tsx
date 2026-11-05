@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { RequireRole } from "../../../components/auth/RequireRole";
 import { useGuardian, type GuardianMessageThread } from "../../../components/guardian/GuardianContext";
 import { api } from "../../../lib/api";
+import {useGuardianPageView} from "../../../components/guardian/useGuardianPageView";
 import styles from "./page.module.css";
 
 interface Contact {
@@ -35,7 +36,9 @@ function MessagesList() {
   const [newMsgText, setNewMsgText] = useState("");
   const [sending, setSending] = useState(false);
   const [contacts, setContacts] = useState<Contact[]>([]);
-  const [showNewChatModal, setShowNewChatModal] = useState(false);
+  const [pageView,setPageView]=useGuardianPageView();
+  const showNewChatModal=pageView==="new-inquiry";
+  const setShowNewChatModal=(open:boolean)=>setPageView(open?"new-inquiry":"");
   const chatBodyRef = useRef<HTMLDivElement>(null);
 
   const displayThreads = messages || [];
@@ -416,11 +419,11 @@ function MessagesList() {
       <AnimatePresence>
         {showNewChatModal && (
           <motion.div
-            className={styles.modalBackdrop}
+            className={styles.modalBackdrop} data-guardian-detail="true"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => setShowNewChatModal(false)}
+            
           >
             <motion.div
               className={styles.contactPickerModal}

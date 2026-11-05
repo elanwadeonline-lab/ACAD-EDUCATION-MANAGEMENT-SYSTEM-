@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { api } from "../../lib/api";
 import { useAuth } from "../../hooks/useAuth";
 
@@ -180,6 +181,7 @@ interface GuardianContextType {
 const GuardianContext = createContext<GuardianContextType | null>(null);
 
 export function GuardianProvider({ children }: { children: React.ReactNode }) {
+  const guardianRouter=useRouter();
   const { user } = useAuth();
   const [wards, setWards] = useState<Ward[]>([]);
   const [activeWardId, setActiveWardIdState] = useState<number | null>(null);
@@ -385,7 +387,7 @@ export function GuardianProvider({ children }: { children: React.ReactNode }) {
         period,
         setPeriod,
         childSwitcherOpen,
-        openChildSwitcher: () => setChildSwitcherOpen(true),
+        openChildSwitcher: () => { sessionStorage.setItem("guardian-return",location.pathname+location.search); guardianRouter.push("/guardian/select-child"); },
         closeChildSwitcher: () => setChildSwitcherOpen(false),
         guardianName: user?.name || "Guardian",
         guardianEmail: user?.email || "",

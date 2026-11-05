@@ -28,7 +28,7 @@
 .heroTitle {
   font-size: 1.625rem;
   font-weight: 700;
-  color: #0F172A;
+  color: var(--color-text);
   letter-spacing: -0.025em;
   margin: 0;
   line-height: 1.2;
@@ -54,7 +54,7 @@
   align-items: center;
   gap: 1rem;
   padding: 1.15rem 1.45rem;
-  background: #FFFFFF;
+  background: var(--color-surface);
   border: 1px solid #E2E8F0;
   border-radius: 16px;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
@@ -97,7 +97,7 @@
 .telemetryNumber {
   font-size: 1.125rem;
   font-weight: 700;
-  color: #0F172A;
+  color: var(--color-text);
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.01em;
 }
@@ -112,7 +112,7 @@
 
 /* ── 2. Sync Action Toolbar ── */
 .toolbarCard {
-  background: #FFFFFF;
+  background: var(--color-surface);
   border: 1px solid #E2E8F0;
   border-radius: 16px;
   padding: 1.25rem 1.5rem;
@@ -136,7 +136,7 @@
 .toolbarTitle {
   font-size: 0.9375rem;
   font-weight: 600;
-  color: #0F172A;
+  color: var(--color-text);
   margin: 0;
 }
 
@@ -187,8 +187,8 @@
   gap: 0.45rem;
   padding: 0.55rem 1.15rem;
   border-radius: 10px;
-  background: #FFFFFF;
-  color: #0F172A;
+  background: var(--color-surface);
+  color: var(--color-text);
   font-size: 0.8125rem;
   font-weight: 600;
   border: 1px solid #E2E8F0;
@@ -197,7 +197,7 @@
 }
 
 .syncBtn:hover:not(:disabled) {
-  background: #F8FAFC;
+  background: var(--color-surface);
   border-color: #CBD5E1;
   transform: translateY(-1px);
 }
@@ -209,7 +209,7 @@
 
 /* ── 3. Enrolled Assignments Track Container ── */
 .assignmentsContainer {
-  background: #FFFFFF;
+  background: var(--color-surface);
   border: 1px solid #E2E8F0;
   border-radius: 18px;
   padding: 1.75rem 2rem;
@@ -256,7 +256,7 @@
 .hubClassTitle {
   font-size: 1.125rem;
   font-weight: 600;
-  color: #0F172A;
+  color: var(--color-text);
   margin: 0;
   line-height: 1.2;
 }
@@ -269,7 +269,7 @@
 }
 
 .card {
-  background: #FFFFFF;
+  background: var(--color-surface);
   border: 1px solid #E2E8F0;
   border-radius: 14px;
   padding: 1.25rem 1.15rem;
@@ -298,7 +298,7 @@
   height: 34px;
   border-radius: 8px;
   background: #F1F5F9;
-  color: #0F172A;
+  color: var(--color-text);
   border: 1px solid #E2E8F0;
   display: flex;
   align-items: center;
@@ -320,7 +320,7 @@
 .cardTitle {
   font-size: 0.9375rem;
   font-weight: 600;
-  color: #0F172A;
+  color: var(--color-text);
   line-height: 1.35;
   margin: 0;
 }
@@ -355,7 +355,7 @@
 .emptyState h3 {
   font-size: 1rem;
   font-weight: 600;
-  color: #0F172A;
+  color: var(--color-text);
   margin: 0;
 }
 
@@ -380,7 +380,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 1rem 1.5rem;
-  background: #FFFFFF;
+  background: var(--color-surface);
   border: 1px solid #E2E8F0;
   border-radius: 16px;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02);
@@ -400,13 +400,13 @@
   padding: 0.35rem 0.75rem;
   border-radius: 8px;
   border: 1px solid #E2E8F0;
-  background: #FFFFFF;
+  background: var(--color-surface);
   transition: all 150ms ease;
 }
 
 .exitBtn:hover {
-  background: #F8FAFC;
-  color: #0F172A;
+  background: var(--color-surface);
+  color: var(--color-text);
   border-color: #CBD5E1;
 }
 
@@ -419,7 +419,7 @@
 .headerTitle strong {
   font-size: 1rem;
   font-weight: 700;
-  color: #0F172A;
+  color: var(--color-text);
 }
 
 .badge {
@@ -456,7 +456,7 @@
 }
 
 .sidebar {
-  background: #FFFFFF;
+  background: var(--color-surface);
   border: 1px solid #E2E8F0;
   border-radius: 16px;
   padding: 1.25rem;
@@ -477,7 +477,7 @@
   justify-content: center;
   border-radius: 8px;
   border: 1px solid #E2E8F0;
-  background: #FFFFFF;
+  background: var(--color-surface);
   font-size: 0.8125rem;
   font-weight: 600;
   color: #64748B;
@@ -488,7 +488,7 @@
 
 .navBtn:hover {
   border-color: #CBD5E1;
-  background: #F8FAFC;
+  background: var(--color-surface);
 }
 
 .navBtnActive {
@@ -504,7 +504,7 @@
 }
 
 .qArea {
-  background: #FFFFFF;
+  background: var(--color-surface);
   border: 1px solid #E2E8F0;
   border-radius: 16px;
   padding: 2rem;
@@ -525,7 +525,7 @@
 .qTopRow h2 {
   font-size: 1.125rem;
   font-weight: 700;
-  color: #0F172A;
+  color: var(--color-text);
   margin: 0;
 }
 
@@ -542,7 +542,7 @@
 .qText {
   font-size: 1rem;
   line-height: 1.6;
-  color: #0F172A;
+  color: var(--color-text);
   font-weight: 500;
 }
 
@@ -565,7 +565,7 @@
   padding: 0.95rem 1.15rem;
   border-radius: 12px;
   border: 1px solid #E2E8F0;
-  background: #FFFFFF;
+  background: var(--color-surface);
   cursor: pointer;
   text-align: left;
   transition: all 150ms ease;
@@ -573,7 +573,7 @@
 
 .optionBtn:hover {
   border-color: #CBD5E1;
-  background: #F8FAFC;
+  background: var(--color-surface);
 }
 
 .optionBtnActive {
@@ -589,7 +589,7 @@
   align-items: center;
   justify-content: center;
   background: #F1F5F9;
-  color: #0F172A;
+  color: var(--color-text);
   font-weight: 700;
   font-size: 0.8125rem;
   flex-shrink: 0;
@@ -602,7 +602,7 @@
 
 .optionText {
   font-size: 0.9375rem;
-  color: #0F172A;
+  color: var(--color-text);
   line-height: 1.4;
 }
 
@@ -619,7 +619,7 @@
   padding: 0.55rem 1.15rem;
   border-radius: 8px;
   border: 1px solid #E2E8F0;
-  background: #FFFFFF;
+  background: var(--color-surface);
   color: #334155;
   font-size: 0.8125rem;
   font-weight: 600;
@@ -628,9 +628,9 @@
 }
 
 .navActionBtn:hover:not(:disabled) {
-  background: #F8FAFC;
+  background: var(--color-surface);
   border-color: #CBD5E1;
-  color: #0F172A;
+  color: var(--color-text);
 }
 
 .navActionBtn:disabled {
@@ -685,7 +685,7 @@
 }
 
 .completionCard {
-  background: #FFFFFF;
+  background: var(--color-surface);
   border: 1px solid #E2E8F0;
   border-radius: 20px;
   padding: 3rem 2.5rem;
@@ -715,7 +715,7 @@
 .completionTitle {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #0F172A;
+  color: var(--color-text);
   margin: 0;
 }
 

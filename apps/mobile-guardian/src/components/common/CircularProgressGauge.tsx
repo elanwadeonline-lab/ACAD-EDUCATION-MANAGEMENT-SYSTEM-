@@ -1,9 +1,10 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
-import Svg, { Circle, Defs, LinearGradient, Stop } from "react-native-svg";
-import { GraduationCap, ArrowUpRight } from "lucide-react-native";
-import { Colors, Spacing, Radii, Typography } from "../../theme/tokens";
+import { View, Text, StyleSheet, Platform } from "react-native";
+import Svg, { Circle } from "react-native-svg";
+import { SolidGraduationCap } from "./SolidIcons";
+import { Colors, Spacing, Typography } from "../../theme/tokens";
 import { BaseSlidingNumber } from "../base-sliding-number";
+import { getPerformanceLabel } from "../../utils/performanceColors";
 
 interface CircularProgressGaugeProps {
   percentage: number | null;
@@ -14,7 +15,7 @@ interface CircularProgressGaugeProps {
 
 export function CircularProgressGauge({
   percentage = 0,
-  label = "Term Average",
+  label = "Term average",
   trendText = "",
   size = 190,
 }: CircularProgressGaugeProps) {
@@ -23,49 +24,49 @@ export function CircularProgressGauge({
   const circumference = 2 * Math.PI * radius;
   // Arc spans 260 degrees for speedometer / gauge feel
   const arcLength = circumference * 0.75;
-  const progressOffset = arcLength - (arcLength * Math.max(0,Math.min(percentage ?? 0, 100))) / 100;
+  const progressOffset =
+    arcLength - (arcLength * Math.max(0, Math.min(percentage ?? 0, 100))) / 100;
+
+  const orangeAccent = "#F59E0B";
+  const orangeText = "#D97706";
+  const performanceLabel = getPerformanceLabel(percentage);
 
   return (
     <View style={[styles.card, { width: "100%", alignItems: "center" }]}>
       <View style={{ width: size, height: size, alignItems: "center", justifyContent: "center" }}>
         <View style={{ transform: [{ rotate: "135deg" }] }}>
-        <Svg width={size} height={size}>
-          <Defs>
-            <LinearGradient id="magentaGaugeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <Stop offset="0%" stopColor="#F59E0B" />
-              <Stop offset="100%" stopColor="#92400E" />
-            </LinearGradient>
-          </Defs>
-          {/* Background track */}
-          <Circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            stroke="#FEF3C7"
-            strokeWidth={strokeWidth}
-            strokeDasharray={`${arcLength} ${circumference}`}
-            strokeLinecap="round"
-            fill="none"
-          />
-          {/* Active progress */}
-          <Circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            stroke="url(#magentaGaugeGrad)"
-            strokeWidth={strokeWidth}
-            strokeDasharray={`${arcLength} ${circumference}`}
-            strokeDashoffset={progressOffset}
-            strokeLinecap="round"
-            fill="none"
-          />
-        </Svg>
+          <Svg width={size} height={size}>
+            {/* Background track */}
+            <Circle
+              cx={size / 2}
+              cy={size / 2}
+              r={radius}
+              stroke="#F1F5F9"
+              strokeWidth={strokeWidth}
+              strokeDasharray={`${arcLength} ${circumference}`}
+              strokeLinecap="round"
+              fill="none"
+            />
+            {/* Active single orange accent track */}
+            <Circle
+              cx={size / 2}
+              cy={size / 2}
+              r={radius}
+              stroke={orangeAccent}
+              strokeWidth={strokeWidth}
+              strokeDasharray={`${arcLength} ${circumference}`}
+              strokeDashoffset={progressOffset}
+              strokeLinecap="round"
+              fill="none"
+            />
+          </Svg>
         </View>
 
         {/* Center Content */}
         <View style={styles.centerContent}>
-          <View style={styles.iconCircle}>
-            <GraduationCap size={24} color={Colors.primary} strokeWidth={2.2} />
+          {/* Clean unboxed SVG icon in single orange accent */}
+          <View style={styles.iconClean}>
+            <SolidGraduationCap size={26} color={orangeAccent} secondaryColor={orangeAccent} />
           </View>
           <Text style={styles.labelText}>{label}</Text>
           {percentage === null ? (
@@ -75,75 +76,73 @@ export function CircularProgressGauge({
               value={percentage / 100}
               format={{ style: "percent", minimumFractionDigits: 1, maximumFractionDigits: 1 }}
               fontSize={32}
-              color={Colors.ink}
+              color="#111014"
             />
           )}
-          {!!trendText && <View style={styles.trendChip}>
-            <ArrowUpRight size={13} color={Colors.success} strokeWidth={2.4} />
-            <Text style={styles.trendChipText}>{trendText}</Text>
-          </View>}
+          {percentage !== null && (
+            <Text style={styles.perfLabelClean}>
+              {trendText ? `${trendText} · ${performanceLabel}` : performanceLabel}
+            </Text>
+          )}
         </View>
       </View>
     </View>
   );
 }
 
+const MANROPE_MEDIUM =
+  Platform.OS === 'web' ? 'Manrope_500Medium, Manrope, sans-serif' : 'Manrope_500Medium';
+
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: Colors.card,
-    borderRadius: Radii.lg,
-    paddingVertical: Spacing.xl,
+    backgroundColor: "transparent",
+    borderRadius: 20,
+    paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.lg,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.04,
-    shadowRadius: 10,
-    elevation: 2,
+    borderWidth: 0,
+    borderColor: 'transparent',
+    shadowColor: "transparent",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
+    ...(Platform.OS === 'web'
+      ? {
+          boxShadow: 'none',
+        }
+      : {}),
   },
   centerContent: {
     position: "absolute",
     alignItems: "center",
     justifyContent: "center",
   },
-  iconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.primaryLight,
+  iconClean: {
+    width: 32,
+    height: 32,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 4,
   },
   labelText: {
-    ...Typography.caption,
-    color: Colors.slate,
-    fontSize: 13,
+    fontSize: 12.5,
+    color: '#64748B',
     marginBottom: 2,
+    fontWeight: "500",
+    fontFamily: MANROPE_MEDIUM,
   },
   percentText: {
     fontSize: 32,
-    fontWeight: "800",
+    fontWeight: "500",
     color: Colors.ink,
-    letterSpacing: -0.6,
+    fontFamily: MANROPE_MEDIUM,
   },
-  trendChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 2,
-    backgroundColor: Colors.successBg,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: Radii.pill,
+  perfLabelClean: {
+    color: '#D97706',
+    fontWeight: "500",
+    fontSize: 12,
+    fontFamily: MANROPE_MEDIUM,
     marginTop: 4,
-    borderWidth: 1,
-    borderColor: Colors.successBorder,
-  },
-  trendChipText: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: Colors.success,
+    letterSpacing: -0.1,
   },
 });
-

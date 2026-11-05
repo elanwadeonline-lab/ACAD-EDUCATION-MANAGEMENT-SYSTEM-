@@ -6,6 +6,7 @@
       "name": "acqad-mobile-guardian",
       "dependencies": {
         "@expo-google-fonts/geist": "^0.4.2",
+        "@expo-google-fonts/manrope": "^0.4.3",
         "@expo/html-elements": "0.12.5",
         "@expo/metro-runtime": "~57.0.17",
         "@gluestack-ui/core": "5.0.0-alpha.0",
@@ -195,6 +196,8 @@
     "@egjs/hammerjs": ["@egjs/hammerjs@2.0.17", "", { "dependencies": { "@types/hammerjs": "^2.0.36" } }, "sha512-XQsZgjm2EcVUiZQf11UBJQfmZeEmOW8DpI1gsFeln6w0ae0ii4dMQEQ0kjl6DspdWX1aGY1/loyXnP0JS06e/A=="],
 
     "@expo-google-fonts/geist": ["@expo-google-fonts/geist@0.4.2", "", {}, "sha512-cTsqJRQrvK5EniTVwH7UDK18RFf9Bc6yxciAuM936aViQ+eR6j3mLEI2rQkJXz5JP9kwtn8tHJviDyZ0ulH6oA=="],
+
+    "@expo-google-fonts/manrope": ["@expo-google-fonts/manrope@0.4.3", "", {}, "sha512-Jvu9AYoSfjum1maq5JT01OLj1xlr90/tmb+6beHRhL1bC/lYzXMrieH6PzACP7YcE03PT9/Ks9l0WphoLEV/wg=="],
 
     "@expo-google-fonts/material-symbols": ["@expo-google-fonts/material-symbols@0.4.53", "", {}, "sha512-SgCSm8rUYvwy+5ABvwlV/h7xbJkWAsenChSKlUwMLVyEw/QoUon055QixCOtGCjrSRWqFGDvR0ghVa5nA2OkIg=="],
 

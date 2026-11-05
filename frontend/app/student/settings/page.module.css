@@ -28,7 +28,7 @@
 .heroTitle {
   font-size: 1.625rem;
   font-weight: 700;
-  color: #0F172A;
+  color: var(--color-text);
   letter-spacing: -0.025em;
   margin: 0;
   line-height: 1.2;
@@ -54,7 +54,7 @@
   align-items: center;
   gap: 1rem;
   padding: 1.15rem 1.45rem;
-  background: #FFFFFF;
+  background: var(--color-surface);
   border: 1px solid #E2E8F0;
   border-radius: 16px;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
@@ -97,7 +97,7 @@
 .telemetryNumber {
   font-size: 1.125rem;
   font-weight: 700;
-  color: #0F172A;
+  color: var(--color-text);
   letter-spacing: -0.01em;
 }
 
@@ -111,7 +111,7 @@
 
 /* ── 2. Candidate Identity Card ── */
 .card {
-  background: #FFFFFF;
+  background: var(--color-surface);
   border: 1px solid #E2E8F0;
   border-radius: 18px;
   padding: 1.75rem 2rem;
@@ -145,7 +145,7 @@
 .name {
   font-size: 1.125rem;
   font-weight: 700;
-  color: #0F172A;
+  color: var(--color-text);
   line-height: 1.2;
 }
 
@@ -175,7 +175,7 @@
 }
 
 .fieldItem {
-  background: #F8FAFC;
+  background: var(--color-surface);
   border: 1px solid #F1F5F9;
   border-radius: 12px;
   padding: 0.85rem 1rem;
@@ -195,7 +195,7 @@
 .fieldValue {
   font-size: 0.9375rem;
   font-weight: 600;
-  color: #0F172A;
+  color: var(--color-text);
 }
 
 /* ── 3. Security Section ── */

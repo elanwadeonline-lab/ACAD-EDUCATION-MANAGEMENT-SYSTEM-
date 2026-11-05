@@ -1,213 +1,839 @@
-import React,{useEffect,useState} from 'react';
-import {Text,StyleSheet,Switch,ScrollView} from 'react-native';
-import {Box as View} from '../components/ui/box';
-import {Pressable} from '../components/ui/pressable';
-import {Progress,ProgressFilledTrack} from '../components/ui/progress';
-import {Card,SchoolInput as TextInput,useNotice,BaseEmptyState,BaseAlert,BaseSeparator,BaseSlidingNumber,BaseSelect,BaseDialog,BaseToggleGroup} from '../components/common/NativeUI';
-import {useRouter,type Href} from 'expo-router';
-import {AlertCircle,Bell,BookOpen,CalendarDays,CheckCircle2,ChartNoAxesCombined,ChevronDown,ChevronLeft,ChevronRight,ClipboardCheck,FileText,GraduationCap,HelpCircle,MessageSquare,Plus,Search,ShieldCheck,Users,Wallet,X} from 'lucide-react-native';
-import {Colors as C} from '../theme/tokens';
-import {useGuardianAuth} from '../context/GuardianAuthContext';
-import {useActiveWard} from '../context/ActiveWardContext';
-import {requestData,type CalendarEvent} from '../api/client';
-import {feeLedger,monthlyAttendance,calendarCells,localDate,money,finite,type Payment} from '../api/records';
-import {Page,Button,Feedback,Section,Avatar,Row,Pill,useRemote,ui} from '../components/common/NativeUI';
-import {SegmentedControl} from '../components/common/SegmentedControl';
-import {CircularProgressGauge} from '../components/common/CircularProgressGauge';
-import {AttendanceBarChart} from '../components/common/AttendanceBarChart';
-import {BaseSheet} from '../components/base-sheet';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import {BaseSettingsBlock} from '../components/base-settings-block';
-import {BaseSwitch} from '../components/base-switch';
-import {BaseListDetailBlock,type ListDetailItem} from '../components/base-list-detail-block';
+import React, { useEffect, useState } from 'react';
+import { Text, StyleSheet, ScrollView, Platform } from 'react-native';
+import { Box as View } from '../components/ui/box';
+import { Pressable } from '../components/ui/pressable';
+import { Progress, ProgressFilledTrack } from '../components/ui/progress';
+import {
+  Card,
+  SchoolInput as TextInput,
+  useNotice,
+  BaseEmptyState,
+  BaseAlert,
+  BaseSeparator,
+  BaseSlidingNumber,
+  BaseSelect,
+  BaseDialog,
+  BaseToggleGroup,
+} from '../components/common/NativeUI';
+import { useRouter, type Href } from 'expo-router';
+import {
+  Bell,
+  BookOpen,
+  CalendarDays,
+  ChartNoAxesCombined,
+  ChevronDown,
+  ChevronRight,
+  ClipboardCheck,
+  FileText,
+  GraduationCap,
+  HelpCircle,
+  MessageSquare,
+  ShieldCheck,
+  Users,
+  Wallet,
+} from 'lucide-react-native';
+import { Colors as C } from '../theme/tokens';
+import { useGuardianAuth } from '../context/GuardianAuthContext';
+import { useActiveWard } from '../context/ActiveWardContext';
+import { feeLedger, money, finite, type Payment } from '../api/records';
+import { Page, Button, Feedback, Section, Avatar, Row, Pill, useRemote, ui } from '../components/common/NativeUI';
+import { SegmentedControl } from '../components/common/SegmentedControl';
+import { CircularProgressGauge } from '../components/common/CircularProgressGauge';
+import { QuickActions } from '../components/common/QuickActions';
+import {
+  SolidGraduationCap,
+  SolidWallet,
+  SolidMessage,
+  SolidCalendar,
+  SolidAttendance,
+  SolidLinkChild,
+  SolidBell,
+  SolidShield,
+} from '../components/common/SolidIcons';
 
-const destinations:Record<string,string>={home:'/(main)/home',academics:'/(main)/academics',payments:'/(main)/payments',more:'/(main)/more'};
-const dateText=(value?:string)=>value&&Number.isFinite(Date.parse(value))?new Date(value).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'Date not recorded';
-const pct=(value:unknown)=>finite(value)===null?'—':`${finite(value)}%`;
+const destinations: Record<string, string> = {
+  home: '/(main)/home',
+  academics: '/(main)/academics',
+  payments: '/(main)/payments',
+  more: '/(main)/more',
+  attendance: '/attendance',
+  calendar: '/calendar',
+  messages: '/messages',
+  updates: '/updates',
+  link: '/link',
+  settings: '/settings',
+  profile: '/profile',
+};
 
-export function GuardianScreen({screen}:{screen:string}){
-  const router=useRouter(),{user}=useGuardianAuth(),ward=useActiveWard();
-  const go=(next:string)=>router.push((destinations[next]||`/${next}`) as Href);
-  const back=()=>router.canGoBack()?router.back():router.replace('/(main)/home' as Href);
-  if(!user)return <Page title="Your family"><BaseEmptyState icon={<ShieldCheck size={28} color={C.primary}/>} title="Sign in required" description="Sign in to your guardian account to view school records." actions={<Button label="Sign in" onPress={()=>router.replace('/' as Href)}/>}/></Page>;
-  if(screen==='home')return <Home go={go}/>;
-  if(screen==='profile'||screen==='more')return <Profile go={go} back={back} more={screen==='more'}/>;
-  if(screen==='link')return <LinkChild back={back}/>;
-  if(screen==='settings')return <GuardianPreferences back={back}/>;
-  if(screen==='updates')return <Updates back={back}/>;
-  if(!ward.activeWard)return <Page title="Your children" onBack={back}><Feedback loading={ward.isLoadingWards} error={ward.error} onRetry={()=>void ward.refreshWards()} empty="Link your child’s school record to see their academic information." emptyTitle="No linked children yet" emptyIcon={<Users size={28} color={C.primary}/>}/><Button label="Link another child" onPress={()=>go('link')}/></Page>;
-  const shared={go,back};
-  return screen==='academics'?<Academics {...shared}/>:screen==='attendance'?<Attendance back={back}/>:screen==='payments'?<Payments back={back}/>:screen==='messages'?<Messages back={back}/>:screen==='calendar'?<Calendar back={back}/>:<Page title="School information" onBack={back}><BaseEmptyState title="Choose a section" description="Select a section from your family overview."/></Page>;
+const dateText = (value?: string) =>
+  value && Number.isFinite(Date.parse(value))
+    ? new Date(value).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+    : 'Date not recorded';
+
+const pct = (value: unknown) => (finite(value) === null ? '—' : `${finite(value)}%`);
+
+export function GuardianScreen({ screen }: { screen: string }) {
+  const router = useRouter();
+  const { user } = useGuardianAuth();
+  const ward = useActiveWard();
+
+  const go = (next: string) => {
+    const target = destinations[next] || (next.startsWith('/') ? next : `/${next}`);
+    router.push(target as Href);
+  };
+
+  const back = () => (router.canGoBack() ? router.back() : router.replace('/(main)/home' as Href));
+
+  if (!user) {
+    return (
+      <Page title="Your family">
+        <BaseEmptyState
+          icon={<SolidShield size={36} color="#3B82F6" secondaryColor="#1D4ED8" />}
+          title="Sign in required"
+          description="Sign in to your guardian account to view school records."
+          actions={<Button label="Sign in" onPress={() => router.replace('/' as Href)} />}
+        />
+      </Page>
+    );
+  }
+
+  if (screen === 'home') return <Home go={go} />;
+  if (screen === 'profile' || screen === 'more') return <MoreHub go={go} back={back} />;
+  if (screen === 'academics') return <Academics go={go} back={back} />;
+  if (screen === 'payments') return <Payments go={go} back={back} />;
+
+  // Dynamic redirects for screens that have dedicated pages
+  if (['attendance', 'calendar', 'messages', 'updates', 'link', 'settings'].includes(screen)) {
+    go(screen);
+    return null;
+  }
+
+  return (
+    <Page title="School Information" onBack={back}>
+      <BaseEmptyState title="Choose a section" description="Select a section from your family overview." />
+    </Page>
+  );
 }
 
-function Home({go}:{go:(name:string)=>void}){
-  const {user,token}=useGuardianAuth(),{activeWard:w,openSwitcher,isLoadingWards,error,refreshWards,updatedAt}=useActiveWard();
-  const updates=useRemote<{items:any[];unreadCount:number}>('/api/guardian/notifications',token||'');
-  const hour=new Date().getHours(),greeting=hour<12?'Good morning,':hour<17?'Good afternoon,':'Good evening,';
-  const avgVal=finite(w?.average_score),attVal=w?.attendance?.total_days?finite(w?.attendance_pct):null;
-  return <Page refreshing={isLoadingWards} onRefresh={()=>{void refreshWards();updates.reload();}}>
-    <View style={s.homeHeader}><View><Text style={s.greeting}>{greeting}</Text><Text style={s.name}>{user?.name}</Text></View><Pressable accessibilityRole="button" accessibilityLabel="School notifications" onPress={()=>go('updates')} style={ui.iconButton}><Bell size={23} color={C.ink}/>{!!updates.data?.unreadCount&&<View style={s.notificationDot}/>}</Pressable></View>
-    <Feedback loading={isLoadingWards} error={error} onRetry={()=>void refreshWards()}/>
-    {w?<>
-      <Pressable style={s.childCard} onPress={openSwitcher} accessibilityRole="button" accessibilityLabel={`Switch child, currently ${w.name}`}><Avatar name={w.name} uri={w.image_url} size={52}/><View style={{flex:1,gap:5}}><Text style={s.childName}>{w.name}</Text><Text style={ui.small}>{w.grade||'Class not recorded'}{w.school_name?` · ${w.school_name}`:''}</Text><Text style={s.micro}>{w.reg_id||'School record linked'}</Text></View><ChevronDown color={C.ink} size={19}/></Pressable>
-      <View style={s.snapshot}>
-        <Pressable onPress={()=>go('academics')} style={[s.metricCard,{backgroundColor:'#F3F8E8'}]} accessibilityRole="button">
-          <ChartNoAxesCombined color={C.limeText} size={22}/>
-          {avgVal!==null?<BaseSlidingNumber value={avgVal/100} format={{style:'percent',minimumFractionDigits:1,maximumFractionDigits:1}} fontSize={30} color={C.ink}/>:<Text style={ui.metric}>—</Text>}
-          <Text style={s.metricLabel}>Term average</Text>
-          <Text style={ui.small}>{w.completed_exams||0} completed assessments</Text>
-        </Pressable>
-        <Pressable onPress={()=>go('attendance')} style={[s.metricCard,{backgroundColor:C.primaryLight}]} accessibilityRole="button">
-          <CalendarDays size={22} color={C.primary}/>
-          {attVal!==null?<BaseSlidingNumber value={attVal/100} format={{style:'percent',maximumFractionDigits:0}} fontSize={30} color={C.ink}/>:<Text style={ui.metric}>—</Text>}
-          <Text style={s.metricLabel}>Attendance</Text>
-          <Text style={ui.small}>{w.attendance?.total_days?`${w.attendance.present_days}/${w.attendance.total_days} recorded days`:'No attendance recorded'}</Text>
+function Home({ go }: { go: (name: string) => void }) {
+  const { user, token } = useGuardianAuth();
+  const { activeWard: w, openSwitcher, isLoadingWards, error, refreshWards, updatedAt } = useActiveWard();
+  const updates = useRemote<{ items: any[]; unreadCount: number }>('/api/guardian/notifications', token || '');
+
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good morning,' : hour < 17 ? 'Good afternoon,' : 'Good evening,';
+  const avgVal = finite(w?.average_score);
+  const attVal = w?.attendance?.total_days ? finite(w?.attendance_pct) : null;
+
+  return (
+    <Page refreshing={isLoadingWards} onRefresh={() => { void refreshWards(); updates.reload(); }}>
+      {/* Home Header */}
+      <View style={s.homeHeader}>
+        <View>
+          <Text style={s.greeting}>{greeting}</Text>
+          <Text style={s.name}>{user?.name}</Text>
+        </View>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="School notifications"
+          onPress={() => go('updates')}
+          style={s.notifBtn}
+        >
+          <SolidBell size={22} color="#F59E0B" secondaryColor="#D97706" />
+          {!!updates.data?.unreadCount && <View style={s.notificationDot} />}
         </Pressable>
       </View>
-      <Section title="Quick actions"/>
-      <View style={s.quickActions}>{[{title:'Results',screen:'academics',Icon:FileText},{title:'Fees',screen:'payments',Icon:Wallet},{title:'Messages',screen:'messages',Icon:MessageSquare},{title:'Calendar',screen:'calendar',Icon:CalendarDays}].map(({title,screen,Icon})=><Pressable key={screen} style={s.quickAction} accessibilityRole="button" onPress={()=>go(screen)}><View style={s.quickIcon}><Icon size={23} color={C.primary} strokeWidth={1.75}/></View><Text style={s.quickLabel}>{title}</Text></Pressable>)}</View>
-      <Card style={ui.card}><Row title="Fees & payment records" detail="Current charges, allocations and recorded receipts" icon={<Wallet size={21} color={C.primary}/>} onPress={()=>go('payments')}/><Row title="Latest report card" detail="Published results and teacher remarks" icon={<FileText size={21} color={C.primary}/>} onPress={()=>go('academics')}/></Card>
-      <Section title="Updates for you" action="View all" onPress={()=>go('updates')}/>
-      <Feedback loading={updates.loading} error={updates.error} onRetry={updates.reload}/>
-      {updates.data?.items?.slice(0,3).map(n=><Row key={n.id} title={n.type?.replace(/_/g,' ')||'School update'} detail={n.message} icon={<Bell size={18} color={C.primary}/>} onPress={()=>go('updates')} right={!n.is_read?<View style={s.unread}/>:undefined}/>)}
-      {!updates.loading&&!updates.error&&!updates.data?.items?.length&&<BaseEmptyState icon={<Bell size={24} color={C.primary}/>} title="All caught up" description="School updates will appear here when they are published."/>}
-      {updatedAt&&<Text style={s.freshness}>Updated {new Date(updatedAt).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})} · Pull down to refresh</Text>}
-    </>:!isLoadingWards&&!error?<BaseEmptyState icon={<Users size={30} color={C.primary}/>} title="Bring your family into view" description="Request a link using your child’s registration number. The school approves access before records appear." actions={<Button label="Link a child" onPress={()=>go('link')}/>}/>:null}
-  </Page>;
+
+      <Feedback loading={isLoadingWards} error={error} onRetry={() => void refreshWards()} />
+
+      {w ? (
+        <>
+          {/* Active Child Switcher Card */}
+          <Pressable
+            style={s.childCard}
+            onPress={openSwitcher}
+            accessibilityRole="button"
+            accessibilityLabel={`Switch child, currently ${w.name}`}
+          >
+            <Avatar name={w.name} uri={w.image_url} size={50} />
+            <View style={{ flex: 1, gap: 3 }}>
+              <Text style={s.childName}>{w.name}</Text>
+              <Text style={ui.small}>{w.grade || 'Class not recorded'}{w.school_name ? ` · ${w.school_name}` : ''}</Text>
+              <Text style={s.micro}>{w.reg_id || 'School record linked'}</Text>
+            </View>
+            <View style={s.switchPill}>
+              <Text style={s.switchText}>Switch</Text>
+              <ChevronDown color={C.primary} size={15} />
+            </View>
+          </Pressable>
+
+          {/* Snapshot Metrics */}
+          <View style={s.snapshot}>
+            <Pressable
+              onPress={() => go('academics')}
+              style={[s.metricCard, { backgroundColor: '#F0FDF4', borderColor: '#BBF7D0' }]}
+              accessibilityRole="button"
+            >
+              <View style={s.metricTop}>
+                <SolidGraduationCap size={22} color="#10B981" secondaryColor="#059669" />
+                <Text style={[s.metricChip, { color: '#059669' }]}>Academics</Text>
+              </View>
+              {avgVal !== null ? (
+                <BaseSlidingNumber
+                  value={avgVal / 100}
+                  format={{ style: 'percent', minimumFractionDigits: 1, maximumFractionDigits: 1 }}
+                  fontSize={28}
+                  color="#0F172A"
+                />
+              ) : (
+                <Text style={ui.metric}>—</Text>
+              )}
+              <Text style={s.metricLabel}>Term average</Text>
+              <Text style={ui.small}>{w.completed_exams || 0} completed assessments</Text>
+            </Pressable>
+
+            <Pressable
+              onPress={() => go('attendance')}
+              style={[s.metricCard, { backgroundColor: '#ECFEFF', borderColor: '#A5F3FC' }]}
+              accessibilityRole="button"
+            >
+              <View style={s.metricTop}>
+                <SolidAttendance size={22} color="#06B6D4" secondaryColor="#0891B2" />
+                <Text style={[s.metricChip, { color: '#0891B2' }]}>Attendance</Text>
+              </View>
+              {attVal !== null ? (
+                <BaseSlidingNumber
+                  value={attVal / 100}
+                  format={{ style: 'percent', maximumFractionDigits: 0 }}
+                  fontSize={28}
+                  color="#0F172A"
+                />
+              ) : (
+                <Text style={ui.metric}>—</Text>
+              )}
+              <Text style={s.metricLabel}>Attendance rate</Text>
+              <Text style={ui.small}>
+                {w.attendance?.total_days ? `${w.attendance.present_days}/${w.attendance.total_days} recorded days` : 'No attendance recorded'}
+              </Text>
+            </Pressable>
+          </View>
+
+          {/* Quick Actions Component */}
+          <Section title="Quick actions" />
+          <QuickActions onNavigate={go} />
+
+          {/* Summary Links */}
+          <Card style={s.summaryCard}>
+            <Row
+              title="Fees & payment records"
+              detail="Outstanding charges, allocations and recorded receipts"
+              icon={<SolidWallet size={20} color="#F59E0B" secondaryColor="#D97706" />}
+              onPress={() => go('payments')}
+            />
+            <Row
+              title="Latest report card"
+              detail="Published examination scores and teacher remarks"
+              icon={<SolidGraduationCap size={20} color="#10B981" secondaryColor="#059669" />}
+              onPress={() => go('academics')}
+            />
+          </Card>
+
+          {/* Updates Feed Preview */}
+          <Section title="Updates for you" action="View all" onPress={() => go('updates')} />
+          <Feedback loading={updates.loading} error={updates.error} onRetry={updates.reload} />
+          {updates.data?.items?.slice(0, 3).map((n) => (
+            <Row
+              key={n.id}
+              title={n.type?.replace(/_/g, ' ').toUpperCase() || 'SCHOOL UPDATE'}
+              detail={n.message}
+              icon={<SolidBell size={18} color="#F59E0B" secondaryColor="#D97706" />}
+              onPress={() => go('updates')}
+              right={!n.is_read ? <View style={s.unread} /> : undefined}
+            />
+          ))}
+          {!updates.loading && !updates.error && !updates.data?.items?.length && (
+            <BaseEmptyState
+              icon={<SolidBell size={28} color="#F59E0B" secondaryColor="#D97706" />}
+              title="All caught up"
+              description="School updates will appear here when they are published."
+            />
+          )}
+
+          {updatedAt && (
+            <Text style={s.freshness}>
+              Updated {new Date(updatedAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} · Pull down to refresh
+            </Text>
+          )}
+        </>
+      ) : !isLoadingWards && !error ? (
+        <BaseEmptyState
+          icon={<SolidLinkChild size={36} color="#F43F5E" secondaryColor="#E11D48" />}
+          title="Bring your family into view"
+          description="Request a link using your child’s registration number. The school approves access before records appear."
+          actions={<Button label="Link a child" onPress={() => go('link')} />}
+        />
+      ) : null}
+    </Page>
+  );
 }
 
-function Academics({back,go}:{back:()=>void;go:(screen:string)=>void}){
-  const {activeWard:w}=useActiveWard(),{token}=useGuardianAuth();
-  const [tab,setTab]=useState(0),[detail,setDetail]=useState<any|null>(null),[chosenPeriod,setChosenPeriod]=useState('');
-  const reportSource=useRemote<{results:any[];remarks:any[]}>(`/api/guardian/wards/${w!.id}/report-card`,`${token}:${w!.id}`);
-  const academic=useRemote<any>('/api/academic/active',token||'');
-  const currentKey=academic.data?.activeTerm?.id?`${academic.data?.activeSession?.id}:${academic.data.activeTerm.id}`:'';
-  const periods=new Map<string,string>();
-  if(currentKey)periods.set(currentKey,[academic.data?.activeSession?.name,academic.data?.activeTerm?.name].filter(Boolean).join(' · '));
-  for(const row of reportSource.data?.results||[])periods.set(`${row.session_id}:${row.term_id}`,[row.session_name,row.term].filter(Boolean).join(' · '));
-  const selectedPeriod=chosenPeriod||currentKey||periods.keys().next().value||'';
-  const published=(reportSource.data?.results||[]).filter(row=>(row.is_approved===undefined||Number(row.is_approved)===1)&&(!selectedPeriod||`${row.session_id}:${row.term_id}`===selectedPeriod));
-  const report={...reportSource,data:reportSource.data?{results:published,remarks:reportSource.data.remarks.filter(row=>!selectedPeriod||`${row.session_id}:${row.term_id}`===selectedPeriod)}:null};
-  const results={...reportSource,data:reportSource.data?published:null};
-  useEffect(()=>{setChosenPeriod('');setDetail(null);},[w?.id]);
-  const isCurrent=!selectedPeriod||selectedPeriod===currentKey;
-  const subjects=isCurrent?(w?.subjects_performance||[]):published.map(r=>({subject_name:r.subject_name,subject_code:r.code,score:finite(r.total_score)&&finite(r.score)!==null?Math.round(Number(r.score)/Number(r.total_score)*1000)/10:0,grade:r.grade}));
-  const periodOptions=[...periods].map(([value,label])=>({value,label,description:w?.name}));
-  return <Page title="Academics" onBack={back} onRefresh={()=>{results.reload();report.reload();academic.reload();}} refreshing={results.loading}>
-    {periodOptions.length>0?<BaseSelect label="Academic period" value={selectedPeriod} onValueChange={setChosenPeriod} options={periodOptions} placeholder="Published academic records" accessibilityLabel="Choose academic period"/>:<Text style={s.period}>Published academic records · {w?.name}</Text>}
-    <View style={s.segment}><SegmentedControl options={['Overview','Results','Subjects']} selectedIndex={tab} onChange={setTab}/></View>
-    {tab===0?<><CircularProgressGauge percentage={isCurrent?finite(w?.average_score):null} label={finite(w?.average_score)===null?'Average not recorded':'Term average'} trendText="" size={230}/><Section title="Subject performance"/>{subjects.length?subjects.map((subject,i)=><Pressable key={i} style={s.subject} onPress={()=>setDetail(subject)} accessibilityRole="button"><View style={s.inline}><Text style={ui.rowTitle}>{subject.subject_name}</Text><Text style={s.score}>{pct(subject.score)}</Text><ChevronRight size={17} color={C.ink}/></View><Progress value={Math.max(0,Math.min(100,Number(subject.score)||0))} accessibilityLabel={`${subject.subject_name} performance`} style={{height:6,marginRight:24,backgroundColor:"#E9EEDC"}}><ProgressFilledTrack style={{backgroundColor:"#8EB83C",borderRadius:5}}/></Progress></Pressable>):<BaseEmptyState icon={<GraduationCap size={26} color={C.primary}/>} title="No subject scores yet" description="Subject performance appears after the school publishes results."/>}<Button label="View attendance" quiet onPress={()=>go('attendance')}/></>:tab===1?<><Feedback loading={results.loading} error={results.error} onRetry={results.reload}/>{results.data?.map((r,i)=><Row key={r.id||i} title={r.subject_name||r.subject_code||'Published result'} detail={`${r.grade||'Grade not recorded'} · ${r.remark||r.remarks||'School-published assessment'}`} right={<Text style={s.score}>{finite(r.total_score)&&finite(r.score)!==null?`${r.score}/${r.total_score}`:pct(r.score)}</Text>} onPress={()=>setDetail(r)}/>)}{!results.loading&&!results.error&&!results.data?.length&&<BaseEmptyState icon={<FileText size={26} color={C.primary}/>} title="No released results" description="No released results for this period."/>}<Section title="Report card"/><Feedback loading={report.loading} error={report.error} onRetry={report.reload}/>{report.data?.results?.map((r,i)=><Row key={r.id||i} title={r.subject_name||r.name||'Subject result'} detail={[r.grade,r.remark].filter(Boolean).join(' · ')} right={<Text style={s.score}>{r.score!=null?`${r.score}/${r.total_score}`:r.total??'—'}</Text>} onPress={()=>setDetail(r)}/>)}{report.data?.remarks?.map((r,i)=><View key={i} style={ui.card}><Text style={ui.rowTitle}>{r.teacher_remark?'Class teacher’s remark':'School remark'}</Text><Text style={ui.muted}>{r.teacher_remark||r.principal_remark||r.remark||'No remark recorded'}</Text></View>)}{!report.loading&&!report.error&&!report.data?.results?.length&&<BaseEmptyState icon={<BookOpen size={26} color={C.primary}/>} title="No report card published" description="No report card published for this period."/>}</>:<><Section title={`${subjects.length} recorded subjects`}/>{subjects.map((subject,i)=><Row key={i} title={subject.subject_name} detail={[subject.subject_code,subject.grade].filter(Boolean).join(' · ')||'School subject'} right={<Text style={s.score}>{pct(subject.score)}</Text>} onPress={()=>setDetail(subject)}/>)}{!subjects.length&&<BaseEmptyState icon={<BookOpen size={26} color={C.primary}/>} title="No subject records" description="No subject records are available."/>}</>}
-    <DetailSheet title={detail?.subject_name||detail?.name||'Academic result'} visible={!!detail} close={()=>setDetail(null)}>{detail&&<><Text style={ui.metric}>{finite(detail.total_score)?`${detail.score??detail.total??'—'}/${detail.total_score}`:pct(detail.score)}</Text>{['grade','ca_score','exam_score','teacher_remark','principal_remark','remark'].filter(k=>detail[k]!==undefined&&detail[k]!==null).map(key=><Row key={key} title={key.replace(/_/g,' ')} detail={String(detail[key])}/>)}</>}</DetailSheet>
-  </Page>;
-}
+function Academics({ back, go }: { back: () => void; go: (screen: string) => void }) {
+  const router = useRouter();
+  const { activeWard: w } = useActiveWard();
+  const { token } = useGuardianAuth();
 
-function Attendance({back}:{back:()=>void}){
-  const {activeWard:w}=useActiveWard(),{token}=useGuardianAuth(),[tab,setTab]=useState(0);
-  const record=useRemote<{summary:any;calendar:Array<{id:number;date:string;status:string;remarks?:string}>}>(`/api/guardian/wards/${w!.id}/attendance`,`${token}:${w!.id}`);
-  const summary=record.data?.summary,calendar=record.data?.calendar||[],trend=monthlyAttendance(calendar);
-  const total=finite(summary?.total_days)||0,rate=total?Math.round((finite(summary?.present_days)||0)/total*100):null;
-  const statColumns:Array<[string,number]>=[['Days present',finite(summary?.present_days)||0],['Days absent',finite(summary?.absent_days)||0],['Days late',finite(summary?.late_days)||0]];
-  return <Page title="Attendance" onBack={back} refreshing={record.loading} onRefresh={record.reload}><Text style={s.period}>{w?.name} · Current term</Text><View style={s.segment}><SegmentedControl options={['Summary','Daily record']} selectedIndex={tab} onChange={setTab}/></View><Feedback loading={record.loading} error={record.error} onRetry={record.reload}/>{record.data&&<>{tab===0?<><View style={s.attendanceHero}><View style={{gap:6}}>{rate!==null?<BaseSlidingNumber value={rate/100} format={{style:'percent',maximumFractionDigits:0}} fontSize={42} color={C.ink}/>:<Text style={[ui.metric,{fontSize:42}]}>—</Text>}<Text style={s.metricLabel}>Attendance rate</Text><Text style={ui.small}>{total} school records</Text></View><View style={s.calendarSymbol}><CalendarDays size={48} color={C.primary} strokeWidth={1.5}/></View></View><View style={s.counts}>{statColumns.map(([label,count],i)=><React.Fragment key={label}>{i>0&&<BaseSeparator orientation="vertical" inset={4}/>}<View style={s.count}><BaseSlidingNumber value={count} fontSize={23} color={i===1?C.danger:C.ink}/><Text style={ui.small}>{label}</Text></View></React.Fragment>)}</View>{trend.length?<AttendanceBarChart data={trend}/>:<BaseEmptyState icon={<CalendarDays size={24} color={C.primary}/>} title="Monthly trend pending" description="Monthly trends need recorded attendance days."/>}<Section title="Latest records"/>{calendar.slice(-5).reverse().map(r=><Row key={r.id} title={dateText(r.date)} detail={r.remarks} right={<Pill text={r.status} positive={r.status==='present'}/>}/>)}</>:<>{calendar.length?calendar.slice().reverse().map(r=><Row key={r.id} title={dateText(r.date)} detail={r.remarks||'School attendance record'} right={<Pill text={r.status} positive={r.status==='present'}/>} />):<BaseEmptyState icon={<ClipboardCheck size={26} color={C.primary}/>} title="No daily attendance" description="No daily attendance has been recorded."/>}</>}</>}</Page>;
-}
+  const [tab, setTab] = useState(0);
+  const [chosenPeriod, setChosenPeriod] = useState('');
 
-function Payments({back}:{back:()=>void}){
-  const {activeWard:w}=useActiveWard(),{token}=useGuardianAuth(),[tab,setTab]=useState(0),[selected,setSelected]=useState<any|null>(null),[payInfo,setPayInfo]=useState(false);
-  const records=useRemote<{structures:any[];payments:Payment[]}>(`/api/guardian/wards/${w!.id}/fees`,`${token}:${w!.id}`);
-  const ledger=records.data?feeLedger(records.data):null;
-  return <Page title="Fees & payments" onBack={back} refreshing={records.loading} onRefresh={records.reload}><Text style={s.period}>{w?.name} · School ledger</Text><View style={s.segment}><SegmentedControl options={['Overview','History']} selectedIndex={tab} onChange={setTab}/></View><Feedback loading={records.loading} error={records.error} onRetry={records.reload}/>{ledger&&<>{tab===0?<><Card style={s.balanceCard}><View style={{flex:1,gap:8}}><Text style={s.metricLabel}>Outstanding balance</Text>{ledger.invoices.length?<BaseSlidingNumber value={ledger.balance} locale="en-NG" format={{style:'currency',currency:'NGN',maximumFractionDigits:0}} fontSize={30} color={C.ink}/>:<Text style={ui.metric}>—</Text>}<Text style={ui.small}>{ledger.invoices.length?`${ledger.invoices.length} current charges · ${money(ledger.paid)} allocated`:'No fees published for this period'}</Text></View><Wallet size={48} color={C.primary} strokeWidth={1.5}/></Card><Button label="Payment information" onPress={()=>setPayInfo(true)}/><Text style={ui.small}>For payment instructions, contact the school accounts office. Recorded receipts appear in History.</Text>{ledger.invoices.map(f=><Row key={f.id} title={f.title} detail={`${money(f.amount)}${f.due_date?` · Due ${dateText(f.due_date)}`:''}`} icon={<Wallet size={19} color={C.primary}/>} right={<Pill text={f.status==='partial'?'Part paid':f.status==='paid'?'Paid':'Pending'} positive={f.status==='paid'}/>} onPress={()=>setSelected(f)}/>)}</>:ledger.payments.length?ledger.payments.map(p=><Row key={p.id} title={p.fee_title||'Recorded payment'} detail={`${dateText(p.paid_at)} · ${p.payment_ref}`} right={<Text style={s.score}>{money(p.amount_paid)}</Text>} onPress={()=>setSelected(p)}/>):<BaseEmptyState icon={<Wallet size={26} color={C.primary}/>} title="No payment history" description="No payment records yet."/>}</>}
-    <BaseDialog visible={payInfo} onVisibleChange={setPayInfo} title="Arrange your school payment" description="Use the payment instructions supplied by your school’s accounts office. Include your child’s registration number so the payment can be matched to the correct record." footer={<Button label="Back to fees" quiet onPress={()=>setPayInfo(false)}/>}><Text style={ui.small}>Child reference: {w?.name} ({w?.reg_id||'Linked record'})</Text><Text style={ui.muted}>After the school verifies and records payment, pull down to refresh the ledger.</Text></BaseDialog>
-    <DetailSheet visible={!!selected} title={selected?.title||'Payment record'} close={()=>setSelected(null)}>{selected&&Object.entries(selected).filter(([key])=>['title','amount','paid','balance','status','due_date','payment_ref','paid_at','amount_paid','method','fee_title'].includes(key)).map(([key,value])=><Row key={key} title={key.replace(/_/g,' ')} detail={String(value??'Not recorded')}/>)}</DetailSheet>
-  </Page>;
-}
+  const reportSource = useRemote<{ results: any[]; remarks: any[] }>(
+    `/api/guardian/wards/${w!.id}/report-card`,
+    `${token}:${w!.id}`
+  );
+  const academic = useRemote<any>('/api/academic/active', token || '');
 
-function Messages({back}:{back:()=>void}){
-  const {activeWard:w}=useActiveWard(),{token}=useGuardianAuth(),notice=useNotice();
-  const [tab,setTab]=useState(0),[search,setSearch]=useState(''),[thread,setThread]=useState<any|null>(null),[text,setText]=useState(''),[sending,setSending]=useState(false),[sendError,setSendError]=useState(''),[newThread,setNewThread]=useState(false),[contact,setContact]=useState<any|null>(null);
-  const threads=useRemote<any[]>('/api/guardian/messages/threads',`${token}:${w!.id}`);
-  const conversation=useRemote<{thread:any;messages:any[]}>(thread?`/api/guardian/messages/threads/${thread.id}`:null,token||'');
-  const contacts=useRemote<any>(newThread?`/api/guardian/messages/contacts?student_id=${w!.id}`:null,token||'');
-  useEffect(()=>{setThread(null);setContact(null);setText('');setNewThread(false);},[w?.id,token]);
-  const available=(threads.data||[]).filter(t=>(!t.student_id||Number(t.student_id)===w!.id)&&(tab===0||tab===1&&t.category==='teacher'||tab===2&&t.category!=='teacher')&&`${t.recipient_name} ${t.last_message}`.toLowerCase().includes(search.toLowerCase()));
-  const send=async()=>{if(!text.trim()||sending)return;setSending(true);setSendError('');try{
-    if(thread)await requestData(`/api/guardian/messages/threads/${thread.id}`,{method:'POST',body:JSON.stringify({text:text.trim()})});
-    else if(contact){const result=await requestData<{threadId:number}>('/api/guardian/messages/new-thread',{method:'POST',body:JSON.stringify({recipient_id:contact.id,student_id:w!.id,text:text.trim()})});setThread({id:result.threadId,recipient_name:contact.name});setContact(null);setNewThread(false);}
-    setText('');notice('Message sent');conversation.reload();threads.reload();
-  }catch(e){setSendError(e instanceof Error?e.message:'Message could not be sent.');}finally{setSending(false);}};
-  const contactList=Array.isArray(contacts.data)?contacts.data:contacts.data?.contacts||[];
-  return <Page title="Messages" onBack={back} right={<Pressable accessibilityLabel="New message" accessibilityRole="button" style={ui.iconButton} onPress={()=>setNewThread(true)}><Plus size={22} color={C.ink}/></Pressable>} refreshing={threads.loading} onRefresh={threads.reload}><Text style={s.period}>Conversations about {w?.name}</Text><TextInput accessibilityLabel="Search conversations" value={search} onChangeText={setSearch} placeholder="Search teachers or messages" style={ui.input}/><BaseToggleGroup variant="chip" attached={false} items={[{value:'0',label:'All'},{value:'1',label:'Teachers'},{value:'2',label:'School'}]} value={String(tab)} onValueChange={v=>setTab(Number(v||'0'))} accessibilityLabel="Filter conversations"/><Feedback loading={threads.loading} error={threads.error} onRetry={threads.reload}/>{available.map(t=><Row key={t.id} title={t.recipient_name||'School contact'} detail={t.last_message||t.subject||'Open conversation'} icon={<Avatar name={t.recipient_name||'School'} size={38}/>} right={<View style={{gap:6,alignItems:'flex-end'}}><Text style={s.micro}>{dateText(t.last_message_at)}</Text>{t.unread_for_guardian>0&&<View style={s.unread}/>}</View>} onPress={()=>{setText('');setThread(t);}}/>)}{!threads.loading&&!threads.error&&!available.length&&<BaseEmptyState icon={<MessageSquare size={26} color={C.primary}/>} title={search?'No matching conversations':'No conversations yet'} description={search?'No conversations match your search.':'Use + to contact a teacher or the school office.'}/>}
-    <DetailSheet visible={!!thread||!!contact||newThread} title={thread?.recipient_name||contact?.name||'New message'} close={()=>{setThread(null);setContact(null);setNewThread(false);setText('');setSendError('');}}>
-      {newThread&&!contact&&!thread?<><Feedback loading={contacts.loading} error={contacts.error} onRetry={contacts.reload}/>{contactList.map((c:any)=><Row key={c.id} title={c.name} detail={c.role_label||c.role} onPress={()=>setContact(c)}/>)}{!contacts.loading&&!contacts.error&&!contactList.length&&<BaseEmptyState icon={<Users size={24} color={C.primary}/>} title="No contacts available" description="No contacts are available for this child."/>}</>:<><Feedback loading={conversation.loading} error={conversation.error} onRetry={conversation.reload}/>{conversation.data?.messages?.map(m=><View key={m.id} style={[s.messageBubble,m.sender_role==='guardian'&&s.ownMessage]}><Text style={s.micro}>{m.sender_name} · {dateText(m.created_at)}</Text><Text style={s.messageText}>{m.text}</Text></View>)}{!!sendError&&<BaseAlert variant="destructive" icon={<AlertCircle size={18} color={C.danger}/>} title="Could not send message" description={sendError} onDismiss={()=>setSendError('')}/>}<TextInput accessibilityLabel="Message" placeholder="Write a message" value={text} onChangeText={setText} multiline maxLength={4000} style={[ui.input,{minHeight:90}]}/><Button label={sending?'Sending…':'Send message'} disabled={sending||!text.trim()} onPress={()=>void send()}/></>}
-    </DetailSheet>
-  </Page>;
-}
+  const currentKey = academic.data?.activeTerm?.id ? `${academic.data?.activeSession?.id}:${academic.data.activeTerm.id}` : '';
+  const periods = new Map<string, string>();
+  if (currentKey) periods.set(currentKey, [academic.data?.activeSession?.name, academic.data?.activeTerm?.name].filter(Boolean).join(' · '));
+  for (const row of reportSource.data?.results || []) periods.set(`${row.session_id}:${row.term_id}`, [row.session_name, row.term].filter(Boolean).join(' · '));
 
-function Calendar({back}:{back:()=>void}){
-  const {token}=useGuardianAuth(),[month,setMonth]=useState(()=>new Date()),[selected,setSelected]=useState(()=>localDate(new Date())),[detail,setDetail]=useState<CalendarEvent|null>(null);
-  const events=useRemote<CalendarEvent[]>('/api/v2/calendar',token||'');
-  const year=month.getFullYear(),m=month.getMonth(),cells=calendarCells(year,m),all=events.data||[];
-  const onDate=(e:CalendarEvent,day:string)=>day>=e.start_date.slice(0,10)&&day<=(e.end_date||e.start_date).slice(0,10);
-  const chosen=all.filter(e=>onDate(e,selected));
-  return <Page title="School calendar" onBack={back} refreshing={events.loading} onRefresh={events.reload}><View style={s.monthHeader}><Pressable accessibilityLabel="Previous month" style={ui.iconButton} onPress={()=>{const d=new Date(year,m-1,1);setMonth(d);setSelected(localDate(d));}}><ChevronLeft color={C.ink} size={21}/></Pressable><Text style={s.monthTitle}>{month.toLocaleDateString('en-GB',{month:'long',year:'numeric'})}</Text><Pressable accessibilityLabel="Next month" style={ui.iconButton} onPress={()=>{const d=new Date(year,m+1,1);setMonth(d);setSelected(localDate(d));}}><ChevronRight color={C.ink} size={21}/></Pressable></View><View style={s.calendarGrid}>{['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d=><Text key={d} style={s.dayHeading}>{d}</Text>)}{cells.map((day,i)=>{const iso=day?localDate(new Date(year,m,day)):'';return <View key={i} style={s.dayCell}>{day&&<Pressable accessibilityRole="button" accessibilityLabel={dateText(iso)} accessibilityState={{selected:selected===iso}} onPress={()=>setSelected(iso)} style={[s.dayButton,selected===iso&&s.daySelected]}><Text style={[s.dayNumber,selected===iso&&{color:'#fff'}]}>{day}</Text>{all.some(e=>onDate(e,iso))&&<View style={[s.eventDot,selected===iso&&{backgroundColor:'#fff'}]}/>}</Pressable>}</View>;})}</View><BaseSeparator/><Section title={dateText(selected)}/><Feedback loading={events.loading} error={events.error} onRetry={events.reload}/>{chosen.length?chosen.map(e=><Row key={e.id} title={e.title} detail={[e.time_str,e.venue].filter(Boolean).join(' · ')||dateText(e.start_date)} icon={<CalendarDays size={22} color={C.primary}/>} onPress={()=>setDetail(e)}/>):!events.loading&&!events.error?<BaseEmptyState icon={<CalendarDays size={24} color={C.primary}/>} title="No events on this day" description="No school events recorded for this day."/>:null}<Section title="Upcoming events"/>{all.filter(e=>Date.parse(e.start_date)>=Date.now()).slice(0,5).map(e=><Row key={e.id} title={e.title} detail={dateText(e.start_date)} icon={<CalendarDays size={21} color={C.primary}/>} onPress={()=>setDetail(e)}/>)}<DetailSheet visible={!!detail} title={detail?.title||'School event'} close={()=>setDetail(null)}><Text style={ui.muted}>{detail&&dateText(detail.start_date)}{detail?.venue?` · ${detail.venue}`:''}</Text><Text style={ui.muted}>{(detail as any)?.description||'No additional details were published.'}</Text></DetailSheet></Page>;
-}
-
-function Updates({back}:{back:()=>void}){
-  const {token}=useGuardianAuth(),insets=useSafeAreaInsets();
-  const notices=useRemote<{items:any[];unreadCount:number}>('/api/guardian/notifications',token||'');
-  const events=useRemote<CalendarEvent[]>('/api/v2/calendar',token||'');
-  const items:ListDetailItem[]=[...(notices.data?.items||[]).map(n=>({id:`notice-${n.id}`,title:n.type?.replace(/_/g,' ')||'School notice',description:`${n.message}\n${dateText(n.created_at)}`,initials:'SC',category:['announcement','broadcast','school_announcement'].includes(n.type)?'announcements':'notices',badge:n.is_read?'School':'Unread'})),...(events.data||[]).map(e=>({id:`event-${e.id}`,title:e.title,description:[(e as any).description,dateText(e.start_date),e.venue].filter(Boolean).join('\n'),initials:'EV',category:'events',badge:'Event'}))];
-  return <BaseListDetailBlock readOnly items={items} insets={insets} onBack={back}
-    loading={notices.loading||events.loading} error={notices.error||events.error} onRetry={()=>{notices.reload();events.reload();}}
-    filters={[{value:'announcements',label:'Announcements'},{value:'events',label:'Events'},{value:'notices',label:'Notices'}]}
-    icons={{search:<Search size={19} color={C.muted}/>,empty:<Bell size={28} color={C.primary}/>}}
-    copy={{title:'School updates',subtitle:'News and dates from your school',search:'Search school updates',filters:'Update categories',emptyTitle:'All caught up',emptyDescription:'School announcements and events will appear here when published.',noResults:'No matching updates',noResultsDescription:'Try another search or category.',errorTitle:'School updates could not be loaded',close:'Close details',reset:'Show all updates'}}
-  />;
-}
-function Profile({go,back,more}:{go:(screen:string)=>void;back:()=>void;more:boolean}){
-  const {user,token,logout,server}=useGuardianAuth(),{wards,openSwitcher}=useActiveWard(),[section,setSection]=useState<string|null>(null),[saveError,setSaveError]=useState(''),[saving,setSaving]=useState(false);
-  const profile=useRemote<any>('/api/guardian/profile',token||'');
-  const setPreference=async(key:string,value:boolean)=>{setSaving(true);setSaveError('');try{const fields={notify_attendance:profile.data?.notify_attendance,notify_results:profile.data?.notify_results,notify_fees:profile.data?.notify_fees,notify_messages:profile.data?.notify_messages,[key]:value};await requestData('/api/guardian/settings/notifications',{method:'POST',body:JSON.stringify(fields)});profile.reload();}catch(e){setSaveError(e instanceof Error?e.message:'Preferences could not be saved.');}finally{setSaving(false);}};
-  return <Page title={more?'More':'My profile'} onBack={more?undefined:back}>
-    <View style={s.profileIdentity}><Avatar name={user!.name} size={76}/><Text style={s.name}>{user?.name}</Text><Text style={ui.muted}>Guardian · {wards.length} linked {wards.length===1?'child':'children'}</Text><Text style={ui.small}>{user?.email}</Text></View>
-    {more&&<><Row title="Messages" detail="Teachers and school conversations" icon={<MessageSquare size={20} color={C.ink}/>} onPress={()=>go('messages')}/><Row title="Attendance" detail="Daily records and patterns" icon={<ClipboardCheck size={20} color={C.ink}/>} onPress={()=>go('attendance')}/><Row title="School calendar" detail="Events and academic dates" icon={<CalendarDays size={20} color={C.ink}/>} onPress={()=>go('calendar')}/><Row title="School updates" detail="Announcements, events and notices" icon={<Bell size={20} color={C.ink}/>} onPress={()=>go('updates')}/><BaseSeparator label="Account & preferences"/></>}
-    <Row title="Account information" detail={user?.email} icon={<Users size={20} color={C.ink}/>} onPress={()=>setSection('account')}/><Row title="Linked students" detail={`${wards.length} approved ${wards.length===1?'link':'links'}`} icon={<Users size={20} color={C.ink}/>} onPress={openSwitcher}/><Row title="Notifications" detail="Results, attendance, fees and messages" icon={<Bell size={20} color={C.ink}/>} onPress={()=>go('settings')}/><Row title="Security" detail="School connection and sign-in" icon={<ShieldCheck size={20} color={C.ink}/>} onPress={()=>setSection('security')}/><Row title="Help & support" detail="Getting help from your school" icon={<HelpCircle size={20} color={C.ink}/>} onPress={()=>setSection('help')}/><Button label="Sign out" quiet onPress={()=>setSection('signout')}/>
-    <BaseDialog role="alertdialog" visible={section==='signout'} onVisibleChange={open=>{if(!open)setSection(null);}} title="Sign out of Guardian" description="You will need your school account to sign in again." footer={<><Button label="Cancel" quiet onPress={()=>setSection(null)}/><Button label="Sign out" onPress={()=>void logout().catch(()=>{})}/></>}/>
-    <DetailSheet visible={!!section&&section!=='signout'} title={section==='notifications'?'Notification preferences':section==='account'?'Account information':section==='security'?'Account security':'Help & support'} close={()=>setSection(null)}>
-      {section==='account'?<><Row title="Guardian" detail={user?.name}/><Row title="Email" detail={user?.email}/><Row title="Phone" detail={user?.phone||'Not recorded'}/><Text style={ui.muted}>Contact your school office to correct your verified account information.</Text></>:section==='notifications'?<><Feedback loading={profile.loading} error={profile.error} onRetry={profile.reload}/>{profile.data&&['notify_results','notify_attendance','notify_fees','notify_messages'].map(key=><View key={key} style={ui.row}><Text style={[ui.rowTitle,{flex:1}]}>{key.replace('notify_','').replace(/^./,s=>s.toUpperCase())}</Text><Switch accessibilityLabel={`${key.replace('notify_','')} notifications`} value={!!profile.data[key]} disabled={saving} onValueChange={v=>void setPreference(key,v)} trackColor={{true:C.primaryTint,false:C.cardBorder}} thumbColor={profile.data[key]?C.primary:'#fff'}/></View>)}{saveError&&<Text style={s.error}>{saveError}</Text>}<Text style={ui.small}>These preferences control school notifications. Native push delivery must be configured by the school separately.</Text></>:section==='security'?<><Row title="School connection" detail={server||'Same-origin preview'}/><Text style={ui.muted}>Your device stores its session in secure device storage. Ask your school for account recovery assistance. Signing out revokes this session.</Text></>:<><Text style={ui.muted}>For incorrect results, attendance, payments or child links, contact the school office. You can message a teacher or school administrator from Messages.</Text><Button label="Open messages" onPress={()=>{setSection(null);go('messages');}}/><Button label="Request a child link" quiet onPress={()=>{setSection(null);go('link');}}/></>}
-    </DetailSheet>
-  </Page>;
-}
-
-function GuardianPreferences({back}:{back:()=>void}){
-  const notice=useNotice();
-  const {user,token}=useGuardianAuth(),insets=useSafeAreaInsets();
-  const record=useRemote<Record<string,any>>('/api/guardian/profile',token||'');
-  const [saving,setSaving]=useState(false),[error,setError]=useState('');
-  const fields=[['notify_results','Results','When the school publishes a result.'],['notify_attendance','Attendance','Updates to your child’s attendance.'],['notify_fees','Fees','School charges and payment records.'],['notify_messages','Messages','Teacher and school conversations.']];
-  const save=async(key:string,value:boolean)=>{
-    if(saving)return;setSaving(true);setError('');
-    try{const next=Object.fromEntries(fields.map(([field])=>[field,field===key?value:!!record.data?.[field]]));await requestData('/api/guardian/settings/notifications',{method:'POST',body:JSON.stringify(next)});notice('Notification preferences saved');record.reload();}
-    catch(e){setError(e instanceof Error?e.message:'Could not save your preferences.');}finally{setSaving(false);}
+  const selectedPeriod = chosenPeriod || currentKey || periods.keys().next().value || '';
+  const published = (reportSource.data?.results || []).filter(
+    (row) => (row.is_approved === undefined || Number(row.is_approved) === 1) && (!selectedPeriod || `${row.session_id}:${row.term_id}` === selectedPeriod)
+  );
+  const report = {
+    ...reportSource,
+    data: reportSource.data ? { results: published, remarks: reportSource.data.remarks.filter((row) => !selectedPeriod || `${row.session_id}:${row.term_id}` === selectedPeriod) } : null,
   };
-  return <BaseSettingsBlock onBack={back} insets={insets} profile={{name:user!.name,email:user!.email,initials:user!.name.trim().split(/\s+/).slice(0,2).map(v=>v[0]).join('')}}
-    copy={{title:'Notifications',notifications:'School notifications',version:'ACQAD Guardian · School-approved access',errorTitle:'Preferences could not be updated'}}
-    loading={record.loading} error={error||record.error} showPreferences={false} showDanger={false}
-    notificationContent={<View style={{gap:8}}>{fields.map(([key,title,description])=><Row key={key} title={title} detail={description} right={<BaseSwitch value={!!record.data?.[key]} disabled={saving||!record.data} onValueChange={v=>void save(key,v)} accessibilityLabel={`${title} notifications`}/>}/>)}<Text style={ui.small}>Preferences are saved with your school account. Native push delivery requires the school’s notification service.</Text>{record.error&&<Button label="Try again" onPress={record.reload} quiet/>}</View>}
-  />;
+  const results = { ...reportSource, data: reportSource.data ? published : null };
+
+  const isCurrent = !selectedPeriod || selectedPeriod === currentKey;
+  const subjects = isCurrent
+    ? (w?.subjects_performance || [])
+    : published.map((r) => ({
+        subject_name: r.subject_name,
+        subject_code: r.code,
+        score: finite(r.total_score) && finite(r.score) !== null ? Math.round((Number(r.score) / Number(r.total_score)) * 1000) / 10 : 0,
+        grade: r.grade,
+      }));
+
+  const periodOptions = [...periods].map(([value, label]) => ({ value, label, description: w?.name }));
+
+  const openDetail = (item: any) => {
+    router.push({
+      pathname: '/academics/detail',
+      params: {
+        subject: item.subject_name || item.name || 'Subject Result',
+        data: JSON.stringify(item),
+      },
+    });
+  };
+
+  return (
+    <Page title="Academics" onBack={back} onRefresh={() => { results.reload(); report.reload(); academic.reload(); }} refreshing={results.loading}>
+      {periodOptions.length > 0 ? (
+        <BaseSelect
+          label="Academic period"
+          value={selectedPeriod}
+          onValueChange={setChosenPeriod}
+          options={periodOptions}
+          placeholder="Published academic records"
+          accessibilityLabel="Choose academic period"
+        />
+      ) : (
+        <Text style={s.period}>Published academic records · {w?.name}</Text>
+      )}
+
+      <View style={s.segment}>
+        <SegmentedControl options={['Overview', 'Results', 'Subjects']} selectedIndex={tab} onChange={setTab} />
+      </View>
+
+      {tab === 0 ? (
+        <>
+          <CircularProgressGauge
+            percentage={isCurrent ? finite(w?.average_score) : null}
+            label={finite(w?.average_score) === null ? 'Average not recorded' : 'Term average'}
+            trendText=""
+            size={220}
+          />
+
+          <Section title="Subject performance" />
+          {subjects.length ? (
+            subjects.map((subject, i) => (
+              <Pressable
+                key={i}
+                style={s.subjectCard}
+                onPress={() => openDetail(subject)}
+                accessibilityRole="button"
+              >
+                <View style={s.inline}>
+                  <Text style={ui.rowTitle}>{subject.subject_name}</Text>
+                  <Text style={s.score}>{pct(subject.score)}</Text>
+                  <ChevronRight size={17} color={C.muted} />
+                </View>
+                <Progress
+                  value={Math.max(0, Math.min(100, Number(subject.score) || 0))}
+                  style={{ height: 6, backgroundColor: '#E9EEDC', borderRadius: 4 }}
+                >
+                  <ProgressFilledTrack style={{ backgroundColor: '#10B981', borderRadius: 4 }} />
+                </Progress>
+              </Pressable>
+            ))
+          ) : (
+            <BaseEmptyState
+              icon={<GraduationCap size={26} color={C.primary} />}
+              title="No subject scores yet"
+              description="Subject performance appears after the school publishes results."
+            />
+          )}
+
+          <Button label="View attendance records" quiet onPress={() => go('attendance')} />
+        </>
+      ) : tab === 1 ? (
+        <>
+          <Feedback loading={results.loading} error={results.error} onRetry={results.reload} />
+          {results.data?.map((r, i) => (
+            <Row
+              key={r.id || i}
+              title={r.subject_name || r.subject_code || 'Published result'}
+              detail={`${r.grade || 'Grade not recorded'} · ${r.remark || r.remarks || 'School-published assessment'}`}
+              right={
+                <Text style={s.score}>
+                  {finite(r.total_score) && finite(r.score) !== null ? `${r.score}/${r.total_score}` : pct(r.score)}
+                </Text>
+              }
+              onPress={() => openDetail(r)}
+            />
+          ))}
+
+          <Section title="Report card remarks" />
+          <Feedback loading={report.loading} error={report.error} onRetry={report.reload} />
+          {report.data?.remarks?.map((r, i) => (
+            <View key={i} style={ui.card}>
+              <Text style={ui.rowTitle}>{r.teacher_remark ? 'Class teacher’s remark' : 'School remark'}</Text>
+              <Text style={ui.muted}>{r.teacher_remark || r.principal_remark || r.remark || 'No remark recorded'}</Text>
+            </View>
+          ))}
+        </>
+      ) : (
+        <>
+          <Section title={`${subjects.length} recorded subjects`} />
+          {subjects.map((subject, i) => (
+            <Row
+              key={i}
+              title={subject.subject_name}
+              detail={[subject.subject_code, subject.grade].filter(Boolean).join(' · ') || 'School subject'}
+              right={<Text style={s.score}>{pct(subject.score)}</Text>}
+              onPress={() => openDetail(subject)}
+            />
+          ))}
+        </>
+      )}
+    </Page>
+  );
 }
 
-function LinkChild({back}:{back:()=>void}){
-  const {token}=useGuardianAuth(),{refreshWards}=useActiveWard(),toast=useNotice(),[reg,setReg]=useState(''),[relationship,setRelationship]=useState('Parent'),[busy,setBusy]=useState(false),[notice,setNotice]=useState(''),[error,setError]=useState('');
-  const links=useRemote<any[]>('/api/guardian/links',token||'');
-  const relationshipOptions=[{value:'Parent',label:'Parent',description:'Mother or father of the student'},{value:'Mother',label:'Mother'},{value:'Father',label:'Father'},{value:'Guardian',label:'Legal guardian',description:'Authorized family guardian'},{value:'Sponsor',label:'Academic sponsor'}];
-  const submit=async()=>{setBusy(true);setError('');setNotice('');try{await requestData('/api/guardian/links',{method:'POST',body:JSON.stringify({student_reg_id:reg.trim(),relationship})});setReg('');setNotice('Request sent. The school must approve the link before records become available.');toast('Child link request submitted');links.reload();await refreshWards();}catch(e){setError(e instanceof Error?e.message:'Link request failed.');}finally{setBusy(false);}};
-  return <Page title="Link a child" onBack={back}><Text style={ui.muted}>Use the registration number supplied by your school. Approval protects your child’s records.</Text><Text style={ui.label}>Registration number</Text><TextInput value={reg} onChangeText={setReg} autoCapitalize="characters" placeholder="Your child’s school registration" accessibilityLabel="Student registration number" style={ui.input}/><BaseSelect label="Relationship" value={relationship} onValueChange={setRelationship} options={relationshipOptions} accessibilityLabel="Relationship to student"/>{!!error&&<BaseAlert variant="destructive" icon={<AlertCircle size={18} color={C.danger}/>} title="Could not submit link request" description={error} onDismiss={()=>setError('')}/>}{!!notice&&<BaseAlert icon={<CheckCircle2 size={18} color={C.success}/>} title="Request submitted" description={notice} onDismiss={()=>setNotice('')}/>}<Button label={busy?'Sending request…':'Request child link'} disabled={busy||!reg.trim()||!relationship.trim()} onPress={()=>void submit()}/><Section title="Link requests"/><Feedback loading={links.loading} error={links.error} onRetry={links.reload}/>{links.data?.map((l:any)=><Row key={l.id} title={l.student_name||l.name||'Student link'} detail={l.relationship} right={<Pill text={l.status||'pending'} positive={l.status==='approved'}/>}/>)}</Page>;
+function Payments({ back, go }: { back: () => void; go: (screen: string) => void }) {
+  const router = useRouter();
+  const { activeWard: w } = useActiveWard();
+  const { token } = useGuardianAuth();
+
+  const [tab, setTab] = useState(0);
+  const records = useRemote<{ structures: any[]; payments: Payment[] }>(
+    `/api/guardian/wards/${w!.id}/fees`,
+    `${token}:${w!.id}`
+  );
+  const ledger = records.data ? feeLedger(records.data) : null;
+
+  const openPaymentDetail = (item: any) => {
+    router.push({
+      pathname: '/payments/detail',
+      params: {
+        title: item.title || item.fee_title || 'Fee Invoice',
+        data: JSON.stringify(item),
+      },
+    });
+  };
+
+  return (
+    <Page title="Fees & Payments" onBack={back} refreshing={records.loading} onRefresh={records.reload}>
+      <Text style={s.period}>{w?.name} · School ledger</Text>
+      <View style={s.segment}>
+        <SegmentedControl options={['Overview', 'History']} selectedIndex={tab} onChange={setTab} />
+      </View>
+
+      <Feedback loading={records.loading} error={records.error} onRetry={records.reload} />
+
+      {ledger && (
+        <>
+          {tab === 0 ? (
+            <>
+              {/* Balance Card */}
+              <Card style={s.balanceCard}>
+                <View style={{ flex: 1, gap: 6 }}>
+                  <Text style={s.balanceLabel}>Outstanding balance</Text>
+                  {ledger.invoices.length ? (
+                    <BaseSlidingNumber
+                      value={ledger.balance}
+                      locale="en-NG"
+                      format={{ style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }}
+                      fontSize={32}
+                      color="#0F172A"
+                    />
+                  ) : (
+                    <Text style={ui.metric}>—</Text>
+                  )}
+                  <Text style={ui.small}>
+                    {ledger.invoices.length ? `${ledger.invoices.length} active charges · ${money(ledger.paid)} allocated` : 'No fees published for this period'}
+                  </Text>
+                </View>
+                <View style={s.walletCircle}>
+                  <SolidWallet size={36} color="#F59E0B" secondaryColor="#D97706" />
+                </View>
+              </Card>
+
+              <Section title="Fee invoices" />
+              {ledger.invoices.map((f) => (
+                <Row
+                  key={f.id}
+                  title={f.title}
+                  detail={`${money(f.amount)}${f.due_date ? ` · Due ${dateText(f.due_date)}` : ''}`}
+                  icon={<SolidWallet size={19} color="#F59E0B" secondaryColor="#D97706" />}
+                  right={
+                    <Pill
+                      text={f.status === 'partial' ? 'Part paid' : f.status === 'paid' ? 'Paid' : 'Pending'}
+                      positive={f.status === 'paid'}
+                    />
+                  }
+                  onPress={() => openPaymentDetail(f)}
+                />
+              ))}
+            </>
+          ) : (
+            <>
+              {ledger.payments.length ? (
+                ledger.payments.map((p) => (
+                  <Row
+                    key={p.id}
+                    title={p.fee_title || 'Recorded payment'}
+                    detail={`${dateText(p.paid_at)} · Ref: ${p.payment_ref}`}
+                    right={<Text style={s.score}>{money(p.amount_paid)}</Text>}
+                    onPress={() => openPaymentDetail(p)}
+                  />
+                ))
+              ) : (
+                <BaseEmptyState
+                  icon={<SolidWallet size={32} color="#F59E0B" secondaryColor="#D97706" />}
+                  title="No payment history"
+                  description="Confirmed payment receipts from the bursary will be archived here."
+                />
+              )}
+            </>
+          )}
+        </>
+      )}
+    </Page>
+  );
 }
 
-function DetailSheet({visible,title,children,close}:{visible:boolean;title:string;children:React.ReactNode;close:()=>void}){
-  const insets=useSafeAreaInsets();
-  return <BaseSheet visible={visible} onVisibleChange={open=>{if(!open)close();}} title={title} bottomInset={insets.bottom} closeLabel="Dismiss details"><View style={{alignItems:'flex-end'}}><Pressable style={ui.iconButton} accessibilityRole="button" accessibilityLabel="Close details" onPress={close}><X size={22} color={C.ink}/></Pressable></View><ScrollView style={{flexShrink:1}} keyboardShouldPersistTaps="handled" contentContainerStyle={{gap:16,paddingBottom:24}}>{children}</ScrollView></BaseSheet>;
+function MoreHub({ go, back }: { go: (screen: string) => void; back: () => void }) {
+  const { user, logout } = useGuardianAuth();
+  const { wards, openSwitcher } = useActiveWard();
+  const [confirmSignOut, setConfirmSignOut] = useState(false);
+
+  return (
+    <Page title="More">
+      <View style={s.profileIdentity}>
+        <Avatar name={user?.name || 'Guardian'} size={72} />
+        <Text style={s.name}>{user?.name}</Text>
+        <Text style={ui.muted}>Authorized Guardian · {wards.length} linked {wards.length === 1 ? 'ward' : 'wards'}</Text>
+        <Text style={ui.small}>{user?.email}</Text>
+      </View>
+
+      <Card style={s.hubCard}>
+        <Row
+          title="Messages"
+          detail="Direct communication with teachers & admin"
+          icon={<SolidMessage size={20} color="#6366F1" secondaryColor="#4F46E5" />}
+          onPress={() => go('messages')}
+        />
+        <Row
+          title="Attendance"
+          detail="Daily check-in logs and attendance trends"
+          icon={<SolidAttendance size={20} color="#06B6D4" secondaryColor="#0891B2" />}
+          onPress={() => go('attendance')}
+        />
+        <Row
+          title="School calendar"
+          detail="Term schedule, examinations and dates"
+          icon={<SolidCalendar size={20} color="#8B5CF6" secondaryColor="#7C3AED" />}
+          onPress={() => go('calendar')}
+        />
+        <Row
+          title="School updates"
+          detail="Announcements, official circulars and events"
+          icon={<SolidBell size={20} color="#F59E0B" secondaryColor="#D97706" />}
+          onPress={() => go('updates')}
+        />
+      </Card>
+
+      <BaseSeparator label="Account & preferences" />
+
+      <Card style={s.hubCard}>
+        <Row
+          title="My Profile"
+          detail="Personal verified credentials & security"
+          icon={<SolidShield size={20} color="#3B82F6" secondaryColor="#1D4ED8" />}
+          onPress={() => go('profile')}
+        />
+        <Row
+          title="Linked students"
+          detail={`${wards.length} approved ${wards.length === 1 ? 'link' : 'links'}`}
+          icon={<SolidLinkChild size={20} color="#F43F5E" secondaryColor="#E11D48" />}
+          onPress={openSwitcher}
+        />
+        <Row
+          title="Link another child"
+          detail="Request student record verification"
+          icon={<SolidLinkChild size={20} color="#F43F5E" secondaryColor="#E11D48" />}
+          onPress={() => go('link')}
+        />
+        <Row
+          title="Notification preferences"
+          detail="Alerts for results, attendance and fees"
+          icon={<SolidBell size={20} color="#F59E0B" secondaryColor="#D97706" />}
+          onPress={() => go('settings')}
+        />
+      </Card>
+
+      <Button
+        label="Sign Out"
+        quiet
+        onPress={() => setConfirmSignOut(true)}
+      />
+
+      <BaseDialog
+        role="alertdialog"
+        visible={confirmSignOut}
+        onVisibleChange={setConfirmSignOut}
+        title="Sign out of Guardian?"
+        description="You will need your school-registered email and password to sign back in."
+        footer={
+          <View style={{ flexDirection: 'row', gap: 10, justifyContent: 'flex-end', width: '100%' }}>
+            <Button label="Cancel" quiet onPress={() => setConfirmSignOut(false)} />
+            <Button label="Sign out" onPress={() => void logout().catch(() => {})} />
+          </View>
+        }
+      />
+    </Page>
+  );
 }
 
-const s=StyleSheet.create({
-  homeHeader:{flexDirection:'row',justifyContent:'space-between',alignItems:'center',paddingVertical:7},greeting:{fontSize:14,color:C.ink,marginBottom:4},name:{fontSize:23,fontWeight:'700',color:C.ink,letterSpacing:-.6},notificationDot:{position:'absolute',right:9,top:8,width:8,height:8,backgroundColor:C.primary,borderRadius:4,borderWidth:2,borderColor:C.canvas},childCard:{flexDirection:'row',gap:12,alignItems:'center',padding:14,borderRadius:18,backgroundColor:C.primaryTint,borderWidth:1,borderColor:'#FDE4AC'},childName:{fontSize:15,fontWeight:'700',color:C.ink},micro:{fontSize:10,color:C.muted,lineHeight:15},snapshot:{flexDirection:'row',gap:12},metricCard:{flex:1,padding:16,borderRadius:18,gap:8},metricLabel:{fontSize:12,color:C.ink,fontWeight:'500'},quickActions:{flexDirection:'row',justifyContent:'space-between',gap:10},quickAction:{flex:1,alignItems:'center',gap:7,minHeight:70},quickIcon:{width:48,height:46,borderRadius:14,backgroundColor:C.primaryLight,alignItems:'center',justifyContent:'center'},quickLabel:{fontSize:11,color:C.ink,fontWeight:'500'},freshness:{fontSize:10,color:C.muted,textAlign:'center',paddingTop:5},unread:{width:7,height:7,borderRadius:4,backgroundColor:C.primary},period:{fontSize:11,color:C.muted,lineHeight:17},segment:{marginHorizontal:-20},inline:{flexDirection:'row',alignItems:'center',gap:10},subject:{paddingVertical:12,gap:9},score:{fontSize:14,fontWeight:'700',color:C.ink,marginLeft:'auto'},progress:{height:6,borderRadius:5,backgroundColor:'#E9EEDC',overflow:'hidden',marginRight:24},progressFill:{height:'100%',backgroundColor:'#8EB83C',borderRadius:5},attendanceHero:{flexDirection:'row',alignItems:'center',justifyContent:'space-between',paddingVertical:12},calendarSymbol:{width:94,height:94,borderRadius:22,backgroundColor:C.primaryTint,alignItems:'center',justifyContent:'center'},counts:{flexDirection:'row',paddingVertical:16,borderTopWidth:1,borderBottomWidth:1,borderColor:C.divider,alignItems:'center'},count:{flex:1,gap:6,paddingHorizontal:8},countValue:{fontSize:23,fontWeight:'700',color:C.ink},balanceCard:{flexDirection:'row',gap:15,alignItems:'center',backgroundColor:C.primaryTint,borderRadius:18,padding:18},error:{color:C.danger,fontSize:13,lineHeight:20},monthHeader:{flexDirection:'row',alignItems:'center',justifyContent:'space-between'},monthTitle:{fontSize:15,fontWeight:'700',color:C.ink},calendarGrid:{flexDirection:'row',flexWrap:'wrap',paddingVertical:10},dayHeading:{width:'14.2857%',textAlign:'center',fontSize:10,color:C.muted,paddingVertical:10},dayCell:{width:'14.2857%',height:44,alignItems:'center',justifyContent:'center'},dayButton:{width:40,height:40,alignItems:'center',justifyContent:'center',borderRadius:22},daySelected:{backgroundColor:C.primary},dayNumber:{fontSize:13,fontWeight:'600',color:C.ink},eventDot:{width:4,height:4,backgroundColor:C.primary,borderRadius:2,position:'absolute',bottom:4},tag:{color:C.primary,fontSize:11,fontWeight:'600',textTransform:'capitalize',flex:1},updateCopy:{fontSize:14,lineHeight:22,color:C.ink},profileIdentity:{alignItems:'center',gap:9,paddingVertical:16},messageBubble:{padding:14,borderRadius:14,backgroundColor:'#F0F0EE',gap:6,alignSelf:'flex-start',maxWidth:'94%'},ownMessage:{alignSelf:'flex-end',backgroundColor:C.primaryTint},messageText:{fontSize:14,lineHeight:21,color:C.ink},modalBackdrop:{flex:1,backgroundColor:'rgba(12,13,18,.4)',justifyContent:'flex-end'},detailSheet:{backgroundColor:C.canvas,padding:20,paddingBottom:28,borderTopLeftRadius:24,borderTopRightRadius:24,maxHeight:'88%',gap:16,width:'100%',maxWidth:560,alignSelf:'center'},
+const s = StyleSheet.create({
+  homeHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 6,
+  },
+  greeting: {
+    fontSize: 13,
+    color: '#64748B',
+    marginBottom: 2,
+    fontWeight: '500',
+  },
+  name: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#0F172A',
+    letterSpacing: -0.5,
+  },
+  notifBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: '#FFFBEB',
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  notificationDot: {
+    position: 'absolute',
+    right: 8,
+    top: 8,
+    width: 8,
+    height: 8,
+    backgroundColor: '#DC2626',
+    borderRadius: 4,
+    borderWidth: 1.5,
+    borderColor: '#FFFFFF',
+  },
+  childCard: {
+    flexDirection: 'row',
+    gap: 12,
+    alignItems: 'center',
+    padding: 14,
+    borderRadius: 18,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+    ...(Platform.OS === 'web'
+      ? {
+          boxShadow: '0 4px 10px -2px rgba(15, 23, 42, 0.05), 0 2px 4px -1px rgba(15, 23, 42, 0.02)',
+          cursor: 'pointer',
+        }
+      : {}),
+  },
+  childName: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  micro: {
+    fontSize: 10.5,
+    color: '#64748B',
+    fontWeight: '500',
+  },
+  switchPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+  },
+  switchText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: C.primary,
+  },
+  snapshot: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  metricCard: {
+    flex: 1,
+    padding: 14,
+    borderRadius: 18,
+    borderWidth: 1.5,
+    gap: 6,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+    ...(Platform.OS === 'web'
+      ? {
+          boxShadow: '0 4px 10px -2px rgba(15, 23, 42, 0.05), 0 2px 4px -1px rgba(15, 23, 42, 0.02)',
+          cursor: 'pointer',
+        }
+      : {}),
+  },
+  metricTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  metricChip: {
+    fontSize: 10.5,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+  },
+  metricLabel: {
+    fontSize: 12,
+    color: '#0F172A',
+    fontWeight: '600',
+  },
+  summaryCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    padding: 8,
+    gap: 2,
+  },
+  hubCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    padding: 8,
+  },
+  freshness: {
+    fontSize: 10.5,
+    color: '#94A3B8',
+    textAlign: 'center',
+    paddingTop: 4,
+  },
+  unread: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#DC2626',
+  },
+  period: {
+    fontSize: 11.5,
+    color: '#64748B',
+    lineHeight: 18,
+  },
+  segment: {
+    marginHorizontal: -4,
+  },
+  inline: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  subjectCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    padding: 14,
+    gap: 8,
+  },
+  score: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0F172A',
+    marginLeft: 'auto',
+  },
+  balanceCard: {
+    flexDirection: 'row',
+    gap: 15,
+    alignItems: 'center',
+    backgroundColor: '#FFFBEB',
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: '#FDE68A',
+    padding: 18,
+  },
+  balanceLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#92400E',
+  },
+  walletCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 18,
+    backgroundColor: '#FEF3C7',
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  profileIdentity: {
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 14,
+  },
 });

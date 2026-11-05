@@ -11,10 +11,12 @@ import {
 } from "./handlers/guardian-portal";
 import { tryAdminMessages } from "./handlers/admin-messages";
 import { tryPracticeArena } from "./handlers/practice-arena";
+import { tryLearningCommunity } from "./handlers/learning-community";
 
 type ZoneHandler = (req: Request, method: string, pathname: string, url: URL) => Promise<Response | null>;
 
 const zones: ZoneHandler[] = [
+  tryLearningCommunity,
   tryPracticeArena,
   tryPracticeContentOffline,
   tryV2AcademicCore,

@@ -11,6 +11,7 @@ import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
 import { api } from "../../../lib/api";
 import { useAuth } from "../../../hooks/useAuth";
+import {useGuardianPageView} from "../../../components/guardian/useGuardianPageView";
 import styles from "./page.module.css";
 
 interface ProfileData {
@@ -53,8 +54,11 @@ function SettingsContent() {
     notify_messages: true,
   });
 
-  const [showEditProfileModal, setShowEditProfileModal] = useState(false);
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [pageView,setPageView]=useGuardianPageView();
+  const showEditProfileModal=pageView==="edit-profile";
+  const setShowEditProfileModal=(open:boolean)=>setPageView(open?"edit-profile":"");
+  const showPasswordModal=pageView==="password";
+  const setShowPasswordModal=(open:boolean)=>setPageView(open?"password":"");
   const [phoneInput, setPhoneInput] = useState(profile.phone);
   const [addressInput, setAddressInput] = useState(profile.address);
   const [currentPassword, setCurrentPassword] = useState("");
@@ -170,7 +174,7 @@ function SettingsContent() {
       <div className={styles.settingsCard}>
         <span className={styles.settingSectionHeading}>Notification Alerts</span>
 
-        <div className={styles.settingRow} onClick={() => handleToggleNotification("notify_attendance")}>
+        <div className={styles.settingRow} role="button" tabIndex={0} onKeyDown={e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();e.currentTarget.click();}}} onClick={() => handleToggleNotification("notify_attendance")}>
           <div>
             <div className={styles.settingLabel}>Daily Attendance Alerts</div>
             <div className={styles.settingSub}>Instant SMS / Push when student roll call is marked</div>
@@ -182,7 +186,7 @@ function SettingsContent() {
           </div>
         </div>
 
-        <div className={styles.settingRow} onClick={() => handleToggleNotification("notify_results")}>
+        <div className={styles.settingRow} role="button" tabIndex={0} onKeyDown={e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();e.currentTarget.click();}}} onClick={() => handleToggleNotification("notify_results")}>
           <div>
             <div className={styles.settingLabel}>Result Release Notices</div>
             <div className={styles.settingSub}>Notified as soon as term broadsheets are published</div>
@@ -194,7 +198,7 @@ function SettingsContent() {
           </div>
         </div>
 
-        <div className={styles.settingRow} onClick={() => handleToggleNotification("notify_fees")}>
+        <div className={styles.settingRow} role="button" tabIndex={0} onKeyDown={e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();e.currentTarget.click();}}} onClick={() => handleToggleNotification("notify_fees")}>
           <div>
             <div className={styles.settingLabel}>Fee Reminders & Receipts</div>
             <div className={styles.settingSub}>Payment reminders and automated digital receipts</div>
@@ -206,7 +210,7 @@ function SettingsContent() {
           </div>
         </div>
 
-        <div className={styles.settingRow} onClick={() => handleToggleNotification("notify_messages")}>
+        <div className={styles.settingRow} role="button" tabIndex={0} onKeyDown={e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();e.currentTarget.click();}}} onClick={() => handleToggleNotification("notify_messages")}>
           <div>
             <div className={styles.settingLabel}>Direct Teacher Messages</div>
             <div className={styles.settingSub}>Notifications for direct messages from form teachers</div>
@@ -326,7 +330,7 @@ function SettingsContent() {
           </svg>
         </Link>
 
-        <div className={styles.settingRow} onClick={() => setShowPasswordModal(true)}>
+        <div className={styles.settingRow} role="button" tabIndex={0} onKeyDown={e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();e.currentTarget.click();}}} onClick={() => setShowPasswordModal(true)}>
           <div>
             <div className={styles.settingLabel}>Security & Password</div>
             <div className={styles.settingSub}>Change account login password</div>
@@ -346,11 +350,11 @@ function SettingsContent() {
       <AnimatePresence>
         {showEditProfileModal && (
           <motion.div
-            className={styles.modalBackdrop}
+            className={styles.modalBackdrop} data-guardian-detail="true"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => setShowEditProfileModal(false)}
+            
           >
             <motion.div
               className={styles.modalContent}
@@ -417,11 +421,11 @@ function SettingsContent() {
       <AnimatePresence>
         {showPasswordModal && (
           <motion.div
-            className={styles.modalBackdrop}
+            className={styles.modalBackdrop} data-guardian-detail="true"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => setShowPasswordModal(false)}
+            
           >
             <motion.div
               className={styles.modalContent}

@@ -54,35 +54,42 @@ export const Radii = {
 };
 
 export const Typography = {
+  fontFamily: 'Manrope_500Medium',
   display: {
+    fontFamily: 'Manrope_700Bold',
     fontSize: 26,
     fontWeight: "700" as const,
     color: Colors.ink,
     letterSpacing: -0.5,
   },
   header: {
+    fontFamily: 'Manrope_700Bold',
     fontSize: 18,
     fontWeight: "700" as const,
     color: Colors.ink,
     letterSpacing: -0.2,
   },
   subHeader: {
+    fontFamily: 'Manrope_600SemiBold',
     fontSize: 15,
     fontWeight: "600" as const,
     color: Colors.slate,
   },
   body: {
+    fontFamily: 'Manrope_500Medium',
     fontSize: 14,
-    fontWeight: "400" as const,
+    fontWeight: "500" as const,
     color: Colors.ink,
     lineHeight: 20,
   },
   caption: {
+    fontFamily: 'Manrope_500Medium',
     fontSize: 12,
     fontWeight: "500" as const,
     color: Colors.muted,
   },
   badge: {
+    fontFamily: 'Manrope_700Bold',
     fontSize: 11,
     fontWeight: "700" as const,
   },

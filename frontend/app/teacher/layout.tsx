@@ -9,6 +9,9 @@ import { useAuth } from "../../hooks/useAuth";
 import { AcademicProvider } from "../../components/context/AcademicContext";
 
 const teacherNav: NavItem[] = [
+  {href:"/teacher/learning-library",section:"Learning",label:"Student Materials",icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 2h8v18H3Zm10 0h8v18h-8Z"/></svg>},
+  {section:"Learning",href:"/teacher/lesson-notes",label:"Lesson Notes",icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 2h10l6 6v14H4Zm10 2v5h5ZM7 12v2h10v-2Zm0 5v2h10v-2Z" fillRule="evenodd"/></svg>},
+  {href:"/teacher/community",label:"Student Community",icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 2h18v15H9l-6 5Zm3 5v2h12V7Zm0 5v2h8v-2Z" fillRule="evenodd"/></svg>},
   {
     section: "Overview",
     href: "/teacher/dashboard",

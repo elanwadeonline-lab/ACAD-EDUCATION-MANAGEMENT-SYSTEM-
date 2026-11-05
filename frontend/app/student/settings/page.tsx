@@ -92,7 +92,7 @@ function StudentSettings() {
 
   if (loading) {
     return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "320px", gap: "0.75rem", color: "#64748B", fontSize: "0.875rem" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "320px", gap: "0.75rem", color: "var(--color-text-2)", fontSize: "0.875rem" }}>
         <div className="spinner" style={{ width: 22, height: 22, borderColor: "#E2E8F0", borderTopColor: "#92400E" }} />
         <span>Loading candidate profile…</span>
       </div>
@@ -174,7 +174,7 @@ function StudentSettings() {
 
       {/* ── 3. Security & Authentication Card ────────────────── */}
       <section className={styles.card}>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.9375rem", fontWeight: 700, color: "#0F172A" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.9375rem", fontWeight: 700, color: "var(--color-text-2)" }}>
           <LockIcon width="16" height="16" style={{ color: "#92400E" }} />
           <span>Security &amp; Authentication</span>
         </div>
@@ -182,8 +182,8 @@ function StudentSettings() {
         <div>
           <div className={styles.actionRow}>
             <div>
-              <div style={{ fontWeight: 600, fontSize: "0.875rem", color: "#0F172A" }}>Portal Password</div>
-              <div style={{ fontSize: "0.75rem", color: "#64748B", marginTop: "0.15rem" }}>
+              <div style={{ fontWeight: 600, fontSize: "0.875rem", color: "var(--color-text-2)" }}>Portal Password</div>
+              <div style={{ fontSize: "0.75rem", color: "var(--color-text-2)", marginTop: "0.15rem" }}>
                 Update your password to keep your examination attempts secure.
               </div>
             </div>
@@ -194,8 +194,8 @@ function StudentSettings() {
 
           <div className={styles.actionRow}>
             <div>
-              <div style={{ fontWeight: 600, fontSize: "0.875rem", color: "#0F172A" }}>Sign Out (This Session)</div>
-              <div style={{ fontSize: "0.75rem", color: "#64748B", marginTop: "0.15rem" }}>
+              <div style={{ fontWeight: 600, fontSize: "0.875rem", color: "var(--color-text-2)" }}>Sign Out (This Session)</div>
+              <div style={{ fontSize: "0.75rem", color: "var(--color-text-2)", marginTop: "0.15rem" }}>
                 End only this browser session without interrupting other active devices.
               </div>
             </div>
@@ -217,11 +217,11 @@ function StudentSettings() {
       <section className={styles.card}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
           <div>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.9375rem", fontWeight: 700, color: "#0F172A" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.9375rem", fontWeight: 700, color: "var(--color-text-2)" }}>
               <MonitorIcon width="16" height="16" style={{ color: "#92400E" }} />
               <span>Active Sessions &amp; Devices</span>
             </div>
-            <div style={{ fontSize: "0.75rem", color: "#64748B", marginTop: "0.2rem" }}>
+            <div style={{ fontSize: "0.75rem", color: "var(--color-text-2)", marginTop: "0.2rem" }}>
               Review devices currently signed in to your student account and revoke any unrecognized session.
             </div>
           </div>
@@ -239,11 +239,11 @@ function StudentSettings() {
 
         <div style={{ display: "flex", flexDirection: "column", gap: "0.625rem", marginTop: "0.5rem" }}>
           {sessionsLoading && sessions.length === 0 ? (
-            <div style={{ fontSize: "0.8125rem", color: "#64748B", padding: "0.5rem 0" }}>
+            <div style={{ fontSize: "0.8125rem", color: "var(--color-text-2)", padding: "0.5rem 0" }}>
               Loading active sessions…
             </div>
           ) : sessions.length === 0 ? (
-            <div style={{ fontSize: "0.8125rem", color: "#64748B", padding: "0.5rem 0" }}>
+            <div style={{ fontSize: "0.8125rem", color: "var(--color-text-2)", padding: "0.5rem 0" }}>
               Current browser session is active.
             </div>
           ) : (
@@ -263,7 +263,7 @@ function StudentSettings() {
               >
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem", minWidth: 0 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
-                    <span style={{ fontSize: "0.8125rem", fontWeight: 600, color: "#0F172A" }}>
+                    <span style={{ fontSize: "0.8125rem", fontWeight: 600, color: "var(--color-text-2)" }}>
                       {s.device_name || "Browser Session"}
                     </span>
                     {s.is_current && (
@@ -281,7 +281,7 @@ function StudentSettings() {
                       </span>
                     )}
                   </div>
-                  <div style={{ fontSize: "0.75rem", color: "#64748B", fontFamily: "var(--font-mono, monospace)" }}>
+                  <div style={{ fontSize: "0.75rem", color: "var(--color-text-2)", fontFamily: "var(--font-mono, monospace)" }}>
                     IP: {s.ip || "local"} · Signed in {new Date(s.created_at).toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
                   </div>
                 </div>

@@ -191,8 +191,17 @@ export function BaseButton({
           expanded: triggerState?.expanded,
         }}
         aria-expanded={triggerState?.expanded}
-        {...(Platform.OS === 'web' && triggerState
-          ? { 'aria-haspopup': 'menu' as const }
+        {...(Platform.OS === 'web'
+          ? {
+              ...(triggerState ? { 'aria-haspopup': 'menu' as const } : {}),
+              onClick: (e: any) => {
+                if (!inactive) {
+                  e?.preventDefault?.();
+                  e?.stopPropagation?.();
+                  onPress?.();
+                }
+              },
+            }
           : {})}
         aria-disabled={inactive}
         aria-busy={loading}
@@ -203,6 +212,7 @@ export function BaseButton({
             minWidth: Platform.OS === 'android' ? 48 : 44,
             justifyContent: 'center',
             alignSelf: fullWidth ? 'stretch' : 'flex-start',
+            ...(Platform.OS === 'web' ? ({ cursor: inactive ? 'default' : 'pointer' } as any) : {}),
           },
           layoutStyle,
           {

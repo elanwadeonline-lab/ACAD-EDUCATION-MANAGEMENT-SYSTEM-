@@ -101,7 +101,7 @@ function CalendarContent() {
       {/* Month Carousel Heading */}
       <section className={styles.monthSection}>
         <div className={styles.monthHeaderRow}>
-          <h2 className={styles.monthTitle}>{months[currentMonthIndex]} 2026</h2>
+          <h2 className={styles.monthTitle}>{months[currentMonthIndex]} {new Date().getFullYear()}</h2>
           <div className={styles.monthNavGroup}>
             <button
               type="button"

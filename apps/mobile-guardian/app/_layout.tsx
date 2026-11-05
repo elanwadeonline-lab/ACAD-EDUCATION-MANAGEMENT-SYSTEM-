@@ -11,12 +11,27 @@ import {BottomSheetModalProvider} from '@gorhom/bottom-sheet';
 import {Colors} from '../src/theme/tokens';
 import {BaseThemeProvider} from '../src/components/base-theme';
 import {guardianBaseTheme} from '../src/theme/base';
-import {useFonts,Geist_400Regular,Geist_500Medium,Geist_600SemiBold} from '@expo-google-fonts/geist';
+import {
+  useFonts,
+  Manrope_400Regular,
+  Manrope_500Medium,
+  Manrope_600SemiBold,
+  Manrope_700Bold,
+  Manrope_800ExtraBold,
+} from '@expo-google-fonts/manrope';
 
 export default function RootLayout() {
-  const [fontsLoaded,fontError]=useFonts({Geist_400Regular,Geist_500Medium,Geist_600SemiBold});
-  if(!fontsLoaded&&!fontError)return null;
-  guardianBaseTheme.fonts.semibold='Geist_600SemiBold';
+  const [fontsLoaded, fontError] = useFonts({
+    Manrope_400Regular,
+    Manrope_500Medium,
+    Manrope_600SemiBold,
+    Manrope_700Bold,
+    Manrope_800ExtraBold,
+  });
+  if (!fontsLoaded && !fontError) return null;
+  guardianBaseTheme.fonts.regular = 'Manrope_500Medium';
+  guardianBaseTheme.fonts.medium = 'Manrope_600SemiBold';
+  guardianBaseTheme.fonts.semibold = 'Manrope_700Bold';
   return (
     <GluestackUIProvider mode="light"><BaseThemeProvider theme={guardianBaseTheme}><GestureHandlerRootView style={{flex:1,backgroundColor:Colors.canvas}}><SafeAreaProvider>
       <GuardianAuthProvider>

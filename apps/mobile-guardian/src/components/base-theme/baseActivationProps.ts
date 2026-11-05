@@ -23,9 +23,9 @@ export function baseActivationProps(activate: () => void, disabled = false) {
               if (!event.repeat) run();
             }
           },
-          // Virtual clicks from assistive technology have no pointer gesture.
-          onClick: (event: MouseEvent) => {
-            if (event.detail === 0) run();
+          // Allow pointer clicks and assistive technology activations on web
+          onClick: (_event: MouseEvent) => {
+            run();
           },
         }
       : {}),

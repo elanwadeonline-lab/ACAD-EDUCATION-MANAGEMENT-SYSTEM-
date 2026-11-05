@@ -1,0 +1,6 @@
+"use client";
+import Link from 'next/link';
+import {RequireRole} from '../../../components/auth/RequireRole';
+import {CalendarDays,Wallet,ClipboardCheck,Megaphone,Link2,Users,FileText} from '../../../components/guardian/GuardianSolidIcons';
+const tools=[['Attendance','Daily school records','attendance',ClipboardCheck],['School calendar','Dates and events','calendar',CalendarDays],['Fees & receipts','Balances and recorded payments','fees',Wallet],['School notices','Announcements from your school','announcements',Megaphone],['Reports','Academic documents','reports',FileText],['Manage children','Link requests and approvals','links',Link2],['Your account','Profile, password and preferences','settings',Users]] as const;
+export default function More(){return <RequireRole role="guardian"><section className="guardian-page"><h1>School tools</h1><p>Everything you need to stay connected.</p><div className="guardian-more-grid">{tools.map(([title,description,path,Icon])=><Link className="guardian-more-card" key={path} href={'/guardian/'+path}><span className="guardian-tool-icon"><Icon/></span><span><strong>{title}</strong><small>{description}</small></span><span aria-hidden="true">→</span></Link>)}</div></section></RequireRole>}

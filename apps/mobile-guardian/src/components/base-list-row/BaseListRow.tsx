@@ -133,6 +133,10 @@ export function BaseListRow({
       {...(onPress && Platform.OS === 'web'
         ? {
             tabIndex: 0,
+            onClick: (e: any) => {
+              e?.stopPropagation?.();
+              onPress();
+            },
             onKeyDown: (event: React.KeyboardEvent) => {
               if (event.key === 'Enter' || event.key === ' ') {
                 event.preventDefault();
@@ -152,6 +156,7 @@ export function BaseListRow({
           gap: size === 'sm' ? 10 : 16,
           flexDirection: 'row',
           alignItems: description ? 'flex-start' : 'center',
+          ...(Platform.OS === 'web' && onPress ? ({ cursor: 'pointer' } as any) : {}),
         },
         style,
         animated,

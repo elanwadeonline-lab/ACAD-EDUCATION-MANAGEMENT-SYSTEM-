@@ -783,8 +783,8 @@ function ExamContent() {
       <main className={styles.errorState}>
         <div className={styles.modalBox}>
           <WarningIcon width="40" height="40" style={{ color: "#D97706", margin: "0 auto 1rem" }} />
-          <h3 style={{ fontSize: "1.25rem", fontWeight: 800, margin: "0 0 0.5rem", color: "#0F172A" }}>Another tab is open</h3>
-          <p style={{ color: "#64748B", fontSize: "0.875rem", lineHeight: 1.5, margin: "0 0 1.5rem" }}>
+          <h3 style={{ fontSize: "1.25rem", fontWeight: 800, margin: "0 0 0.5rem", color: "var(--color-text-2)" }}>Another tab is open</h3>
+          <p style={{ color: "var(--color-text-2)", fontSize: "0.875rem", lineHeight: 1.5, margin: "0 0 1.5rem" }}>
             Please close other exam tabs or windows before continuing this examination session.
           </p>
           <button className={styles.preflightCancelBtn} style={{ width: "100%" }} onClick={() => router.push("/student/dashboard")}>
@@ -800,7 +800,7 @@ function ExamContent() {
       <main className={styles.errorState}>
         <div className={styles.modalBox}>
           <WarningIcon width="40" height="40" style={{ color: "#DC2626", margin: "0 auto 1rem" }} />
-          <h3 style={{ fontSize: "1.25rem", fontWeight: 800, margin: "0 0 0.5rem", color: "#0F172A" }}>Examination Error</h3>
+          <h3 style={{ fontSize: "1.25rem", fontWeight: 800, margin: "0 0 0.5rem", color: "var(--color-text-2)" }}>Examination Error</h3>
           <p style={{ color: "#DC2626", fontSize: "0.875rem", fontWeight: 600, margin: "0 0 1.5rem" }}>{error}</p>
           <button className={styles.preflightCancelBtn} style={{ width: "100%" }} onClick={() => router.push("/student/dashboard")}>
             ← Return to Dashboard
@@ -823,7 +823,7 @@ function ExamContent() {
             >
               <span>← Back to Dashboard</span>
             </button>
-            <span style={{ fontSize: "0.8125rem", color: "#64748B", fontWeight: 500 }}>
+            <span style={{ fontSize: "0.8125rem", color: "var(--color-text-2)", fontWeight: 500 }}>
               <AcqadLogo size="md" wordmarkWeight={700}/>
             </span>
           </div>
@@ -859,16 +859,16 @@ function ExamContent() {
 
             <div className={styles.preflightCandidateBox}>
               <div>
-                <span style={{ color: "#64748B", fontSize: "0.75rem", textTransform: "uppercase", fontWeight: 600, letterSpacing: "0.04em" }}>
+                <span style={{ color: "var(--color-text-2)", fontSize: "0.75rem", textTransform: "uppercase", fontWeight: 600, letterSpacing: "0.04em" }}>
                   Candidate:
                 </span>{" "}
-                <strong style={{ color: "#0F172A" }}>{user?.name || "Student Candidate"}</strong>
+                <strong style={{ color: "var(--color-text-2)" }}>{user?.name || "Student Candidate"}</strong>
               </div>
               <div>
-                <span style={{ color: "#64748B", fontSize: "0.75rem", textTransform: "uppercase", fontWeight: 600, letterSpacing: "0.04em" }}>
+                <span style={{ color: "var(--color-text-2)", fontSize: "0.75rem", textTransform: "uppercase", fontWeight: 600, letterSpacing: "0.04em" }}>
                   Cohort:
                 </span>{" "}
-                <strong style={{ color: "#0F172A" }}>{user?.grade || "General Class"}</strong>
+                <strong style={{ color: "var(--color-text-2)" }}>{user?.grade || "General Class"}</strong>
               </div>
             </div>
 
@@ -924,8 +924,8 @@ function ExamContent() {
             </div>
 
             {subject?.instructions && (
-              <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: "12px", padding: "1rem 1.15rem", fontSize: "0.8125rem", color: "#334155", lineHeight: 1.5 }}>
-                <strong style={{ color: "#0F172A" }}>Special Instructions: </strong>
+              <div style={{ background: "var(--color-surface)", border: "1px solid #E2E8F0", borderRadius: "12px", padding: "1rem 1.15rem", fontSize: "0.8125rem", color: "#334155", lineHeight: 1.5 }}>
+                <strong style={{ color: "var(--color-text-2)" }}>Special Instructions: </strong>
                 {subject.instructions}
               </div>
             )}
@@ -968,7 +968,7 @@ function ExamContent() {
               </span>
             </div>
 
-            <p style={{ fontSize: "0.875rem", color: "#64748B", lineHeight: 1.6, margin: 0 }}>
+            <p style={{ fontSize: "0.875rem", color: "var(--color-text-2)", lineHeight: 1.6, margin: 0 }}>
               You have <strong style={{ color: "#92400E" }}>{Object.keys(answers).length}</strong> answered question(s) securely restored from your session.
               {isLearningMode && (
                 <>
@@ -977,7 +977,7 @@ function ExamContent() {
                 </>
               )}
               <br />
-              {Number(subject?.duration) > 0 ? <>Time remaining: <strong style={{ color: "#0F172A", fontFamily: "var(--font-mono, monospace)" }}>{formatTime(remaining)}</strong></> : <span><strong style={{ color: "#BE185D" }}>Untimed</strong> — no countdown for this assignment.</span>}
+              {Number(subject?.duration) > 0 ? <>Time remaining: <strong style={{ color: "var(--color-text-2)", fontFamily: "var(--font-mono, monospace)" }}>{formatTime(remaining)}</strong></> : <span><strong style={{ color: "#BE185D" }}>Untimed</strong> — no countdown for this assignment.</span>}
             </p>
 
             <div className={styles.preflightActions}>
@@ -1082,7 +1082,7 @@ function ExamContent() {
             </div>
 
             <div className={styles.releaseScheduleBox}>
-              <span style={{ fontSize: "0.75rem", color: "#64748B", fontWeight: 600, textTransform: "uppercase" }}>Scheduled Publication</span>
+              <span style={{ fontSize: "0.75rem", color: "var(--color-text-2)", fontWeight: 600, textTransform: "uppercase" }}>Scheduled Publication</span>
               <strong style={{ fontSize: "1.0625rem", color: "#92400E" }}>{releaseDateStr}</strong>
             </div>
 
@@ -1259,7 +1259,7 @@ function ExamContent() {
             </div>
             <div className={styles.summaryStatItem}>
               <div className={styles.summaryStatLabel}>Time Remaining</div>
-              <div className={styles.summaryStatVal} style={{ color: "#0F172A" }}>
+              <div className={styles.summaryStatVal} style={{ color: "var(--color-text-2)" }}>
                 {Number(subject?.duration) > 0 ? formatTime(remaining) : "Untimed"}
               </div>
             </div>
@@ -1672,7 +1672,7 @@ function ExamContent() {
                     {solutionRevealsRemaining} reveals left
                   </span>
                 </div>
-                <h3 style={{ fontSize: "1.125rem", fontWeight: 800, color: "#0F172A", margin: 0 }}>
+                <h3 style={{ fontSize: "1.125rem", fontWeight: 800, color: "var(--color-text-2)", margin: 0 }}>
                   Question {currentIndex + 1} Solution
                 </h3>
               </div>

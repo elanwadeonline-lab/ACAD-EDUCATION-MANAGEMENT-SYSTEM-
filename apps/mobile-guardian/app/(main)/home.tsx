@@ -1,3 +1,6 @@
 import React from 'react';
-import {GuardianScreen} from '../../src/screens/GuardianScreens';
-export default function Home(){return <GuardianScreen screen="home"/>;}
+import { GuardianHomeScreen } from '../../src/screens/GuardianHomeScreen';
+
+export default function Home() {
+  return <GuardianHomeScreen />;
+}

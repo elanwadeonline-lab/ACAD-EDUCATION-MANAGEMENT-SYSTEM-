@@ -197,6 +197,12 @@ function ToggleControl({
               'aria-pressed': radio ? undefined : active,
               onFocus: () => setFocused(true),
               onBlur: () => setFocused(false),
+              onClick: (e: any) => {
+                if (!disabled) {
+                  e?.stopPropagation?.();
+                  activate();
+                }
+              },
               onKeyDown: (event: React.KeyboardEvent) => {
                 if (event.key === 'Enter' || event.key === ' ') {
                   event.preventDefault();
@@ -212,6 +218,7 @@ function ToggleControl({
             minHeight: TARGET,
             justifyContent: 'center',
             opacity: disabled ? 0.5 : 1,
+            ...(Platform.OS === 'web' ? ({ cursor: disabled ? 'default' : 'pointer' } as any) : {}),
           },
           NO_WEB_OUTLINE,
           style,

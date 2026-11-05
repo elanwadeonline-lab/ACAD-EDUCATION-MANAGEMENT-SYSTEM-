@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import Link from "next/link";
 import { LearningOverview } from "../../../components/student/LearningOverview";
+import { StudentLearningSummary } from "../../../components/learning/StudentLearningSummary";
 import { groupStudentAssessments } from "../../../lib/studentDashboard";
 import { api } from "../../../lib/api";
 import type {
@@ -347,6 +348,7 @@ function DashboardContent() {
         highestSubject={academicAnalytics.highestSubject}
         highestScore={releasedResults.length ? academicAnalytics.highestPct : null}
       />
+      <StudentLearningSummary />
 
     </div>
   );

@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { RequireRole } from "../../../components/auth/RequireRole";
 import { useGuardian, type WardReportDocument } from "../../../components/guardian/GuardianContext";
 import { StudentAvatar } from "../../../components/guardian/StudentAvatar";
 import { api } from "../../../lib/api";
+import {useGuardianRecordPage} from "../../../components/guardian/useGuardianPageView";
 import styles from "./page.module.css";
 
 export default function GuardianReportsPage() {
@@ -19,11 +20,17 @@ export default function GuardianReportsPage() {
 function ReportsList() {
   const { activeWard, period, setPeriod, openChildSwitcher } = useGuardian();
   const router = useRouter();
-  const [selectedDoc, setSelectedDoc] = useState<WardReportDocument | null>(null);
+  const [selectedDoc,setSelectedDoc]=useGuardianRecordPage(activeWard?.reports||[]);
   const [reportCardData, setReportCardData] = useState<{ results: any[]; remarks: any[] } | null>(null);
   const [loadingCard, setLoadingCard] = useState(false);
   const [shareToast, setShareToast] = useState<string | null>(null);
 
+  useEffect(()=>{
+    if(!selectedDoc||!activeWard)return;
+    let cancelled=false;setLoadingCard(true);setReportCardData(null);
+    api.get<{results:any[];remarks:any[]}>(`/api/guardian/wards/${activeWard.student_id||activeWard.id}/report-card`).then(data=>{if(!cancelled)setReportCardData(data)}).catch(()=>{if(!cancelled)setReportCardData(null)}).finally(()=>{if(!cancelled)setLoadingCard(false)});
+    return()=>{cancelled=true};
+  },[selectedDoc?.id,activeWard?.id]);
   if (!activeWard) {
     return <div style={{ padding: "2rem", textAlign: "center", color: "var(--g-text-secondary, #64748B)" }}>No active ward selected.</div>;
   }
@@ -32,18 +39,7 @@ function ReportsList() {
     ? activeWard.reports
     : [];
 
-  const handleOpenDoc = async (doc: WardReportDocument) => {
-    setSelectedDoc(doc);
-    try {
-      setLoadingCard(true);
-      const res = await api.get<{ results: any[]; remarks: any[] }>(`/api/guardian/wards/${activeWard.student_id || activeWard.id}/report-card`);
-      setReportCardData(res);
-    } catch {
-      setReportCardData(null);
-    } finally {
-      setLoadingCard(false);
-    }
-  };
+  const handleOpenDoc=(doc:WardReportDocument)=>setSelectedDoc(doc);
 
   const handleShareDoc = async (doc: WardReportDocument) => {
     try {
@@ -175,7 +171,7 @@ function ReportsList() {
 
       {/* ── Report Viewer Modal ── */}
       {selectedDoc && (
-        <div className={styles.modalOverlay} onClick={() => setSelectedDoc(null)}>
+        <div className={styles.modalOverlay} data-guardian-detail="true">
           <div className={styles.modalSheet} onClick={(e) => e.stopPropagation()}>
             <div className={styles.sheetHeader}>
               <div className={styles.sheetTitleGroup}>
@@ -209,7 +205,7 @@ function ReportsList() {
                     <div><strong>Student:</strong> {activeWard.name}</div>
                     <div><strong>Reg No:</strong> {activeWard.admission_number || activeWard.reg_id}</div>
                     <div><strong>Class:</strong> {activeWard.grade}</div>
-                    <div><strong>Term Attendance:</strong> {activeWard.attendance_pct || 92}%</div>
+                    <div><strong>Term Attendance:</strong> {activeWard.attendance_pct != null ? `${activeWard.attendance_pct}%` : "Not recorded"}</div>
                   </div>
 
                   {reportCardData.results && reportCardData.results.length > 0 ? (

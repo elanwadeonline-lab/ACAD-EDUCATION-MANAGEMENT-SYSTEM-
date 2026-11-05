@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import ButtonBase from "@mui/material/ButtonBase";
-import { ArrowUpRight, CalendarDays, ChevronRight, ClipboardCheck, FileText, MessageCircle, Wallet, Megaphone } from "lucide-react";
+import { ArrowUpRight, CalendarDays, ChevronRight, ClipboardCheck, FileText, MessageCircle, Wallet, Megaphone } from "../../../components/guardian/GuardianSolidIcons";
 import { RequireRole } from "../../../components/auth/RequireRole";
 import { useGuardian } from "../../../components/guardian/GuardianContext";
 import { StudentAvatar } from "../../../components/guardian/StudentAvatar";
@@ -36,7 +36,7 @@ function GuardianDashboard() {
     <section className={styles.childProfile} aria-label="Selected child">
       <StudentAvatar name={activeWard.name} imageUrl={activeWard.image_url} size="md" />
       <div className={styles.childIdentity}><h2>{activeWard.name}</h2><p>{activeWard.grade}{activeWard.school_name ? ` · ${activeWard.school_name}` : ""}</p><small>{activeWard.admission_number || activeWard.reg_id || "Registration not available"}</small></div>
-      <button type="button" className={styles.switchButton} onClick={openChildSwitcher} aria-haspopup="dialog">Switch child <ChevronRight size={16} /></button>
+      <button type="button" className={styles.switchButton} onClick={openChildSwitcher}>Switch child <ChevronRight size={16} /></button>
     </section>
     {activeWard.fees?.balance > 0 && <Link href="/guardian/fees" className={styles.notice}><Wallet size={18} /><span>Fee balance <strong>₦{activeWard.fees.balance.toLocaleString()}</strong></span><span className={styles.noticeAction}>View fees <ChevronRight size={16} /></span></Link>}
     <section className={styles.statGrid} aria-label="Academic summary">

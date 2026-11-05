@@ -56,7 +56,7 @@
   font-size: 0.75rem;
   font-weight: 500;
   color: #475569;
-  background: #F8FAFC;
+  background: var(--color-surface);
   border: 1px solid #E2E8F0;
   padding: 0.175rem 0.55rem;
   border-radius: 6px;
@@ -66,7 +66,7 @@
 .pageTitle {
   font-size: clamp(1.8rem, 3vw, 2.6rem);
   font-weight: 600;
-  color: #0F172A;
+  color: var(--color-text);
   letter-spacing: -.045em;
   line-height: 1.25;
   margin: 0;
@@ -131,7 +131,7 @@
 
 /* ── 2. Primary Action Area (Immediate Next Step) ── */
 .primaryActionCard {
-  background: #FFFFFF;
+  background: var(--color-surface);
   border: 1px solid #E2E8F0;
   border-left: 4px solid #92400E;
   border-radius: 12px;
@@ -213,7 +213,7 @@
 .primaryActionTitle {
   font-size: 1rem;
   font-weight: 700;
-  color: #0F172A;
+  color: var(--color-text);
   margin: 0;
 }
 
@@ -261,7 +261,7 @@
 /* ── 4. Academic Performance Analytics Component (Part A2) ── */
 
 .sectionCard {
-  background: #FFFFFF;
+  background: var(--color-surface);
   border: 1px solid #E2E8F0;
   border-radius: 12px;
   padding: 1.25rem 1.375rem;
@@ -297,7 +297,7 @@
 .sectionTitle {
   font-size: 1rem;
   font-weight: 700;
-  color: #0F172A;
+  color: var(--color-text);
   margin: 0;
   letter-spacing: -0.015em;
 }
@@ -330,7 +330,7 @@
   font-weight: 700;
   padding: 0.1rem 0.4rem;
   border-radius: 4px;
-  background: #F8FAFC;
+  background: var(--color-surface);
   color: #334155;
   border: 1px solid #E2E8F0;
   min-width: 1.85rem;
@@ -362,7 +362,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  background: #F8FAFC;
+  background: var(--color-surface);
   border: 1px solid #E2E8F0;
   padding: 0.225rem;
   border-radius: 8px;
@@ -385,7 +385,7 @@
 }
 
 .tabBtn:hover {
-  color: #0F172A;
+  color: var(--color-text);
 }
 
 .tabCount {
@@ -405,7 +405,7 @@
 }
 
 .subjectCard {
-  background: #FFFFFF;
+  background: var(--color-surface);
   border: 1px solid #E2E8F0;
   border-radius: 10px;
   padding: 1rem 1.125rem;
@@ -438,7 +438,7 @@
   font-weight: 700;
   font-family: var(--font-mono, monospace);
   color: #475569;
-  background: #F8FAFC;
+  background: var(--color-surface);
   border: 1px solid #E2E8F0;
   padding: 0.15rem 0.45rem;
   border-radius: 5px;
@@ -465,7 +465,7 @@
 }
 
 .statusAssignment {
-  background: #F8FAFC;
+  background: var(--color-surface);
   color: #334155;
   border: 1px solid #CBD5E1;
 }
@@ -479,7 +479,7 @@
 .subjectCardName {
   font-size: 0.9375rem;
   font-weight: 700;
-  color: #0F172A;
+  color: var(--color-text);
   margin: 0;
   line-height: 1.35;
 }
@@ -535,8 +535,8 @@
 }
 
 .actionSubtle {
-  background: #F8FAFC;
-  color: #1E293B;
+  background: var(--color-surface);
+  color: var(--color-text);
   border: 1px solid #E2E8F0;
 }
 
@@ -565,7 +565,7 @@
   padding: 0.75rem 0.875rem;
   border-radius: 9px;
   border: 1px solid #E2E8F0;
-  background: #FFFFFF;
+  background: var(--color-surface);
   transition: border-color 140ms ease;
 }
 
@@ -575,7 +575,7 @@
 }
 
 .milestoneCardLocked {
-  background: #F8FAFC;
+  background: var(--color-surface);
   opacity: 0.88;
 }
 
@@ -593,7 +593,7 @@
 }
 
 .milestoneCardEarned .milestoneIconBox {
-  background: #FFFFFF;
+  background: var(--color-surface);
   color: #92400E;
   border-color: #FDE68A;
 }
@@ -616,7 +616,7 @@
 .milestoneName {
   font-size: 0.8125rem;
   font-weight: 700;
-  color: #0F172A;
+  color: var(--color-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -647,7 +647,7 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.5rem;
   padding: 0.65rem;
-  background: #F8FAFC;
+  background: var(--color-surface);
   border: 1px solid #E2E8F0;
   border-radius: 8px;
 }
@@ -666,7 +666,7 @@
 .xpBreakdownVal {
   font-size: 0.875rem;
   font-weight: 700;
-  color: #0F172A;
+  color: var(--color-text);
   font-variant-numeric: tabular-nums;
 }
 
@@ -684,7 +684,7 @@
   padding: 0.5rem 0.75rem;
   border-radius: 8px;
   border: 1px solid #F1F5F9;
-  background: #FFFFFF;
+  background: var(--color-surface);
   font-size: 0.8125rem;
 }
 
@@ -723,7 +723,7 @@
 
 .cohortName {
   font-weight: 600;
-  color: #0F172A;
+  color: var(--color-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -737,7 +737,7 @@
 .cohortXp {
   font-size: 0.8125rem;
   font-weight: 700;
-  color: #0F172A;
+  color: var(--color-text);
   font-variant-numeric: tabular-nums;
   flex-shrink: 0;
 }
@@ -763,14 +763,14 @@
   padding: 0.65rem 0.85rem;
   border-radius: 8px;
   border: 1px solid #E2E8F0;
-  background: #FFFFFF;
+  background: var(--color-surface);
 }
 
 .scheduleDateBox {
   width: 44px;
   height: 44px;
   border-radius: 8px;
-  background: #F8FAFC;
+  background: var(--color-surface);
   border: 1px solid #E2E8F0;
   display: flex;
   flex-direction: column;
@@ -791,7 +791,7 @@
 .scheduleDay {
   font-size: 0.9375rem;
   font-weight: 800;
-  color: #0F172A;
+  color: var(--color-text);
   line-height: 1.15;
 }
 
@@ -806,7 +806,7 @@
 .scheduleSubject {
   font-size: 0.8125rem;
   font-weight: 700;
-  color: #0F172A;
+  color: var(--color-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -839,13 +839,13 @@
   color: #64748B;
   padding: 0.55rem 0.75rem;
   border-bottom: 1px solid #E2E8F0;
-  background: #F8FAFC;
+  background: var(--color-surface);
 }
 
 .resultsTable td {
   padding: 0.65rem 0.75rem;
   border-bottom: 1px solid #F1F5F9;
-  color: #1E293B;
+  color: var(--color-text);
   vertical-align: middle;
 }
 

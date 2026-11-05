@@ -122,8 +122,12 @@
 }
 /* ACQAD overrides: the user's gold/amber identity takes precedence over the reference magenta. */
 @theme {
-  --font-sans: 'Geist_400Regular';
-  --font-body: 'Geist_400Regular';
+  --font-sans: 'Manrope_500Medium', 'Manrope', system-ui, -apple-system, sans-serif;
+  --font-body: 'Manrope_500Medium', 'Manrope', system-ui, -apple-system, sans-serif;
+}
+body {
+  font-family: 'Manrope_500Medium', 'Manrope', system-ui, -apple-system, sans-serif;
+  font-weight: 500;
 }
 @layer theme {
   :root, :root.light {

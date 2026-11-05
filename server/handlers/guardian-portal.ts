@@ -141,8 +141,12 @@ export async function tryGuardianPortalZoneA(req: Request, method: string, pathn
     if (!link) return apiError(403, "Access denied: not your ward");
     const actualStudentId = Number(link.student_id);
     const termId = Number(url.searchParams.get("term_id") || 0);
-    const activeTerm = queries.getActiveTerm.get() as any;
-    const resolvedTermId = isPositiveIntId(termId) ? termId : (activeTerm?.id ?? 0);
+    const activeTerm = queries.getActiveAcademicTerm.get() as any;
+    let resolvedTermId = isPositiveIntId(termId) ? termId : 0;
+    if (!resolvedTermId) {
+      const latest = db.prepare("SELECT term_id FROM term_results WHERE student_id = ? AND is_approved = 1 ORDER BY id DESC LIMIT 1").get(actualStudentId) as any;
+      resolvedTermId = latest?.term_id || (activeTerm?.id ?? 0);
+    }
     if (!resolvedTermId) return apiSuccess([]);
     const results = queries.getWardTermResults.all(actualStudentId, resolvedTermId);
     return apiSuccess(results);

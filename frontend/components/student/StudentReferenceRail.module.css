@@ -91,3 +91,5 @@
     display: none;
   }
 }
+.rail a[aria-current="page"],.rail a:hover { background:transparent; }
+@media(max-width:700px){.rail{overflow-x:auto;justify-content:flex-start;gap:4px;padding:6px}.rail a{flex:0 0 36px;width:36px;height:42px}}

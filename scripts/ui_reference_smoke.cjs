@@ -19,7 +19,7 @@ function ward(id,name,average){return {id,student_id:id,name,grade:'SS2',reg_id:
  console.log('Browser launched');
  const outcomes=[];
  try {
- for(const role of ['student','guardian','operator','teacher']) {
+ for(const role of (process.argv.includes('--student-dashboard')?['student']:process.argv.includes('--guardian')?['guardian']:['student','guardian','operator','teacher'])) {
   console.log('Checking '+role);
   const page=await browser.newPage(); await page.evaluateOnNewDocument(() => { delete Object.getPrototypeOf(navigator).serviceWorker; }); await page.setBypassServiceWorker(true); await page.setRequestInterception(true);
   let empty=false, telemetryMissing=false, profileFailure=false, signedIn=true; let practiceSubmissions=0; const submittedAnswers=[]; const errors=[];
@@ -55,6 +55,7 @@ function ward(id,name,average){return {id,student_id:id,name,grade:'SS2',reg_id:
   // Test-only middleware fixture; backend authentication is never contacted.
   await page.setCookie({name:`__exampool_session_${role}`,value:`fixture.${Buffer.from(JSON.stringify({role,exp:Math.floor(Date.now()/1000)+3600})).toString('base64url')}.fixture`,url:origin});
   const route=role==='operator'?'ADMIN':role;
+  if(role==='guardian')await page.evaluateOnNewDocument(()=>{if(!localStorage.getItem('acad_guardian_theme'))localStorage.setItem('acad_guardian_theme','light');});
   await page.setViewport({width:1440,height:1100,deviceScaleFactor:1});
   await page.goto(`${origin}/${route}/dashboard/`,{waitUntil:'networkidle2',timeout:180000});
   const expected=role==='student'?'Learning insights':role==='guardian'?'A little closer':role==='operator'?'Institutional Overview':'Teaching Overview';
@@ -81,15 +82,10 @@ function ward(id,name,average){return {id,student_id:id,name,grade:'SS2',reg_id:
     await page.click('button[aria-label="Switch to light mode"]');
     await page.click('button[aria-label="View Karim Yusuf"]');
     await page.waitForFunction(()=>document.querySelector('section[aria-label="Selected child"]')?.textContent.includes('Karim Yusuf'));
-    await page.click('button[aria-haspopup=dialog]');
-    await page.waitForSelector('[role=dialog]');
-    assert(await page.$eval('[role=dialog]',el=>el.contains(document.activeElement)),'dialog must contain focus');
-    await page.keyboard.press('Escape');
-    await page.waitForSelector('[role=dialog]',{hidden:true});
-    assert(await page.evaluate(()=>document.activeElement.textContent.includes('Switch child')),'restore focus after Escape');
-    await page.click('button[aria-haspopup=dialog]');
-    await page.waitForSelector('[role=dialog]');
-    await page.evaluate(()=>[...document.querySelectorAll('[role=dialog] button')].find(b=>b.textContent.includes('Amina Yusuf')).click());
+    await page.click('button[class*="switchButton"]');
+    await page.waitForFunction(()=>location.pathname.includes('/guardian/select-child'));
+    assert.equal(await page.$$eval('[role=dialog]',els=>els.length),0,'child selection is a page');
+    await page.evaluate(()=>[...document.querySelectorAll('button')].find(b=>b.textContent.includes('Amina Yusuf')).click());
     await page.waitForFunction(()=>document.querySelector('section[aria-label="Selected child"]')?.textContent.includes('Amina Yusuf'));
   }
   if(role==='student') {
@@ -104,6 +100,21 @@ function ward(id,name,average){return {id,student_id:id,name,grade:'SS2',reg_id:
     await page.screenshot({path:path.join(output,`${role}-${width}.png`),fullPage:true});
     const overflow=await page.evaluate(()=>({width:innerWidth,scroll:document.documentElement.scrollWidth}));
     assert(overflow.scroll<=overflow.width,`${role} ${width}px overflow: ${JSON.stringify(overflow)}`);
+  }
+  if(process.argv.includes('--student-dashboard')) {
+    await page.setViewport({width:1440,height:1100});
+    const lightSwitch=await page.$('button[aria-label="Switch to light theme"]');if(lightSwitch)await lightSwitch.click();
+    await new Promise(resolve=>setTimeout(resolve,350));
+    assert(await page.$('img[src="/gold-card-wave.svg"]'),'approved wave asset reused');
+    const before=await page.$eval('[class*="xpHero"]',el=>({width:el.getBoundingClientRect().width,height:el.getBoundingClientRect().height,text:el.textContent}));
+    await page.screenshot({path:path.join(output,'student-wave-light.png'),fullPage:true});
+    await page.click('button[aria-label="Switch to dark theme"]');await new Promise(resolve=>setTimeout(resolve,350));
+    const after=await page.$eval('[class*="xpHero"]',el=>({width:el.getBoundingClientRect().width,height:el.getBoundingClientRect().height,text:el.textContent}));
+    assert.deepEqual(after,before,'theme change preserves XP content and dimensions');
+    const surface=await page.$eval('#learning-overview [data-slot=card]',el=>getComputedStyle(el).backgroundColor);
+    assert.notEqual(surface,'rgb(255, 255, 255)','dark cards use theme surface');
+    await page.screenshot({path:path.join(output,'student-wave-dark.png'),fullPage:true});
+    assert.deepEqual(errors,[],'student dashboard runtime');outcomes.push('Student wave, responsive layout, theme and XP stability passed');await page.close();continue;
   }
   if(['student','guardian'].includes(role)) {
     empty=true;telemetryMissing=true;
@@ -184,7 +195,7 @@ function ward(id,name,average){return {id,student_id:id,name,grade:'SS2',reg_id:
     assert(await page.$eval('[role=tabpanel]',el=>el.textContent.includes('Not provided')),'missing profile information is not invented');
     await page.goto(origin+'/guardian/wards/profile/?id=9999',{waitUntil:'networkidle2'});
     await page.waitForFunction(()=>document.body?.innerText.includes('Ward record not found'));
-    for(const surface of ['wards','results','reports','performance','attendance','fees','messages','notifications','calendar','announcements','links','settings','examinations']) {
+    for(const surface of ['wards','results','reports','performance','attendance','fees','messages','notifications','calendar','announcements','links','settings','examinations','more']) {
       await page.goto(`${origin}/guardian/${surface}/`,{waitUntil:'networkidle2'});
       assert(await page.$('#guardian-content'),'Guardian app shell on '+surface);
       assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Guardian phone overflow on '+surface);
@@ -197,6 +208,15 @@ function ward(id,name,average){return {id,student_id:id,name,grade:'SS2',reg_id:
       }
       if(['wards','results','attendance'].includes(surface))await page.screenshot({path:path.join(output,'guardian-'+surface+'.png'),fullPage:true});
     }
+  }
+  if(role==='guardian') {
+    await page.goto(origin+'/guardian/settings/?view=password',{waitUntil:'networkidle2'});
+    await page.waitForSelector('[data-guardian-detail]');
+    assert.equal(await page.$eval('[data-guardian-detail]',el=>getComputedStyle(el).position),'static','password is an inline page');
+    await page.screenshot({path:path.join(output,'guardian-password-page.png'),fullPage:true});
+    await page.goto(origin+'/guardian/more/',{waitUntil:'networkidle2'});
+    assert.equal(await page.$$eval('.guardian-more-card',els=>els.length),7,'More page has school tools');
+    await page.screenshot({path:path.join(output,'guardian-more-page.png'),fullPage:true});
   }
   if(role==='teacher') {
     await page.goto(origin+'/teacher/grading/details/?id=1',{waitUntil:'networkidle2'});

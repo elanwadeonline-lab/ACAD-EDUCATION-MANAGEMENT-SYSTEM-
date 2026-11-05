@@ -71,10 +71,18 @@ export function BaseHeaderAction({
         {...(Platform.OS === 'web'
           ? {
               tabIndex: disabled ? -1 : 0,
-              // Gesture Handler activates on key-up; prevent browser scrolling without firing twice.
+              cursor: disabled ? 'default' : 'pointer',
+              onClick: (e: any) => {
+                if (!disabled) {
+                  e?.preventDefault?.();
+                  e?.stopPropagation?.();
+                  onPress();
+                }
+              },
               onKeyDown: (event: React.KeyboardEvent) => {
                 if (!disabled && (event.key === 'Enter' || event.key === ' ')) {
                   event.preventDefault();
+                  onPress();
                 }
               },
             }
@@ -87,6 +95,7 @@ export function BaseHeaderAction({
             alignItems: 'center',
             justifyContent: 'center',
             borderRadius: theme.radius.md,
+            ...(Platform.OS === 'web' ? ({ cursor: disabled ? 'default' : 'pointer' } as any) : {}),
           },
           NO_WEB_OUTLINE,
           animated,

@@ -7,6 +7,7 @@ import { RequireRole } from "../../../components/auth/RequireRole";
 import { useGuardian } from "../../../components/guardian/GuardianContext";
 import { StudentAvatar } from "../../../components/guardian/StudentAvatar";
 import { api } from "../../../lib/api";
+import {useGuardianPageView} from "../../../components/guardian/useGuardianPageView";
 import styles from "./page.module.css";
 
 interface GuardianLink {
@@ -37,7 +38,9 @@ function LinksContent() {
   const [searchReg, setSearchReg] = useState("");
   const [relationship, setRelationship] = useState("Mother");
   const [submitting, setSubmitting] = useState(false);
-  const [modalOpen, setModalOpen] = useState(false);
+  const [pageView,setPageView]=useGuardianPageView();
+  const modalOpen=pageView==="link-child";
+  const setModalOpen=(open:boolean)=>setPageView(open?"link-child":"");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const fetchLinks = async () => {
@@ -219,11 +222,11 @@ function LinksContent() {
       <AnimatePresence>
         {modalOpen && (
           <motion.div
-            className={styles.modalBackdrop}
+            className={styles.modalBackdrop} data-guardian-detail="true"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => setModalOpen(false)}
+            
           >
             <motion.div
               className={styles.modalContent}

@@ -75,7 +75,7 @@ export function StudentReviewModal({ examId, subjectName, practiceData, onClose 
   }, [examId, practiceData]);
 
   return (
-    <Dialog open onClose={onClose} fullWidth maxWidth="md" aria-labelledby="student-review-title" slotProps={{ paper:{sx:{borderRadius:2,boxShadow:"0 12px 40px #00000018",p:{xs:2,sm:3},maxHeight:"90dvh"}} }}>
+    <Dialog open onClose={onClose} fullWidth maxWidth="md" aria-labelledby="student-review-title" slotProps={{ paper:{sx:{bgcolor:"var(--color-surface)",color:"var(--color-text)",borderRadius:2,boxShadow:"0 12px 40px #00000018",p:{xs:2,sm:3},maxHeight:"90dvh"}} }}>
       <div>
         <div
           style={{
@@ -88,7 +88,7 @@ export function StudentReviewModal({ examId, subjectName, practiceData, onClose 
           }}
         >
           <div>
-            <h2 id="student-review-title" style={{ fontSize: "1.375rem", fontWeight: 500, color: "#0F172A", margin: 0, letterSpacing: "-0.02em" }}>
+            <h2 id="student-review-title" style={{ fontSize: "1.375rem", fontWeight: 500, color: "var(--color-text)", margin: 0, letterSpacing: "-0.02em" }}>
               Assessment Evaluation Review
             </h2>
             <p style={{ color: "#64748B", fontSize: "0.875rem", marginTop: "0.25rem", fontWeight: 500 }}>
@@ -98,7 +98,7 @@ export function StudentReviewModal({ examId, subjectName, practiceData, onClose 
           <button
             onClick={onClose}
             style={{
-              background: "#F1F5F9",
+              background: "var(--color-surface-2)",
               border: "1px solid #E2E8F0",
               color: "#475569",
               borderRadius: "6px",
@@ -117,7 +117,7 @@ export function StudentReviewModal({ examId, subjectName, practiceData, onClose 
             <div className="spinner" />
           </div>
         ) : error ? (
-          <div style={{ textAlign: "center", color: "#374151", padding: "2rem", background: "#fafafa", borderRadius: "10px" }}>
+          <div style={{ textAlign: "center", color: "var(--color-text-2)", padding: "2rem", background: "var(--color-surface-2)", borderRadius: "10px" }}>
             {error}
           </div>
         ) : reviewData ? (
@@ -154,7 +154,7 @@ export function StudentReviewModal({ examId, subjectName, practiceData, onClose 
                 <div
                   key={s.label}
                   style={{
-                    background: "#F8FAFC",
+                    background: "var(--color-surface-2)",
                     borderRadius: "10px",
                     padding: "0.875rem 1.15rem",
                     minWidth: "130px",
@@ -174,7 +174,7 @@ export function StudentReviewModal({ examId, subjectName, practiceData, onClose 
                   >
                     {s.label}
                   </div>
-                  <div style={{ fontWeight: 500, fontSize: "1.125rem", color: "#0F172A", fontFamily: "var(--font-mono, monospace)" }}>
+                  <div style={{ fontWeight: 500, fontSize: "1.125rem", color: "var(--color-text)", fontFamily: "var(--font-mono, monospace)" }}>
                     {s.value}
                   </div>
                 </div>
@@ -240,7 +240,7 @@ export function StudentReviewModal({ examId, subjectName, practiceData, onClose 
                           gap: "1rem",
                         }}
                       >
-                        <span style={{ fontWeight: 500, fontSize: "0.9375rem", color: "#0F172A", lineHeight: 1.5 }}>
+                        <span style={{ fontWeight: 500, fontSize: "0.9375rem", color: "var(--color-text)", lineHeight: 1.5 }}>
                           <span style={{ color: "#64748B", marginRight: "0.4rem", fontFamily: "var(--font-mono, monospace)" }}>
                             Q{idx + 1}.
                           </span>
@@ -268,14 +268,14 @@ export function StudentReviewModal({ examId, subjectName, practiceData, onClose 
                           style={{
                             fontSize: "0.875rem",
                             color: "#334155",
-                            background: "#FFFFFF",
+                            background: "var(--color-surface)",
                             padding: "0.875rem 1rem",
                             borderRadius: "6px",
                             border: "1px solid #E2E8F0",
                           }}
                         >
                           <div style={{ marginBottom: "0.6rem" }}>
-                            <strong style={{ color: "#0F172A", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                            <strong style={{ color: "var(--color-text)", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.04em" }}>
                               Your Submission:
                             </strong>
                             <br />
@@ -285,7 +285,7 @@ export function StudentReviewModal({ examId, subjectName, practiceData, onClose 
                           </div>
                           {a.teacher_answer && (
                             <div style={{ paddingTop: "0.6rem", borderTop: "1px solid #F1F5F9" }}>
-                              <strong style={{ color: "#0F172A", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                              <strong style={{ color: "var(--color-text)", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.04em" }}>
                                 Expected Rubric / Guide:
                               </strong>
                               <br />
@@ -310,25 +310,25 @@ export function StudentReviewModal({ examId, subjectName, practiceData, onClose 
                               <span style={{ color: "#64748B", width: "110px", flexShrink: 0, fontSize: "0.78rem", fontWeight: 600 }}>
                                 Correct Answer:
                               </span>
-                              <strong style={{ color: "#374151" }}>
+                              <strong style={{ color: "var(--color-text-2)" }}>
                                 {correctText}
                               </strong>
                             </div>
                           )}
 
                           {a.explanation && (
-                            <div style={{ marginTop: "0.5rem", padding: "0.6rem 0.85rem", background: "#fafafa", border: "1px solid #e5e7eb", borderRadius: "8px", fontSize: "0.8125rem", color: "#374151", lineHeight: 1.5 }}>
-                              <strong style={{ color: "#374151", display: "block", marginBottom: "0.2rem" }}>Explanation:</strong>
+                            <div style={{ marginTop: "0.5rem", padding: "0.6rem 0.85rem", background: "var(--color-surface-2)", border: "1px solid #e5e7eb", borderRadius: "8px", fontSize: "0.8125rem", color: "var(--color-text-2)", lineHeight: 1.5 }}>
+                              <strong style={{ color: "var(--color-text-2)", display: "block", marginBottom: "0.2rem" }}>Explanation:</strong>
                               {a.explanation}
                             </div>
                           )}
 
                           {a.solution && (
-                            <div style={{ marginTop: "0.4rem", padding: "0.6rem 0.85rem", background: "#fafafa", border: "1px solid #e5e7eb", borderRadius: "8px", fontSize: "0.8125rem", color: "#374151", lineHeight: 1.5 }}>
+                            <div style={{ marginTop: "0.4rem", padding: "0.6rem 0.85rem", background: "var(--color-surface-2)", border: "1px solid #e5e7eb", borderRadius: "8px", fontSize: "0.8125rem", color: "var(--color-text-2)", lineHeight: 1.5 }}>
                               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.2rem" }}>
                                 <strong style={{ color: "#29231B" }}>Worked Solution:</strong>
                                 {a.is_solution_revealed && (
-                                  <span style={{ fontSize: "0.6875rem", fontWeight: 500, color: "#374151", background: "#fafafa", padding: "0.1rem 0.4rem", borderRadius: "4px" }}>
+                                  <span style={{ fontSize: "0.6875rem", fontWeight: 500, color: "var(--color-text-2)", background: "var(--color-surface-2)", padding: "0.1rem 0.4rem", borderRadius: "4px" }}>
                                     ✓ Unlocked During Attempt
                                   </span>
                                 )}

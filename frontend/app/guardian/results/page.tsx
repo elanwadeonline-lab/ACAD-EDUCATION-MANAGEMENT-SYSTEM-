@@ -8,6 +8,7 @@ import { RequireRole } from "../../../components/auth/RequireRole";
 import { useGuardian } from "../../../components/guardian/GuardianContext";
 import { StudentAvatar } from "../../../components/guardian/StudentAvatar";
 import { api } from "../../../lib/api";
+import {useGuardianPageView} from "../../../components/guardian/useGuardianPageView";
 import styles from "./page.module.css";
 
 interface SubjectResult {
@@ -37,7 +38,9 @@ function ResultsContent() {
   const [results, setResults] = useState<SubjectResult[]>([]);
   const [reportCardData, setReportCardData] = useState<{ results: any[]; remarks: any[] } | null>(null);
   const [loading, setLoading] = useState(false);
-  const [modalOpen, setModalOpen] = useState(false);
+  const [pageView,setPageView]=useGuardianPageView();
+  const modalOpen=pageView==="report";
+  const setModalOpen=(open:boolean)=>setPageView(open?"report":"");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -204,11 +207,11 @@ function ResultsContent() {
       <AnimatePresence>
         {modalOpen && (
           <motion.div
-            className={styles.modalBackdrop}
+            className={styles.modalBackdrop} data-guardian-detail="true"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => setModalOpen(false)}
+
           >
             <motion.div
               className={styles.modalContent}
@@ -222,7 +225,7 @@ function ResultsContent() {
                 <button
                   type="button"
                   className={styles.modalCloseBtn}
-                  onClick={() => setModalOpen(false)}
+      
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                     <line x1="18" y1="6" x2="6" y2="18" />
