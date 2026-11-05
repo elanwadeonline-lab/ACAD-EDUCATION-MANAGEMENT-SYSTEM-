@@ -135,3 +135,4 @@ Expected Response (`200 OK`):
    Direct parents to `https://<your-service-name>.onrender.com/guardian`.
 4. **Student Portal**:
    Students access their CBT exam and practice arena at `https://<your-service-name>.onrender.com/student`.
+

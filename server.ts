@@ -433,7 +433,7 @@ export function apiMessage(message: string, status = 200, extraHeaders: Record<s
 }
 
 export function apiError(status: number, error: string, extra?: Record<string, unknown>) {
-  if (status >= 500) {
+  if (status >= 500 && error !== "Setup required") {
     console.error(JSON.stringify({ timestamp: new Date().toISOString(), level: "error", status, error, extra }));
   }
   return new Response(JSON.stringify({ error, ...extra }), {
@@ -1021,15 +1021,17 @@ async function serveStatic(urlPath: string, req?: Request): Promise<Response> {
     const file = Bun.file(filePath);
     if (await file.exists()) {
       const isSvg = filePath.toLowerCase().endsWith(".svg");
-      return new Response(file, {
-        headers: {
-          ...corsHeaders,
-          "Content-Type": getMimeType(filePath),
-          "Cache-Control": getCacheControl(filePath),
-          "Pragma": (filePath.endsWith(".html") || filePath.endsWith(".txt") || filePath.endsWith(".rsc") || filePath.endsWith(".meta")) ? "no-cache" : "",
-          ...(isSvg ? { "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; sandbox" } : {}),
-        },
-      });
+      const respHeaders = {
+        ...corsHeaders,
+        "Content-Type": getMimeType(filePath),
+        "Cache-Control": getCacheControl(filePath),
+        "Pragma": (filePath.endsWith(".html") || filePath.endsWith(".txt") || filePath.endsWith(".rsc") || filePath.endsWith(".meta")) ? "no-cache" : "",
+        ...(isSvg ? { "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; sandbox" } : {}),
+      };
+      if (req?.method?.toUpperCase() === "HEAD") {
+        return new Response(null, { status: 200, headers: respHeaders });
+      }
+      return new Response(file, { headers: respHeaders });
     }
   }
 
@@ -1068,8 +1070,9 @@ async function serveStatic(urlPath: string, req?: Request): Promise<Response> {
 }
 
 function isApiExemptWhileSetup(pathname: string, method: string): boolean {
+  // Always permit health checks and base API discovery during first-run setup
+  if (pathname === "/api/health" || pathname === "/health" || pathname === "/api") return true;
   // [SECURITY FIX VULN-14] /api/server-info is no longer exempt from auth.
-  // It leaked internal IPs, port, and version string to unauthenticated callers.
   // The setup wizard uses /api/setup (POST) which is still exempt below.
   if (method === "POST" && (pathname === "/api/setup" || pathname === "/api/setup/complete")) return true;
   return false;
@@ -7193,9 +7196,40 @@ const server = serve({
       return new Response(null, { status: 204, headers: optHeaders });
     }
     const url = new URL(req.url);
+    const method = req.method.toUpperCase();
+    const cleanPath = url.pathname.replace(/\/+$/, "") || "/";
+
+    // ── Instant Cloud Orchestrator Health Check (Render, AWS, Fly, K8s) ───────
+    if (cleanPath === "/api/health" || cleanPath === "/health") {
+      if (method === "HEAD") {
+        return new Response(null, { status: 200, headers: corsHeaders });
+      }
+      return new Response(
+        JSON.stringify({
+          status: "ok",
+          service: "ACQAD Education Management System",
+          uptime: Math.floor(process.uptime()),
+          timestamp: new Date().toISOString(),
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+    if (cleanPath === "/api") {
+      if (method === "HEAD") {
+        return new Response(null, { status: 200, headers: corsHeaders });
+      }
+      return new Response(
+        JSON.stringify({ status: "ok", name: "ACQAD API", version: "1.0.0" }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
     try {
       let res: Response;
-      if (url.pathname.startsWith("/api/") || url.pathname === "/api" || url.pathname === "/health") {
+      if (url.pathname.startsWith("/api/") || url.pathname === "/api") {
         res = await handleApi(req, url);
       } else {
         res = await serveStatic(url.pathname, req);
@@ -7466,9 +7500,17 @@ function startMdnsResponder() {
   } catch {}
 }
 
-startMdnsResponder();
+const isCloudDeploy = Boolean(
+  Bun.env.RENDER ||
+  Bun.env.FLY_APP_NAME ||
+  Bun.env.RAILWAY_ENVIRONMENT ||
+  (Bun.env.NODE_ENV === "production" && Bun.env.PORT && Number(Bun.env.PORT) !== 8001)
+);
 
-if (primaryLocalIp || getCurrentPrimaryIp()) {
+if (!isCloudDeploy && Bun.env.DISABLE_LOCAL_DNS !== "true") {
+  startMdnsResponder();
+
+  if (primaryLocalIp || getCurrentPrimaryIp()) {
   try {
     const { Packet } = DNS;
     const dnsServer = DNS.createServer({
@@ -7591,9 +7633,10 @@ if (primaryLocalIp || getCurrentPrimaryIp()) {
     console.warn(`[DNS WARNING] Failed to initialize local DNS: ${err.message}`);
     console.warn(`              Direct IP access still works: http://${getCurrentPrimaryIp()}:${server.port}`);
   }
-} else {
-  console.warn(`[DNS] No LAN IP detected — DNS masking disabled. Connect to Wi-Fi/Ethernet to enable custom URL.`);
-  console.warn(`      Direct fallback: http://127.0.0.1:${server.port}`);
+  } else {
+    console.warn(`[DNS] No LAN IP detected — DNS masking disabled. Connect to Wi-Fi/Ethernet to enable custom URL.`);
+    console.warn(`      Direct fallback: http://127.0.0.1:${server.port}`);
+  }
 }
 
 // --- Graceful Shutdown ---
