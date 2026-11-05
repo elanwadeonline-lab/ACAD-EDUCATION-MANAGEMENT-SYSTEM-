@@ -1,16 +1,26 @@
 services:
   - type: web
-    name: exampool
-    env: docker
-    plan: starter # Note: Render requires a paid 'Starter' plan ($7/mo) to use Disks. Free tier cannot use SQLite!
+    name: acad-education-management-system
+    runtime: docker
+    plan: starter # Starter plan ($7/mo) supports Persistent Disks. For Free tier, remove the 'disk' block below.
+    region: oregon # Available: oregon, frankfurt, ohio, singapore
+    branch: main
+    healthCheckPath: /api/health
+    autoDeploy: true
     disk:
-      name: exampool_data
+      name: acad_data
       mountPath: /app/data
       sizeGB: 1
     envVars:
-      - key: EXAMPOOL_DB
-        value: /app/data/exampool.db
-      - key: PORT
-        value: 8000
       - key: NODE_ENV
         value: production
+      - key: PORT
+        value: 10000
+      - key: ALLOWED_ORIGIN
+        value: "*"
+      - key: EXAMPOOL_DB
+        value: /app/data/exampool.db
+      - key: UPLOADS_DIR
+        value: /app/data/uploads
+      - key: JWT_SECRET
+        generateValue: true

@@ -11,3 +11,8 @@ exampool.db-shm
 exampool.db-wal
 exampool.sqlite
 tests/
+scratch/
+apps/mobile-guardian/node_modules
+apps/mobile-guardian/.expo
+apps/mobile-guardian/dist
+apps/mobile-guardian/dist-review

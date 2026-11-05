@@ -978,7 +978,7 @@ async function serveStatic(urlPath: string, req?: Request): Promise<Response> {
   // ── Uploaded static files (/uploads/...) ──────────────────
   if (pathname.startsWith("/uploads/")) {
     const filename = path.basename(pathname);
-    const publicUploadDir = path.join(process.cwd(), "frontend", "public", "uploads");
+    const publicUploadDir = Bun.env.UPLOADS_DIR || path.join(process.cwd(), "frontend", "public", "uploads");
     const targetFile = path.join(publicUploadDir, filename);
     const bunFile = Bun.file(targetFile);
     if (await bunFile.exists()) {
@@ -1083,6 +1083,25 @@ function normalizeApiPathname(raw: string): string {
 async function handleApi(req: Request, url: URL): Promise<Response> {
   const method = req.method.toUpperCase();
   const pathname = normalizeApiPathname(url.pathname);
+
+  // ── Health Check Endpoint for Render & Cloud Orchestrators ─────────────────
+  if ((pathname === "/api/health" || pathname === "/health") && method === "GET") {
+    return new Response(
+      JSON.stringify({
+        status: "ok",
+        service: "ACQAD Education Management System",
+        uptime: Math.floor(process.uptime()),
+        timestamp: new Date().toISOString(),
+      }),
+      {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          ...corsHeaders,
+        },
+      }
+    );
+  }
 
   // ── Supervisory Module & Feature Flag Gate Enforcement ───────────────────
   try {
@@ -6524,7 +6543,7 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
       const safeHash = crypto.randomBytes(8).toString("hex");
       const filename = `${auth.userId}_${safeHash}.${ext}`;
       
-      const uploadDir = path.join(process.cwd(), "frontend", "public", "uploads");
+      const uploadDir = Bun.env.UPLOADS_DIR || path.join(process.cwd(), "frontend", "public", "uploads");
       if (!existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
       const fullPath = path.join(uploadDir, filename);
       
@@ -7176,7 +7195,7 @@ const server = serve({
     const url = new URL(req.url);
     try {
       let res: Response;
-      if (url.pathname.startsWith("/api/") || url.pathname === "/api") {
+      if (url.pathname.startsWith("/api/") || url.pathname === "/api" || url.pathname === "/health") {
         res = await handleApi(req, url);
       } else {
         res = await serveStatic(url.pathname, req);

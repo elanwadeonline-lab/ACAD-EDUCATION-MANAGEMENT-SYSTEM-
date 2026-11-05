@@ -1,26 +1,40 @@
-FROM oven/bun:1 as base
+# syntax=docker/dockerfile:1
+FROM oven/bun:1.2-debian AS runner
 WORKDIR /app
 
-# Copy package config files
-COPY package.json bun.lock ./
-COPY frontend/package.json ./frontend/
+# Install curl and ca-certificates for health checks
+RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates && rm -rf /var/lib/apt/lists/*
 
-# Install dependencies (This also triggers the postinstall script to install frontend dependencies)
+# Copy dependency configuration files
+COPY package.json bun.lock* ./
+COPY frontend/package.json frontend/bun.lock* ./frontend/
+
+# Install dependencies (cached layers)
 RUN bun install
+RUN cd frontend && bun install
 
-# Copy all source files
+# Copy application source code
 COPY . .
 
+# Set production environment variables
 ENV NODE_ENV=production
+ENV PORT=10000
 
-# Build the frontend Next.js app
-RUN bun run build
+# Build Next.js static production export
+RUN cd frontend && bun run build
 
+# Mirror frontend/dist to root dist for static file discovery
+RUN if [ -d "frontend/dist" ] && [ ! -d "dist" ]; then cp -r frontend/dist dist; fi
 
+# Ensure persistent mount directories exist
+RUN mkdir -p /app/data /app/frontend/public/uploads
 
-# Fly.io injects the PORT environment variable. We default to 8000.
-EXPOSE 8000
-ENV PORT=8000
+# Expose Render standard port
+EXPOSE 10000
 
-# Start the Bun server
-CMD ["bun", "run", "start"]
+# Container healthcheck
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+  CMD curl -f http://localhost:${PORT}/api/health || exit 1
+
+# Start the Bun production server
+CMD ["bun", "server.ts"]
