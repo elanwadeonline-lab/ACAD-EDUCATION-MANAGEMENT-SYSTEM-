@@ -313,7 +313,7 @@
 
 .paperCardSelected {
   border-color: var(--color-primary) !important;
-  background: #FAFCFF;
+  background: var(--color-surface-2);
   box-shadow: 0 0 0 1px var(--color-primary);
 }
 

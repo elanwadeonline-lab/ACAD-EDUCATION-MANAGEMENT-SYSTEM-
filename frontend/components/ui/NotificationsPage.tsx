@@ -146,8 +146,8 @@ export function NotificationsPage() {
                 style={{
                   padding: "0.35rem 0.75rem",
                   borderRadius: "6px",
-                  border: `1px solid ${active ? "rgba(234, 88, 12, 0.3)" : "var(--color-border, #E2E8F0)"}`,
-                  background: active ? "rgba(234, 88, 12, 0.08)" : "#FFFFFF",
+                  border: `1px solid ${active ? "var(--color-primary-border)" : "var(--color-border, #E2E8F0)"}`,
+                  background: active ? "var(--color-primary-subtle)" : "var(--color-surface)",
                   color: active ? "var(--color-primary, #EA580C)" : "var(--color-text, #0F172A)",
                   fontSize: "0.75rem",
                   fontWeight: active ? 700 : 500,

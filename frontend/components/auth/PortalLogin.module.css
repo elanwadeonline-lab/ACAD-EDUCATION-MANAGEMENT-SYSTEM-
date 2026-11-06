@@ -1,5 +1,5 @@
-.page { min-height:100dvh; width:100%; background:white; font-weight:500; }
-.layout { display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1fr); width:100%; min-height:100dvh; background:white; }
+.page { min-height:100dvh; width:100%; background:var(--color-surface); font-weight:500; }
+.layout { display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1fr); width:100%; min-height:100dvh; background:var(--color-surface); }
 .story { display:flex; flex-direction:column; justify-content:center; gap:36px; padding:clamp(40px,9vw,176px); background:radial-gradient(ellipse at 0% 20%,#b7791010,transparent 58%),radial-gradient(ellipse at 100% 90%,#b7791009,transparent 55%),#090a0d; color:white; font-weight:500; position:relative; isolation:isolate; overflow:hidden; }
 .story::before,.story::after { content:""; position:absolute; z-index:-1; width:320px; height:320px; border-radius:50%; background:#ffffff08; pointer-events:none; }
 .story::before { top:-72px; right:-72px; }

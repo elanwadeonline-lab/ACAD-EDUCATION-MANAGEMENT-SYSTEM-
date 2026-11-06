@@ -52,7 +52,7 @@
 .safety svg { flex-shrink:0; margin-top:2px; }
 .hint,.empty { font-size:.8125rem; color:var(--color-muted); line-height:1.7; margin:16px 0 0; }
 .empty { padding:16px 0; }
-.error { padding:12px 15px; border:1px solid #fca5a5; background:#fff1f2; color:var(--color-danger); border-radius:9px; font-size:.8125rem; line-height:1.6; margin:0 0 16px; }
+.error { padding:12px 15px; border:1px solid var(--color-danger-border); background:var(--color-danger-bg); color:var(--color-danger); border-radius:9px; font-size:.8125rem; line-height:1.6; margin:0 0 16px; }
 .error button { border:0; background:transparent; color:inherit; text-decoration:underline; padding:6px 10px; min-height:44px; cursor:pointer; }
 .notice { padding:12px 15px; border:1px solid var(--color-success-border); background:var(--color-success-bg); color:var(--color-success); border-radius:9px; font-size:.8125rem; line-height:1.6; margin:0 0 16px; }
 .resume { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; padding:16px; margin-bottom:20px; border:1px solid var(--color-primary); border-radius:10px; }
@@ -129,7 +129,7 @@
 .reviewHeading h4 { font-size:.875rem; font-weight:500; margin:0; }
 .review { border:1px solid var(--color-border); border-radius:10px; margin-top:9px; }
 .review summary { display:flex; align-items:flex-start; gap:10px; font-size:.8125rem; line-height:1.6; cursor:pointer; padding:14px; }
-.review summary > span:first-child { display:grid; place-items:center; flex-shrink:0; width:22px; height:22px; border-radius:50%; background:#fff1f2; color:var(--color-danger); }
+.review summary > span:first-child { display:grid; place-items:center; flex-shrink:0; width:22px; height:22px; border-radius:50%; background:var(--color-danger-bg); color:var(--color-danger); }
 .review summary > span[data-correct=true] { background:var(--color-success-bg); color:var(--color-success); }
 .review > div { padding:0 16px 14px 46px; font-size:.8125rem; line-height:1.7; overflow-wrap:anywhere; }
 .review p { margin:6px 0; }

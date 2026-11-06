@@ -158,7 +158,7 @@
 
 .mobileBrand .heroBrandIcon {
   background: var(--color-primary, #0F766E);
-  color: white;
+  color: var(--color-on-primary);
   border: none;
 }
 
@@ -208,8 +208,8 @@
   display: flex;
   align-items: flex-start;
   gap: 0.5rem;
-  background: #FEF2F2;
-  border: 1px solid #FECACA;
+  background: var(--color-danger-bg);
+  border: 1px solid var(--color-danger-border);
   border-radius: 8px;
   padding: 0.65rem 0.85rem;
   color: #DC2626;
@@ -223,8 +223,8 @@
   display: flex;
   align-items: flex-start;
   gap: 0.5rem;
-  background: #F0FDF4;
-  border: 1px solid #BBF7D0;
+  background: var(--color-success-bg);
+  border: 1px solid var(--color-success-border);
   border-radius: 8px;
   padding: 0.65rem 0.85rem;
   color: #16A34A;
@@ -273,7 +273,7 @@
 
 .fieldInput:focus {
   outline: none;
-  background: #FFFFFF;
+  background: var(--color-surface);
   border-color: var(--color-primary, #0F766E);
   box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
 }
@@ -288,7 +288,7 @@
   height: 40px;
   padding: 0 1.25rem;
   background: var(--color-primary, #0F766E);
-  color: #FFFFFF;
+  color: var(--color-on-primary);
   border: none;
   border-radius: 8px;
   font-weight: 500;
@@ -342,12 +342,12 @@
 
 .statusOnline {
   background: #16A34A;
-  box-shadow: 0 0 0 3px #DCFCE7;
+  box-shadow: 0 0 0 3px var(--color-success-bg);
 }
 
 .statusOffline {
   background: #DC2626;
-  box-shadow: 0 0 0 3px #FEE2E2;
+  box-shadow: 0 0 0 3px var(--color-danger-bg);
 }
 
 .statusChecking {

@@ -954,7 +954,7 @@ function ReportCardPageInner() {
                             type="checkbox"
                             checked={checked}
                             onChange={() => toggleExam(e.exam_id)}
-                            style={{ width: 16, height: 16, accentColor: "#0F172A", cursor: "pointer", flexShrink: 0 }}
+                            style={{ width: 16, height: 16, accentColor: "var(--color-text)", cursor: "pointer", flexShrink: 0 }}
                           />
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ fontWeight: 600, fontSize: "0.875rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "var(--color-text, #0F172A)" }}>
@@ -1131,15 +1131,15 @@ function ReportCardPageInner() {
               <div className={styles.livePreviewSheet}>
                 <div className={styles.previewHeader}>
                   <div>
-                    <h3 style={{ fontSize: "1rem", fontWeight: 800, margin: 0, color: "#0F172A", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                    <h3 style={{ fontSize: "1rem", fontWeight: 800, margin: 0, color: "var(--color-text)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
                       <span className={styles.metricIconCyan}><SparklesIcon width="16" height="16" /></span>
                       {isCumulativeMode ? "3rd Term Cumulative Annual Record Preview" : "Official Report Card Preview"}
                     </h3>
-                    <p style={{ fontSize: "0.75rem", color: "#64748B", margin: "0.2rem 0 0" }}>
+                    <p style={{ fontSize: "0.75rem", color: "var(--color-muted)", margin: "0.2rem 0 0" }}>
                       High-fidelity preview of official academic transcript for {currentAcademicDisplay}
                     </p>
                   </div>
-                  <span className="badge" style={{ fontSize: "0.75rem", padding: "0.25rem 0.6rem", background: "#F1F5F9", color: "#0F172A", border: "1px solid #E2E8F0" }}>
+                  <span className="badge" style={{ fontSize: "0.75rem", padding: "0.25rem 0.6rem", background: "#F1F5F9", color: "var(--color-text)", border: "1px solid #E2E8F0" }}>
                     {currentAcademicDisplay}
                   </span>
                 </div>
@@ -1183,7 +1183,7 @@ function ReportCardPageInner() {
                                     <td style={{ textAlign: "center", fontFamily: "var(--font-mono)" }}>{r.term3_ca ?? "—"}</td>
                                     <td style={{ textAlign: "center", fontFamily: "var(--font-mono)" }}>{r.term3_exam ?? "—"}</td>
                                     <td style={{ textAlign: "center", fontWeight: 700, fontFamily: "var(--font-mono)" }}>{r.term3_total ?? "—"}</td>
-                                    <td style={{ textAlign: "center", fontWeight: 800, fontFamily: "var(--font-mono)", color: cumPct >= 75 ? "#16A34A" : cumPct >= 45 ? "#0F172A" : "#DC2626" }}>
+                                    <td style={{ textAlign: "center", fontWeight: 800, fontFamily: "var(--font-mono)", color: cumPct >= 75 ? "#16A34A" : cumPct >= 45 ? "var(--color-text)" : "#DC2626" }}>
                                       {r.cumulative_avg !== null ? `${r.cumulative_avg}%` : "—"}
                                     </td>
                                     <td style={{ textAlign: "center" }}>
@@ -1197,7 +1197,7 @@ function ReportCardPageInner() {
                               <tfoot>
                                 <tr>
                                   <td colSpan={7} style={{ textTransform: "uppercase", fontSize: "0.75rem", letterSpacing: "0.04em" }}>Cumulative Overall Performance</td>
-                                  <td style={{ textAlign: "center", fontSize: "0.9375rem", color: "#0F172A" }}>{overallCumAvg}%</td>
+                                  <td style={{ textAlign: "center", fontSize: "0.9375rem", color: "var(--color-text)" }}>{overallCumAvg}%</td>
                                   <td style={{ textAlign: "center" }}>
                                     <span className={`badge ${gradeBadgeClass(overallCumAvg)}`}>{overallCumGrade}</span>
                                   </td>
@@ -1245,7 +1245,7 @@ function ReportCardPageInner() {
                           <tfoot>
                             <tr>
                               <td colSpan={4} style={{ textTransform: "uppercase", fontSize: "0.75rem", letterSpacing: "0.04em" }}>Term Performance Average</td>
-                              <td style={{ textAlign: "center", fontSize: "0.9375rem", color: "#0F172A" }}>{avgPct}%</td>
+                              <td style={{ textAlign: "center", fontSize: "0.9375rem", color: "var(--color-text)" }}>{avgPct}%</td>
                               <td style={{ textAlign: "center" }}>
                                 <span className={`badge ${gradeBadgeClass(avgPct)}`}>{overallLetterGrade}</span>
                               </td>

@@ -16,6 +16,8 @@
 :root {
   color-scheme: light;
   --color-on-primary: #FFFFFF;
+  --color-on-success: #FFFFFF;
+  --color-on-danger: #FFFFFF;
   --icon-orange: #D97706;
   --icon-blue: #0284C7;
   --icon-green: #16A34A;
@@ -208,6 +210,8 @@
 .dark {
   color-scheme: dark;
   --color-on-primary: #111622;
+  --color-on-success: #111622;
+  --color-on-danger: #0A0D14;
   --icon-orange: #FB923C;
   --icon-blue: #38BDF8;
   --icon-green: #4ADE80;
@@ -233,8 +237,8 @@
   --color-text-2:   #E2E8F0;
   --color-text-3:   #CBD5E1;
   --color-muted:    #94A3B8;
-  --color-muted-2:  #64748B;
-  --color-muted-3:  #475569;
+  --color-muted-2:  #8492A8;
+  --color-muted-3:  #8492A8;
 
   /* Primary — Acqad Luminous Amber in Dark Mode */
   --color-brand:            #F59E0B;

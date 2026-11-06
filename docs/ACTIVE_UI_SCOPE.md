@@ -22,3 +22,10 @@ The user explicitly requested both a student learning resource library and exter
 Community discussions at each role's `/community/` page support questions, replies, resolved status, staff moderation, recent community presence, and sharing existing waiting challenge codes. Challenge joining reuses Arena permissions and capacity checks.
 
 Verification for these additions uses isolated SQLite tests and intercepted browser fixtures; no school accounts or posts are created for testing. The live backend was still the old process when checked and needs a normal restart to register `/api/learning/*`. Frontend publication alone cannot update a running Bun process.
+
+
+## Student refinement: sourced trophy approved
+
+The user explicitly selected “Allow a professionally sourced trophy,” superseding the earlier exact-original-only restriction for this dashboard task. The carousel now uses the existing golden wave and a licensed Microsoft Fluent Emoji trophy with its base fill adapted to purple. Attribution and license accompany the SVG. This is not a recovered original trophy.
+
+The current refinement preserves the Learning Insights layout/data while replacing student outline glyphs with semantically colored official Phosphor filled icons. Theme coverage includes student routes, dialogs, exam tools and status surfaces, shared sign-in forms, and shared UI popovers. Print sheets retain white paper. See `docs/STUDENT_DASHBOARD_REFINEMENT.md` for the verification scope.

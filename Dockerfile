@@ -24,7 +24,7 @@ ENV PORT=10000
 RUN cd frontend && bun run build
 
 # Mirror frontend/dist to root dist for static file discovery
-RUN if [ -d "frontend/dist" ] && [ ! -d "dist" ]; then cp -r frontend/dist dist; fi
+RUN mkdir -p dist && cp -r frontend/dist/* dist/
 
 # Ensure persistent mount directories exist
 RUN mkdir -p /app/data /app/frontend/public/uploads

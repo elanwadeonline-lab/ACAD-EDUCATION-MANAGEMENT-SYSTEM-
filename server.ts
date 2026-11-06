@@ -1003,8 +1003,27 @@ async function serveStatic(urlPath: string, req?: Request): Promise<Response> {
   distDir = currentDistDir;
   const currentIdxFile = Bun.file(path.join(currentDistDir, "index.html"));
 
+  // Check multiple root locations for mobile assets (dist, frontend/public, apps/mobile-guardian/dist)
+  const isMobilePath = rel === "mobile" || rel.startsWith("mobile/") || rel === "guardian/mobile" || rel === "guardian-mobile";
+
   if (!rel) {
     candidates.push(path.join(currentDistDir, "index.html"));
+  } else if (isMobilePath) {
+    const subRel = rel === "guardian/mobile" || rel === "guardian-mobile" ? "mobile" : rel;
+    const mobileRelativeFile = subRel.replace(/^mobile\/?/, "");
+    
+    // Add exact candidates from dist, frontend/public, and mobile-guardian/dist
+    candidates.push(path.join(currentDistDir, subRel));
+    candidates.push(path.join(currentDistDir, subRel, "index.html"));
+    candidates.push(path.join(import.meta.dir, "frontend", "public", subRel));
+    candidates.push(path.join(import.meta.dir, "frontend", "public", subRel, "index.html"));
+    if (mobileRelativeFile) {
+      candidates.push(path.join(import.meta.dir, "apps", "mobile-guardian", "dist", mobileRelativeFile));
+    }
+    // Mobile SPA entry points
+    candidates.push(path.join(currentDistDir, "mobile", "index.html"));
+    candidates.push(path.join(import.meta.dir, "frontend", "public", "mobile", "index.html"));
+    candidates.push(path.join(import.meta.dir, "apps", "mobile-guardian", "dist", "index.html"));
   } else if (path.extname(rel) !== "") {
     candidates.push(path.join(currentDistDir, rel));
   } else {
@@ -1015,11 +1034,19 @@ async function serveStatic(urlPath: string, req?: Request): Promise<Response> {
 
   // Normalize distDir for comparison (resolve symlinks/dotdots)
   const resolvedDistDir = path.resolve(currentDistDir);
+  const resolvedPublicDir = path.resolve(path.join(import.meta.dir, "frontend", "public"));
+  const resolvedMobileDistDir = path.resolve(path.join(import.meta.dir, "apps", "mobile-guardian", "dist"));
 
   for (const filePath of candidates) {
-    // Path traversal guard: ensure resolved path stays inside distDir
     const resolvedFilePath = path.resolve(filePath);
-    if (!resolvedFilePath.startsWith(resolvedDistDir + path.sep) && resolvedFilePath !== resolvedDistDir) {
+    // Path traversal guard: must be in distDir, publicDir, or mobileDistDir
+    const isSafe = resolvedFilePath.startsWith(resolvedDistDir + path.sep) ||
+                   resolvedFilePath === resolvedDistDir ||
+                   resolvedFilePath.startsWith(resolvedPublicDir + path.sep) ||
+                   resolvedFilePath === resolvedPublicDir ||
+                   resolvedFilePath.startsWith(resolvedMobileDistDir + path.sep) ||
+                   resolvedFilePath === resolvedMobileDistDir;
+    if (!isSafe) {
       return apiError(403, "Forbidden");
     }
     const file = Bun.file(filePath);
@@ -1036,6 +1063,28 @@ async function serveStatic(urlPath: string, req?: Request): Promise<Response> {
         return new Response(null, { status: 200, headers: respHeaders });
       }
       return new Response(file, { headers: respHeaders });
+    }
+  }
+
+  // Native Mobile App SPA fallback (always before Next.js dev proxy)
+  if (isMobilePath) {
+    const mobileFallbacks = [
+      path.join(currentDistDir, "mobile", "index.html"),
+      path.join(import.meta.dir, "frontend", "public", "mobile", "index.html"),
+      path.join(import.meta.dir, "apps", "mobile-guardian", "dist", "index.html"),
+    ];
+    for (const fb of mobileFallbacks) {
+      const fbFile = Bun.file(fb);
+      if (await fbFile.exists()) {
+        return new Response(fbFile, {
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "text/html; charset=utf-8",
+            "Cache-Control": "no-store, no-cache, must-revalidate",
+            "Pragma": "no-cache",
+          },
+        });
+      }
     }
   }
 

@@ -123,26 +123,26 @@ export function Calculator({ onClose }: { onClose: () => void }) {
       style={{
         position: "fixed",
         bottom: "24px",
-        right: "24px",
-        width: "320px",
-        background: "#0F172A",
+        right: "16px",
+        width: "min(320px, calc(100vw - 32px))",
+        background: "var(--color-surface)",
         borderRadius: "14px",
         boxShadow: "0 20px 30px -10px rgba(0,0,0,0.5), 0 0 1px rgba(255,255,255,0.1)",
         padding: "16px",
         display: "flex",
         flexDirection: "column",
         zIndex: 9998,
-        border: "1px solid #334155",
-        color: "#FFFFFF",
+        border: "1px solid var(--color-border)",
+        color: "var(--color-text)",
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-        <div style={{ color: "#94A3B8", fontSize: "0.6875rem", fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+        <div style={{ color: "var(--color-muted)", fontSize: "0.6875rem", fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase" }}>
           Scientific Calculator
         </div>
         <button
           onClick={onClose}
-          style={{ background: "transparent", color: "#94A3B8", border: "none", cursor: "pointer", fontSize: "14px", padding: "2px 6px" }}
+          style={{ background: "transparent", color: "var(--color-muted)", border: "none", cursor: "pointer", fontSize: "14px", padding: "2px 6px" }}
           aria-label="Close calculator"
         >
           <CloseIcon size={16} />
@@ -151,19 +151,19 @@ export function Calculator({ onClose }: { onClose: () => void }) {
 
       <div
         style={{
-          background: "#1E293B",
+          background: "var(--color-surface-2)",
           padding: "12px 14px",
           borderRadius: "8px",
           textAlign: "right",
           fontSize: "1.5rem",
           fontFamily: "var(--font-mono, monospace)",
           fontWeight: 700,
-          color: "#F8FAFC",
+          color: "var(--color-text)",
           marginBottom: "14px",
           overflow: "hidden",
           whiteSpace: "nowrap",
           textOverflow: "ellipsis",
-          border: "1px solid #334155",
+          border: "1px solid var(--color-border)",
         }}
       >
         {display}
@@ -195,20 +195,20 @@ export function Calculator({ onClose }: { onClose: () => void }) {
         <button onClick={() => handleNum("3")} style={btnStyleNum}>3</button>
         <button onClick={() => handleOp("-")} style={btnStyleOp}>−</button>
 
-        <button onClick={clear} style={{ ...btnStyleSci, background: "#EF4444", color: "#FFFFFF", fontWeight: 700 }}>C</button>
+        <button onClick={clear} style={{ ...btnStyleSci, background: "var(--color-danger-bg)", color: "var(--color-danger)", fontWeight: 700 }}>C</button>
         <button onClick={() => handleNum("0")} style={btnStyleNum}>0</button>
         <button onClick={() => handleNum(".")} style={btnStyleNum}>.</button>
         <button onClick={() => handleOp("+")} style={btnStyleOp}>+</button>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px", marginTop: "6px" }}>
-        <button onClick={backspace} style={{ ...btnStyleSci, background: "#475569", color: "#FFFFFF" }}>⌫</button>
+        <button onClick={backspace} style={{ ...btnStyleSci, background: "var(--color-surface-3)", color: "var(--color-text)" }}>⌫</button>
         <button
           onClick={calculate}
           style={{
             padding: "10px",
-            background: "#10B981",
-            color: "#FFFFFF",
+            background: "var(--color-primary)",
+            color: "var(--color-on-primary)",
             border: "none",
             borderRadius: "6px",
             fontSize: "1.125rem",
@@ -226,9 +226,9 @@ export function Calculator({ onClose }: { onClose: () => void }) {
 
 const btnStyleNum = {
   padding: "9px 0",
-  background: "#1E293B",
-  color: "#F8FAFC",
-  border: "1px solid #334155",
+  background: "var(--color-surface-2)",
+  color: "var(--color-text)",
+  border: "1px solid var(--color-border)",
   borderRadius: "6px",
   fontSize: "0.9375rem",
   cursor: "pointer",
@@ -238,8 +238,8 @@ const btnStyleNum = {
 
 const btnStyleOp = {
   padding: "9px 0",
-  background: "#F59E0B",
-  color: "#0F172A",
+  background: "var(--color-primary)",
+  color: "var(--color-on-primary)",
   border: "none",
   borderRadius: "6px",
   fontSize: "0.9375rem",
@@ -249,8 +249,8 @@ const btnStyleOp = {
 
 const btnStyleSci = {
   padding: "9px 0",
-  background: "#334155",
-  color: "#CBD5E1",
+  background: "var(--color-surface-3)",
+  color: "var(--color-text-2)",
   border: "none",
   borderRadius: "6px",
   fontSize: "0.8125rem",

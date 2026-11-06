@@ -234,7 +234,7 @@ export function NotificationBell({ role = "ADMIN" }: { role?: "ADMIN" | "teacher
         style={{
           background: "none", border: "none", cursor: "pointer",
           position: "relative", display: "inline-flex", alignItems: "center",
-          padding: "0.5rem", color: isOpen ? "#D97706" : "#64748b",
+          padding: "0.5rem", color: isOpen ? "#D97706" : "var(--color-muted)",
           transition: "color 0.2s"
         }}
         title="Notifications"
@@ -271,21 +271,21 @@ export function NotificationBell({ role = "ADMIN" }: { role?: "ADMIN" | "teacher
           width: 380,
           maxHeight: 480,
           overflowY: "auto",
-          background: "white",
+          background: "var(--color-surface)",
           borderRadius: 12,
           boxShadow: "0 10px 30px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.05)",
-          border: "1px solid #e2e8f0",
+          border: "1px solid var(--color-border)",
           zIndex: 9999,
           display: "flex",
           flexDirection: "column",
         }}>
           <div style={{
             padding: "1rem 1.25rem",
-            borderBottom: "1px solid #e2e8f0",
+            borderBottom: "1px solid var(--color-border)",
             display: "flex", justifyContent: "space-between", alignItems: "center",
-            position: "sticky", top: 0, background: "white", zIndex: 10
+            position: "sticky", top: 0, background: "var(--color-surface)", zIndex: 10
           }}>
-            <h3 style={{ margin: 0, fontSize: "1.05rem", fontWeight: 700, color: "#0f172a" }}>Live Events</h3>
+            <h3 style={{ margin: 0, fontSize: "1.05rem", fontWeight: 700, color: "var(--color-text)" }}>Live Events</h3>
             <Link href={`/${role}/notifications`} onClick={() => setIsOpen(false)} style={{ fontSize: "0.8rem", color: "#D97706", textDecoration: "none", fontWeight: 600 }}>
               View all
             </Link>
@@ -293,7 +293,7 @@ export function NotificationBell({ role = "ADMIN" }: { role?: "ADMIN" | "teacher
 
           <div style={{ padding: "0.5rem", display: "flex", flexDirection: "column", gap: "0.25rem" }}>
             {items.length === 0 ? (
-              <div style={{ padding: "2rem", textAlign: "center", color: "#64748b", fontSize: "0.9rem" }}>
+              <div style={{ padding: "2rem", textAlign: "center", color: "var(--color-muted)", fontSize: "0.9rem" }}>
                 No recent notifications
               </div>
             ) : (
@@ -305,7 +305,7 @@ export function NotificationBell({ role = "ADMIN" }: { role?: "ADMIN" | "teacher
                     borderRadius: 8, transition: "background 0.15s",
                     cursor: notif.link ? "pointer" : "default",
                   }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = "#f8fafc")}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = "var(--color-surface-2)")}
                   onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                   onClick={() => {
                     if (notif.link) {
@@ -321,10 +321,10 @@ export function NotificationBell({ role = "ADMIN" }: { role?: "ADMIN" | "teacher
                       {meta.icon}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ margin: 0, fontSize: "0.85rem", color: "#1e293b", lineHeight: 1.4 }}>
+                      <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--color-text-2)", lineHeight: 1.4 }}>
                         {notif.message}
                       </p>
-                      <span style={{ fontSize: "0.75rem", color: "#94a3b8", display: "block", marginTop: "0.2rem" }}>
+                      <span style={{ fontSize: "0.75rem", color: "var(--color-muted)", display: "block", marginTop: "0.2rem" }}>
                         {timeAgo(notif.created_at)}
                       </span>
                     </div>

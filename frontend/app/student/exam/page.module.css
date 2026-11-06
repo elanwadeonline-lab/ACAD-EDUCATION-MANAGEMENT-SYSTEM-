@@ -236,8 +236,8 @@
   padding: 0.45rem 1.15rem;
   font-size: 0.8125rem;
   font-weight: 700;
-  color: var(--color-text);
-  background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+  color: var(--color-on-primary);
+  background: var(--color-primary);
   border: 1px solid rgba(245, 158, 11, 0.4);
   border-radius: 8px;
   cursor: pointer;
@@ -246,7 +246,7 @@
 }
 
 .headerSubmitBtn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%);
+  background: var(--color-primary-hover);
   transform: translateY(-1px);
   box-shadow: 0 4px 14px rgba(217, 119, 6, 0.45);
 }
@@ -315,9 +315,9 @@
 }
 
 .navPillCurrent {
-  background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%) !important;
+  background: var(--color-primary) !important;
   border-color: #F59E0B !important;
-  color: var(--color-text) !important;
+  color: var(--color-on-primary) !important;
   font-weight: 800;
   box-shadow: 0 0 12px rgba(245, 158, 11, 0.45);
 }

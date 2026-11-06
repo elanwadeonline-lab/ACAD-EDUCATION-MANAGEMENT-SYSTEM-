@@ -108,7 +108,7 @@
 
 .danger {
   background: var(--color-danger, #DC2626);
-  color: #FFFFFF;
+  color: var(--color-on-danger, #FFFFFF);
   border-color: rgba(0, 0, 0, 0.1);
   box-shadow: 0 1px 2px rgba(220, 38, 38, 0.2);
 }
@@ -130,7 +130,7 @@
 
 .success {
   background: var(--color-success, #16A34A);
-  color: #FFFFFF;
+  color: var(--color-on-success, #FFFFFF);
   border-color: rgba(0, 0, 0, 0.1);
   box-shadow: 0 1px 2px rgba(22, 163, 74, 0.2);
 }

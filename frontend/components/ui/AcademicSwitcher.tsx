@@ -59,7 +59,7 @@ export function AcademicSwitcher() {
           <CalendarIcon width="12" height="12" className={styles.triggerIcon} />
         </span>
 
-        <span style={{ fontSize: "0.6875rem", color: "#64748B", fontWeight: 500 }}>Period:</span>
+        <span style={{ fontSize: "0.6875rem", color: "var(--color-muted)", fontWeight: 500 }}>Period:</span>
         <span className={styles.labelSession}>{sessionName}</span>
         <span className={styles.separator}>·</span>
         <span className={styles.labelTerm}>{termName}</span>

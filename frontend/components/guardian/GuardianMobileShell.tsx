@@ -49,6 +49,35 @@ export function GuardianMobileShell({ children }: { children: React.ReactNode })
       <p className={styles.sidebarFoot}>Stay connected to their school day.</p>
     </aside>
     <div className={styles.mobileViewport}>
+      <div style={{
+        background: "#FFFBEB",
+        borderBottom: "1px solid #FDE68A",
+        padding: "7px 14px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        fontSize: 12,
+        width: "100%",
+        boxSizing: "border-box"
+      }}>
+        <span style={{ color: "#92400E", fontWeight: 500 }}>
+          📱 <strong>Native Mobile App</strong> (Expo)
+        </span>
+        <a
+          href="/mobile"
+          style={{
+            color: "#D97706",
+            fontWeight: 600,
+            textDecoration: "none",
+            background: "#FEF3C7",
+            padding: "3px 8px",
+            borderRadius: 6,
+            border: "1px solid #FCD34D"
+          }}
+        >
+          Open App →
+        </a>
+      </div>
       <header className={styles.mobileHeader}>
         {isHome ? (<Link href="/guardian/dashboard" className={styles.greetingLink}><span className={styles.parentAvatar}>{guardianName?.trim().charAt(0) || <Users size={20} />}</span><span className={styles.parentGreeting}><small>Hello,</small><strong>{guardianName || "Your family"}</strong></span></Link>) : <div className={styles.subpageHeading}><Link href="/guardian/dashboard" className={styles.iconButton} aria-label="Back to home"><ArrowLeft size={20}/></Link><strong>{pageTitle}</strong></div>}
         <div className={styles.headerRight}>

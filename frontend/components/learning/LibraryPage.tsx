@@ -12,7 +12,7 @@ import {learningRequest,downloadLessonFile,uploadLessonFile,type LearningResourc
 import {useLearningPage} from './useLearningPage';
 import s from './LearningSpace.module.css';
 const errorText=(e:unknown)=>e instanceof Error?e.message:'Unable to load materials. Please retry.';
-function ResourceIcon({kind}:{kind:string}){const Icon=kind==='pdf'?FilePdfIcon:kind==='video'?PlayCircleIcon:BookOpenTextIcon;return <Icon size={26} weight="fill" color={kind==='pdf'?'#d97706':kind==='video'?'#7c3aed':'#0284c7'} aria-hidden="true"/>;}
+function ResourceIcon({kind}:{kind:string}){const Icon=kind==='pdf'?FilePdfIcon:kind==='video'?PlayCircleIcon:BookOpenTextIcon;return <Icon size={26} weight="fill" color={kind==='pdf'?'var(--icon-orange)':kind==='video'?'var(--icon-purple)':'var(--icon-blue)'} aria-hidden="true"/>;}
 export function LibraryPage(){
  const {user}=useAuth();const [view,navigate]=useLearningPage('resource');
  const [resources,setResources]=useState<LearningResource[]>([]),[subjects,setSubjects]=useState<any[]>([]),[loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState(''),[subject,setSubject]=useState('all'),[status,setStatus]=useState('all'),[search,setSearch]=useState('');

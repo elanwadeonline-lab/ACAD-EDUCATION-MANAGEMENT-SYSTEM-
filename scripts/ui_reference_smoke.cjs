@@ -43,6 +43,12 @@ function ward(id,name,average){return {id,student_id:id,name,grade:'SS2',reg_id:
     else if(p==='/api/exams/results')body=empty?[]:results;
     else if(p==='/api/exams/active')body={server_time:new Date().toISOString(),exams:[]};
     else if(p==='/api/student/telemetry') {if(telemetryMissing)return req.respond({status:500,contentType:'application/json',body:JSON.stringify({error:'Unavailable'})});body=telemetry;}
+    else if(p==='/api/arena/overview')body={papers:[],xp:0,weeklyXp:0,level:1,nextLevelXp:100,completed:0,active:null,recent:[],leaderboard:[],partners:[]};
+    else if(p==='/api/learning/library')body=[];
+    else if(p==='/api/learning/presence')body={count:0};
+    else if(p==='/api/users/me/profile')body={id:20,name:'Amina Yusuf',email:'student@test.invalid',role:'student',grade:'SS2',reg_id:'ST-20'};
+    else if(p==='/api/auth/sessions')body={sessions:[]};
+    else if(/^\/api\/exams\/\d+\/review$/.test(p))body={exam:{score:1,total_score:2},answers:[{id:1,question_text:'What is 2 + 2?',options_json:'["4","3"]',correct_answer:0,selected_option:0,is_correct:true,marks:1,marks_awarded:1},{id:2,question_text:'What is 3 + 3?',options_json:'["4","6"]',correct_answer:1,selected_option:0,is_correct:false,marks:1,marks_awarded:0}]};
     else if(p==='/api/guardian/profile') { if(profileFailure)return req.respond({status:500,contentType:'application/json',body:JSON.stringify({error:'Fixture unavailable'})}); body={id:10,name:'Sara Yusuf',email:'guardian@test.invalid',phone:'',address:'',relationship:'Parent',notify_attendance:true,notify_results:true,notify_fees:true,notify_messages:true}; }
     else if(p==='/api/guardian/wards')body={wards:empty?[]:[ward(20,'Amina Yusuf',82),ward(21,'Karim Yusuf',71)]};
     else if(p.endsWith('/notifications'))body={items:[],notifications:[],unreadCount:0,unread_count:0};
@@ -114,6 +120,17 @@ function ward(id,name,average){return {id,student_id:id,name,grade:'SS2',reg_id:
     const surface=await page.$eval('#learning-overview [data-slot=card]',el=>getComputedStyle(el).backgroundColor);
     assert.notEqual(surface,'rgb(255, 255, 255)','dark cards use theme surface');
     await page.screenshot({path:path.join(output,'student-wave-dark.png'),fullPage:true});
+    if(process.argv.includes('--refinements')){
+      try {await require('./student_refinement_checks.cjs')(page,output);}catch(error){console.log('Refinement page:',(await page.$eval('body',el=>el.innerText)).slice(0,1600));await page.screenshot({path:path.join(output,'student-refinement-failure.png'),fullPage:true});throw error;}
+      signedIn=false;
+      for(const route of ['/','/teacher/','/ADMIN/','/guardian/']){
+        await page.goto(origin+route,{waitUntil:'networkidle2'});
+        await page.waitForSelector('input[type="password"]');
+        assert.equal(await page.$eval('html',el=>el.dataset.theme),'dark','login honors saved theme');
+        await page.focus('input[type="password"]');
+        assert.notEqual(await page.$eval('input[type="password"]',el=>getComputedStyle(el).backgroundColor),'rgb(255, 255, 255)','focused login input follows dark mode');
+      }
+    }
     assert.deepEqual(errors,[],'student dashboard runtime');outcomes.push('Student wave, responsive layout, theme and XP stability passed');await page.close();continue;
   }
   if(['student','guardian'].includes(role)) {

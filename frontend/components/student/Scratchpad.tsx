@@ -2,11 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import { RotateCcwIcon, CloseIcon } from "../icons/StudentIcons";
+import {useStudentTheme} from '../context/StudentThemeContext';
 
 export function Scratchpad({ onClose }: { onClose: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const isDrawingRef = useRef(false);
-  const [color, setColor] = useState("var(--color-text)");
+  const {isDark}=useStudentTheme();
+  const [color, setColor] = useState('#111827');
+  useEffect(()=>{setColor(current=>['#111827','#F8FAFC'].includes(current)?isDark?'#F8FAFC':'#111827':current);},[isDark]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -23,8 +26,7 @@ export function Scratchpad({ onClose }: { onClose: () => void }) {
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
     ctx.lineWidth = 2.5;
-    ctx.fillStyle = "#FFFFFF";
-    ctx.fillRect(0, 0, rect.width, rect.height);
+    ctx.clearRect(0, 0, rect.width, rect.height);
   }, []);
 
   const getCoords = (e: React.MouseEvent | React.TouchEvent) => {
@@ -85,8 +87,7 @@ export function Scratchpad({ onClose }: { onClose: () => void }) {
     const ctx = canvas.getContext("2d");
     if (ctx) {
       const rect = canvas.getBoundingClientRect();
-      ctx.fillStyle = "#FFFFFF";
-      ctx.fillRect(0, 0, rect.width, rect.height);
+      ctx.clearRect(0, 0, rect.width, rect.height);
       ctx.beginPath();
     }
   };
@@ -149,8 +150,8 @@ export function Scratchpad({ onClose }: { onClose: () => void }) {
             onClick={onClose}
             style={{
               padding: "5px 12px",
-              background: "var(--color-text)",
-              color: "#FFFFFF",
+              background: "var(--color-surface-3)",
+              color: "var(--color-text)",
               border: "none",
               borderRadius: "6px",
               cursor: "pointer",
