@@ -298,16 +298,32 @@ function TeacherDashboard() {
                   </div>
 
                   <div className={styles.courseActions}>
+                    <Link
+                      href={`/teacher/questions?subjectId=${s.id}`}
+                      style={{ textDecoration: "none" }}
+                    >
+                      <button type="button" className={styles.moreTrigger} style={{ background: "var(--color-surface-2, #f1f5f9)" }}>
+                        Item Bank
+                      </button>
+                    </Link>
+                    <Link
+                      href={`/teacher/questions?subjectId=${s.id}&action=create`}
+                      style={{ textDecoration: "none" }}
+                    >
+                      <button type="button" className={styles.moreTrigger} style={{ background: "var(--color-primary, #0F766E)", color: "#ffffff", borderColor: "transparent" }}>
+                        + Author
+                      </button>
+                    </Link>
                     <DropdownMenu.Root>
                       <DropdownMenu.Trigger asChild>
                         <button type="button" className={styles.moreTrigger} aria-label={`See more for ${s.name}`}>
-                          See more <span aria-hidden="true">⌄</span>
+                          More <span aria-hidden="true">⌄</span>
                         </button>
                       </DropdownMenu.Trigger>
                       <DropdownMenu.Portal>
                         <DropdownMenu.Content className={styles.actionMenu} align="end" sideOffset={6} collisionPadding={12}>
                           <DropdownMenu.Label className={styles.actionMenuLabel}>{s.name}</DropdownMenu.Label>
-                          <DropdownMenu.Item asChild><Link className={styles.actionMenuItem} href={`/teacher/questions?subjectId=${s.id}${!isLive ? "&action=create" : ""}`}>{isLive ? "Inspect questions" : "Author questions"}</Link></DropdownMenu.Item>
+                          <DropdownMenu.Item asChild><Link className={styles.actionMenuItem} href={`/teacher/questions?subjectId=${s.id}`}>{isLive ? "Inspect item bank" : "Author questions"}</Link></DropdownMenu.Item>
                           <DropdownMenu.Item asChild><Link className={styles.actionMenuItem} href="/teacher/grading">Gradebook</Link></DropdownMenu.Item>
                           <DropdownMenu.Item asChild><Link className={styles.actionMenuItem} href={`/teacher/results?subjectId=${s.id}`}>Results</Link></DropdownMenu.Item>
                         </DropdownMenu.Content>

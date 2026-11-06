@@ -578,6 +578,61 @@
   color: #FFFFFF;
 }
 
+/* ── Subject Switcher Bar ────────────────────────────── */
+.subjectSelectorBar {
+  background: var(--color-surface, #FFFFFF);
+  border: 1px solid var(--color-border, #CBD5E1);
+  border-radius: 12px;
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.subjectSelectGroup {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 260px;
+}
+
+.subjectSelectLabel {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text, #0F172A);
+  white-space: nowrap;
+}
+
+.subjectSelectDropdown {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border, #CBD5E1);
+  background: var(--color-surface, #FFFFFF);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text, #0F172A);
+  min-width: 220px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.subjectSelectDropdown:focus {
+  border-color: var(--color-primary, #0F766E);
+}
+
+.subjectSelectorActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 /* ── Toast ──────────────────────────────────────────────── */
 .toast {
   position: fixed;

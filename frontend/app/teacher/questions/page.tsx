@@ -91,7 +91,8 @@ type ImageInputMode = "url" | "upload";
 
 function QuestionsContent() {
   const searchParams = useSearchParams();
-  const subjectId = Number(searchParams.get("subjectId") || 0);
+  const urlSubjectId = Number(searchParams.get("subjectId") || 0);
+  const [activeSubjectId, setActiveSubjectId] = useState<number>(urlSubjectId);
 
   const [subjects, setSubjects] = useState<any[]>([]);
   const [questions, setQuestions] = useState<any[]>([]);
@@ -105,6 +106,11 @@ function QuestionsContent() {
   const [editorMode, setEditorMode] = useState<EditorMode>("list");
   const [editSubjectOpen, setEditSubjectOpen] = useState(false);
   const [bulkUploadOpen, setBulkUploadOpen] = useState(false);
+  const [createSubjectOpen, setCreateSubjectOpen] = useState(false);
+  const [newSubjName, setNewSubjName] = useState("");
+  const [newSubjCode, setNewSubjCode] = useState("");
+  const [newSubjClass, setNewSubjClass] = useState("SS 2");
+
   const [editing, setEditing] = useState<any | null>(null);
   const [deleting, setDeleting] = useState<any | null>(null);
   const [saving, setSaving] = useState(false);
@@ -148,8 +154,15 @@ function QuestionsContent() {
   const [subjResultPolicy, setSubjResultPolicy] = useState("immediate");
   const [subjReleaseTime, setSubjReleaseTime] = useState("");
 
-  const subject = useMemo(() => subjects.find((s) => Number(s.id) === subjectId), [subjects, subjectId]);
+  const subject = useMemo(() => subjects.find((s) => Number(s.id) === activeSubjectId), [subjects, activeSubjectId]);
   const isLocked = Boolean(subject?.is_published);
+
+  // Sync state if URL search param changes externally
+  useEffect(() => {
+    if (urlSubjectId > 0 && urlSubjectId !== activeSubjectId) {
+      setActiveSubjectId(urlSubjectId);
+    }
+  }, [urlSubjectId]);
 
   const showToast = useCallback((type: "success" | "error", text: string) => {
     if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
@@ -166,9 +179,21 @@ function QuestionsContent() {
   const loadSubjects = useCallback(
     async (signal?: AbortSignal) => {
       try {
-        const data = (await api.getSubjects(selectedSession?.id, selectedTerm?.id)) as any[];
+        let data = (await api.getSubjects(selectedSession?.id, selectedTerm?.id)) as any[];
+        // Fallback: If filtered by session/term returns empty, load all subjects assigned to teacher
+        if ((!data || data.length === 0) && (selectedSession?.id || selectedTerm?.id)) {
+          data = (await api.getSubjects()) as any[];
+        }
         if (signal?.aborted) return;
         setSubjects(data ?? []);
+
+        // Automatically select the first subject if none selected or if selection not in list
+        if (data && data.length > 0) {
+          setActiveSubjectId((prev) => {
+            const exists = data.some((s) => Number(s.id) === prev);
+            return exists && prev > 0 ? prev : Number(data[0].id);
+          });
+        }
       } catch (err) {
         if (signal?.aborted) return;
         setError(err instanceof Error ? err.message : "Failed loading subjects");
@@ -181,9 +206,9 @@ function QuestionsContent() {
 
   const loadQuestions = useCallback(
     async (signal?: AbortSignal) => {
-      if (!subjectId) return;
+      if (!activeSubjectId) return;
       try {
-        const data = (await api.getQuestions(subjectId)) as any[];
+        const data = (await api.getQuestions(activeSubjectId)) as any[];
         if (signal?.aborted) return;
         setQuestions(data ?? []);
       } catch (err) {
@@ -193,7 +218,7 @@ function QuestionsContent() {
         if (!signal?.aborted) setQuestionsReady(true);
       }
     },
-    [subjectId]
+    [activeSubjectId]
   );
 
   useEffect(() => {
@@ -203,21 +228,21 @@ function QuestionsContent() {
   }, [loadSubjects]);
 
   useEffect(() => {
-    if (!subjectId) return;
+    if (!activeSubjectId) return;
     const controller = new AbortController();
     loadQuestions(controller.signal);
     return () => controller.abort();
-  }, [subjectId, loadQuestions]);
+  }, [activeSubjectId, loadQuestions]);
 
   useEffect(() => {
-    if (actionHandled.current || !subjectId) return;
+    if (actionHandled.current || !activeSubjectId) return;
     const action = searchParams.get("action");
     if (action === "create") {
       actionHandled.current = true;
       resetForm();
       setEditorMode("create");
     }
-  }, [searchParams, subjectId]);
+  }, [searchParams, activeSubjectId]);
 
   function resetForm() {
     setEditing(null);
@@ -390,7 +415,7 @@ function QuestionsContent() {
         }
       }
 
-      await api.updateSubject(subjectId, {
+      await api.updateSubject(activeSubjectId, {
         exam_datetime: safeExamDatetime,
         duration: Math.max(1, Number(subjDuration) || 60),
         instructions: subjInstructions,
@@ -409,11 +434,12 @@ function QuestionsContent() {
   };
 
   const onPublishSubject = async () => {
+    if (!activeSubjectId) return;
     confirmActionRef.current = async () => {
       setConfirmState((prev) => ({ ...prev, loading: true }));
       try {
-        await api.updateSubject(subjectId, { is_published: 1 });
-        showToast("success", "Subject marked as ready!");
+        await api.updateSubject(activeSubjectId, { is_published: 1 });
+        showToast("success", "Subject marked as ready / published!");
         await loadSubjects();
       } catch (err) {
         showToast("error", err instanceof Error ? err.message : "Failed to publish.");
@@ -429,6 +455,54 @@ function QuestionsContent() {
       variant: "primary",
       loading: false,
     });
+  };
+
+  const onUnpublishSubject = async () => {
+    if (!activeSubjectId) return;
+    try {
+      await api.updateSubject(activeSubjectId, { is_published: 0 });
+      showToast("success", "Subject unlocked for question editing.");
+      await loadSubjects();
+    } catch (err) {
+      showToast("error", err instanceof Error ? err.message : "Failed to unlock subject.");
+    }
+  };
+
+  const handleCreateSubject = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!newSubjName.trim() || !newSubjCode.trim()) {
+      showToast("error", "Subject name and code are required.");
+      return;
+    }
+    setSaving(true);
+    try {
+      const res = await api.createSubject({
+        name: newSubjName.trim(),
+        code: newSubjCode.trim(),
+        class: newSubjClass.trim(),
+        term: selectedTerm?.name || "First Term",
+        duration: 60,
+        exam_datetime: "",
+        teacher_id: 0,
+        mode: "exam",
+        assessment_type: "school_exam",
+        session_id: selectedSession?.id,
+        term_id: selectedTerm?.id,
+      });
+      showToast("success", "Subject assessment created!");
+      setCreateSubjectOpen(false);
+      setNewSubjName("");
+      setNewSubjCode("");
+      await loadSubjects();
+      if (res?.id) {
+        setActiveSubjectId(Number(res.id));
+        setEditorMode("create");
+      }
+    } catch (err) {
+      showToast("error", err instanceof Error ? err.message : "Failed to create subject assessment.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const onSubmitQuestion = async (e: FormEvent) => {
@@ -464,7 +538,7 @@ function QuestionsContent() {
         await api.updateQuestion(editing.id, payload);
         showToast("success", "Question updated.");
       } else {
-        await api.createQuestion({ subject_id: subjectId, order_index: questions.length, ...payload });
+        await api.createQuestion({ subject_id: activeSubjectId, order_index: questions.length, ...payload });
         showToast("success", "Question created!");
       }
       await loadQuestions();
@@ -496,19 +570,103 @@ function QuestionsContent() {
 
   if (loading) return <div className="loadingWrap"><div className="spinner" /></div>;
 
-  if (!subjectId) {
+  if (!loading && subjects.length === 0) {
     return (
-      <div className={styles.emptyState}>
-        <LockIcon width="36" height="36" style={{ color: "var(--color-muted)" }} />
-        <div className={styles.emptyTitle}>No Subject Selected</div>
-        <div className={styles.emptySubtitle}>
-          Select a subject from your faculty dashboard to view or author examination questions.
+      <div className={styles.container}>
+        {toast && <div className={styles.toast}>{toast.text}</div>}
+        <PageHeader
+          eyebrow="Faculty Question Bank"
+          title="Examination & Assessment Studio"
+          subtitle="Manage subject question banks, author exam items, and configure candidate evaluations."
+          actions={
+            <div style={{ display: "flex", gap: "0.5rem" }}>
+              <Button variant="primary" size="sm" onClick={() => setCreateSubjectOpen(true)}>
+                <PlusIcon width="13" height="13" />
+                Create Course Assessment
+              </Button>
+              <Link href="/teacher/dashboard">
+                <Button variant="secondary" size="sm">
+                  Faculty Dashboard
+                </Button>
+              </Link>
+            </div>
+          }
+        />
+        <div className={styles.emptyState}>
+          <DocumentIcon width="40" height="40" style={{ color: "var(--color-muted)" }} />
+          <div className={styles.emptyTitle}>No Subjects Allocated Yet</div>
+          <div className={styles.emptySubtitle}>
+            You do not have any active subject question banks allocated for this term yet. You can create a new subject assessment now or select another academic period.
+          </div>
+          <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.5rem" }}>
+            <Button variant="primary" size="sm" onClick={() => setCreateSubjectOpen(true)}>
+              <PlusIcon width="14" height="14" />
+              Create Course Assessment
+            </Button>
+            <Link href="/teacher/dashboard">
+              <Button variant="secondary" size="sm">
+                Faculty Dashboard
+              </Button>
+            </Link>
+          </div>
         </div>
-        <Link href="/teacher/dashboard" style={{ marginTop: "0.5rem" }}>
-          <Button variant="primary" size="sm">
-            Back to Dashboard
-          </Button>
-        </Link>
+
+        {/* Modal for creating subject */}
+        <Modal open={createSubjectOpen} onClose={() => setCreateSubjectOpen(false)} size="md">
+          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            <div style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--color-text)" }}>
+              Create Course Assessment
+            </div>
+            <p style={{ margin: 0, fontSize: "0.8125rem", color: "var(--color-muted)" }}>
+              Initialize a new subject item bank to author questions and configure assessments.
+            </p>
+            <form onSubmit={handleCreateSubject} style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Subject Name *</label>
+                <input
+                  type="text"
+                  required
+                  className={styles.formInput}
+                  placeholder="e.g. Further Mathematics, Chemistry"
+                  value={newSubjName}
+                  onChange={(e) => setNewSubjName(e.target.value)}
+                />
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Subject Code *</label>
+                  <input
+                    type="text"
+                    required
+                    className={styles.formInput}
+                    placeholder="e.g. MTH201, CHM101"
+                    value={newSubjCode}
+                    onChange={(e) => setNewSubjCode(e.target.value.toUpperCase())}
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Class / Grade Cohort *</label>
+                  <input
+                    type="text"
+                    required
+                    className={styles.formInput}
+                    placeholder="e.g. SS 2, SS 1, JSS 3"
+                    value={newSubjClass}
+                    onChange={(e) => setNewSubjClass(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem", marginTop: "0.5rem" }}>
+                <Button variant="secondary" size="sm" type="button" onClick={() => setCreateSubjectOpen(false)}>
+                  Cancel
+                </Button>
+                <Button variant="primary" size="sm" type="submit" loading={saving}>
+                  Create &amp; Author Questions
+                </Button>
+              </div>
+            </form>
+          </div>
+        </Modal>
       </div>
     );
   }
@@ -547,6 +705,23 @@ function QuestionsContent() {
             </div>
           }
         />
+
+        {isLocked && (
+          <div className={styles.lockedBanner} style={{ marginBottom: "0.5rem" }}>
+            <LockIcon width="16" height="16" />
+            <span style={{ flex: 1 }}>
+              <strong>Subject is Live / Published:</strong> Question editing is locked to preserve candidate integrity.
+            </span>
+            <Button
+              variant="secondary"
+              size="xs"
+              onClick={onUnpublishSubject}
+              style={{ background: "#ffffff", borderColor: "#f59e0b", color: "#b45309" }}
+            >
+              Unpublish to Enable Editing
+            </Button>
+          </div>
+        )}
 
         <div className={styles.editorContainer}>
           {/* Main Question Stem Editor */}
@@ -1087,41 +1262,91 @@ function QuestionsContent() {
     <div className={styles.container}>
       {toast && <div className={styles.toast}>{toast.text}</div>}
 
+      {/* ── Subject Switcher Bar ──────────────────────────── */}
+      <div className={styles.subjectSelectorBar}>
+        <div className={styles.subjectSelectGroup}>
+          <label htmlFor="teacherSubjectDropdown" className={styles.subjectSelectLabel}>
+            Active Subject / Course:
+          </label>
+          <select
+            id="teacherSubjectDropdown"
+            className={styles.subjectSelectDropdown}
+            value={activeSubjectId}
+            onChange={(e) => {
+              const nextId = Number(e.target.value);
+              setActiveSubjectId(nextId);
+              const url = new URL(window.location.href);
+              url.searchParams.set("subjectId", String(nextId));
+              window.history.replaceState(null, "", url.toString());
+            }}
+          >
+            {subjects.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name} ({s.code}) {s.class ? `· ${s.class}` : ""} {s.is_published ? "· [Published]" : "· [Draft / Editable]"}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className={styles.subjectSelectorActions}>
+          <Button
+            variant="primary"
+            size="sm"
+            leftIcon={<PlusIcon width="13" height="13" />}
+            onClick={openCreate}
+            disabled={isLocked}
+          >
+            Author New Question
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            leftIcon={<DocumentIcon width="13" height="13" />}
+            onClick={() => setBulkUploadOpen(true)}
+            disabled={isLocked}
+          >
+            Bulk Import
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            leftIcon={<SettingsIcon width="13" height="13" />}
+            onClick={openEditSubject}
+            disabled={isLocked}
+          >
+            Exam Settings
+          </Button>
+          {isLocked ? (
+            <Button
+              variant="secondary"
+              size="sm"
+              leftIcon={<LockIcon width="13" height="13" />}
+              onClick={onUnpublishSubject}
+              title="Unlock this subject to allow adding or editing questions"
+            >
+              Unpublish to Edit
+            </Button>
+          ) : (
+            <Button
+              variant="secondary"
+              size="sm"
+              leftIcon={<CheckCircleIcon width="13" height="13" />}
+              onClick={onPublishSubject}
+              title="Mark assessment ready for candidates"
+            >
+              Publish Exam
+            </Button>
+          )}
+        </div>
+      </div>
+
       {/* ── Page Header ───────────────────────────────────── */}
       <PageHeader
         eyebrow="Assessment Item Bank"
         title={subject?.name ?? "Questions"}
-        subtitle={`Subject Code: ${subject?.code || "—"} · Term: ${subject?.term || "—"}`}
+        subtitle={`Subject Code: ${subject?.code || "—"} · Class: ${subject?.class || "SS 2"} · Term: ${subject?.term || "First Term"}`}
         actions={
           <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-            <Button
-              variant="secondary"
-              size="sm"
-              leftIcon={<SettingsIcon width="13" height="13" />}
-              onClick={openEditSubject}
-              disabled={isLocked}
-            >
-              Exam Settings
-            </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              leftIcon={<DocumentIcon width="13" height="13" />}
-              onClick={() => setBulkUploadOpen(true)}
-              disabled={isLocked}
-            >
-              Bulk Import
-            </Button>
-            {!isLocked && (
-              <Button
-                variant="secondary"
-                size="sm"
-                leftIcon={<CheckCircleIcon width="13" height="13" />}
-                onClick={onPublishSubject}
-              >
-                Publish Exam
-              </Button>
-            )}
             <Button
               variant="primary"
               size="sm"
@@ -1138,9 +1363,17 @@ function QuestionsContent() {
       {isLocked && (
         <div className={styles.lockedBanner}>
           <LockIcon width="16" height="16" />
-          <span>
+          <span style={{ flex: 1 }}>
             <strong>Subject is Live / Published:</strong> Question editing is locked to preserve candidate integrity.
           </span>
+          <Button
+            variant="secondary"
+            size="xs"
+            onClick={onUnpublishSubject}
+            style={{ background: "#ffffff", borderColor: "#f59e0b", color: "#b45309" }}
+          >
+            Unpublish to Edit Questions
+          </Button>
         </div>
       )}
 
@@ -1295,7 +1528,7 @@ function QuestionsContent() {
       {/* Bulk Upload Modal */}
       {bulkUploadOpen && (
         <BulkUploadModal
-          subjectId={subjectId}
+          subjectId={activeSubjectId}
           onClose={() => setBulkUploadOpen(false)}
           onSuccess={() => {
             setBulkUploadOpen(false);

@@ -21,6 +21,20 @@ export async function bootstrapDefaultSystemAccounts(): Promise<void> {
       db.prepare("UPDATE users SET password_hash = ?, is_active = 1 WHERE id = ?").run(passwordHash, guardian.id);
     }
 
+    // 2. Ensure default teacher exists (with password 'password')
+    let teacher = db.prepare("SELECT id FROM users WHERE email = 'teacher@exampool.ng' OR role = 'teacher' LIMIT 1").get() as any;
+    let teacherId: number;
+    if (!teacher) {
+      const tRes = db.prepare(
+        "INSERT INTO users (name, email, role, password_hash, is_active, phone) VALUES (?, ?, 'teacher', ?, 1, ?)"
+      ).run("Mr. Samuel Adeleke (Mathematics & Sciences)", "teacher@exampool.ng", passwordHash, "+234 802 345 6789");
+      teacherId = Number(tRes.lastInsertRowid);
+      console.log("[bootstrap] Created default teacher: teacher@exampool.ng / password");
+    } else {
+      teacherId = Number(teacher.id);
+      db.prepare("UPDATE users SET is_active = 1 WHERE id = ?").run(teacherId);
+    }
+
     // 3. Ensure student (Daniel Adeleke) exists
     let student = db.prepare("SELECT id FROM users WHERE email = 'student1@exampool.ng' OR name LIKE '%Daniel Adeleke%'").get() as any;
     let studentId: number;
@@ -100,12 +114,33 @@ export async function bootstrapDefaultSystemAccounts(): Promise<void> {
       if (!subjectRow) {
         const subRes = db.prepare(`
           INSERT INTO subjects 
-          (name, code, term, duration, exam_datetime, teacher_id, created_by, is_published)
-          VALUES (?, ?, 'First Term', 60, '2025-10-15T09:00:00Z', 1, 1, 1)
-        `).run(sub.name, sub.code);
+          (name, code, term, duration, exam_datetime, teacher_id, created_by, is_published, class, session_id, term_id)
+          VALUES (?, ?, 'First Term', 60, '2026-11-15T09:00:00Z', ?, ?, 0, 'SS 2', ?, ?)
+        `).run(sub.name, sub.code, teacherId, teacherId, activeSession?.id || 1, activeTerm?.id || 1);
         subjectId = Number(subRes.lastInsertRowid);
       } else {
         subjectId = Number(subjectRow.id);
+        db.prepare("UPDATE subjects SET teacher_id = ?, is_published = 0, class = COALESCE(class, 'SS 2') WHERE id = ?").run(teacherId, subjectId);
+      }
+
+      // Seed sample questions for the teacher so the question bank and text editor are populated
+      const existingQ = db.prepare("SELECT COUNT(*) as count FROM questions WHERE subject_id = ?").get(subjectId) as any;
+      if (!existingQ || existingQ.count === 0) {
+        if (sub.code === "MTH101") {
+          db.prepare(`
+            INSERT INTO questions (subject_id, question_text, options_json, correct_answer, marks, order_index, question_type, explanation, solution)
+            VALUES (?, 'Solve for x in the quadratic equation: 2x² - 8x + 6 = 0', ?, 0, 2, 0, 'objective', 'Divide by 2: x² - 4x + 3 = 0. Factors are (x - 1)(x - 3) = 0, giving x = 1 or x = 3.', 'Step 1: Simplify by dividing each term by 2.\nStep 2: Factorize: (x - 1)(x - 3) = 0.\nStep 3: Solve x = 1, x = 3.')
+          `).run(subjectId, JSON.stringify(["x = 1 or x = 3", "x = -1 or x = -3", "x = 2 or x = 4", "x = 0 or x = 6"]));
+          db.prepare(`
+            INSERT INTO questions (subject_id, question_text, options_json, correct_answer, marks, order_index, question_type, teacher_answer, explanation)
+            VALUES (?, 'State Pythagoras Theorem and calculate the hypotenuse of a right-angled triangle with sides 6cm and 8cm.', '["","","",""]', 0, 5, 1, 'essay', 'Award 2 marks for stating a² + b² = c². Award 3 marks for calculation: 6² + 8² = 36 + 64 = 100, c = 10cm.', 'c = √(a² + b²) = √(36 + 64) = 10cm')
+          `).run(subjectId);
+        } else {
+          db.prepare(`
+            INSERT INTO questions (subject_id, question_text, options_json, correct_answer, marks, order_index, question_type, explanation)
+            VALUES (?, 'Which of the following represents a foundational principle in ' || ? || '?', ?, 0, 2, 0, 'objective', 'Core syllabus definition.')
+          `).run(subjectId, sub.name, JSON.stringify(["Option A: Core Principle", "Option B: Secondary Theory", "Option C: Non-Applicable Case", "Option D: None of the above"]));
+        }
       }
 
       // Check if exam / result exists for Daniel

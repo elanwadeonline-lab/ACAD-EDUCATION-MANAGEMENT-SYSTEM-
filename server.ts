@@ -4284,13 +4284,18 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     }
 
     if (auth.role === "teacher") {
-      let query = "SELECT * FROM subjects WHERE teacher_id = ?";
-      const params: any[] = [auth.userId];
+      let query = `
+        SELECT DISTINCT s.* FROM subjects s
+        LEFT JOIN classes c ON (s.class IS NOT NULL AND LOWER(TRIM(c.name)) = LOWER(TRIM(s.class)))
+        LEFT JOIN class_teacher_assignments cta ON cta.class_id = c.id AND cta.teacher_id = ?
+        WHERE (s.teacher_id = ? OR cta.id IS NOT NULL)
+      `;
+      const params: any[] = [auth.userId, auth.userId];
       if (targetSessionId && targetTermId) {
-        query += " AND (session_id = ? AND term_id = ? OR session_id IS NULL)";
+        query += " AND ((s.session_id = ? AND (s.term_id = ? OR s.term_id IS NULL)) OR s.session_id IS NULL)";
         params.push(targetSessionId, targetTermId);
       }
-      query += " ORDER BY name";
+      query += " ORDER BY s.name";
       return apiSuccess(db.prepare(query).all(...params));
     }
 
