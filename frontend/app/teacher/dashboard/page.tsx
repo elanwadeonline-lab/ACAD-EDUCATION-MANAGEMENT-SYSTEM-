@@ -197,7 +197,7 @@ function TeacherDashboard() {
                 )}
               </Button>
             </Link>
-            {isClassTeacher ? (
+            {isClassTeacher && (
               <>
                 <Link href="/teacher/class-grading">
                   <Button variant="secondary" size="sm">
@@ -210,20 +210,17 @@ function TeacherDashboard() {
                   </Button>
                 </Link>
               </>
-            ) : (
-              <>
-                <Link href="/teacher/grading">
-                  <Button variant="secondary" size="sm">
-                    Subject Grading
-                  </Button>
-                </Link>
-                <Link href="/teacher/results">
-                  <Button variant="primary" size="sm">
-                    Exam Results
-                  </Button>
-                </Link>
-              </>
             )}
+            <Link href="/teacher/grading">
+              <Button variant="secondary" size="sm">
+                Subject Grading
+              </Button>
+            </Link>
+            <Link href="/teacher/results">
+              <Button variant={isClassTeacher ? "secondary" : "primary"} size="sm">
+                Exam Results
+              </Button>
+            </Link>
           </div>
         }
       />

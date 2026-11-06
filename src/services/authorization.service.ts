@@ -83,26 +83,37 @@ export class AuthorizationService {
   isClassTeacherForStudent(auth: Auth, studentId: number): boolean {
     if (auth.role !== "teacher") return false;
 
-    const cached = this.classTeacherCache.get(auth.userId);
-    if (cached && cached.expires > Date.now()) {
-      if (!cached.classId) return false;
-      const enrolled = this.db.prepare(
-        "SELECT 1 FROM users u LEFT JOIN grade_levels gl ON gl.id = u.grade_level_id LEFT JOIN classes c ON c.name = COALESCE(gl.name, u.grade) WHERE u.id = ? AND (c.id = ? OR EXISTS (SELECT 1 FROM class_enrollments ce WHERE ce.student_id = u.id AND ce.class_id = ?)) LIMIT 1"
-      ).get(studentId, cached.classId, cached.classId);
-      return !!enrolled;
-    }
+    const supervisedClasses = this.db.prepare(`
+      SELECT c.id FROM classes c WHERE c.class_teacher_id = ?
+      UNION
+      SELECT cta.class_id as id FROM class_teacher_assignments cta WHERE cta.teacher_id = ? AND cta.action != 'unassigned'
+    `).all(auth.userId, auth.userId) as Array<{ id: number }>;
 
-    const teacherClass = this.queries.getClassForTeacher.get(auth.userId) as any;
-    this.classTeacherCache.set(auth.userId, {
-      classId: teacherClass?.id || null,
-      expires: Date.now() + 5 * 60 * 1000
-    });
+    if (!supervisedClasses || supervisedClasses.length === 0) return false;
 
-    if (!teacherClass) return false;
+    const classIds = supervisedClasses.map((c) => c.id);
+    const placeholders = classIds.map(() => "?").join(",");
 
-    const enrolled = this.db.prepare(
-      "SELECT 1 FROM users u LEFT JOIN grade_levels gl ON gl.id = u.grade_level_id LEFT JOIN classes c ON c.name = COALESCE(gl.name, u.grade) WHERE u.id = ? AND (c.id = ? OR EXISTS (SELECT 1 FROM class_enrollments ce WHERE ce.student_id = u.id AND ce.class_id = ?)) LIMIT 1"
-    ).get(studentId, teacherClass.id, teacherClass.id);
+    const enrolled = this.db.prepare(`
+      SELECT 1 FROM users u 
+      LEFT JOIN grade_levels gl ON gl.id = u.grade_level_id 
+      LEFT JOIN classes c ON (
+        c.name = u.grade 
+        OR c.name = gl.name 
+        OR REPLACE(c.name, ' ', '') = REPLACE(COALESCE(u.grade, ''), ' ', '')
+        OR c.id = u.grade_level_id
+      )
+      WHERE u.id = ? 
+        AND (
+          c.id IN (${placeholders})
+          OR EXISTS (
+            SELECT 1 FROM class_enrollments ce 
+            WHERE ce.student_id = u.id AND ce.class_id IN (${placeholders})
+          )
+        )
+      LIMIT 1
+    `).get(studentId, ...classIds, ...classIds);
+
     return !!enrolled;
   }
 
@@ -133,12 +144,23 @@ export class AuthorizationService {
     if (!gs) return false;
 
     const isPublishedToClass = gs.is_published_to_class === 1;
-    if (!isPublishedToClass) return false;
+    if (!isPublishedToClass) {
+      const isApproved = this.db.prepare("SELECT 1 FROM term_results WHERE grading_subject_id = ? AND is_approved = 1 LIMIT 1").get(gsId);
+      if (!isApproved) return false;
+    }
 
-    const teacherClass = this.queries.getClassForTeacher.get(auth.userId) as any;
-    if (!teacherClass) return false;
+    const supervisedClasses = this.db.prepare(`
+      SELECT c.id FROM classes c WHERE c.class_teacher_id = ?
+      UNION
+      SELECT cta.class_id as id FROM class_teacher_assignments cta WHERE cta.teacher_id = ? AND cta.action != 'unassigned'
+    `).all(auth.userId, auth.userId) as Array<{ id: number }>;
 
-    if (gs.class_id && gs.class_id !== teacherClass.id) return false;
+    if (!supervisedClasses || supervisedClasses.length === 0) return false;
+
+    if (gs.class_id) {
+      const matches = supervisedClasses.some((c) => c.id === gs.class_id);
+      if (!matches) return false;
+    }
 
     return true;
   }

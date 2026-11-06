@@ -918,22 +918,37 @@ export function stripPassword(user: any) {
   // If user is a teacher, enrich with their assigned class teacher status
   if (safe.role === "teacher" && safe.id) {
     try {
-      const teacherClass = db.prepare("SELECT * FROM classes WHERE class_teacher_id = ? LIMIT 1").get(Number(safe.id)) as any;
-      if (teacherClass) {
+      const assignedClasses = db.prepare(`
+        SELECT DISTINCT c.id, c.name, c.section FROM classes c 
+        WHERE c.class_teacher_id = ? 
+        UNION 
+        SELECT DISTINCT c.id, c.name, c.section FROM classes c 
+        JOIN class_teacher_assignments cta ON cta.class_id = c.id AND cta.teacher_id = ? AND cta.action != 'unassigned'
+      `).all(Number(safe.id), Number(safe.id)) as any[];
+
+      if (assignedClasses.length > 0) {
         safe.is_class_teacher = true;
-        safe.assigned_class_id = Number(teacherClass.id);
-        safe.assigned_class_name = teacherClass.name;
-        safe.assigned_class_section = teacherClass.section || null;
+        safe.assigned_class_id = Number(assignedClasses[0].id);
+        safe.assigned_class_name = assignedClasses[0].name;
+        safe.assigned_class_section = assignedClasses[0].section || null;
+        safe.assigned_classes = assignedClasses.map((c: any) => ({
+          id: Number(c.id),
+          name: c.name,
+          section: c.section || null,
+        }));
       } else {
         safe.is_class_teacher = false;
         safe.assigned_class_id = null;
         safe.assigned_class_name = null;
         safe.assigned_class_section = null;
+        safe.assigned_classes = [];
       }
     } catch {
       safe.is_class_teacher = false;
       safe.assigned_class_id = null;
       safe.assigned_class_name = null;
+      safe.assigned_class_section = null;
+      safe.assigned_classes = [];
     }
   }
 
@@ -3005,41 +3020,50 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     const gradingCfg = getGradingConfig();
 
     if (auth.role === "teacher") {
-      // 1. Find all CBT subjects this teacher owns that have ≥1 completed submission for the target term
-      const cbtWithSubmissions = db.prepare(`
+      // 1. Find all subjects this teacher owns for the target session & term (or active/null)
+      const teacherSubjects = db.prepare(`
         SELECT s.*,
-          COUNT(DISTINCT e.student_id) as students_completed,
+          (SELECT COUNT(DISTINCT e.student_id) FROM exams e WHERE e.subject_id = s.id AND e.status = 'completed') as students_completed,
           (SELECT COUNT(*) FROM subject_enrollments se WHERE se.subject_id = s.id) as students_enrolled,
-          ROUND(AVG(CASE WHEN e.total_score > 0 THEN e.score * 100.0 / e.total_score ELSE 0 END), 1) as avg_score_pct
+          (SELECT ROUND(AVG(CASE WHEN e.total_score > 0 THEN e.score * 100.0 / e.total_score ELSE 0 END), 1) FROM exams e WHERE e.subject_id = s.id AND e.status = 'completed') as avg_score_pct
         FROM subjects s
-        JOIN exams e ON e.subject_id = s.id AND e.status = 'completed'
         LEFT JOIN terms t ON (s.term_id = t.id OR s.term = t.name)
-        WHERE s.teacher_id = ? AND (s.term_id = ? OR t.id = ?)
+        WHERE s.teacher_id = ? 
+          AND ((s.session_id = ? OR s.session_id IS NULL) AND (s.term_id = ? OR s.term_id IS NULL OR t.id = ? OR s.term = t.name))
         GROUP BY s.id
-      `).all(auth.userId, targetTermId, targetTermId) as any[];
+      `).all(auth.userId, targetSessionId, targetTermId, targetTermId) as any[];
 
-      // 2. Auto-create grading_subject rows for any not yet created
-      if (targetSessionId) {
-        for (const cbt of cbtWithSubmissions) {
-          const existing = queries.getGradingSubjectBySource.get(cbt.id, targetTermId) as any
-            ?? queries.getGradingSubjectByTeacherCodeTerm.get(auth.userId, cbt.code, targetTermId) as any;
+      // 2. Auto-create / sync grading_subject rows for any not yet created
+      if (targetSessionId && targetTermId) {
+        for (const sub of teacherSubjects) {
+          const existing = queries.getGradingSubjectBySource.get(sub.id, targetTermId) as any
+            ?? queries.getGradingSubjectByTeacherCodeTerm.get(auth.userId, sub.code, targetTermId) as any;
+
+          // Resolve class_id from sub.grade_level_id or sub.class
+          let resolvedClassId: number | null = null;
+          if (sub.grade_level_id) {
+            resolvedClassId = Number(sub.grade_level_id);
+          } else if (sub.class) {
+            const classRow = db.prepare("SELECT id FROM classes WHERE name = ? OR REPLACE(name,' ','') = REPLACE(?,' ') LIMIT 1").get(sub.class, sub.class) as any;
+            resolvedClassId = classRow ? Number(classRow.id) : null;
+          }
 
           if (!existing) {
             try {
               const gsRes = queries.createGradingSubject.run(
-                cbt.name, cbt.code, null, targetTermId, targetSessionId, auth.userId
+                sub.name, sub.code, resolvedClassId, targetTermId, targetSessionId, auth.userId
               ) as any;
               const newGsId = Number(gsRes.lastInsertRowid);
-              queries.updateGradingSubjectMeta.run(cbt.mode || "exam", cbt.id, newGsId);
+              queries.updateGradingSubjectMeta.run(sub.mode || "exam", sub.id, newGsId);
 
               // Auto-create grading policies from school template
-              const mode   = cbt.mode || "exam";
+              const mode   = sub.mode || "exam";
               const isExam = mode === "exam";
 
               if (isExam) {
                 // Exam component (auto-linked)
                 queries.createGradingPolicy.run(
-                  newGsId, "CBT Examination", "cbt_exam", cbt.id, gradingCfg.exam_max, 1
+                  newGsId, "CBT Examination", "cbt_exam", sub.id, gradingCfg.exam_max, 1
                 );
                 // CA components from school default template (manual ones)
                 for (const tmpl of gradingCfg.default_ca_template) {
@@ -3060,14 +3084,19 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
                   : mode === "assignment" ? "CBT Assignment"
                   : `CBT ${mode.charAt(0).toUpperCase() + mode.slice(1)}`;
                 const caSlot = Math.min(gradingCfg.ca_max, 40);
-                queries.createGradingPolicy.run(newGsId, policyName, "cbt_test", cbt.id, caSlot, 0);
+                queries.createGradingPolicy.run(newGsId, policyName, "cbt_test", sub.id, caSlot, 0);
               }
             } catch (e: any) {
               console.error("[GradingSubject AutoCreate Error]", e.message);
             }
-          } else if (!existing.source_cbt_subject_id) {
-            // Backfill source on old rows
-            queries.updateGradingSubjectMeta.run(cbt.mode || existing.mode || "exam", cbt.id, existing.id);
+          } else {
+            // Backfill source and class_id on existing rows if missing
+            if (!existing.source_cbt_subject_id || (!existing.class_id && resolvedClassId)) {
+              if (!existing.class_id && resolvedClassId) {
+                db.prepare("UPDATE grading_subjects SET class_id = ? WHERE id = ?").run(resolvedClassId, existing.id);
+              }
+              queries.updateGradingSubjectMeta.run(sub.mode || existing.mode || "exam", sub.id, existing.id);
+            }
           }
         }
       }
@@ -3080,7 +3109,7 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
         if (gs.source_cbt_subject_id) {
           const sourceSub = db.prepare("SELECT s.term_id, s.term, t.id as term_id_from_name FROM subjects s LEFT JOIN terms t ON s.term = t.name WHERE s.id = ?").get(gs.source_cbt_subject_id) as any;
           if (sourceSub) {
-            const matchesTerm = sourceSub.term_id === targetTermId || sourceSub.term_id_from_name === targetTermId;
+            const matchesTerm = sourceSub.term_id === targetTermId || sourceSub.term_id_from_name === targetTermId || sourceSub.term_id == null;
             if (!matchesTerm) return false;
           }
         }
@@ -3090,11 +3119,11 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
         let is_approved = false;
 
         if (gs.source_cbt_subject_id) {
-          const cbt = cbtWithSubmissions.find((c: any) => c.id === gs.source_cbt_subject_id);
-          if (cbt) {
-            students_completed = cbt.students_completed || 0;
-            students_enrolled  = cbt.students_enrolled  || 0;
-            avg_score_pct      = cbt.avg_score_pct;
+          const sub = teacherSubjects.find((c: any) => c.id === gs.source_cbt_subject_id);
+          if (sub) {
+            students_completed = sub.students_completed || 0;
+            students_enrolled  = sub.students_enrolled  || 0;
+            avg_score_pct      = sub.avg_score_pct;
           }
         }
         // Check approval status
@@ -3178,13 +3207,32 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     const sessionId = qSessionId || activeSession?.id;
 
     let cls = null;
-    if (auth.role === "operator" && isPositiveIntId(qClassId)) {
-      cls = queries.getClassById.get(qClassId) as any;
+    let teacherAssignedClasses: any[] = [];
+    if (auth.role === "teacher") {
+      teacherAssignedClasses = db.prepare(`
+        SELECT DISTINCT c.* FROM classes c 
+        WHERE c.class_teacher_id = ? 
+        UNION 
+        SELECT DISTINCT c.* FROM classes c 
+        JOIN class_teacher_assignments cta ON cta.class_id = c.id AND cta.teacher_id = ? AND cta.action != 'unassigned'
+      `).all(auth.userId, auth.userId) as any[];
+
+      if (isPositiveIntId(qClassId)) {
+        cls = teacherAssignedClasses.find((c: any) => c.id === qClassId);
+        if (!cls) return apiError(403, "You are not assigned as class teacher for this class cohort");
+      } else {
+        cls = teacherAssignedClasses[0] || null;
+      }
     } else {
-      cls = queries.getClassForTeacher.get(auth.userId) as any;
+      if (isPositiveIntId(qClassId)) {
+        cls = queries.getClassById.get(qClassId) as any;
+      } else {
+        const allClasses = queries.getClasses.all() as any[];
+        cls = allClasses[0] || null;
+      }
     }
-    if (!cls) return apiSuccess({ class: null, students: [], grading_subjects: [] });
-    if (!termId || !sessionId) return apiSuccess({ class: { id: cls.id, name: cls.name, section: cls.section || null }, students: [], grading_subjects: [] });
+    if (!cls) return apiSuccess({ class: null, assigned_classes: teacherAssignedClasses, students: [], grading_subjects: [] });
+    if (!termId || !sessionId) return apiSuccess({ class: { id: cls.id, name: cls.name, section: cls.section || null }, assigned_classes: teacherAssignedClasses, students: [], grading_subjects: [] });
 
     const classId = Number(cls.id);
     const roster = queries.getClassRoster.all(classId, termId) as any[];
@@ -3230,6 +3278,7 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
 
     return apiSuccess({
       class: { id: cls.id, name: cls.name, section: cls.section || null },
+      assigned_classes: teacherAssignedClasses.map((c: any) => ({ id: c.id, name: c.name, section: c.section || null })),
       students,
       grading_subjects: gradingSubjects.map((gs: any) => ({
         id: sqlInt(gs.id),
@@ -3625,6 +3674,8 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
         );
       }
       queries.approveTermResults.run(subjectId);
+      db.prepare("UPDATE grading_subjects SET is_published_to_class = 1 WHERE id = ?").run(subjectId);
+      auditLog(auth.userId, "SCORE_APPROVE", "grading_subject", subjectId, JSON.stringify({ approved_by: auth.userId }));
     })();
     return apiSuccess({ success: true });
   }
@@ -3639,6 +3690,8 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     if (auth.role !== "operator" && !sameUserId(subject.teacher_id, auth.userId)) return apiError(403, "Not authorized");
     
     db.prepare("UPDATE term_results SET is_approved = 0 WHERE grading_subject_id = ?").run(subjectId);
+    db.prepare("UPDATE grading_subjects SET is_published_to_class = 0 WHERE id = ?").run(subjectId);
+    auditLog(auth.userId, "SCORE_UNAPPROVE", "grading_subject", subjectId, JSON.stringify({ unapproved_by: auth.userId }));
     return apiSuccess({ success: true });
   }
 

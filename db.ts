@@ -1883,17 +1883,17 @@ export const queries = {
            (SELECT principal_remark FROM student_term_remarks WHERE student_id = tr.student_id AND (session_id = tr.session_id OR session_id IS NULL) AND term_id = tr.term_id ORDER BY id DESC LIMIT 1) as principal_remark,
            (SELECT teacher_remark FROM student_term_remarks WHERE student_id = tr.student_id AND (session_id = tr.session_id OR session_id IS NULL) AND term_id = tr.term_id ORDER BY id DESC LIMIT 1) as term_teacher_remark,
            gs.name as subject_name, gs.code as code, 
-           at.name as term,
-           at.id as term_id,
+           COALESCE(at.name, 'First Term') as term,
+           tr.term_id as term_id,
            tr.session_id as session_id,
-           acs.name as session_name,
+           COALESCE(acs.name, '2026/2027') as session_name,
            gs.teacher_id,
            tr.is_approved as is_approved,
            (SELECT COUNT(*) FROM academic_terms WHERE session_id = tr.session_id AND id <= tr.term_id) as term_order_in_session
     FROM term_results tr
     JOIN grading_subjects gs ON tr.grading_subject_id = gs.id
-    JOIN academic_terms at ON tr.term_id = at.id
-    JOIN academic_sessions acs ON tr.session_id = acs.id
+    LEFT JOIN academic_terms at ON tr.term_id = at.id
+    LEFT JOIN academic_sessions acs ON tr.session_id = acs.id
     WHERE tr.student_id = ? AND tr.is_approved = 1
     ORDER BY tr.session_id ASC, tr.term_id ASC
   `),
@@ -2026,7 +2026,27 @@ export const queries = {
   `),
 
   // ── v5: Class Enrollments ───────────────────────────────────────────────────
-  getClassRoster:             db.prepare("SELECT u.id, u.name, u.email, COALESCE(gl.name, u.grade) as grade, u.reg_id, u.is_active, ce.enrollment_date FROM class_enrollments ce JOIN users u ON u.id = ce.student_id LEFT JOIN grade_levels gl ON gl.id = u.grade_level_id WHERE ce.class_id = ? AND ce.term_id = ? AND u.role = 'student' AND u.is_active = 1 ORDER BY u.name"),
+  getClassRoster: db.prepare(`
+    WITH target_class AS (SELECT ? AS target_class_id, ? AS target_term_id)
+    SELECT DISTINCT u.id, u.name, u.email, COALESCE(gl.name, u.grade) as grade, u.reg_id, u.is_active, 
+           COALESCE(ce.enrollment_date, u.created_at) as enrollment_date
+    FROM users u
+    CROSS JOIN target_class tc
+    LEFT JOIN grade_levels gl ON gl.id = u.grade_level_id
+    LEFT JOIN class_enrollments ce ON ce.student_id = u.id AND ce.class_id = tc.target_class_id AND (ce.term_id = tc.target_term_id OR tc.target_term_id IS NULL)
+    LEFT JOIN classes c ON c.id = tc.target_class_id
+    WHERE u.role = 'student' AND u.is_active = 1
+      AND (
+        ce.id IS NOT NULL
+        OR (c.id IS NOT NULL AND (
+          c.name = u.grade 
+          OR c.name = gl.name 
+          OR REPLACE(c.name, ' ', '') = REPLACE(COALESCE(u.grade, ''), ' ', '')
+          OR c.id = u.grade_level_id
+        ))
+      )
+    ORDER BY u.name
+  `),
   getStudentClassForTerm:     db.prepare("SELECT c.*, ce.enrollment_date FROM class_enrollments ce JOIN classes c ON c.id = ce.class_id WHERE ce.student_id = ? AND ce.term_id = ? LIMIT 1"),
   enrollStudentInClass:       db.prepare("INSERT OR REPLACE INTO class_enrollments (student_id, class_id, term_id) VALUES (?, ?, ?)"),
   unenrollStudentFromClass:   db.prepare("DELETE FROM class_enrollments WHERE student_id=? AND term_id=?"),
@@ -2093,20 +2113,20 @@ export const queries = {
   
   // ── v8: Grading System Queries ──────────────────────────────────────────────
   getGradingSubjectsByTeacher: db.prepare(`
-    SELECT gs.*, c.name as class_name
+    SELECT gs.*, c.name as class, c.name as class_name
     FROM grading_subjects gs
     LEFT JOIN classes c ON c.id = gs.class_id
-    WHERE gs.teacher_id = ? AND gs.term_id = ?
+    WHERE gs.teacher_id = ? AND (gs.term_id = ? OR gs.term_id IS NULL)
   `),
   getAllGradingSubjects: db.prepare(`
-    SELECT gs.*, c.name as class_name
+    SELECT gs.*, c.name as class, c.name as class_name
     FROM grading_subjects gs
     LEFT JOIN classes c ON c.id = gs.class_id
-    WHERE gs.term_id = ?
+    WHERE gs.term_id = ? OR gs.term_id IS NULL
   `),
-  getGradingSubjectById: db.prepare("SELECT gs.*, c.name as class_name FROM grading_subjects gs LEFT JOIN classes c ON c.id = gs.class_id WHERE gs.id = ?"),
-  getGradingSubjectBySource: db.prepare("SELECT * FROM grading_subjects WHERE source_cbt_subject_id = ? AND term_id = ?"),
-  getGradingSubjectByTeacherCodeTerm: db.prepare("SELECT * FROM grading_subjects WHERE teacher_id = ? AND code = ? AND term_id = ?"),
+  getGradingSubjectById: db.prepare("SELECT gs.*, c.name as class, c.name as class_name FROM grading_subjects gs LEFT JOIN classes c ON c.id = gs.class_id WHERE gs.id = ?"),
+  getGradingSubjectBySource: db.prepare("SELECT * FROM grading_subjects WHERE source_cbt_subject_id = ? AND (term_id = ? OR term_id IS NULL)"),
+  getGradingSubjectByTeacherCodeTerm: db.prepare("SELECT * FROM grading_subjects WHERE teacher_id = ? AND code = ? AND (term_id = ? OR term_id IS NULL)"),
   createGradingSubject: db.prepare("INSERT INTO grading_subjects (name, code, class_id, term_id, session_id, teacher_id) VALUES (?, ?, ?, ?, ?, ?)"),
   updateGradingSubject: db.prepare("UPDATE grading_subjects SET name=?, code=?, class_id=?, teacher_id=? WHERE id=?"),
   deleteGradingSubject: db.prepare("DELETE FROM grading_subjects WHERE id=?"),
@@ -2154,7 +2174,7 @@ export const queries = {
     FROM term_results tr
     JOIN grading_subjects gs ON gs.id = tr.grading_subject_id
     JOIN users u ON u.id = tr.student_id
-    WHERE tr.term_id = ? AND tr.session_id = ?
+    WHERE (tr.term_id = ? OR tr.term_id IS NULL) AND (tr.session_id = ? OR tr.session_id IS NULL)
     ORDER BY u.name, gs.name
   `),
   
@@ -2172,12 +2192,17 @@ export const queries = {
     JOIN grading_subjects gs ON gs.id = tr.grading_subject_id
     JOIN users u ON u.id = tr.student_id
     JOIN target t ON 1=1
-    WHERE tr.term_id = ? AND tr.session_id = ?
+    WHERE (tr.term_id = ? OR tr.term_id IS NULL) AND (tr.session_id = ? OR tr.session_id IS NULL)
       AND (
         u.id IN (
           SELECT u2.id FROM users u2 
           LEFT JOIN grade_levels gl ON gl.id = u2.grade_level_id 
-          JOIN classes c ON c.name = COALESCE(gl.name, u2.grade)
+          JOIN classes c ON (
+            c.name = u2.grade 
+            OR c.name = gl.name 
+            OR REPLACE(c.name, ' ', '') = REPLACE(COALESCE(u2.grade, ''), ' ', '')
+            OR c.id = u2.grade_level_id
+          )
           WHERE c.id = t.target_class_id AND u2.role = 'student' AND u2.is_active = 1
         )
         OR EXISTS (
@@ -2194,14 +2219,30 @@ export const queries = {
     FROM grading_subjects gs
     LEFT JOIN users t ON t.id = gs.teacher_id
     JOIN target tg ON 1=1
-    WHERE gs.term_id = ? AND gs.session_id = ?
+    WHERE (gs.term_id = ? OR gs.term_id IS NULL) AND (gs.session_id = ? OR gs.session_id IS NULL)
       AND (
         gs.class_id = tg.target_class_id
         OR gs.class_id IS NULL
         OR EXISTS (
           SELECT 1 FROM subjects s 
-          JOIN classes c ON c.name = s.class 
+          JOIN classes c ON (
+            c.name = s.class 
+            OR REPLACE(c.name, ' ', '') = REPLACE(COALESCE(s.class, ''), ' ', '')
+            OR c.id = s.grade_level_id
+          )
           WHERE s.id = gs.source_cbt_subject_id AND c.id = tg.target_class_id
+        )
+        OR EXISTS (
+          SELECT 1 FROM term_results tr
+          JOIN users u ON u.id = tr.student_id
+          LEFT JOIN grade_levels gl ON gl.id = u.grade_level_id
+          JOIN classes c ON (
+            c.name = u.grade 
+            OR c.name = gl.name 
+            OR REPLACE(c.name, ' ', '') = REPLACE(COALESCE(u.grade, ''), ' ', '')
+            OR c.id = u.grade_level_id
+          )
+          WHERE tr.grading_subject_id = gs.id AND c.id = tg.target_class_id
         )
         OR EXISTS (
           SELECT 1 FROM term_results tr
@@ -2213,8 +2254,8 @@ export const queries = {
   
   getStudentTermRemarks: db.prepare("SELECT * FROM student_term_remarks WHERE student_id = ? AND session_id = ? AND term_id = ?"),
   upsertStudentTermRemarks: db.prepare(`
-    INSERT INTO student_term_remarks (student_id, session_id, term_id, teacher_remark, principal_remark)
-    VALUES (?, ?, ?, ?, ?)
+    INSERT INTO student_term_remarks (student_id, session_id, term_id, teacher_remark, principal_remark, term)
+    VALUES (?1, ?2, ?3, ?4, ?5, COALESCE((SELECT name FROM academic_terms WHERE id = ?3), 'First Term'))
     ON CONFLICT(student_id, session_id, term_id) DO UPDATE SET
     teacher_remark=excluded.teacher_remark, principal_remark=excluded.principal_remark,
     updated_at=strftime('%Y-%m-%dT%H:%M:%SZ','now')
@@ -2302,7 +2343,9 @@ export const queries = {
           EXISTS (
             SELECT 1 FROM classes c 
             WHERE c.id = gs.class_id AND (
-              c.name = COALESCE(gl.name, u.grade) 
+              c.name = u.grade
+              OR c.name = gl.name
+              OR REPLACE(c.name, ' ', '') = REPLACE(COALESCE(u.grade, ''), ' ', '')
               OR c.id = u.grade_level_id
               OR EXISTS (SELECT 1 FROM class_enrollments ce WHERE ce.class_id = c.id AND ce.student_id = u.id)
             )
@@ -2314,20 +2357,40 @@ export const queries = {
             SELECT 1 FROM subjects s
             WHERE s.id = gs.source_cbt_subject_id AND (
               (s.grade_level_id IS NOT NULL AND s.grade_level_id = u.grade_level_id)
-              OR (s.class IS NOT NULL AND s.class != '' AND s.class = COALESCE(gl.name, u.grade))
+              OR (s.class IS NOT NULL AND s.class != '' AND (
+                s.class = u.grade
+                OR s.class = gl.name
+                OR REPLACE(s.class, ' ', '') = REPLACE(COALESCE(u.grade, ''), ' ', '')
+              ))
               OR EXISTS (SELECT 1 FROM subject_enrollments se WHERE se.subject_id = s.id AND se.student_id = u.id)
             )
           )
         ))
-        -- 3. OR general manual subject (no class or CBT constraint)
-        OR (gs.class_id IS NULL AND gs.source_cbt_subject_id IS NULL)
+        -- 3. OR general subject (no class constraint on grading_subject AND (either no CBT subject OR CBT subject has no class constraint and no specific enrollment restrictions))
+        OR (
+          gs.class_id IS NULL AND (
+            gs.source_cbt_subject_id IS NULL 
+            OR EXISTS (
+              SELECT 1 FROM subjects s 
+              WHERE s.id = gs.source_cbt_subject_id 
+                AND (s.class IS NULL OR s.class = '') 
+                AND s.grade_level_id IS NULL 
+                AND NOT EXISTS (SELECT 1 FROM subject_enrollments se WHERE se.subject_id = s.id)
+            )
+          )
+        )
         -- 4. OR student completed an exam mapped to this grading subject
         OR u.id IN (
           SELECT DISTINCT e.student_id FROM exams e
           JOIN grading_policies gp ON gp.mapped_cbt_subject_id = e.subject_id
           WHERE gp.grading_subject_id = gs.id AND e.status = 'completed'
         )
-        -- 5. OR student has a manual score entry in this grading subject
+        -- 5. OR student completed the source CBT exam directly
+        OR (gs.source_cbt_subject_id IS NOT NULL AND u.id IN (
+          SELECT DISTINCT e.student_id FROM exams e
+          WHERE e.subject_id = gs.source_cbt_subject_id AND e.status = 'completed'
+        ))
+        -- 6. OR student has a manual score entry in this grading subject
         OR u.id IN (
           SELECT DISTINCT ms.student_id FROM grading_manual_scores ms
           JOIN grading_policies gp ON gp.id = ms.grading_policy_id

@@ -133,8 +133,6 @@ export async function tryV2AcademicCore(req: Request, method: string, pathname: 
         return apiError(400, "Invalid or inactive teacher");
       }
       action = cls.class_teacher_id ? "reassigned" : "assigned";
-      // Clear any other class assigned to this teacher
-      queries.unassignTeacherFromAllClasses.run(teacherId);
       queries.assignClassTeacher.run(teacherId, classId);
       queries.logClassTeacherAssignment.run(classId, teacherId, auth.userId, action, notes || null);
 
@@ -179,7 +177,6 @@ export async function tryV2AcademicCore(req: Request, method: string, pathname: 
     if (classTeacherId !== cls.class_teacher_id) {
       if (classTeacherId) {
         const action = cls.class_teacher_id ? "reassigned" : "assigned";
-        queries.unassignTeacherFromAllClasses.run(classTeacherId);
         queries.logClassTeacherAssignment.run(classId, classTeacherId, auth.userId, action, notes || "Updated via class settings");
       } else {
         queries.logClassTeacherAssignment.run(classId, null, auth.userId, "unassigned", notes || "Removed via class settings");

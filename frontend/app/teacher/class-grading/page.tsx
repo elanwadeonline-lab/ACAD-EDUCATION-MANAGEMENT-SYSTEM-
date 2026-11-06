@@ -37,8 +37,10 @@ function ClassGradingCenter() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
   const [data, setData] = useState<{
     class: any;
+    assigned_classes?: any[];
     students: any[];
     grading_subjects: any[];
   } | null>(null);
@@ -50,9 +52,13 @@ function ClassGradingCenter() {
       const res = await api.getClassGradingCenter({
         sessionId: selectedSession?.id || activeSession?.id,
         termId: selectedTerm?.id || activeTerm?.id,
+        classId: selectedClassId || undefined,
       });
       if (!res.class) throw new Error("You are not assigned as a class master for any class cohort.");
       setData(res);
+      if (!selectedClassId && res.class?.id) {
+        setSelectedClassId(Number(res.class.id));
+      }
       setError("");
     } catch (e: any) {
       setError(e.message || "Failed to load class grading center");
@@ -63,7 +69,7 @@ function ClassGradingCenter() {
 
   useEffect(() => {
     fetchData();
-  }, [selectedSession?.id, selectedTerm?.id, activeSession?.id, activeTerm?.id]);
+  }, [selectedSession?.id, selectedTerm?.id, activeSession?.id, activeTerm?.id, selectedClassId]);
 
   const currentTermName = selectedTerm?.name || activeTerm?.name || "First Term";
   const currentSessionName = selectedSession?.name || activeSession?.name || "2026/2027";
@@ -97,7 +103,29 @@ function ClassGradingCenter() {
         title="Class Grading Center"
         subtitle={`${className} · Academic Session ${currentSessionName} (${currentTermName})`}
         actions={
-          <div style={{ display: "flex", gap: "0.5rem" }}>
+          <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+            {data?.assigned_classes && data.assigned_classes.length > 1 && (
+              <select
+                value={selectedClassId || data.class?.id || ""}
+                onChange={(e) => setSelectedClassId(Number(e.target.value))}
+                style={{
+                  fontSize: "0.8125rem",
+                  padding: "0.35rem 0.65rem",
+                  borderRadius: "6px",
+                  border: "1px solid var(--color-border, #CBD5E1)",
+                  background: "var(--color-surface, #FFFFFF)",
+                  color: "var(--color-text, #0F172A)",
+                  fontWeight: 500,
+                  cursor: "pointer",
+                }}
+              >
+                {data.assigned_classes.map((c: any) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}{c.section ? ` (${c.section})` : ""}
+                  </option>
+                ))}
+              </select>
+            )}
             <Button variant="secondary" size="sm" onClick={fetchData} loading={loading}>
               Refresh
             </Button>

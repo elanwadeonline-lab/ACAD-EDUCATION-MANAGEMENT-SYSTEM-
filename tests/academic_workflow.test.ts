@@ -161,31 +161,31 @@ describe("Academic Session, Term & Grading System Full Workflow Audit", () => {
   test("2.1 Subject creation with teacher assignment across terms", () => {
     // Term 1 Math
     const sM1 = queries.createSubject.run(
-      "Mathematics", `MTH_${TS}`, "First Term", 60, teacher1Id, 1, "Math T1", "JSS1", null, `Session_2026_${TS}`, "exam", "Do all questions", 1, 0, session2026Id, term1Id, "school_exam", "immediate", null
+      "Mathematics", `MTH_${TS}`, "First Term", 60, teacher1Id, teacher1Id, "Math T1", "JSS1", null, `Session_2026_${TS}`, "exam", "Do all questions", 1, 0, session2026Id, term1Id, "school_exam", "immediate", null
     ) as any;
     mathSubjectT1Id = Number(sM1.lastInsertRowid);
 
     // Term 2 Math
     const sM2 = queries.createSubject.run(
-      "Mathematics", `MTH_${TS}`, "Second Term", 60, teacher1Id, 1, "Math T2", "JSS1", null, `Session_2026_${TS}`, "exam", "Do all questions", 1, 0, session2026Id, term2Id, "school_exam", "immediate", null
+      "Mathematics", `MTH_${TS}`, "Second Term", 60, teacher1Id, teacher1Id, "Math T2", "JSS1", null, `Session_2026_${TS}`, "exam", "Do all questions", 1, 0, session2026Id, term2Id, "school_exam", "immediate", null
     ) as any;
     mathSubjectT2Id = Number(sM2.lastInsertRowid);
 
     // Term 3 Math
     const sM3 = queries.createSubject.run(
-      "Mathematics", `MTH_${TS}`, "Third Term", 60, teacher1Id, 1, "Math T3", "JSS1", null, `Session_2026_${TS}`, "exam", "Do all questions", 1, 0, session2026Id, term3Id, "school_exam", "immediate", null
+      "Mathematics", `MTH_${TS}`, "Third Term", 60, teacher1Id, teacher1Id, "Math T3", "JSS1", null, `Session_2026_${TS}`, "exam", "Do all questions", 1, 0, session2026Id, term3Id, "school_exam", "immediate", null
     ) as any;
     mathSubjectT3Id = Number(sM3.lastInsertRowid);
 
     // English Term 1
     const sE1 = queries.createSubject.run(
-      "English Language", `ENG_${TS}`, "First Term", 60, teacher2Id, 1, "Eng T1", "JSS1", null, `Session_2026_${TS}`, "exam", "Do all questions", 1, 0, session2026Id, term1Id, "school_exam", "immediate", null
+      "English Language", `ENG_${TS}`, "First Term", 60, teacher2Id, teacher2Id, "Eng T1", "JSS1", null, `Session_2026_${TS}`, "exam", "Do all questions", 1, 0, session2026Id, term1Id, "school_exam", "immediate", null
     ) as any;
     engSubjectT1Id = Number(sE1.lastInsertRowid);
 
     // 50-Max Science Subject (to test flexible weight normalization)
     const sSci = queries.createSubject.run(
-      "Basic Science", `SCI_${TS}`, "First Term", 45, teacher1Id, 1, "Sci T1", "JSS1", null, `Session_2026_${TS}`, "exam", "Do all questions", 1, 0, session2026Id, term1Id, "school_exam", "immediate", null
+      "Basic Science", `SCI_${TS}`, "First Term", 45, teacher1Id, teacher1Id, "Sci T1", "JSS1", null, `Session_2026_${TS}`, "exam", "Do all questions", 1, 0, session2026Id, term1Id, "school_exam", "immediate", null
     ) as any;
     scienceSubject50MaxId = Number(sSci.lastInsertRowid);
 
@@ -204,8 +204,8 @@ describe("Academic Session, Term & Grading System Full Workflow Audit", () => {
     queries.updateSubjectTotalScore.run(mathSubjectT1Id, mathSubjectT1Id);
 
     // Enroll Student 1 and Student 2 in Math
-    queries.enrollStudent.run(mathSubjectT1Id, student1Id, 1);
-    queries.enrollStudent.run(mathSubjectT1Id, student2Id, 1);
+    queries.enrollStudent.run(mathSubjectT1Id, student1Id, teacher1Id);
+    queries.enrollStudent.run(mathSubjectT1Id, student2Id, teacher1Id);
 
     // Student 1 starts and completes exam: answers Q1 correct (25 marks), Q2 incorrect (0 marks) -> Raw Score = 25/50 (50%)
     const ex1 = queries.createExam.run(student1Id, mathSubjectT1Id, new Date().toISOString(), "[]", `Session_2026_${TS}`, "First Term", "exam", null, "released", 5, "[]") as any;
