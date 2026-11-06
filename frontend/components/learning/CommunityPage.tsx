@@ -2,6 +2,31 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import {
+  MessageSquare,
+  MessagesSquare,
+  Lock,
+  Unlock,
+  PenSquare,
+  ArrowLeft,
+  GraduationCap,
+  ShieldCheck,
+  Lightbulb,
+  HelpCircle,
+  Swords,
+  CheckCircle2,
+  Pin,
+  PinOff,
+  Star,
+  AlertTriangle,
+  Trash2,
+  Search,
+  Send,
+  Hash,
+  Users,
+  Sparkles,
+  X
+} from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { arenaApi } from '../../lib/arena';
 import {
@@ -273,14 +298,17 @@ export function CommunityPage() {
       {/* ─── Top Social Bar ─── */}
       <header className={s.topBar}>
         <div className={s.titleArea}>
-          <div className={s.channelIcon}>💬</div>
+          <div className={s.channelIcon}>
+            <MessagesSquare size={22} strokeWidth={2.2} />
+          </div>
           <div className={s.titleGroup}>
             <h1>
-              School Community Chat
+              <span>School Community Chat</span>
               {online !== null && (
                 <span className={s.presencePill}>
                   <span className={s.presenceDot} />
-                  {online} online
+                  <Users size={12} strokeWidth={2.5} style={{ display: 'inline' }} />
+                  <span>{online} online</span>
                 </span>
               )}
             </h1>
@@ -295,7 +323,17 @@ export function CommunityPage() {
               onClick={handleToggleChatLock}
               disabled={busy}
             >
-              {chatStatus?.is_locked ? '🔓 Unlock Community Chat' : '🔒 Lock Chat (Staff)'}
+              {chatStatus?.is_locked ? (
+                <>
+                  <Unlock size={14} strokeWidth={2.2} />
+                  <span>Unlock Community Chat</span>
+                </>
+              ) : (
+                <>
+                  <Lock size={14} strokeWidth={2.2} />
+                  <span>Lock Chat (Staff)</span>
+                </>
+              )}
             </button>
           )}
 
@@ -305,7 +343,8 @@ export function CommunityPage() {
               className={s.btnNewPost}
               onClick={() => setComposerOpen(true)}
             >
-              ✍️ New Post or Question
+              <PenSquare size={14} strokeWidth={2.2} />
+              <span>New Discussion</span>
             </button>
           )}
 
@@ -315,7 +354,8 @@ export function CommunityPage() {
               className={s.threadBackBtn}
               onClick={() => navigate('')}
             >
-              ← Back to Chat Feed
+              <ArrowLeft size={15} strokeWidth={2.2} />
+              <span>Back to Chat Feed</span>
             </button>
           )}
         </div>
@@ -325,7 +365,8 @@ export function CommunityPage() {
       {chatStatus?.is_locked && (
         <div className={s.lockBanner} role="alert">
           <div className={s.lockText}>
-            <span>🔒 <strong>Community Chat is Locked</strong></span>
+            <Lock size={16} strokeWidth={2.2} style={{ flexShrink: 0 }} />
+            <span><strong>Community Chat is Locked</strong></span>
             {chatStatus.reason && <span className={s.lockReason}>— {chatStatus.reason}</span>}
             <span className={s.lockReason}>
               {staff ? '(Staff can still post official guidance)' : '(Read-only mode for students)'}
@@ -338,7 +379,8 @@ export function CommunityPage() {
               onClick={handleToggleChatLock}
               disabled={busy}
             >
-              Unlock Now
+              <Unlock size={13} strokeWidth={2.2} />
+              <span>Unlock Now</span>
             </button>
           )}
         </div>
@@ -347,7 +389,10 @@ export function CommunityPage() {
       {/* ─── Error Notification ─── */}
       {error && (
         <div className={s.lockBanner} style={{ borderColor: '#fca5a5', background: '#fef2f2', color: '#991b1b' }}>
-          <span>⚠️ {error}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <AlertTriangle size={16} strokeWidth={2.2} style={{ flexShrink: 0 }} />
+            <span>{error}</span>
+          </div>
           <button type="button" className={s.btnActionText} onClick={() => void run(refresh)}>Retry</button>
         </div>
       )}
@@ -372,10 +417,16 @@ export function CommunityPage() {
                         <span className={s.badgeGrade}>{thread.post.author_grade}</span>
                       )}
                       {thread.post.author_role === 'teacher' && (
-                        <span className={s.badgeTeacher}>🎓 Teacher</span>
+                        <span className={s.badgeTeacher}>
+                          <GraduationCap size={12} strokeWidth={2.2} />
+                          <span>Teacher</span>
+                        </span>
                       )}
                       {thread.post.author_role === 'operator' && (
-                        <span className={s.badgeAdmin}>🛡️ Admin</span>
+                        <span className={s.badgeAdmin}>
+                          <ShieldCheck size={12} strokeWidth={2.2} />
+                          <span>Admin</span>
+                        </span>
                       )}
                     </div>
                     <span className={s.timeMuted}>{formatRelativeTime(thread.post.created_at)}</span>
@@ -383,11 +434,36 @@ export function CommunityPage() {
                 </div>
 
                 <div className={s.cardTags}>
-                  {thread.post.category === 'tip' && <span className={`${s.tagPill} ${s.tagTip}`}>💡 Study Tip</span>}
-                  {thread.post.category === 'question' && <span className={`${s.tagPill} ${s.tagQuestion}`}>❓ Question</span>}
-                  {thread.post.category === 'challenge' && <span className={`${s.tagPill} ${s.tagChallenge}`}>⚔️ Challenge</span>}
-                  {thread.post.resolved === 1 && <span className={`${s.tagPill} ${s.tagResolved}`}>✓ Solved</span>}
-                  {thread.post.pinned === 1 && <span className={`${s.tagPill} ${s.tagTip}`}>📌 Pinned</span>}
+                  {thread.post.category === 'tip' && (
+                    <span className={`${s.tagPill} ${s.tagTip}`}>
+                      <Lightbulb size={11} strokeWidth={2.2} style={{ marginRight: 3, verticalAlign: 'middle' }} />
+                      Study Tip
+                    </span>
+                  )}
+                  {thread.post.category === 'question' && (
+                    <span className={`${s.tagPill} ${s.tagQuestion}`}>
+                      <HelpCircle size={11} strokeWidth={2.2} style={{ marginRight: 3, verticalAlign: 'middle' }} />
+                      Question
+                    </span>
+                  )}
+                  {thread.post.category === 'challenge' && (
+                    <span className={`${s.tagPill} ${s.tagChallenge}`}>
+                      <Swords size={11} strokeWidth={2.2} style={{ marginRight: 3, verticalAlign: 'middle' }} />
+                      Challenge
+                    </span>
+                  )}
+                  {thread.post.resolved === 1 && (
+                    <span className={`${s.tagPill} ${s.tagResolved}`}>
+                      <CheckCircle2 size={11} strokeWidth={2.2} style={{ marginRight: 3, verticalAlign: 'middle' }} />
+                      Solved
+                    </span>
+                  )}
+                  {thread.post.pinned === 1 && (
+                    <span className={`${s.tagPill} ${s.tagTip}`}>
+                      <Pin size={11} strokeWidth={2.2} style={{ marginRight: 3, verticalAlign: 'middle' }} />
+                      Pinned
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -410,7 +486,8 @@ export function CommunityPage() {
                         window.location.href = '/student/practice/';
                       })}
                     >
-                      ⚔️ Enter Match Arena
+                      <Swords size={14} strokeWidth={2.2} />
+                      <span>Enter Match Arena</span>
                     </button>
                   )}
                 </div>
@@ -447,7 +524,8 @@ export function CommunityPage() {
                         await refresh();
                       })}
                     >
-                      {thread.post.resolved ? 'Reopen Question' : '✓ Mark Solved'}
+                      <CheckCircle2 size={13} strokeWidth={2.2} style={{ marginRight: 3, verticalAlign: 'middle' }} />
+                      {thread.post.resolved ? 'Reopen Question' : 'Mark Solved'}
                     </button>
                   )}
                   {staff && (
@@ -458,7 +536,17 @@ export function CommunityPage() {
                         disabled={busy}
                         onClick={() => handleTogglePin(thread.post.id)}
                       >
-                        {thread.post.pinned ? '📌 Unpin' : '📌 Pin to Top'}
+                        {thread.post.pinned ? (
+                          <>
+                            <PinOff size={13} strokeWidth={2.2} style={{ marginRight: 3, verticalAlign: 'middle' }} />
+                            Unpin
+                          </>
+                        ) : (
+                          <>
+                            <Pin size={13} strokeWidth={2.2} style={{ marginRight: 3, verticalAlign: 'middle' }} />
+                            Pin to Top
+                          </>
+                        )}
                       </button>
                       <button
                         type="button"
@@ -474,6 +562,7 @@ export function CommunityPage() {
                           }
                         }}
                       >
+                        <Trash2 size={13} strokeWidth={2.2} style={{ marginRight: 3, verticalAlign: 'middle' }} />
                         Delete
                       </button>
                     </>
@@ -484,8 +573,9 @@ export function CommunityPage() {
 
             {/* Replies Stream */}
             <div className={s.repliesStream}>
-              <h3 style={{ fontSize: 15, fontWeight: 700, margin: '16px 0 8px', color: '#475569' }}>
-                Comments & Answers ({thread.replies.length})
+              <h3 style={{ fontSize: 15, fontWeight: 700, margin: '16px 0 8px', color: '#475569', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <MessageSquare size={16} strokeWidth={2.2} />
+                <span>Comments & Answers ({thread.replies.length})</span>
               </h3>
 
               {thread.replies.length === 0 && (
@@ -505,7 +595,8 @@ export function CommunityPage() {
                   >
                     {isVerified && (
                       <div className={s.verifiedStaffHeader}>
-                        ⭐ Official Staff Verified Solution
+                        <Star size={14} fill="#047857" stroke="#047857" />
+                        <span>Official Staff Verified Solution</span>
                       </div>
                     )}
 
@@ -518,8 +609,18 @@ export function CommunityPage() {
                           <div className={s.authorNameLine}>
                             <span className={s.authorName} style={{ fontSize: 13 }}>{reply.author_name}</span>
                             {reply.author_grade && <span className={s.badgeGrade}>{reply.author_grade}</span>}
-                            {reply.author_role === 'teacher' && <span className={s.badgeTeacher}>🎓 Teacher</span>}
-                            {reply.author_role === 'operator' && <span className={s.badgeAdmin}>🛡️ Admin</span>}
+                            {reply.author_role === 'teacher' && (
+                              <span className={s.badgeTeacher}>
+                                <GraduationCap size={11} strokeWidth={2.2} />
+                                <span>Teacher</span>
+                              </span>
+                            )}
+                            {reply.author_role === 'operator' && (
+                              <span className={s.badgeAdmin}>
+                                <ShieldCheck size={11} strokeWidth={2.2} />
+                                <span>Admin</span>
+                              </span>
+                            )}
                           </div>
                           <span className={s.timeMuted}>{formatRelativeTime(reply.created_at)}</span>
                         </div>
@@ -533,7 +634,8 @@ export function CommunityPage() {
                             style={{ fontSize: 11 }}
                             onClick={() => handleVerifyReply(thread.post.id, reply.id)}
                           >
-                            {reply.is_staff_verified ? 'Unverify' : '⭐ Verify Solution'}
+                            <Star size={12} strokeWidth={2.2} fill={reply.is_staff_verified ? '#047857' : 'none'} style={{ marginRight: 3, verticalAlign: 'middle' }} />
+                            {reply.is_staff_verified ? 'Unverify' : 'Verify Solution'}
                           </button>
                           <button
                             type="button"
@@ -544,6 +646,7 @@ export function CommunityPage() {
                               await refresh();
                             })}
                           >
+                            <Trash2 size={12} strokeWidth={2.2} style={{ marginRight: 3, verticalAlign: 'middle' }} />
                             Delete
                           </button>
                         </div>
@@ -581,13 +684,19 @@ export function CommunityPage() {
             {/* Reply Composer */}
             {chatStatus?.is_locked && !staff ? (
               <div className={s.composerLockedBanner} style={{ marginTop: 24 }}>
-                🔒 New replies are currently paused while community chat is locked by School Administration.
+                <Lock size={15} strokeWidth={2.2} style={{ display: 'inline', marginRight: 6, verticalAlign: 'middle' }} />
+                <span>New replies are currently paused while community chat is locked by School Administration.</span>
               </div>
             ) : (
               <form className={s.composerBox} onSubmit={handleReplySubmit}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
                   <span style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>Drop an Answer or Comment:</span>
-                  {staff && <span className={s.badgeTeacher}>Posting as Verified Staff</span>}
+                  {staff && (
+                    <span className={s.badgeTeacher}>
+                      <ShieldCheck size={11} strokeWidth={2.2} />
+                      Posting as Verified Staff
+                    </span>
+                  )}
                 </div>
                 <textarea
                   required
@@ -600,7 +709,8 @@ export function CommunityPage() {
                 <div className={s.composerFooter}>
                   <span className={s.composerHint}>Keep explanations clear and respectful.</span>
                   <button type="submit" className={s.btnSubmit} disabled={busy || !replyText.trim()}>
-                    Post Reply →
+                    <Send size={14} strokeWidth={2.2} />
+                    <span>Post Reply</span>
                   </button>
                 </div>
               </form>
@@ -617,49 +727,55 @@ export function CommunityPage() {
               className={`${s.channelPill} ${channel === 'all' ? s.channelActive : ''}`}
               onClick={() => setChannel('all')}
             >
-              # all-channels
+              <Hash size={14} strokeWidth={2.2} />
+              <span>All Channels</span>
             </button>
             <button
               type="button"
               className={`${s.channelPill} ${channel === 'general' ? s.channelActive : ''}`}
               onClick={() => setChannel('general')}
             >
-              💬 # general-chat
+              <MessageSquare size={14} strokeWidth={2.2} />
+              <span>General Discussion</span>
             </button>
             <button
               type="button"
               className={`${s.channelPill} ${channel === 'question' ? s.channelActive : ''}`}
               onClick={() => setChannel('question')}
             >
-              ❓ # questions-help
+              <HelpCircle size={14} strokeWidth={2.2} />
+              <span>Questions & Help</span>
             </button>
             <button
               type="button"
               className={`${s.channelPill} ${channel === 'tip' ? s.channelActive : ''}`}
               onClick={() => setChannel('tip')}
             >
-              💡 # tips-resources
+              <Lightbulb size={14} strokeWidth={2.2} />
+              <span>Tips & Formulas</span>
             </button>
             <button
               type="button"
               className={`${s.channelPill} ${channel === 'challenge' ? s.channelActive : ''}`}
               onClick={() => setChannel('challenge')}
             >
-              ⚔️ # challenge-arena
+              <Swords size={14} strokeWidth={2.2} />
+              <span>Challenge Arena</span>
             </button>
             <button
               type="button"
               className={`${s.channelPill} ${channel === 'pinned' ? s.channelActive : ''}`}
               onClick={() => setChannel('pinned')}
             >
-              📌 # pinned
+              <Pin size={14} strokeWidth={2.2} />
+              <span>Announcements</span>
             </button>
           </nav>
 
           {/* Search Row */}
           <div className={s.searchRow}>
             <div className={s.searchBox}>
-              <span className={s.searchIcon}>🔍</span>
+              <Search size={15} strokeWidth={2.2} className={s.searchIcon} />
               <input
                 type="text"
                 className={s.searchInput}
@@ -667,6 +783,15 @@ export function CommunityPage() {
                 value={search}
                 onChange={e => setSearch(e.target.value)}
               />
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => setSearch('')}
+                  style={{ position: 'absolute', right: 10, background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8' }}
+                >
+                  <X size={14} strokeWidth={2.2} />
+                </button>
+              )}
             </div>
             {!composerOpen && !chatStatus?.is_locked && (
               <button
@@ -674,7 +799,8 @@ export function CommunityPage() {
                 className={s.btnNewPost}
                 onClick={() => setComposerOpen(true)}
               >
-                + Drop a Question / Tip
+                <PenSquare size={14} strokeWidth={2.2} />
+                <span>Drop a Question / Tip</span>
               </button>
             )}
           </div>
@@ -682,9 +808,14 @@ export function CommunityPage() {
           {/* Pinned Notice Card if not in pinned channel */}
           {channel !== 'pinned' && pinnedPost && (
             <div className={s.pinnedCard}>
-              <div className={s.pinnedIconWrap}>📌</div>
+              <div className={s.pinnedIconWrap}>
+                <Pin size={18} strokeWidth={2.2} />
+              </div>
               <div className={s.pinnedContent}>
-                <span className={s.pinnedLabel}>Official Pinned Notice · {pinnedPost.author_name} ({pinnedPost.author_role})</span>
+                <span className={s.pinnedLabel}>
+                  <Sparkles size={11} strokeWidth={2.5} style={{ display: 'inline', marginRight: 4 }} />
+                  Official Notice · {pinnedPost.author_name} ({pinnedPost.author_role})
+                </span>
                 <span className={s.pinnedTitle} onClick={() => navigate(String(pinnedPost.id))}>
                   {pinnedPost.title}
                 </span>
@@ -699,8 +830,19 @@ export function CommunityPage() {
           {composerOpen && (
             <form className={s.composerBox} onSubmit={handleCreatePost} style={{ marginBottom: 24 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                <span style={{ fontSize: 14, fontWeight: 700, color: '#0f172a' }}>Share with the School Community</span>
-                <button type="button" className={s.btnActionText} onClick={() => setComposerOpen(false)}>✕ Cancel</button>
+                <span style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <PenSquare size={15} strokeWidth={2.2} />
+                  <span>Share with the School Community</span>
+                </span>
+                <button
+                  type="button"
+                  className={s.btnActionText}
+                  onClick={() => setComposerOpen(false)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 4 }}
+                >
+                  <X size={14} strokeWidth={2.2} />
+                  <span>Cancel</span>
+                </button>
               </div>
 
               {/* Category Selector Tabs */}
@@ -710,28 +852,32 @@ export function CommunityPage() {
                   className={`${s.composerTab} ${composerCategory === 'general' ? s.composerTabActive : ''}`}
                   onClick={() => setComposerCategory('general')}
                 >
-                  💬 General Discussion
+                  <MessageSquare size={13} strokeWidth={2.2} style={{ display: 'inline', marginRight: 5, verticalAlign: 'middle' }} />
+                  General Discussion
                 </button>
                 <button
                   type="button"
                   className={`${s.composerTab} ${composerCategory === 'question' ? s.composerTabActive : ''}`}
                   onClick={() => setComposerCategory('question')}
                 >
-                  ❓ Problem / Question
+                  <HelpCircle size={13} strokeWidth={2.2} style={{ display: 'inline', marginRight: 5, verticalAlign: 'middle' }} />
+                  Problem / Question
                 </button>
                 <button
                   type="button"
                   className={`${s.composerTab} ${composerCategory === 'tip' ? s.composerTabActive : ''}`}
                   onClick={() => setComposerCategory('tip')}
                 >
-                  💡 Study Tip & Formula
+                  <Lightbulb size={13} strokeWidth={2.2} style={{ display: 'inline', marginRight: 5, verticalAlign: 'middle' }} />
+                  Study Tip & Formula
                 </button>
                 <button
                   type="button"
                   className={`${s.composerTab} ${composerCategory === 'challenge' ? s.composerTabActive : ''}`}
                   onClick={() => setComposerCategory('challenge')}
                 >
-                  ⚔️ Arena Challenge Invite
+                  <Swords size={13} strokeWidth={2.2} style={{ display: 'inline', marginRight: 5, verticalAlign: 'middle' }} />
+                  Arena Challenge Invite
                 </button>
               </div>
 
@@ -781,7 +927,8 @@ export function CommunityPage() {
               <div className={s.composerFooter}>
                 <span className={s.composerHint}>Visible to all students, teachers, and school administrators.</span>
                 <button type="submit" className={s.btnSubmit} disabled={busy || !title.trim() || !body.trim()}>
-                  Post to Community →
+                  <Send size={14} strokeWidth={2.2} />
+                  <span>Post to Community</span>
                 </button>
               </div>
             </form>
@@ -792,7 +939,9 @@ export function CommunityPage() {
             <p style={{ textAlign: 'center', padding: '40px 0', color: '#94a3b8' }}>Loading community discussions…</p>
           ) : filteredPosts.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '50px 20px', background: '#f8fafc', borderRadius: 16, border: '1px solid #e2e8f0' }}>
-              <span style={{ fontSize: 32, display: 'block', marginBottom: 8 }}>💬</span>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+                <MessagesSquare size={44} strokeWidth={1.5} color="#94a3b8" />
+              </div>
               <h3 style={{ fontSize: 17, fontWeight: 700, margin: '0 0 6px', color: '#1e293b' }}>
                 {search ? 'No matching discussions found' : 'No posts in this channel yet'}
               </h3>
@@ -801,7 +950,8 @@ export function CommunityPage() {
               </p>
               {!chatStatus?.is_locked && (
                 <button type="button" className={s.btnNewPost} onClick={() => setComposerOpen(true)}>
-                  Start a Discussion
+                  <PenSquare size={14} strokeWidth={2.2} />
+                  <span>Start a Discussion</span>
                 </button>
               )}
             </div>
@@ -821,19 +971,54 @@ export function CommunityPage() {
                         <div className={s.authorNameLine}>
                           <span className={s.authorName}>{post.author_name}</span>
                           {post.author_grade && <span className={s.badgeGrade}>{post.author_grade}</span>}
-                          {post.author_role === 'teacher' && <span className={s.badgeTeacher}>🎓 Teacher</span>}
-                          {post.author_role === 'operator' && <span className={s.badgeAdmin}>🛡️ Admin</span>}
+                          {post.author_role === 'teacher' && (
+                            <span className={s.badgeTeacher}>
+                              <GraduationCap size={12} strokeWidth={2.2} />
+                              <span>Teacher</span>
+                            </span>
+                          )}
+                          {post.author_role === 'operator' && (
+                            <span className={s.badgeAdmin}>
+                              <ShieldCheck size={12} strokeWidth={2.2} />
+                              <span>Admin</span>
+                            </span>
+                          )}
                         </div>
                         <span className={s.timeMuted}>{formatRelativeTime(post.created_at)}</span>
                       </div>
                     </div>
 
                     <div className={s.cardTags}>
-                      {post.category === 'tip' && <span className={`${s.tagPill} ${s.tagTip}`}>💡 Study Tip</span>}
-                      {post.category === 'question' && <span className={`${s.tagPill} ${s.tagQuestion}`}>❓ Question</span>}
-                      {post.category === 'challenge' && <span className={`${s.tagPill} ${s.tagChallenge}`}>⚔️ Challenge</span>}
-                      {post.resolved === 1 && <span className={`${s.tagPill} ${s.tagResolved}`}>✓ Solved</span>}
-                      {post.pinned === 1 && <span className={`${s.tagPill} ${s.tagTip}`}>📌 Pinned</span>}
+                      {post.category === 'tip' && (
+                        <span className={`${s.tagPill} ${s.tagTip}`}>
+                          <Lightbulb size={11} strokeWidth={2.2} style={{ marginRight: 3, verticalAlign: 'middle' }} />
+                          Study Tip
+                        </span>
+                      )}
+                      {post.category === 'question' && (
+                        <span className={`${s.tagPill} ${s.tagQuestion}`}>
+                          <HelpCircle size={11} strokeWidth={2.2} style={{ marginRight: 3, verticalAlign: 'middle' }} />
+                          Question
+                        </span>
+                      )}
+                      {post.category === 'challenge' && (
+                        <span className={`${s.tagPill} ${s.tagChallenge}`}>
+                          <Swords size={11} strokeWidth={2.2} style={{ marginRight: 3, verticalAlign: 'middle' }} />
+                          Challenge
+                        </span>
+                      )}
+                      {post.resolved === 1 && (
+                        <span className={`${s.tagPill} ${s.tagResolved}`}>
+                          <CheckCircle2 size={11} strokeWidth={2.2} style={{ marginRight: 3, verticalAlign: 'middle' }} />
+                          Solved
+                        </span>
+                      )}
+                      {post.pinned === 1 && (
+                        <span className={`${s.tagPill} ${s.tagTip}`}>
+                          <Pin size={11} strokeWidth={2.2} style={{ marginRight: 3, verticalAlign: 'middle' }} />
+                          Pinned
+                        </span>
+                      )}
                     </div>
                   </div>
 
@@ -859,7 +1044,8 @@ export function CommunityPage() {
                             window.location.href = '/student/practice/';
                           })}
                         >
-                          ⚔️ Join Battle
+                          <Swords size={14} strokeWidth={2.2} />
+                          <span>Join Battle</span>
                         </button>
                       )}
                     </div>
@@ -891,7 +1077,8 @@ export function CommunityPage() {
                         className={s.replyCountBtn}
                         onClick={() => navigate(String(post.id))}
                       >
-                        💬 {post.reply_count} {post.reply_count === 1 ? 'Reply' : 'Replies'}
+                        <MessageSquare size={13} strokeWidth={2} />
+                        <span>{post.reply_count} {post.reply_count === 1 ? 'Reply' : 'Replies'}</span>
                       </button>
 
                       {staff && (
@@ -900,7 +1087,17 @@ export function CommunityPage() {
                           className={s.btnActionText}
                           onClick={() => handleTogglePin(post.id)}
                         >
-                          {post.pinned ? '📌 Unpin' : '📌 Pin'}
+                          {post.pinned ? (
+                            <>
+                              <PinOff size={12} strokeWidth={2.2} style={{ marginRight: 3, verticalAlign: 'middle' }} />
+                              Unpin
+                            </>
+                          ) : (
+                            <>
+                              <Pin size={12} strokeWidth={2.2} style={{ marginRight: 3, verticalAlign: 'middle' }} />
+                              Pin
+                            </>
+                          )}
                         </button>
                       )}
                     </div>

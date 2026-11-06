@@ -226,8 +226,40 @@ export function checkSetupRequired(): boolean {
   return rowCount(queries.countActiveOperators.get() as { count?: unknown }) === 0;
 }
 
+// User-requested datastore reset & operator wipe to unlock /setup onboarding wizard
+db.run("CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)");
+const setupResetKey = "SETUP_RESET_RELEASE_2026_V1";
+const alreadyReset = db.prepare("SELECT value FROM settings WHERE key = ?").get(setupResetKey) as any;
+if (!alreadyReset || Bun.env.RESET_DATASTORE === "true" || Bun.env.FORCE_SETUP === "true") {
+  console.log("[SetupReset] Performing datastore reset & removing active operators to unlock /setup wizard...");
+  try {
+    db.run("PRAGMA foreign_keys = OFF");
+    const tablesToClear = [
+      "grading_student_scores", "grading_calculated_results", "grading_assessments",
+      "grading_categories", "grading_grade_boundaries", "grading_scheme_versions",
+      "grading_schemes", "grading_manual_scores", "grading_policies", "term_results",
+      "annual_results", "grading_subjects", "student_answers", "exam_attempts",
+      "question_map", "exams", "questions", "subject_enrollments", "timetables",
+      "class_enrollments", "class_teacher_assignments", "guardian_student_links",
+      "academic_calendar_events", "kiosk_sessions", "notifications", "audit_logs",
+      "token_blacklist", "user_tokens", "user_devices", "student_term_remarks"
+    ];
+    for (const tbl of tablesToClear) {
+      try { db.prepare(`DELETE FROM ${tbl}`).run(); } catch {}
+    }
+    // Delete operators so setupRequired becomes true and active admin session is cleared
+    try { db.prepare("DELETE FROM users WHERE role = 'operator'").run(); } catch {}
+    try { db.prepare("DELETE FROM sqlite_sequence WHERE name NOT IN ('grade_levels','settings','config')").run(); } catch {}
+    db.run("PRAGMA foreign_keys = ON");
+    db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES (?, 'completed')").run(setupResetKey);
+    console.log("[SetupReset] Reset complete. Operators removed. Setup mode is now ACTIVE at /setup.");
+  } catch (e) {
+    console.error("[SetupReset] Error during setup reset:", e);
+  }
+}
+
 let setupRequired = checkSetupRequired();
-// Automatically bootstrap default accounts (guardian, operator, student) on deployment if empty
+// Automatically bootstrap default demo data (guardian, student) if empty
 await bootstrapDefaultSystemAccounts();
 setupRequired = checkSetupRequired();
 
@@ -1128,7 +1160,7 @@ function isApiExemptWhileSetup(pathname: string, method: string): boolean {
   if (clean === "/api/health" || clean === "/health" || clean === "/api" || clean.includes("health")) return true;
   // [SECURITY FIX VULN-14] /api/server-info is no longer exempt from auth.
   // The setup wizard uses /api/setup (POST) which is still exempt below.
-  if (method === "POST" && (clean === "/api/setup" || clean === "/api/setup/complete" || clean === "/api/auth/bootstrap")) return true;
+  if (method === "POST" && (clean === "/api/setup" || clean === "/api/setup/complete" || clean === "/api/auth/bootstrap" || clean === "/api/setup/reset-wizard")) return true;
   return false;
 }
 
@@ -1398,6 +1430,37 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
         ],
       },
     );
+  }
+
+  if (method === "POST" && pathname === "/api/setup/reset-wizard") {
+    const body = await readJson(req).catch(() => ({}));
+    const confirmVal = trimStr(body?.confirm || body?.confirmation || "").toUpperCase();
+    if (confirmVal !== "RESET_ALL_DATA" && confirmVal !== "RESET") {
+      return apiError(400, "Confirmation required. Send { \"confirm\": \"RESET\" } to unlock setup.");
+    }
+    try {
+      db.run("PRAGMA foreign_keys = OFF");
+      const tablesToClear = [
+        "grading_student_scores", "grading_calculated_results", "grading_assessments",
+        "grading_categories", "grading_grade_boundaries", "grading_scheme_versions",
+        "grading_schemes", "grading_manual_scores", "grading_policies", "term_results",
+        "annual_results", "grading_subjects", "student_answers", "exam_attempts",
+        "question_map", "exams", "questions", "subject_enrollments", "timetables",
+        "class_enrollments", "class_teacher_assignments", "guardian_student_links",
+        "academic_calendar_events", "kiosk_sessions", "notifications", "audit_logs",
+        "token_blacklist", "user_tokens", "user_devices", "student_term_remarks"
+      ];
+      for (const tbl of tablesToClear) {
+        try { db.prepare(`DELETE FROM ${tbl}`).run(); } catch {}
+      }
+      try { db.prepare("DELETE FROM users WHERE role = 'operator'").run(); } catch {}
+      try { db.prepare("DELETE FROM sqlite_sequence WHERE name NOT IN ('grade_levels','settings','config')").run(); } catch {}
+      db.run("PRAGMA foreign_keys = ON");
+      setupRequired = true;
+      return apiSuccess({ message: "Datastore reset complete. Setup mode is now active at /setup" });
+    } catch (e: any) {
+      return apiError(500, "Reset failed: " + (e?.message || String(e)));
+    }
   }
 
   if (method === "POST" && pathname === "/api/auth/bootstrap") {

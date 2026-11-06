@@ -4,18 +4,11 @@ import { hashPassword } from "../auth";
 export async function bootstrapDefaultSystemAccounts(): Promise<void> {
   try {
     const passwordHash = await hashPassword("password");
-    const adminHash = await hashPassword("Admin@2026");
 
-    // 1. Ensure operator exists
-    const operator = db.prepare("SELECT id FROM users WHERE role = 'operator' LIMIT 1").get() as any;
-    if (!operator) {
-      db.prepare(
-        "INSERT INTO users (name, email, role, password_hash, is_active) VALUES (?, ?, 'operator', ?, 1)"
-      ).run("System Admin", "admin@exampool.ng", adminHash);
-      console.log("[bootstrap] Created default admin: admin@exampool.ng / Admin@2026");
-    }
+    // Note: Operator account is created through the /setup wizard during first-run school onboarding.
+    // We do NOT auto-create an operator here so that setup mode remains accessible.
 
-    // 2. Ensure guardian exists (with password 'password')
+    // 1. Ensure guardian exists (with password 'password')
     let guardian = db.prepare("SELECT id FROM users WHERE email = 'guardian@exampool.ng'").get() as any;
     if (!guardian) {
       const gRes = db.prepare(
