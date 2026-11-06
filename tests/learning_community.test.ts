@@ -33,6 +33,39 @@ describe('School community permissions and persistence',()=>{
  test('accepts only the host’s waiting, unexpired challenge',()=>{const data={kind:'challenge',title:'Join me',body:'Let us practice',challenge_code:'abcdef12'};expect(service.post(student,data).post.challenge_code).toBe('ABCDEF12');for(const code of ['EXPIRED1','OTHER123','MISSING1'])status(()=>service.post(student,{...data,challenge_code:code}),400);});
  test('validates text and uses bounded cursor pagination',()=>{status(()=>service.post(student,{kind:'question',title:'',body:'Hi'}),400);for(let i=0;i<45;i++)question();expect(service.feed(student)).toHaveLength(40);expect(service.feed(student,6)).toHaveLength(5);});
  test('presence counts only recent active students',()=>{expect(service.presence(student)).toEqual({count:1});expect(service.presence(teacher)).toEqual({count:1});db.query('UPDATE learning_presence SET seen_at=1').run();expect(service.presence(other)).toEqual({count:1});});
+ test('staff can lock and unlock community chat, students cannot lock or post when locked',()=>{
+  expect(service.chatStatus(student).is_locked).toBe(false);
+  status(()=>service.setChatLock(student,{locked:true}),403);
+  service.setChatLock(admin,{locked:true,reason:'Study hours: chat paused.'});
+  expect(service.chatStatus(student).is_locked).toBe(true);
+  expect(service.chatStatus(student).reason).toBe('Study hours: chat paused.');
+  status(()=>service.post(student,{kind:'question',title:'Test',body:'Blocked'}),423);
+  const {post}=service.post(teacher,{kind:'discussion',title:'Staff announcement',body:'Quiet hours in effect.'});
+  expect(post.title).toBe('Staff announcement');
+  service.setChatLock(teacher,{locked:false});
+  expect(service.chatStatus(student).is_locked).toBe(false);
+  expect(service.post(student,{kind:'question',title:'Fractions',body:'Now open'}).post.title).toBe('Fractions');
+ });
+ test('students and staff can react with emoji to posts and replies',()=>{
+  const {post}=question();
+  const res1=service.toggleReaction(student,{post_id:post.id,emoji:'💡'});
+  expect(res1.reactions[0]).toMatchObject({emoji:'💡',count:1,has_reacted:true});
+  const res2=service.toggleReaction(teacher,{post_id:post.id,emoji:'💡'});
+  expect(res2.reactions[0].count).toBe(2);
+  const res3=service.toggleReaction(student,{post_id:post.id,emoji:'💡'});
+  expect(res3.reactions[0].count).toBe(1);
+  expect(res3.reactions[0].has_reacted).toBe(false);
+ });
+ test('staff can pin discussions and verify teacher answers',()=>{
+  const q1=question().post;
+  const q2=service.post(student,{kind:'discussion',title:'Important Notice',body:'Read carefully.'}).post;
+  service.moderate(teacher,q2.id,{action:'pin'});
+  const feed=service.feed(student);
+  expect(feed[0].id).toBe(q2.id);
+  expect(feed[0].pinned).toBe(1);
+  const rep=service.reply(teacher,q1.id,{body:'Official Teacher Solution'}).replies[0] as any;
+  expect(rep.is_staff_verified).toBe(1);
+ });
 });
 describe('Teacher lesson notes and admin review',()=>{
  test('students cannot access notes in any state',()=>{const {id}=service.saveNote(teacher,noteData('submitted'));status(()=>service.notes(student),403);service.review(admin,id,{state:'approved'});status(()=>service.notes(student),403);expect(service.notes(teacher)[0].state).toBe('approved');expect(service.notes(secondTeacher)).toHaveLength(0);});

@@ -1,6 +1,46 @@
 import { API_BASE, buildAuthHeaders, fetchWithAuth } from './api';
-export type LearningPost={id:number;author_id:number;author_name:string;author_role:string;title:string;body:string;kind:string;challenge_code:string|null;resolved:number;created_at:number;reply_count:number};
-export type LearningReply={id:number;author_id:number;author_name:string;author_role:string;body:string;created_at:number};
+
+export type ReactionItem = { emoji: string; count: number; has_reacted: boolean };
+
+export type ChatStatus = {
+  is_locked: boolean;
+  locked_by_name: string | null;
+  locked_by_role: string | null;
+  reason: string | null;
+  updated_at: number | null;
+};
+
+export type LearningPost = {
+  id: number;
+  author_id: number;
+  author_name: string;
+  author_role: string;
+  author_grade?: string;
+  author_image_url?: string;
+  title: string;
+  body: string;
+  kind: string;
+  category?: string;
+  pinned?: number;
+  challenge_code: string | null;
+  resolved: number;
+  created_at: number;
+  reply_count: number;
+  reactions?: ReactionItem[];
+};
+
+export type LearningReply = {
+  id: number;
+  author_id: number;
+  author_name: string;
+  author_role: string;
+  author_grade?: string;
+  author_image_url?: string;
+  is_staff_verified?: number;
+  body: string;
+  created_at: number;
+  reactions?: ReactionItem[];
+};
 export type LessonFile={id:number;filename:string;mime:string;bytes:number};
 export type LessonNote={id:number;teacher_id:number;teacher_name:string;subject_id:number;subject_name:string;class:string;term:string;session:string;title:string;body:string;state:string;feedback:string;files:LessonFile[];updated_at:number};
 export async function learningRequest<T>(path:string,body?:unknown):Promise<T> {

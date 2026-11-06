@@ -51,7 +51,31 @@ export class LearningCommunityService {
         resource_id INTEGER NOT NULL REFERENCES learning_resources(id),student_id INTEGER NOT NULL REFERENCES users(id),
         opened_at INTEGER NOT NULL,completed_at INTEGER,PRIMARY KEY(resource_id,student_id)
       );
+      CREATE TABLE IF NOT EXISTS learning_chat_lock (
+        id INTEGER PRIMARY KEY, is_locked INTEGER NOT NULL DEFAULT 0,
+        locked_by_id INTEGER REFERENCES users(id), reason TEXT, updated_at INTEGER NOT NULL
+      );
+      INSERT OR IGNORE INTO learning_chat_lock(id, is_locked, updated_at) VALUES (1, 0, 0);
+
+      CREATE TABLE IF NOT EXISTS learning_reactions (
+        id INTEGER PRIMARY KEY, post_id INTEGER REFERENCES learning_posts(id),
+        reply_id INTEGER REFERENCES learning_replies(id), user_id INTEGER NOT NULL REFERENCES users(id),
+        emoji TEXT NOT NULL, created_at INTEGER NOT NULL,
+        UNIQUE(post_id, reply_id, user_id, emoji)
+      );
+      CREATE INDEX IF NOT EXISTS idx_learning_reactions_post ON learning_reactions(post_id);
+      CREATE INDEX IF NOT EXISTS idx_learning_reactions_reply ON learning_reactions(reply_id);
     `);
+
+    const addCol = (table: string, col: string, def: string) => {
+      try {
+        const cols = (this.db.query(`PRAGMA table_info(${table})`).all() as any[]).map(c => c.name);
+        if (!cols.includes(col)) this.db.run(`ALTER TABLE ${table} ADD COLUMN ${col} ${def}`);
+      } catch {}
+    };
+    addCol('learning_posts', 'pinned', 'INTEGER NOT NULL DEFAULT 0');
+    addCol('learning_posts', 'category', "TEXT NOT NULL DEFAULT 'general'");
+    addCol('learning_replies', 'is_staff_verified', 'INTEGER NOT NULL DEFAULT 0');
   }
   private actor(actor: LearningActor) {
     const user = this.db.query('SELECT * FROM users WHERE id=? AND is_active=1').get(actor.userId) as any;
@@ -62,21 +86,74 @@ export class LearningCommunityService {
     this.actor(actor);
     if (!['teacher','operator'].includes(actor.role)) throw new LearningError(403,'School staff access required.');
   }
+  private checkChatLock(actor: LearningActor) {
+    try {
+      const lock = this.db.query('SELECT is_locked, reason FROM learning_chat_lock WHERE id=1').get() as any;
+      if (lock && lock.is_locked && actor.role === 'student') {
+        throw new LearningError(423, lock.reason || 'Community chat is currently locked by school administration.');
+      }
+    } catch (e) {
+      if (e instanceof LearningError) throw e;
+    }
+  }
+  private userCols() {
+    try {
+      const cols = (this.db.query('PRAGMA table_info(users)').all() as any[]).map(c => c.name);
+      const grade = cols.includes('grade') ? 'u.grade AS author_grade' : 'NULL AS author_grade';
+      const img = cols.includes('image_url') ? 'u.image_url AS author_image_url' : 'NULL AS author_image_url';
+      return `${grade}, ${img}`;
+    } catch {
+      return 'NULL AS author_grade, NULL AS author_image_url';
+    }
+  }
+  private getReactions(targetType: 'post' | 'reply', targetId: number, currentUserId?: number) {
+    try {
+      const col = targetType === 'post' ? 'post_id' : 'reply_id';
+      const rows = this.db.query(`
+        SELECT emoji, COUNT(*) as count, GROUP_CONCAT(user_id) as users
+        FROM learning_reactions
+        WHERE ${col}=?
+        GROUP BY emoji
+      `).all(targetId) as any[];
+
+      return rows.map(r => {
+        const userIds = (r.users ? String(r.users) : '').split(',').map(Number);
+        return {
+          emoji: r.emoji,
+          count: Number(r.count),
+          has_reacted: currentUserId ? userIds.includes(currentUserId) : false,
+        };
+      });
+    } catch {
+      return [];
+    }
+  }
   feed(actor: LearningActor, before = Number.MAX_SAFE_INTEGER) {
     this.actor(actor);
-    return this.db.query(`SELECT p.*,u.name AS author_name,u.role AS author_role,
+    const uCols = this.userCols();
+    const rows = this.db.query(`SELECT p.*,u.name AS author_name,u.role AS author_role, ${uCols},
       (SELECT COUNT(*) FROM learning_replies r WHERE r.post_id=p.id AND r.hidden=0) AS reply_count
-      FROM learning_posts p JOIN users u ON u.id=p.author_id WHERE p.hidden=0 AND p.id<? ORDER BY p.id DESC LIMIT 40`).all(before);
+      FROM learning_posts p JOIN users u ON u.id=p.author_id WHERE p.hidden=0 AND p.id<? ORDER BY p.pinned DESC, p.id DESC LIMIT 40`).all(before) as any[];
+    return rows.map(p => ({
+      ...p,
+      reactions: this.getReactions('post', p.id, actor.userId),
+    }));
   }
   thread(actor: LearningActor, id: number) {
     this.actor(actor);
-    const post = this.db.query(`SELECT p.*,u.name AS author_name,u.role AS author_role FROM learning_posts p JOIN users u ON u.id=p.author_id WHERE p.id=? AND p.hidden=0`).get(id) as any;
+    const uCols = this.userCols();
+    const post = this.db.query(`SELECT p.*,u.name AS author_name,u.role AS author_role, ${uCols} FROM learning_posts p JOIN users u ON u.id=p.author_id WHERE p.id=? AND p.hidden=0`).get(id) as any;
     if (!post) throw new LearningError(404,'This discussion is no longer available.');
-    const replies = this.db.query(`SELECT r.*,u.name AS author_name,u.role AS author_role FROM learning_replies r JOIN users u ON u.id=r.author_id WHERE r.post_id=? AND r.hidden=0 ORDER BY r.id LIMIT 500`).all(id);
+    post.reactions = this.getReactions('post', post.id, actor.userId);
+    const replies = (this.db.query(`SELECT r.*,u.name AS author_name,u.role AS author_role, ${uCols} FROM learning_replies r JOIN users u ON u.id=r.author_id WHERE r.post_id=? AND r.hidden=0 ORDER BY r.is_staff_verified DESC, r.id ASC LIMIT 500`).all(id) as any[]).map(r => ({
+      ...r,
+      reactions: this.getReactions('reply', r.id, actor.userId),
+    }));
     return {post,replies};
   }
   post(actor: LearningActor, data: any) {
     this.actor(actor);
+    this.checkChatLock(actor);
     const title=text(data?.title,140,true), body=text(data?.body,10000,true);
     if (!['question','discussion','challenge'].includes(data?.kind)) throw new LearningError(400,'Choose a question, discussion, or challenge.');
     let code: string | null = null;
@@ -85,15 +162,19 @@ export class LearningCommunityService {
       const room=this.db.query("SELECT * FROM arena_sessions WHERE room_code=? AND host_id=? AND status='waiting' AND expires_at>?").get(code,actor.userId,this.now());
       if (!room) throw new LearningError(400,'Share a waiting challenge you created in Practice Arena.');
     }
-    const result=this.db.query('INSERT INTO learning_posts(author_id,title,body,kind,challenge_code,created_at) VALUES(?,?,?,?,?,?)').run(actor.userId,title,body,data.kind,code,this.now());
+    const category = ['general', 'question', 'tip', 'challenge'].includes(data?.category) ? data.category : (data.kind === 'question' ? 'question' : data.kind === 'challenge' ? 'challenge' : 'general');
+    const result=this.db.query('INSERT INTO learning_posts(author_id,title,body,kind,category,challenge_code,created_at) VALUES(?,?,?,?,?,?,?)').run(actor.userId,title,body,data.kind,category,code,this.now());
     return this.thread(actor,Number(result.lastInsertRowid));
   }
   reply(actor: LearningActor,id: number,data: any) {
+    this.actor(actor);
+    this.checkChatLock(actor);
     this.thread(actor,id);
     const body=text(data?.body,10000,true);
     const count=this.db.query('SELECT COUNT(*) AS n FROM learning_replies WHERE post_id=? AND hidden=0').get(id) as any;
     if (count.n>=500) throw new LearningError(409,'This discussion has reached its reply limit. Start a new discussion.');
-    this.db.query('INSERT INTO learning_replies(post_id,author_id,body,created_at) VALUES(?,?,?,?)').run(id,actor.userId,body,this.now());
+    const staffVerified = ['teacher', 'operator'].includes(actor.role) ? 1 : 0;
+    this.db.query('INSERT INTO learning_replies(post_id,author_id,body,is_staff_verified,created_at) VALUES(?,?,?,?,?)').run(id,actor.userId,body,staffVerified,this.now());
     return this.thread(actor,id);
   }
   moderate(actor: LearningActor,id: number,data: any) {
@@ -101,11 +182,72 @@ export class LearningCommunityService {
     if (post.author_id!==actor.userId && !['teacher','operator'].includes(actor.role)) throw new LearningError(403,'Only the author or school staff can update this discussion.');
     if (data.action==='resolve') this.db.query('UPDATE learning_posts SET resolved=? WHERE id=?').run(post.resolved?0:1,id);
     else if (data.action==='hide') this.db.query('UPDATE learning_posts SET hidden=1 WHERE id=?').run(id);
+    else if (data.action==='pin') {
+      this.staff(actor);
+      this.db.query('UPDATE learning_posts SET pinned=? WHERE id=?').run(post.pinned?0:1,id);
+    }
+    else if (data.action==='verify-reply') {
+      this.staff(actor);
+      const rep = this.db.query('SELECT is_staff_verified FROM learning_replies WHERE id=? AND post_id=?').get(Number(data.reply_id), id) as any;
+      if (!rep) throw new LearningError(404, 'Reply not found.');
+      this.db.query('UPDATE learning_replies SET is_staff_verified=? WHERE id=? AND post_id=?').run(rep.is_staff_verified ? 0 : 1, Number(data.reply_id), id);
+    }
     else if (data.action==='hide-reply') {
       this.staff(actor);
       this.db.query('UPDATE learning_replies SET hidden=1 WHERE id=? AND post_id=?').run(Number(data.reply_id),id);
     } else throw new LearningError(400,'Unknown discussion action.');
     return {ok:true};
+  }
+  chatStatus(actor: LearningActor) {
+    this.actor(actor);
+    const row = this.db.query(`
+      SELECT l.*, u.name as locked_by_name, u.role as locked_by_role
+      FROM learning_chat_lock l
+      LEFT JOIN users u ON u.id = l.locked_by_id
+      WHERE l.id = 1
+    `).get() as any;
+    return {
+      is_locked: row ? Boolean(row.is_locked) : false,
+      locked_by_name: row?.locked_by_name || null,
+      locked_by_role: row?.locked_by_role || null,
+      reason: row?.reason || null,
+      updated_at: row?.updated_at || null,
+    };
+  }
+  setChatLock(actor: LearningActor, data: any) {
+    this.staff(actor);
+    const isLocked = data.locked ? 1 : 0;
+    const reason = data.reason ? text(data.reason, 200) : '';
+    this.db.query(`
+      UPDATE learning_chat_lock
+      SET is_locked = ?, locked_by_id = ?, reason = ?, updated_at = ?
+      WHERE id = 1
+    `).run(isLocked, actor.userId, reason, this.now());
+    return this.chatStatus(actor);
+  }
+  toggleReaction(actor: LearningActor, data: any) {
+    this.actor(actor);
+    const emoji = (data?.emoji || '').trim();
+    if (!emoji || emoji.length > 8) throw new LearningError(400, 'Invalid emoji.');
+    const postId = data.post_id ? Number(data.post_id) : null;
+    const replyId = data.reply_id ? Number(data.reply_id) : null;
+    if (!postId && !replyId) throw new LearningError(400, 'Specify a post or reply to react to.');
+
+    const existing = this.db.query(
+      'SELECT id FROM learning_reactions WHERE post_id IS ? AND reply_id IS ? AND user_id=? AND emoji=?'
+    ).get(postId, replyId, actor.userId, emoji) as any;
+
+    if (existing) {
+      this.db.query('DELETE FROM learning_reactions WHERE id=?').run(existing.id);
+    } else {
+      this.db.query(
+        'INSERT INTO learning_reactions(post_id, reply_id, user_id, emoji, created_at) VALUES(?,?,?,?,?)'
+      ).run(postId, replyId, actor.userId, emoji, this.now());
+    }
+
+    return {
+      reactions: this.getReactions(postId ? 'post' : 'reply', (postId || replyId)!, actor.userId)
+    };
   }
   presence(actor: LearningActor) {
     this.actor(actor);

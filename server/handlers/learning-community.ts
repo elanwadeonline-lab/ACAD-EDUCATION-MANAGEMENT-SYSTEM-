@@ -13,6 +13,7 @@ export async function tryLearningCommunity(req: Request,method: string,pathname:
   const learning=service ||= new LearningCommunityService(db);
   try {
     const success=(data: unknown,status=200)=>apiSuccess(data,status,{'Cache-Control':'no-store'});
+    if(method==='GET' && pathname==='/api/learning/chat-status') return success(learning.chatStatus(actor));
     if(method==='GET' && pathname==='/api/learning/posts') return success(learning.feed(actor,Number(url.searchParams.get('before'))||undefined));
     const post=pathname.match(/^\/api\/learning\/posts\/(\d+)(?:\/(replies|moderate))?$/);
     if(method==='GET' && post && !post[2]) return success(learning.thread(actor,Number(post[1])));
@@ -28,6 +29,8 @@ export async function tryLearningCommunity(req: Request,method: string,pathname:
     }
     if(method==='POST') {
       checkRateLimit(`learning_write_${actor.userId}`,40,60_000);
+      if(pathname==='/api/learning/chat-lock') return success(learning.setChatLock(actor,data));
+      if(pathname==='/api/learning/react') return success(learning.toggleReaction(actor,data));
       if(pathname==='/api/learning/presence') return success(learning.presence(actor));
       if(pathname==='/api/learning/files'||pathname==='/api/learning/library/files') {
         const library=pathname.includes('/library/');
