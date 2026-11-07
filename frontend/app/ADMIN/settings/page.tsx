@@ -226,6 +226,11 @@ function SettingsContent() {
       // Send the typed confirmation (UI requires "DELETE ALL DATA") — backend accepts both variants case-insensitively
       const confirmation = confirmText.trim() || "DELETE ALL DATA";
       await api.resetDb(confirmation);
+      try {
+        sessionStorage.clear();
+        localStorage.removeItem("exampool_selected_session_id");
+        localStorage.removeItem("exampool_selected_term_id");
+      } catch {}
       showToast("success", "Factory reset complete. Redirecting to setup…");
       setShowFinalModal(false);
       setConfirmText("");
@@ -233,7 +238,7 @@ function SettingsContent() {
       // Give user a moment to read toast, then force reload to setup wizard
       setTimeout(() => {
         window.location.href = "/setup/";
-      }, 1400);
+      }, 1000);
     } catch (err) {
       showToast("error", err instanceof Error ? err.message : "Reset failed.");
     }

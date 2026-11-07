@@ -14,7 +14,6 @@
  */
 
 import { describe, test, expect, beforeAll, afterAll } from "bun:test";
-import "../server";
 import { apiGet, apiPost, apiPut, extractToken, json, bootstrapOperator } from "./helpers";
 import { groupStudentAssessments } from "../frontend/lib/studentDashboard";
 import db from "../db";
@@ -562,6 +561,42 @@ describe("ACQAD Examination Lifecycle, Timetable Enforcement, Dashboard & Gradin
 
     // Clean up test second term
     db.prepare("DELETE FROM academic_terms WHERE id = ?").run(secondTermId);
+  });
+
+  test("Scenario J: No hardcoded subjects/users are seeded on bootstrap, and Factory Reset wipes the entire system cleanly", async () => {
+    // 1. Triggering /api/auth/bootstrap must NOT create MTH101, ENG101, PHY101, CHM101, BIO101 or demo users
+    const bootRes = await apiPost("/api/auth/bootstrap", {});
+    expect(bootRes.status).toBe(200);
+    const demoUsersCount = (db.prepare("SELECT COUNT(*) as c FROM users WHERE email IN ('guardian@exampool.ng', 'teacher@exampool.ng', 'student1@exampool.ng')").get() as any)?.c ?? 0;
+    expect(Number(demoUsersCount)).toBe(0);
+
+    // 2. Execute full system Factory Reset via POST /api/settings/reset
+    const resetRes = await apiPost("/api/settings/reset", { confirm: "DELETE ALL DATA" }, operatorToken);
+    expect(resetRes.status).toBe(200);
+    const resetJson = await json(resetRes);
+    expect(resetJson.data?.setupRequired).toBe(true);
+
+    // 3. Verify all users, subjects, questions, exams, and grading records are completely wiped
+    const usersAfterReset = (db.prepare("SELECT COUNT(*) as c FROM users").get() as any)?.c ?? 0;
+    const subjectsAfterReset = (db.prepare("SELECT COUNT(*) as c FROM subjects").get() as any)?.c ?? 0;
+    const questionsAfterReset = (db.prepare("SELECT COUNT(*) as c FROM questions").get() as any)?.c ?? 0;
+    const examsAfterReset = (db.prepare("SELECT COUNT(*) as c FROM exams").get() as any)?.c ?? 0;
+    const gradingSubjectsAfterReset = (db.prepare("SELECT COUNT(*) as c FROM grading_subjects").get() as any)?.c ?? 0;
+    expect(Number(usersAfterReset)).toBe(0);
+    expect(Number(subjectsAfterReset)).toBe(0);
+    expect(Number(questionsAfterReset)).toBe(0);
+    expect(Number(examsAfterReset)).toBe(0);
+    expect(Number(gradingSubjectsAfterReset)).toBe(0);
+
+    // 4. Even when no operator exists (setup mode), calling /api/auth/bootstrap must NOT seed the 5 subjects or demo accounts
+    await apiPost("/api/auth/bootstrap", {});
+    expect(Number((db.prepare("SELECT COUNT(*) as c FROM subjects").get() as any)?.c ?? 0)).toBe(0);
+    expect(Number((db.prepare("SELECT COUNT(*) as c FROM users").get() as any)?.c ?? 0)).toBe(0);
+
+    // 5. Re-initialize fresh operator via /api/setup so subsequent tests or server usage have a clean admin
+    operatorToken = await bootstrapOperator(`op_lifecycle_${TS}@acqad.test`, "Operator@123");
+    expect(typeof operatorToken).toBe("string");
+    expect(operatorToken.length).toBeGreaterThan(10);
   });
 });
 

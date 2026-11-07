@@ -1,6 +1,7 @@
-import { describe, test, expect, beforeAll } from "bun:test";
+import { describe, test, expect, beforeAll, afterAll } from "bun:test";
 import db, { queries } from "../db";
-import { generateToken } from "../auth";
+import { generateToken, hashPassword } from "../auth";
+import { bootstrapOperator } from "./helpers";
 
 describe("Guardian Portal & Hybrid Messaging API Tests", () => {
   let guardianUser: any;
@@ -12,10 +13,17 @@ describe("Guardian Portal & Hybrid Messaging API Tests", () => {
 
   const baseUrl = "http://127.0.0.1:8001";
 
-  beforeAll(() => {
-    guardianUser = db.prepare("SELECT * FROM users WHERE email = 'guardian@exampool.ng'").get() as any;
-    teacherUser = db.prepare("SELECT * FROM users WHERE email = 'teacher@exampool.ng'").get() as any;
-    studentUser = db.prepare("SELECT * FROM users WHERE email = 'student@exampool.ng'").get() as any;
+  beforeAll(async () => {
+    await bootstrapOperator("op_guardian_api@acqad.test", "Operator@123");
+    const pwdHash = await hashPassword("Password@123");
+
+    db.prepare("INSERT OR IGNORE INTO users (name, email, role, password_hash, is_active) VALUES ('Test Guardian', 'guardian_api@acqad.test', 'guardian', ?, 1)").run(pwdHash);
+    db.prepare("INSERT OR IGNORE INTO users (name, email, role, password_hash, is_active) VALUES ('Test Teacher', 'teacher_api@acqad.test', 'teacher', ?, 1)").run(pwdHash);
+    db.prepare("INSERT OR IGNORE INTO users (name, email, role, password_hash, is_active, grade, reg_id) VALUES ('Default Student', 'student_api@acqad.test', 'student', ?, 1, 'JSS 3', 'REG-G-001')").run(pwdHash);
+
+    guardianUser = db.prepare("SELECT * FROM users WHERE email = 'guardian_api@acqad.test'").get() as any;
+    teacherUser = db.prepare("SELECT * FROM users WHERE email = 'teacher_api@acqad.test'").get() as any;
+    studentUser = db.prepare("SELECT * FROM users WHERE email = 'student_api@acqad.test'").get() as any;
 
     // Reset any previous class teacher assignments for teacher
     db.prepare("UPDATE classes SET class_teacher_id = NULL WHERE class_teacher_id = ?").run(teacherUser.id);
@@ -32,7 +40,7 @@ describe("Guardian Portal & Hybrid Messaging API Tests", () => {
     // 3. Ensure active session & term
     let session = queries.getActiveAcademicSession.get() as any;
     if (!session) {
-      db.prepare("INSERT INTO academic_sessions (name, start_date, end_date, is_active) VALUES ('2026/2027', '2026-01-01', '2026-12-31', 1)").run();
+      db.prepare("INSERT INTO academic_sessions (name, is_active) VALUES ('2026/2027', 1)").run();
       session = queries.getActiveAcademicSession.get() as any;
     }
     let term = queries.getActiveAcademicTerm.get() as any;
@@ -43,6 +51,7 @@ describe("Guardian Portal & Hybrid Messaging API Tests", () => {
 
     const sessionId = session.id;
     const termId = term.id;
+    db.prepare("INSERT OR IGNORE INTO terms (id, session, name, start_date, end_date, is_active, registration_open) VALUES (?, ?, ?, '2026-01-01', '2026-12-31', 1, 1)").run(termId, session.name, term.name);
 
     // 1. Assign student and teacher to JSS 3 and enroll
     db.prepare("UPDATE users SET grade = 'JSS 3' WHERE id = ?").run(studentUser.id);
@@ -54,7 +63,15 @@ describe("Guardian Portal & Hybrid Messaging API Tests", () => {
     db.prepare("INSERT OR IGNORE INTO guardian_student_links (guardian_id, student_id, relationship, status) VALUES (?, ?, 'Parent', 'approved')").run(guardianUser.id, studentUser.id);
     db.prepare("UPDATE guardian_student_links SET status = 'approved' WHERE guardian_id = ? AND student_id = ?").run(guardianUser.id, studentUser.id);
 
-    // 4. Seed 4 grading subjects & term results
+    // 4. Seed 4 grading subjects & term results + 1 CBT timetable event
+    let cbtSub = db.prepare("SELECT id FROM subjects WHERE code = 'MTH_J3_CBT'").get() as any;
+    if (!cbtSub) {
+      const r = db.prepare("INSERT INTO subjects (name, code, term, duration, exam_datetime, teacher_id, created_by, is_published, class, session_id, term_id) VALUES ('Mathematics', 'MTH_J3_CBT', ?, 60, '2026-12-01T09:00:00Z', ?, ?, 1, 'JSS 3', ?, ?)").run(term.name, teacherUser.id, teacherUser.id, sessionId, termId);
+      cbtSub = { id: Number(r.lastInsertRowid) };
+    }
+    db.prepare("DELETE FROM timetables WHERE subject_id = ?").run(cbtSub.id);
+    db.prepare("INSERT INTO timetables (subject_id, class, exam_date, start_time, end_time, duration, exam_mode, allow_students, session_id, term_id) VALUES (?, 'JSS 3', '2026-12-01', '09:00', '10:00', 60, 'CBT', 1, ?, ?)").run(cbtSub.id, sessionId, termId);
+
     const subjects = [
       { name: "Mathematics", code: "MTH_J3" },
       { name: "English Language", code: "ENG_J3" },
@@ -198,5 +215,25 @@ describe("Guardian Portal & Hybrid Messaging API Tests", () => {
       body: JSON.stringify({ text: "Received loud and clear, Chief Doe! Real-time messaging is online." }),
     });
     expect(replyRes.status).toBe(201);
+  });
+
+  afterAll(() => {
+    try {
+      db.run("PRAGMA foreign_keys = OFF");
+      db.prepare("DELETE FROM guardian_messages WHERE thread_id IN (SELECT id FROM guardian_message_threads WHERE guardian_id = ?)").run(guardianUser?.id || 0);
+      db.prepare("DELETE FROM guardian_message_threads WHERE guardian_id = ?").run(guardianUser?.id || 0);
+      db.prepare("DELETE FROM fee_payments WHERE student_id = ?").run(studentUser?.id || 0);
+      db.prepare("DELETE FROM fee_structures WHERE class_id = ? AND title IN ('Tuition Fee','Lab & Exam Fee','Development Levy')").run(jss3Class?.id || 0);
+      db.prepare("DELETE FROM attendance_records WHERE student_id = ?").run(studentUser?.id || 0);
+      db.prepare("DELETE FROM term_results WHERE student_id = ?").run(studentUser?.id || 0);
+      db.prepare("DELETE FROM grading_subjects WHERE code IN ('MTH_J3','ENG_J3','SCI_J3','SOS_J3')").run();
+      db.prepare("DELETE FROM timetables WHERE subject_id IN (SELECT id FROM subjects WHERE code = 'MTH_J3_CBT')").run();
+      db.prepare("DELETE FROM subjects WHERE code = 'MTH_J3_CBT'").run();
+      db.prepare("DELETE FROM guardian_student_links WHERE guardian_id = ?").run(guardianUser?.id || 0);
+      db.prepare("DELETE FROM class_enrollments WHERE student_id = ?").run(studentUser?.id || 0);
+      db.prepare("UPDATE classes SET class_teacher_id = NULL WHERE class_teacher_id = ?").run(teacherUser?.id || 0);
+      db.prepare("DELETE FROM users WHERE email IN ('guardian_api@acqad.test','teacher_api@acqad.test','student_api@acqad.test','op_guardian_api@acqad.test')").run();
+      db.run("PRAGMA foreign_keys = ON");
+    } catch {}
   });
 });

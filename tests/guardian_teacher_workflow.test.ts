@@ -1,6 +1,7 @@
-import { describe, test, expect, beforeAll } from "bun:test";
+import { describe, test, expect, beforeAll, afterAll } from "bun:test";
 import db, { queries } from "../db";
-import { generateToken } from "../auth";
+import { generateToken, hashPassword } from "../auth";
+import { bootstrapOperator } from "./helpers";
 
 describe("Guardian-Teacher Hybrid Workflow & Attendance API Tests", () => {
   let teacherUser: any;
@@ -12,16 +13,30 @@ describe("Guardian-Teacher Hybrid Workflow & Attendance API Tests", () => {
 
   const baseUrl = "http://localhost:8001";
 
-  beforeAll(() => {
-    teacherUser = db.prepare("SELECT * FROM users WHERE email = 'teacher@exampool.ng'").get() as any;
-    guardianUser = db.prepare("SELECT * FROM users WHERE email = 'guardian@exampool.ng'").get() as any;
-    studentUser = db.prepare("SELECT * FROM users WHERE email = 'student@exampool.ng'").get() as any;
+  beforeAll(async () => {
+    await bootstrapOperator("op_gt_workflow@acqad.test", "Operator@123");
+    const pwdHash = await hashPassword("Password@123");
 
+    db.prepare("INSERT OR IGNORE INTO users (name, email, role, password_hash, is_active) VALUES ('Test Guardian', 'guardian_api@acqad.test', 'guardian', ?, 1)").run(pwdHash);
+    db.prepare("INSERT OR IGNORE INTO users (name, email, role, password_hash, is_active) VALUES ('Test Teacher', 'teacher_api@acqad.test', 'teacher', ?, 1)").run(pwdHash);
+    db.prepare("INSERT OR IGNORE INTO users (name, email, role, password_hash, is_active, grade, reg_id) VALUES ('Default Student', 'student_api@acqad.test', 'student', ?, 1, 'JSS 3', 'REG-G-001')").run(pwdHash);
+
+    teacherUser = db.prepare("SELECT * FROM users WHERE email = 'teacher_api@acqad.test'").get() as any;
+    guardianUser = db.prepare("SELECT * FROM users WHERE email = 'guardian_api@acqad.test'").get() as any;
+    studentUser = db.prepare("SELECT * FROM users WHERE email = 'student_api@acqad.test'").get() as any;
+
+    let session = queries.getActiveAcademicSession.get() as any;
+    if (!session) {
+      db.prepare("INSERT INTO academic_sessions (name, is_active) VALUES ('2026/2027', 1)").run();
+      session = queries.getActiveAcademicSession.get() as any;
+    }
     let term = queries.getActiveAcademicTerm.get() as any;
     if (!term) {
-      term = db.prepare("SELECT id FROM academic_terms LIMIT 1").get() as any || { id: 1 };
+      db.prepare("INSERT INTO academic_terms (session_id, name, start_date, end_date, is_active) VALUES (?, 'First Term', '2026-01-01', '2026-04-30', 1)").run(session.id);
+      term = queries.getActiveAcademicTerm.get() as any;
     }
     const termId = term.id;
+    db.prepare("INSERT OR IGNORE INTO terms (id, session, name, start_date, end_date, is_active, registration_open) VALUES (?, ?, ?, '2026-01-01', '2026-12-31', 1, 1)").run(termId, session.name, term.name);
 
     // Reset any previous class teacher assignments for teacher
     db.prepare("UPDATE classes SET class_teacher_id = NULL WHERE class_teacher_id = ?").run(teacherUser.id);
@@ -159,5 +174,18 @@ describe("Guardian-Teacher Hybrid Workflow & Attendance API Tests", () => {
     expect(res.status).toBe(200);
     const json = await res.json() as any;
     expect(json.data.publicKey).toBeDefined();
+  });
+
+  afterAll(() => {
+    try {
+      db.run("PRAGMA foreign_keys = OFF");
+      db.prepare("DELETE FROM attendance_records WHERE student_id = ?").run(studentUser?.id || 0);
+      db.prepare("DELETE FROM guardian_student_links WHERE guardian_id = ?").run(guardianUser?.id || 0);
+      db.prepare("DELETE FROM class_enrollments WHERE student_id = ?").run(studentUser?.id || 0);
+      db.prepare("UPDATE classes SET class_teacher_id = NULL WHERE class_teacher_id = ?").run(teacherUser?.id || 0);
+      db.prepare("DELETE FROM notifications WHERE user_id IN (?, ?, ?)").run(guardianUser?.id || 0, teacherUser?.id || 0, studentUser?.id || 0);
+      db.prepare("DELETE FROM users WHERE email IN ('guardian_api@acqad.test','teacher_api@acqad.test','student_api@acqad.test','op_gt_workflow@acqad.test')").run();
+      db.run("PRAGMA foreign_keys = ON");
+    } catch {}
   });
 });

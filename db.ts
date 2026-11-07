@@ -2689,43 +2689,10 @@ export const queries = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// bootstrap_v5_migration(): runs once on first deploy so v2 API is never empty.
-// Creates a default term, a Legacy Class, and enrolls all existing students.
-// Fully idempotent — safe to call on every server start.
+// bootstrap_v5_migration(): retained as a no-op for backward compatibility.
+// Hardcoded demo classes ("Legacy Class") and auto-enrollments are disabled.
 // ─────────────────────────────────────────────────────────────────────────────
 export function bootstrap_v5_migration(): void {
-  const termCount = (db.prepare("SELECT COUNT(*) as c FROM terms").get() as any)?.c ?? 0;
-  if (termCount > 0) return;
-
-  console.log("[db v5] bootstrap_v5_migration() — first deploy, seeding default term...");
-
-  db.transaction(() => {
-    const ctRow = db.prepare("SELECT value FROM settings WHERE key='CURRENT_TERM'").get() as any;
-    const currentTermStr = String(ctRow?.value ?? "2026-T1");
-    const parts = currentTermStr.split("-");
-    const year = parts[0] ?? "2026";
-    const termLabel = parts[1] === "T2" ? "Second Term" : parts[1] === "T3" ? "Third Term" : "First Term";
-    const session = (Number(year) - 1) + "/" + year;
-
-    const termResult = db.prepare(
-      "INSERT INTO terms (session, name, start_date, end_date, is_active, registration_open) VALUES (?, ?, date('now','start of year'), date('now','start of year','+4 months'), 1, 1)"
-    ).run(session, termLabel) as { lastInsertRowid: number | bigint };
-    const termId = Number(termResult.lastInsertRowid);
-
-    let classId: number;
-    const existingClass = db.prepare("SELECT id FROM classes WHERE name='Legacy Class'").get() as any;
-    if (existingClass) {
-      classId = Number(existingClass.id);
-    } else {
-      const cr = db.prepare("INSERT INTO classes (name, level) VALUES ('Legacy Class', 'junior')").run() as { lastInsertRowid: number | bigint };
-      classId = Number(cr.lastInsertRowid);
-    }
-
-    const students = db.prepare("SELECT id FROM users WHERE role='student' AND is_active=1").all() as Array<{ id: number }>;
-    const stmt = db.prepare("INSERT OR IGNORE INTO class_enrollments (student_id, class_id, term_id) VALUES (?, ?, ?)");
-    for (const s of students) stmt.run(s.id, classId, termId);
-
-    console.log("[db v5] Bootstrap done: term=" + termLabel + " (" + session + "), enrolled " + students.length + " students into Legacy Class.");
-  })();
+  // No-op: do not auto-seed "Legacy Class" or hardcoded enrollments.
 }
 export default db;

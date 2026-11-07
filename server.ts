@@ -344,35 +344,155 @@ export function checkSetupRequired(): boolean {
   return rowCount(queries.countActiveOperators.get() as { count?: unknown }) === 0;
 }
 
+/**
+ * Performs a complete, atomic system factory reset across all operational, academic,
+ * examination, grading, community, guardian, user, session, and configuration tables.
+ * Preserves only standardized grade_levels, RBAC role_permissions, license_registry,
+ * and the external content_bank database.
+ */
+export function performFullSystemFactoryReset(): void {
+  // CRITICAL: PRAGMA foreign_keys = OFF must be executed OUTSIDE db.transaction(),
+  // because SQLite silently ignores PRAGMA foreign_keys changes inside a BEGIN...COMMIT block.
+  db.run("PRAGMA foreign_keys = OFF");
+  try {
+    db.transaction(() => {
+      const explicitTablesToClear = [
+        "grading_student_scores",
+        "grading_calculated_results",
+        "grading_assessments",
+        "grading_categories",
+        "grading_grade_boundaries",
+        "grading_scheme_versions",
+        "grading_schemes",
+        "grading_manual_scores",
+        "grading_policies",
+        "term_results",
+        "annual_results",
+        "grading_subjects",
+        "student_term_remarks",
+        "student_answers",
+        "exam_attempts",
+        "exam_retake_authorizations",
+        "question_map",
+        "kiosk_sessions",
+        "exams",
+        "questions",
+        "subject_enrollments",
+        "timetables",
+        "subjects",
+        "learning_reactions",
+        "learning_replies",
+        "learning_posts",
+        "learning_presence",
+        "learning_chat_lock",
+        "lesson_note_files",
+        "lesson_notes",
+        "learning_resource_files",
+        "learning_resource_progress",
+        "learning_resources",
+        "guardian_messages",
+        "guardian_message_threads",
+        "guardian_student_links",
+        "attendance_records",
+        "fee_payments",
+        "fee_structures",
+        "push_subscriptions",
+        "school_announcements",
+        "academic_calendar_events",
+        "class_enrollments",
+        "class_teacher_assignments",
+        "classes",
+        "academic_terms",
+        "academic_sessions",
+        "terms",
+        "notifications",
+        "audit_logs",
+        "token_blacklist",
+        "user_tokens",
+        "user_devices",
+        "users",
+        "config",
+      ];
+
+      // Also dynamically discover any other tables in main DB so nothing is ever left behind
+      const preserveTables = new Set([
+        "grade_levels",
+        "role_permissions",
+        "license_registry",
+        "content_manifest",
+        "settings",
+      ]);
+      const dynamicTables = (
+        db
+          .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'")
+          .all() as Array<{ name: string }>
+      )
+        .map((r) => r.name)
+        .filter((name) => !preserveTables.has(name));
+
+      const allTablesToClear = Array.from(new Set([...explicitTablesToClear, ...dynamicTables]));
+      for (const tbl of allTablesToClear) {
+        if (!/^[a-zA-Z0-9_]+$/.test(tbl)) continue;
+        try {
+          db.prepare(`DELETE FROM ${tbl}`).run();
+        } catch {}
+      }
+
+      // Remove custom grade levels while preserving the 22 standardized grade levels
+      try {
+        db.prepare("DELETE FROM grade_levels WHERE category = 'custom'").run();
+      } catch {}
+
+      // Clear attached practice_logs DB (preserve schema)
+      try {
+        db.prepare("DELETE FROM practice_logs.practice_logs").run();
+      } catch {}
+
+      // Reset settings and config to clean factory state while preserving schema version 5
+      db.prepare("DELETE FROM settings").run();
+      db.prepare("INSERT INTO settings (key, value) VALUES ('SCHEMA_VERSION', '5')").run();
+      db.prepare("INSERT INTO settings (key, value) VALUES ('REGISTRATION_OPEN', 'true')").run();
+      db.prepare("INSERT INTO settings (key, value) VALUES ('CURRENT_TERM', '2026-T1')").run();
+      db.prepare("INSERT OR IGNORE INTO config (id, org_name, version) VALUES (1, 'ExamPool School', '1.0.0')").run();
+
+      // Reset autoincrement sequences so fresh records start at ID 1
+      try {
+        db.prepare(
+          "DELETE FROM sqlite_sequence WHERE name NOT IN ('grade_levels','role_permissions','license_registry','content_manifest','settings','config')"
+        ).run();
+      } catch {}
+    })();
+  } finally {
+    db.run("PRAGMA foreign_keys = ON");
+  }
+
+  // Re-initialize baseline schema defaults (standardized classes, grade levels, initial session/term)
+  try {
+    initializeDatabase();
+  } catch (e) {
+    console.warn("[FactoryReset] initializeDatabase re-seed warning:", e);
+  }
+  try {
+    cacheService.clear();
+  } catch {}
+  try {
+    rateLimits.clear();
+  } catch {}
+}
+
 // Optional datastore reset only if explicitly requested via environment variable
 if (Bun.env.RESET_DATASTORE === "true" || Bun.env.FORCE_SETUP === "true") {
-  console.log("[SetupReset] Explicit RESET_DATASTORE / FORCE_SETUP detected. Performing datastore reset...");
+  console.log("[SetupReset] Explicit RESET_DATASTORE / FORCE_SETUP detected. Performing full system factory reset...");
   try {
-    db.run("PRAGMA foreign_keys = OFF");
-    const tablesToClear = [
-      "grading_student_scores", "grading_calculated_results", "grading_assessments",
-      "grading_categories", "grading_grade_boundaries", "grading_scheme_versions",
-      "grading_schemes", "grading_manual_scores", "grading_policies", "term_results",
-      "annual_results", "grading_subjects", "student_answers", "exam_attempts",
-      "question_map", "exams", "questions", "subject_enrollments", "timetables",
-      "class_enrollments", "class_teacher_assignments", "guardian_student_links",
-      "academic_calendar_events", "kiosk_sessions", "notifications", "audit_logs",
-      "token_blacklist", "user_tokens", "user_devices", "student_term_remarks", "exam_retake_authorizations"
-    ];
-    for (const tbl of tablesToClear) {
-      try { db.prepare(`DELETE FROM ${tbl}`).run(); } catch {}
-    }
-    try { db.prepare("DELETE FROM users WHERE role = 'operator'").run(); } catch {}
-    try { db.prepare("DELETE FROM sqlite_sequence WHERE name NOT IN ('grade_levels','settings','config')").run(); } catch {}
-    db.run("PRAGMA foreign_keys = ON");
-    console.log("[SetupReset] Datastore reset complete.");
+    performFullSystemFactoryReset();
+    console.log("[SetupReset] Full system factory reset complete.");
   } catch (e) {
     console.error("[SetupReset] Error during setup reset:", e);
   }
 }
 
 let setupRequired = checkSetupRequired();
-// Automatically bootstrap default demo data only if no active school administrator exists
+// Purge any legacy hardcoded bootstrap accounts/subjects without seeding demo data
 await bootstrapDefaultSystemAccounts();
 setupRequired = checkSetupRequired();
 
@@ -1564,29 +1684,26 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
   if (method === "POST" && pathname === "/api/setup/reset-wizard") {
     const body = await readJson(req).catch(() => ({}));
     const confirmVal = trimStr(body?.confirm || body?.confirmation || "").toUpperCase();
-    if (confirmVal !== "RESET_ALL_DATA" && confirmVal !== "RESET") {
+    if (confirmVal !== "RESET_ALL_DATA" && confirmVal !== "RESET" && confirmVal !== "DELETE ALL DATA") {
       return apiError(400, "Confirmation required. Send { \"confirm\": \"RESET\" } to unlock setup.");
     }
     try {
-      db.run("PRAGMA foreign_keys = OFF");
-      const tablesToClear = [
-        "grading_student_scores", "grading_calculated_results", "grading_assessments",
-        "grading_categories", "grading_grade_boundaries", "grading_scheme_versions",
-        "grading_schemes", "grading_manual_scores", "grading_policies", "term_results",
-        "annual_results", "grading_subjects", "student_answers", "exam_attempts",
-        "question_map", "exams", "questions", "subject_enrollments", "timetables",
-        "class_enrollments", "class_teacher_assignments", "guardian_student_links",
-        "academic_calendar_events", "kiosk_sessions", "notifications", "audit_logs",
-        "token_blacklist", "user_tokens", "user_devices", "student_term_remarks", "exam_retake_authorizations"
-      ];
-      for (const tbl of tablesToClear) {
-        try { db.prepare(`DELETE FROM ${tbl}`).run(); } catch {}
-      }
-      try { db.prepare("DELETE FROM users WHERE role = 'operator'").run(); } catch {}
-      try { db.prepare("DELETE FROM sqlite_sequence WHERE name NOT IN ('grade_levels','settings','config')").run(); } catch {}
-      db.run("PRAGMA foreign_keys = ON");
+      performFullSystemFactoryReset();
+      activeCustomUrl = Bun.env.CUSTOM_URL || "exampool.ng";
       setupRequired = true;
-      return apiSuccess({ message: "Datastore reset complete. Setup mode is now active at /setup" });
+      return apiSuccess(
+        { message: "Datastore reset complete. Setup mode is now active at /setup", setupRequired: true },
+        200,
+        {
+          "Set-Cookie": [
+            "__exampool_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0",
+            "__exampool_session_operator=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0",
+            "__exampool_session_teacher=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0",
+            "__exampool_session_student=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0",
+            "__exampool_session_guardian=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0",
+          ],
+        }
+      );
     } catch (e: any) {
       return apiError(500, "Reset failed: " + (e?.message || String(e)));
     }
@@ -1594,7 +1711,7 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
 
   if (method === "POST" && pathname === "/api/auth/bootstrap") {
     await bootstrapDefaultSystemAccounts();
-    return apiSuccess({ message: "Default system accounts verified and seeded." });
+    return apiSuccess({ message: "Legacy hardcoded demo accounts and subjects purged." });
   }
 
   if (method === "POST" && pathname === "/api/auth/login") {
@@ -6769,96 +6886,31 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     requireRole(auth.role, ["operator"]);
     const body = await readJson(req);
     const confirmVal = trimStr(body?.confirm || body?.confirmation || body?.confirmText || "").toUpperCase();
-    if (confirmVal !== "RESET_ALL_DATA" && confirmVal !== "DELETE ALL DATA") {
+    if (confirmVal !== "RESET_ALL_DATA" && confirmVal !== "DELETE ALL DATA" && confirmVal !== "RESET") {
       return apiError(400, "Confirmation string required. Type \"DELETE ALL DATA\" to confirm.");
     }
     try {
-      db.transaction(() => {
-        // Disable FK checks for comprehensive wipe — we will re-enable after
-        db.run("PRAGMA foreign_keys = OFF");
-        // Child tables first (grading, exams, enrollments, etc.)
-        const tablesToClear = [
-          "grading_student_scores",
-          "grading_calculated_results",
-          "grading_assessments",
-          "grading_categories",
-          "grading_grade_boundaries",
-          "grading_scheme_versions",
-          "grading_schemes",
-          "grading_manual_scores",
-          "grading_policies",
-          "term_results",
-          "annual_results",
-          "grading_subjects",
-          "student_answers",
-          "exam_attempts",
-          "question_map",
-          "exams",
-          "questions",
-          "subject_enrollments",
-          "timetables",
-          "class_enrollments",
-          "class_teacher_assignments",
-          "guardian_student_links",
-          "academic_calendar_events",
-          "kiosk_sessions",
-          "notifications",
-          "audit_logs",
-          "token_blacklist",
-          "user_tokens",
-          "user_devices",
-          "subjects",
-          "student_term_remarks",
-          "classes",
-          // Keep grade_levels structure but clear custom entries later; do not wipe standardized ones here
-        ];
-        for (const tbl of tablesToClear) {
-          try { db.prepare(`DELETE FROM ${tbl}`).run(); } catch {}
-        }
-        // Clear practice_logs attached DB (preserve schema)
-        try { db.prepare("DELETE FROM practice_logs.practice_logs").run(); } catch {}
-        // Wipe users last (after all FK dependents cleared)
-        try { db.prepare("DELETE FROM users").run(); } catch {}
-        // Reset autoincrement counters so IDs restart from 1
-        try { db.prepare("DELETE FROM sqlite_sequence WHERE name NOT IN ('grade_levels','settings','config')").run(); } catch {}
-        // Re-enable FK
-        db.run("PRAGMA foreign_keys = ON");
-        // Reset config and settings to factory state but preserve SCHEMA_VERSION
-        db.prepare("DELETE FROM config").run();
-        db.prepare("INSERT OR IGNORE INTO config (id, org_name, version) VALUES (1, 'ExamPool School', '1.0.0')").run();
-        db.prepare("UPDATE settings SET value = '2026-T1' WHERE key = 'CURRENT_TERM'").run();
-        db.prepare("UPDATE settings SET value = 'true' WHERE key = 'REGISTRATION_OPEN'").run();
-        db.prepare("DELETE FROM settings WHERE key IN ('SCHOOL_NAME','CUSTOM_URL','INSTITUTION_TYPE')").run();
-        db.prepare("INSERT OR IGNORE INTO settings (key, value) VALUES ('SCHEMA_VERSION','3')").run();
-        // Ensure default academic session/term exist after wipe
-        const sessionCount = (db.prepare("SELECT COUNT(*) as c FROM academic_sessions").get() as any)?.c ?? 0;
-        if (Number(sessionCount) === 0) {
-          db.prepare("INSERT INTO academic_sessions (name, is_active, status) VALUES ('2026/2027', 1, 'active')").run();
-        } else {
-          db.prepare("UPDATE academic_sessions SET is_active = CASE WHEN id = (SELECT MIN(id) FROM academic_sessions) THEN 1 ELSE 0 END").run();
-        }
-        const termCount = (db.prepare("SELECT COUNT(*) as c FROM academic_terms").get() as any)?.c ?? 0;
-        if (Number(termCount) === 0) {
-          const firstSessionId = (db.prepare("SELECT id FROM academic_sessions WHERE is_active = 1 LIMIT 1").get() as any)?.id ?? 1;
-          db.prepare("INSERT INTO academic_terms (session_id, name, is_active, status, registration_open) VALUES (?, 'First Term', 1, 'active', 1)").run(firstSessionId);
-        } else {
-          db.prepare("UPDATE academic_terms SET is_active = CASE WHEN id = (SELECT MIN(id) FROM academic_terms) THEN 1 ELSE 0 END").run();
-        }
-        // Clear server-side caches so stale academic/registration data is not served after wipe
-        try { cacheService.clear(); } catch {}
-      })();
-      // Re-seed grade levels, classes, and default academic structure (idempotent INSERT OR IGNORE)
-      try { initializeDatabase(); } catch (e) { console.warn("[FactoryReset] initializeDatabase re-seed warning:", e); }
-      // Reset in-memory custom URL to default after factory wipe
+      performFullSystemFactoryReset();
       activeCustomUrl = Bun.env.CUSTOM_URL || "exampool.ng";
+      setupRequired = true;
+      console.log(`[FactoryReset] Full system factory reset completed by operator #${auth.userId}. Setup mode active.`);
     } catch (e: any) {
       console.error("[FactoryReset] transaction failed:", e);
       return apiError(500, "Factory reset failed: " + (e.message || String(e)));
     }
-    // Audit after transaction (actor still valid via token, but users table is empty — log with raw ID)
-    try { auditLog(auth.userId, "FACTORY_RESET", "system", null, JSON.stringify({ wiped: true })); } catch {}
-    setupRequired = true;
-    return apiMessage("Database reset complete. Refresh to run setup.");
+    return apiSuccess(
+      { message: "Database reset complete. Refresh to run setup.", setupRequired: true },
+      200,
+      {
+        "Set-Cookie": [
+          "__exampool_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0",
+          "__exampool_session_operator=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0",
+          "__exampool_session_teacher=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0",
+          "__exampool_session_student=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0",
+          "__exampool_session_guardian=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0",
+        ],
+      }
+    );
   }
 
   // ── Grade Levels & Institution Settings ────────────────────────────────────

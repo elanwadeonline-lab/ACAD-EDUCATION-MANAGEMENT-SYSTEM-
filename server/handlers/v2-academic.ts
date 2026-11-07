@@ -344,9 +344,11 @@ export function buildRichWardPayload(studentId: number, guardianId: number, term
     const tid = termId || activeTerm?.id || 1;
     const sid = sessionId || activeSession?.id || 1;
 
-    // 1. Determine student's enrolled class
+    // 1. Determine student's enrolled class & guardian link info
     const enrolledClass = db.prepare("SELECT c.name, c.id as class_id FROM class_enrollments ce JOIN classes c ON c.id = ce.class_id WHERE ce.student_id = ? ORDER BY ce.id DESC LIMIT 1").get(studentId) as any;
-    const studentGrade = enrolledClass?.name || student.grade || "JSS 3";
+    const studentGrade = enrolledClass?.name || student.grade || "Unassigned";
+    const guardianUser = queries.getUserById.get(guardianId) as any;
+    const guardianLink = db.prepare("SELECT relationship FROM guardian_student_links WHERE guardian_id = ? AND student_id = ? LIMIT 1").get(guardianId, studentId) as any;
 
     // 1. Subjects & Performance
     const results = queries.getStudentTermResultsForReportCard.all(studentId) as any[];
@@ -367,7 +369,7 @@ export function buildRichWardPayload(studentId: number, guardianId: number, term
       averageScore = examsAvg?.avg !== null && examsAvg?.avg !== undefined ? Number(examsAvg.avg) : null;
     }
 
-    let classPosition = "1st of 1";
+    let classPosition = "—";
     try {
       const classPeers = db.prepare(`
         SELECT tr.student_id, AVG(tr.total_score) as avg_score
@@ -380,15 +382,17 @@ export function buildRichWardPayload(studentId: number, guardianId: number, term
 
       if (classPeers.length > 0) {
         const rankIdx = classPeers.findIndex((p: any) => Number(p.student_id) === studentId);
-        const rank = rankIdx >= 0 ? rankIdx + 1 : 1;
-        const total = classPeers.length;
-        const suffix = (r: number) => {
-          if (r === 1) return "1st";
-          if (r === 2) return "2nd";
-          if (r === 3) return "3rd";
-          return `${r}th`;
-        };
-        classPosition = `${suffix(rank)} of ${total}`;
+        if (rankIdx >= 0) {
+          const rank = rankIdx + 1;
+          const total = classPeers.length;
+          const suffix = (r: number) => {
+            if (r === 1) return "1st";
+            if (r === 2) return "2nd";
+            if (r === 3) return "3rd";
+            return `${r}th`;
+          };
+          classPosition = `${suffix(rank)} of ${total}`;
+        }
       }
     } catch {}
 
@@ -494,13 +498,14 @@ export function buildRichWardPayload(studentId: number, guardianId: number, term
     });
 
     // 5. Reports
+    const todayIso = new Date().toISOString().slice(0, 10);
     const reports = [
       {
         id: 1,
-        title: `${activeTerm?.name || "First Term"} Report Card`,
+        title: `${activeTerm?.name || "Current Term"} Report Card`,
         category: "academic",
-        date: "2026-07-24",
-        term: `${activeTerm?.name || "First Term"} ${activeSession?.name || "2026/2027"}`,
+        date: todayIso,
+        term: `${activeTerm?.name || "Current Term"} ${activeSession?.name || ""}`.trim(),
         description: "Comprehensive academic broadsheet with subject CA, exam scores, and principal remarks.",
         url: `/api/grading/report-card/${studentId}`,
       },
@@ -508,8 +513,8 @@ export function buildRichWardPayload(studentId: number, guardianId: number, term
         id: 2,
         title: "Attendance & Punctuality Record",
         category: "attendance",
-        date: "2026-07-20",
-        term: `${activeTerm?.name || "First Term"}`,
+        date: todayIso,
+        term: `${activeTerm?.name || "Current Term"}`,
         description: `${presentDays} of ${totalDays} school days attended (${attPct}% attendance rate).`,
         url: `/api/guardian/wards/${studentId}/attendance`,
       },
@@ -517,8 +522,8 @@ export function buildRichWardPayload(studentId: number, guardianId: number, term
         id: 3,
         title: "Behavioral & Character Assessment",
         category: "behaviour",
-        date: "2026-07-15",
-        term: `${activeTerm?.name || "First Term"}`,
+        date: todayIso,
+        term: `${activeTerm?.name || "Current Term"}`,
         description: "Conduct, team participation, attentiveness, and neatness evaluation by Form Teacher.",
         url: `/api/guardian/wards/${studentId}/reports`,
       }
@@ -533,9 +538,13 @@ export function buildRichWardPayload(studentId: number, guardianId: number, term
       grade: studentGrade,
       admission_number: student.reg_id || `REG-${studentId}`,
       reg_id: student.reg_id,
+      dob: student.dob || null,
+      parent_name: guardianUser?.name || null,
+      parent_phone: guardianUser?.phone || student.phone || null,
+      relationship: guardianLink?.relationship || "Parent / Guardian",
       image_url: student.image_url || null,
       average_score: averageScore,
-      score_delta: "+2.4",
+      score_delta: null,
       attendance_pct: attPct,
       class_position: classPosition,
       unread_messages: Number(unreadMsg?.count || 0),

@@ -22,7 +22,7 @@ export function WardProfileClient({ params }: Props) {
 }
 
 function WardProfileContent({ wardId }: { wardId: number }) {
-  const { wards } = useGuardian();
+  const { wards, guardianName } = useGuardian();
   const ward = wards.find((w) => w.id === wardId) || wards[0];
 
   if (!ward) {
@@ -48,15 +48,15 @@ function WardProfileContent({ wardId }: { wardId: number }) {
         <div className={styles.infoGrid}>
           <div className={styles.infoItem}>
             <span className={styles.infoLabel}>Date of Birth</span>
-            <span className={styles.infoValue}>{ward.dob || "12 May 2010"}</span>
+            <span className={styles.infoValue}>{ward.dob || "Not provided"}</span>
           </div>
           <div className={styles.infoItem}>
             <span className={styles.infoLabel}>Gender</span>
-            <span className={styles.infoValue}>{ward.gender || "Male"}</span>
+            <span className={styles.infoValue}>{ward.gender || "Student"}</span>
           </div>
           <div className={styles.infoItem}>
             <span className={styles.infoLabel}>Blood Group</span>
-            <span className={styles.infoValue}>{ward.blood_group || "O+"}</span>
+            <span className={styles.infoValue}>{ward.blood_group || "Not provided"}</span>
           </div>
           <div className={styles.infoItem}>
             <span className={styles.infoLabel}>Status</span>
@@ -71,19 +71,19 @@ function WardProfileContent({ wardId }: { wardId: number }) {
         <div className={styles.infoGrid}>
           <div className={styles.infoItem}>
             <span className={styles.infoLabel}>Parent Name</span>
-            <span className={styles.infoValue}>{ward.parent_name || "Mrs. Adenike Adeleke"}</span>
+            <span className={styles.infoValue}>{ward.parent_name || guardianName || "Not provided"}</span>
           </div>
           <div className={styles.infoItem}>
             <span className={styles.infoLabel}>Relationship</span>
-            <span className={styles.infoValue}>{ward.relationship || "Mother"}</span>
+            <span className={styles.infoValue}>{ward.relationship || "Parent / Guardian"}</span>
           </div>
           <div className={styles.infoItem} style={{ gridColumn: "span 2" }}>
             <span className={styles.infoLabel}>Phone Number</span>
-            <span className={styles.infoValue}>{ward.parent_phone || "+234 801 234 5678"}</span>
+            <span className={styles.infoValue}>{ward.parent_phone || "Not provided"}</span>
           </div>
           <div className={styles.infoItem} style={{ gridColumn: "span 2" }}>
             <span className={styles.infoLabel}>Emergency Contact</span>
-            <span className={styles.infoValue}>{ward.emergency_contact || "+234 802 987 6543 (Mr. Tunde Adeleke)"}</span>
+            <span className={styles.infoValue}>{ward.emergency_contact || "Not provided"}</span>
           </div>
         </div>
       </section>
