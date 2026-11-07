@@ -314,10 +314,14 @@ function ExamContent() {
     return () => window.removeEventListener("beforeunload", onBeforeUnload);
   }, [mode, examId]);
 
-  const seedTimer = useCallback((startTimeIso: string, durationMins: number, serverTimeIso?: string) => {
+  const seedTimer = useCallback((startTimeIso: string, durationMins: number, serverTimeIso?: string, deadlineIso?: string) => {
     const now = serverTimeIso ? Date.parse(serverTimeIso) : Date.now();
     const elapsed = Math.max(0, Math.floor((now - Date.parse(startTimeIso)) / 1000));
-    const seed = Math.max(0, durationMins * 60 - elapsed);
+    let seed = Math.max(0, durationMins * 60 - elapsed);
+    if (deadlineIso && Number.isFinite(Date.parse(deadlineIso))) {
+      const untilDeadline = Math.max(0, Math.floor((Date.parse(deadlineIso) - now) / 1000));
+      seed = Math.min(seed, untilDeadline);
+    }
     setTimerSeed(seed);
   }, []);
 
@@ -388,7 +392,7 @@ function ExamContent() {
         // Untimed coursework (assignments) gets a generous safety seed — there is
         // no deadline, so never let the timer expire immediately (0 → instant onExpire).
         const durForSeed = Number(subjectForStart.duration) > 0 ? Number(subjectForStart.duration) : 240;
-        seedTimer(start.startTime ?? new Date().toISOString(), durForSeed, start.server_time);
+        seedTimer(start.startTime ?? new Date().toISOString(), durForSeed, start.server_time, start.deadline);
         setMode("in-progress");
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to start exam. The exam window might be closed.");
@@ -496,7 +500,7 @@ function ExamContent() {
           if (!mounted) return;
           setQuestions(qs);
           const durForResume = Number(s.duration) > 0 ? Number(s.duration) : 240;
-          seedTimer(inProgress.start_time, durForResume, serverTime);
+          seedTimer(inProgress.start_time, durForResume, serverTime, inProgress.deadline);
 
           if (Object.keys(mapped).length === 0) {
             if (!document.fullscreenElement) {

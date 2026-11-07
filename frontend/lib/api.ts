@@ -450,6 +450,15 @@ export const api = {
     fetchWithAuth<{ released: boolean; count: number; subject_id: number }>(`/api/subjects/${subjectId}/release-results`, { method: "POST" }),
   getResults: (sessionId?: number, termId?: number) => fetchWithAuth<ExamResult[]>(`/api/exams/results${buildAcademicQuery(sessionId, termId)}`),
   retakeExam: (examId: number) => fetchWithAuth<any>(`/api/exams/${examId}/retake`, { method: "POST" }),
+  authorizeRetake: (data: { student_id: number; subject_id: number; reason: string; max_attempts?: number; valid_until?: string }) =>
+    fetchWithAuth<any>("/api/exams/authorizations/retake", { method: "POST", body: JSON.stringify(data) }),
+  getRetakeAuthorizations: (params?: { student_id?: number; subject_id?: number }) => {
+    const qs = new URLSearchParams();
+    if (params?.student_id) qs.set("student_id", String(params.student_id));
+    if (params?.subject_id) qs.set("subject_id", String(params.subject_id));
+    const qStr = qs.toString();
+    return fetchWithAuth<any[]>(`/api/exams/authorizations/retake${qStr ? `?${qStr}` : ""}`);
+  },
   /** Get in-progress exams for the current student (for resume detection) */
   getActiveExams: () => fetchWithAuth<ActiveExamData | Subject[]>("/api/exams/active"),
   getUsers: (sessionId?: number, termId?: number) => fetchWithAuth<User[]>(`/api/users${buildAcademicQuery(sessionId, termId)}`),

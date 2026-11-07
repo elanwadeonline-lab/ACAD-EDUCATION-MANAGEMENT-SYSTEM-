@@ -467,9 +467,18 @@ export function buildRichWardPayload(studentId: number, guardianId: number, term
       const day = d.getDate();
       const weekday = d.toLocaleString("default", { weekday: "short" });
       const nowStr = new Date().toISOString().slice(0, 10);
+      const studentExam = t.subject_id ? db.prepare(
+        "SELECT status FROM exams WHERE student_id = ? AND subject_id = ?"
+      ).get(studentId, t.subject_id) as any : null;
+
       let status = "upcoming";
-      if (t.exam_date === nowStr) status = "live";
-      else if (t.exam_date < nowStr) status = "completed";
+      if (studentExam?.status === "completed") {
+        status = "completed";
+      } else if (t.exam_date === nowStr) {
+        status = "live";
+      } else if (t.exam_date < nowStr) {
+        status = "closed";
+      }
 
       return {
         id: t.id || idx + 1,

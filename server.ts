@@ -151,15 +151,22 @@ export function reconcileSubjectTimetable(subjectId: number, examDatetime: unkno
     const schedDuration = Number(duration) || 60;
     const existing = db.prepare("SELECT id FROM timetables WHERE subject_id = ?").get(subjectId) as any;
     if (existing?.id) {
-      db.prepare(
-        "UPDATE timetables SET exam_date=?, start_time=?, end_time=?, duration=?, updated_at=(strftime('%Y-%m-%dT%H:%M:%SZ','now')) WHERE id=?"
-      ).run(examDate, startTime, endTime, schedDuration, Number(existing.id));
+      db.prepare(`
+        UPDATE timetables
+        SET exam_date=?, start_time=?, end_time=?, duration=?,
+            session_id = COALESCE(session_id, (SELECT session_id FROM subjects WHERE id = ?)),
+            term_id = COALESCE(term_id, (SELECT term_id FROM subjects WHERE id = ?)),
+            updated_at=(strftime('%Y-%m-%dT%H:%M:%SZ','now'))
+        WHERE id=?
+      `).run(examDate, startTime, endTime, schedDuration, subjectId, subjectId, Number(existing.id));
     } else {
       db.prepare(`
-        INSERT INTO timetables (subject_id, class, grade_level_id, exam_date, start_time, end_time, duration, exam_mode, allow_students)
+        INSERT INTO timetables (subject_id, class, grade_level_id, exam_date, start_time, end_time, duration, exam_mode, allow_students, session_id, term_id)
         SELECT id, class, grade_level_id, ?, ?, ?, ?,
           CASE WHEN mode = 'assignment' OR is_assignment = 1 THEN 'Assignment' ELSE 'CBT' END,
-          IFNULL(is_published, 0)
+          CASE WHEN is_timetable_published = 1 OR is_published = 1 THEN 1 ELSE 0 END,
+          session_id,
+          term_id
         FROM subjects WHERE id = ?
       `).run(examDate, startTime, endTime, schedDuration, subjectId);
     }
@@ -203,6 +210,110 @@ export function sameUserId(dbValue: unknown, tokenUserId: number): boolean {
   return sqlInt(dbValue) === tokenUserId;
 }
 
+export function isStudentEligibleForSubject(studentId: number, subject: any): boolean {
+  if (!subject) return false;
+  const sId = Number(subject.id);
+  // 1. Explicit subject enrollment
+  const subEnrollment = db.prepare("SELECT 1 FROM subject_enrollments WHERE subject_id = ? AND student_id = ?").get(sId, studentId);
+  if (subEnrollment) return true;
+
+  // 2. Existing exam record
+  const existingExam = db.prepare("SELECT 1 FROM exams WHERE subject_id = ? AND student_id = ?").get(sId, studentId);
+  if (existingExam) return true;
+
+  // 3. Student user details
+  const student = db.prepare("SELECT u.*, gl.name as gl_name FROM users u LEFT JOIN grade_levels gl ON gl.id = u.grade_level_id WHERE u.id = ?").get(studentId) as any;
+  if (!student) return false;
+
+  // 4. Class / Grade match
+  const subClass = subject.class ? String(subject.class).trim().toLowerCase().replace(/\s+/g, "") : "";
+  const stuGrade = student.grade ? String(student.grade).trim().toLowerCase().replace(/\s+/g, "") : "";
+  const stuGlName = student.gl_name ? String(student.gl_name).trim().toLowerCase().replace(/\s+/g, "") : "";
+
+  if (subClass && (subClass === stuGrade || subClass === stuGlName)) return true;
+  if (subject.grade_level_id && student.grade_level_id && Number(subject.grade_level_id) === Number(student.grade_level_id)) return true;
+
+  // 5. Check class_enrollments
+  const subGlId = subject.grade_level_id ? Number(subject.grade_level_id) : null;
+  const subGlNameRow = subGlId ? (db.prepare("SELECT name FROM grade_levels WHERE id = ?").get(subGlId) as any) : null;
+  const subGlNameNorm = subGlNameRow?.name ? String(subGlNameRow.name).trim().toLowerCase().replace(/\s+/g, "") : "";
+
+  const classEnrollment = db.prepare(`
+    SELECT 1 FROM class_enrollments ce
+    JOIN classes c ON c.id = ce.class_id
+    WHERE ce.student_id = ? AND (
+      (? IS NOT NULL AND c.id = ?)
+      OR (? != '' AND LOWER(REPLACE(c.name, ' ', '')) = ?)
+      OR (? != '' AND LOWER(REPLACE(c.name, ' ', '')) = ?)
+    )
+  `).get(studentId, subGlId, subGlId, subClass, subClass, subGlNameNorm, subGlNameNorm);
+  if (classEnrollment) return true;
+
+  // 6. General / All-cohort subject with no specific enrollments
+  if (!subject.class && !subject.grade_level_id) {
+    const hasAnyEnrollment = db.prepare("SELECT 1 FROM subject_enrollments WHERE subject_id = ? LIMIT 1").get(sId);
+    if (!hasAnyEnrollment) return true;
+  }
+  if (['all', 'all cohorts', 'general'].includes(String(subject.class || '').trim().toLowerCase())) return true;
+
+  return false;
+}
+
+export function isTeacherAuthorizedForGradingSubject(userId: number, subject: any): boolean {
+  if (!subject) return false;
+  if (sameUserId(subject.teacher_id, userId)) return true;
+
+  // 1. Check if this is a grading_subject linked to a CBT subject owned by userId
+  const sourceCbtId = Number(subject.source_cbt_subject_id || 0);
+  if (sourceCbtId > 0) {
+    const ownsSource = db.prepare("SELECT 1 FROM subjects WHERE id = ? AND teacher_id = ? LIMIT 1").get(sourceCbtId, userId);
+    if (ownsSource) return true;
+  }
+
+  // 2. Check if any grading_policy on this grading_subject maps to a CBT subject owned by userId,
+  // or if `subject` is a CBT subject linked to a grading_subject owned by userId
+  if (subject.id) {
+    const ownsMapped = db.prepare(`
+      SELECT 1 FROM grading_policies gp
+      JOIN subjects s ON s.id = gp.mapped_cbt_subject_id
+      WHERE gp.grading_subject_id = ? AND s.teacher_id = ?
+      LIMIT 1
+    `).get(Number(subject.id), userId);
+    if (ownsMapped) return true;
+
+    const ownsGradingForCbt = db.prepare(`
+      SELECT 1 FROM grading_subjects gs
+      WHERE (gs.source_cbt_subject_id = ? OR EXISTS (SELECT 1 FROM grading_policies gp WHERE gp.grading_subject_id = gs.id AND gp.mapped_cbt_subject_id = ?))
+        AND gs.teacher_id = ?
+      LIMIT 1
+    `).get(Number(subject.id), Number(subject.id), userId);
+    if (ownsGradingForCbt) return true;
+  }
+
+  // 3. Check if teacher is the assigned Class Teacher for the subject's class
+  const classId = Number(subject.class_id || 0);
+  const className = typeof subject.class === "string" ? subject.class.trim() : "";
+  if (classId > 0) {
+    const isClassTeacher = db.prepare(`
+      SELECT 1 FROM classes WHERE id = ? AND class_teacher_id = ?
+      UNION
+      SELECT 1 FROM class_teacher_assignments WHERE class_id = ? AND teacher_id = ? AND action != 'unassigned'
+    `).get(classId, userId, classId, userId);
+    if (isClassTeacher) return true;
+  } else if (className) {
+    const isClassTeacherByName = db.prepare(`
+      SELECT 1 FROM classes c
+      LEFT JOIN class_teacher_assignments cta ON cta.class_id = c.id AND cta.action != 'unassigned'
+      WHERE (LOWER(TRIM(c.name)) = LOWER(TRIM(?)) OR REPLACE(LOWER(c.name), ' ', '') = REPLACE(LOWER(?), ' ', ''))
+        AND (c.class_teacher_id = ? OR cta.teacher_id = ?)
+      LIMIT 1
+    `).get(className, className, userId, userId);
+    if (isClassTeacherByName) return true;
+  }
+
+  return false;
+}
+
 /** Never fail the request if audit insert hits FK/race; log instead. */
 export function auditLog(actorId: number, action: string, resource: string, resourceId: number | null, details: string) {
   const aid = sqlInt(actorId);
@@ -239,7 +350,7 @@ if (Bun.env.RESET_DATASTORE === "true" || Bun.env.FORCE_SETUP === "true") {
       "question_map", "exams", "questions", "subject_enrollments", "timetables",
       "class_enrollments", "class_teacher_assignments", "guardian_student_links",
       "academic_calendar_events", "kiosk_sessions", "notifications", "audit_logs",
-      "token_blacklist", "user_tokens", "user_devices", "student_term_remarks"
+      "token_blacklist", "user_tokens", "user_devices", "student_term_remarks", "exam_retake_authorizations"
     ];
     for (const tbl of tablesToClear) {
       try { db.prepare(`DELETE FROM ${tbl}`).run(); } catch {}
@@ -1458,7 +1569,7 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
         "question_map", "exams", "questions", "subject_enrollments", "timetables",
         "class_enrollments", "class_teacher_assignments", "guardian_student_links",
         "academic_calendar_events", "kiosk_sessions", "notifications", "audit_logs",
-        "token_blacklist", "user_tokens", "user_devices", "student_term_remarks"
+        "token_blacklist", "user_tokens", "user_devices", "student_term_remarks", "exam_retake_authorizations"
       ];
       for (const tbl of tablesToClear) {
         try { db.prepare(`DELETE FROM ${tbl}`).run(); } catch {}
@@ -2147,6 +2258,79 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     return apiSuccess({ exam_id: examId, teacher_remark: remark || null });
   }
 
+  // ── Retake Authorization & Execution ─────────────────────────────────────────
+  if (method === "POST" && pathname === "/api/exams/authorizations/retake") {
+    const auth = requireAuth(req);
+    requireRole(auth.role, ["teacher", "operator"]);
+    const body = await readJson(req);
+    const studentId = Number(body?.student_id);
+    const subjectId = Number(body?.subject_id);
+    const reason = trimStr(body?.reason);
+    const maxAttempts = Number(body?.max_attempts) || 1;
+    const validUntil = body?.valid_until ? trimStr(body.valid_until) : null;
+
+    if (!isPositiveIntId(studentId) || !isPositiveIntId(subjectId)) {
+      return apiError(400, "student_id and subject_id are required positive integers");
+    }
+    if (!reason) return apiError(400, "reason is required for retake authorization");
+
+    if (auth.role === "teacher") {
+      const subject = queries.getSubjectById.get(subjectId) as any;
+      if (!isTeacherAuthorizedForGradingSubject(auth.userId, subject)) {
+        return apiError(403, "You are not authorized to grant retakes for this subject");
+      }
+    }
+
+    const res = queries.createRetakeAuth.run(studentId, subjectId, auth.userId, reason, maxAttempts, validUntil) as any;
+    auditLog(auth.userId, "EXAM_RETAKE_AUTHORIZED", "exam_retake_authorizations", Number(res.lastInsertRowid), JSON.stringify({ student_id: studentId, subject_id: subjectId, reason, max_attempts: maxAttempts }));
+    return apiSuccess({ success: true, id: Number(res.lastInsertRowid), message: "Retake successfully authorized." }, 201);
+  }
+
+  const examAuthorizeRetakeMatch = pathname.match(/^\/api\/exams\/(\d+)\/authorize-retake$/);
+  if (examAuthorizeRetakeMatch && method === "POST") {
+    const auth = requireAuth(req);
+    requireRole(auth.role, ["teacher", "operator"]);
+    const examId = Number(examAuthorizeRetakeMatch[1]);
+    if (!isPositiveIntId(examId)) return apiError(400, "Invalid exam id");
+    const exam = queries.getExamById.get(examId) as any;
+    if (!exam) return apiError(404, "Exam not found");
+
+    const body = await readJson(req);
+    const reason = trimStr(body?.reason) || "Administrative retake authorization";
+    const maxAttempts = Number(body?.max_attempts) || 1;
+    const validUntil = body?.valid_until ? trimStr(body.valid_until) : null;
+
+    if (auth.role === "teacher") {
+      const subject = queries.getSubjectById.get(exam.subject_id) as any;
+      if (!isTeacherAuthorizedForGradingSubject(auth.userId, subject)) {
+        return apiError(403, "You are not authorized to grant retakes for this subject");
+      }
+    }
+
+    const res = queries.createRetakeAuth.run(exam.student_id, exam.subject_id, auth.userId, reason, maxAttempts, validUntil) as any;
+    auditLog(auth.userId, "EXAM_RETAKE_AUTHORIZED", "exam_retake_authorizations", Number(res.lastInsertRowid), JSON.stringify({ exam_id: examId, student_id: exam.student_id, subject_id: exam.subject_id, reason }));
+    return apiSuccess({ success: true, id: Number(res.lastInsertRowid), message: "Retake successfully authorized." }, 201);
+  }
+
+  if (method === "GET" && pathname === "/api/exams/authorizations/retake") {
+    const auth = requireAuth(req);
+    requireRole(auth.role, ["teacher", "operator", "student"]);
+    const studentId = Number(url.searchParams.get("student_id") || (auth.role === "student" ? auth.userId : 0));
+    const subjectId = Number(url.searchParams.get("subject_id") || 0);
+
+    if (auth.role === "student") {
+      const list = queries.getRetakeAuthorizationsByStudent.all(auth.userId);
+      return apiSuccess(list);
+    }
+    if (studentId) {
+      return apiSuccess(queries.getRetakeAuthorizationsByStudent.all(studentId));
+    }
+    if (subjectId) {
+      return apiSuccess(queries.getRetakeAuthorizationsBySubject.all(subjectId));
+    }
+    return apiSuccess(db.prepare("SELECT * FROM exam_retake_authorizations ORDER BY id DESC LIMIT 100").all());
+  }
+
   // ── Retake Exam ─────────────────────────────────────────────────────────────
   const examRetakeMatch = pathname.match(/^\/api\/exams\/(\d+)\/retake$/);
   if (examRetakeMatch && method === "POST") {
@@ -2154,30 +2338,55 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     requireRole(auth.role, ["student"]);
     const examId = Number(examRetakeMatch[1]);
     if (!isPositiveIntId(examId)) return apiError(400, "Invalid exam id");
-    
-    // Begin Transaction manually via db object? Since we are doing two writes, we can just run them sequentially.
+
     const exam = queries.getExamById.get(examId) as any;
     if (!exam || exam.student_id !== auth.userId) return apiError(404, "Exam not found");
     if (exam.status !== "completed") return apiError(400, "Exam is not yet completed");
-    
+
     const subject = queries.getSubjectById.get(exam.subject_id) as any;
-    if (!subject || subject.can_retake !== 1) return apiError(403, "Retaking is not allowed for this subject");
-    
-    // [SECURITY FIX] Ensure the global exam window is still open before allowing a retake
+    if (!subject) return apiError(404, "Subject not found");
+
+    const isLearning = ["practice", "mock"].includes(subject.mode) || ["learning_practice", "learning_mock"].includes(subject.assessment_type);
+    let retakeAuth = isLearning ? null : (queries.getActiveRetakeAuth.get(auth.userId, exam.subject_id) as any);
+    if (!isLearning && (!retakeAuth || subject.can_retake === 0)) {
+      return apiError(403, "Retakes are not permitted for this examination without supervisor authorization.");
+    }
+
+    // Ensure the timetable window is still valid or retake authorization grants access
     {
       const gate = examAccessGate(subject, { retake: true });
-      if (gate) return gate;
+      if (gate && !retakeAuth) return gate;
     }
-    
-    // Archive the completed attempt BEFORE resetting — preserves historical data
+
+    // Compute deadline for retake
+    const sched = resolveExamSchedule(subject);
+    const durationMs = Number(subject.duration || 60) * 60_000;
+    let deadlineMs = Date.now() + durationMs;
+    if (sched.scheduled && sched.end) deadlineMs = Math.min(deadlineMs, sched.end);
+    const newDeadline = new Date(deadlineMs).toISOString();
+
     db.transaction(() => {
+      const prevAnswers = db.prepare(
+        "SELECT question_id, selected_option, essay_response, is_correct, marks_awarded, is_graded FROM student_answers WHERE exam_id = ?"
+      ).all(examId);
+      if (prevAnswers.length > 0) {
+        db.prepare("UPDATE exams SET answers_json = ? WHERE id = ?").run(JSON.stringify(prevAnswers), examId);
+      }
       queries.archiveExamAttempt.run(examId);
       queries.deleteStudentAnswersForExam.run(examId);
       queries.resetExam.run(examId, auth.userId);
+      db.prepare("UPDATE exams SET deadline = ?, is_locked = 0, result_status = ? WHERE id = ?").run(
+        newDeadline,
+        isLearning ? "released" : "scheduled",
+        examId
+      );
+      if (retakeAuth) {
+        queries.incrementRetakeUsed.run(retakeAuth.id);
+      }
     })();
-    
+
     auditLog(auth.userId, "EXAM_RETAKE", "exam", examId, JSON.stringify({ retake_count: exam.retake_count + 1 }));
-    return apiSuccess({ success: true, message: "Exam reset for retake." });
+    return apiSuccess({ success: true, message: "Exam reset for retake.", examId, deadline: newDeadline });
   }
 
   // ── Save principal/admin remark for a specific completed exam ────────────────
@@ -2979,23 +3188,26 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     const qTermId    = Number(url.searchParams.get("termId")    || 0);
     const activeTerm    = queries.getActiveAcademicTerm.get()    as any;
     const activeSession = queries.getActiveAcademicSession.get() as any;
-    const targetTermId    = qTermId    || activeTerm?.id;
-    const targetSessionId = qSessionId || activeSession?.id;
+
+    const validTerm = qTermId ? (db.prepare("SELECT id, session_id FROM academic_terms WHERE id = ?").get(qTermId) as any) : null;
+    const validSession = qSessionId ? (db.prepare("SELECT id FROM academic_sessions WHERE id = ?").get(qSessionId) as any) : null;
+    const targetTermId    = validTerm?.id    || activeTerm?.id;
+    const targetSessionId = validSession?.id || validTerm?.session_id || activeSession?.id;
 
     if (!targetTermId) return apiSuccess([]);
 
     const gradingCfg = getGradingConfig();
 
     if (auth.role === "teacher") {
-      // 1. Find all subjects this teacher owns for the target session & term (or active/null)
+      // 1. Find all subjects this teacher owns or is assigned to for the target session & term (or active/null)
       const teacherSubjects = db.prepare(`
         SELECT s.*,
           (SELECT COUNT(DISTINCT e.student_id) FROM exams e WHERE e.subject_id = s.id AND e.status = 'completed') as students_completed,
           (SELECT COUNT(*) FROM subject_enrollments se WHERE se.subject_id = s.id) as students_enrolled,
           (SELECT ROUND(AVG(CASE WHEN e.total_score > 0 THEN e.score * 100.0 / e.total_score ELSE 0 END), 1) FROM exams e WHERE e.subject_id = s.id AND e.status = 'completed') as avg_score_pct
         FROM subjects s
-        LEFT JOIN terms t ON (s.term_id = t.id OR s.term = t.name)
-        WHERE s.teacher_id = ? 
+        LEFT JOIN academic_terms t ON (s.term_id = t.id OR s.term = t.name)
+        WHERE s.teacher_id = ?
           AND ((s.session_id = ? OR s.session_id IS NULL) AND (s.term_id = ? OR s.term_id IS NULL OR t.id = ? OR s.term = t.name))
         GROUP BY s.id
       `).all(auth.userId, targetSessionId, targetTermId, targetTermId) as any[];
@@ -3003,17 +3215,24 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
       // 2. Auto-create / sync grading_subject rows for any not yet created
       if (targetSessionId && targetTermId) {
         for (const sub of teacherSubjects) {
-          const existing = queries.getGradingSubjectBySource.get(sub.id, targetTermId) as any
-            ?? queries.getGradingSubjectByTeacherCodeTerm.get(auth.userId, sub.code, targetTermId) as any;
-
-          // Resolve class_id from sub.grade_level_id or sub.class
+          // Resolve class_id strictly against classes(id) to satisfy FK constraint
           let resolvedClassId: number | null = null;
-          if (sub.grade_level_id) {
-            resolvedClassId = Number(sub.grade_level_id);
-          } else if (sub.class) {
-            const classRow = db.prepare("SELECT id FROM classes WHERE name = ? OR REPLACE(name,' ','') = REPLACE(?,' ') LIMIT 1").get(sub.class, sub.class) as any;
-            resolvedClassId = classRow ? Number(classRow.id) : null;
+          const candidateClassName = sub.class
+            || (sub.grade_level_id ? (db.prepare("SELECT name FROM grade_levels WHERE id = ?").get(sub.grade_level_id) as any)?.name : null);
+          if (candidateClassName) {
+            const classRow = db.prepare(
+              "SELECT id FROM classes WHERE LOWER(TRIM(name)) = LOWER(TRIM(?)) OR REPLACE(LOWER(name), ' ', '') = REPLACE(LOWER(?), ' ', '') LIMIT 1"
+            ).get(candidateClassName, candidateClassName) as any;
+            if (classRow) resolvedClassId = Number(classRow.id);
           }
+          if (!resolvedClassId && sub.grade_level_id) {
+            const directClass = db.prepare("SELECT id FROM classes WHERE id = ?").get(Number(sub.grade_level_id)) as any;
+            if (directClass) resolvedClassId = Number(directClass.id);
+          }
+
+          const existing = (queries.getGradingSubjectBySource.get(sub.id, targetTermId) as any)
+            ?? (db.prepare("SELECT * FROM grading_subjects WHERE code = ? AND term_id = ? AND (class_id = ? OR class_id IS NULL) ORDER BY CASE WHEN class_id = ? THEN 0 ELSE 1 END LIMIT 1").get(sub.code, targetTermId, resolvedClassId, resolvedClassId) as any)
+            ?? (queries.getGradingSubjectByTeacherCodeTerm.get(auth.userId, sub.code, targetTermId) as any);
 
           if (!existing) {
             try {
@@ -3059,22 +3278,39 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
           } else {
             // Backfill source and class_id on existing rows if missing
             if (!existing.source_cbt_subject_id || (!existing.class_id && resolvedClassId)) {
-              if (!existing.class_id && resolvedClassId) {
-                db.prepare("UPDATE grading_subjects SET class_id = ? WHERE id = ?").run(resolvedClassId, existing.id);
-              }
-              queries.updateGradingSubjectMeta.run(sub.mode || existing.mode || "exam", sub.id, existing.id);
+              try {
+                if (!existing.class_id && resolvedClassId) {
+                  db.prepare("UPDATE grading_subjects SET class_id = ? WHERE id = ?").run(resolvedClassId, existing.id);
+                }
+                queries.updateGradingSubjectMeta.run(sub.mode || existing.mode || "exam", sub.id, existing.id);
+              } catch { /* ignore UNIQUE conflict if another row already has this class_id */ }
             }
           }
         }
       }
 
-      // 3. Fetch all grading subjects for this teacher this term (includes auto-created + manually created)
-      const gsubs = queries.getGradingSubjectsByTeacher.all(auth.userId, targetTermId) as any[];
+      // 3. Fetch all grading subjects for this teacher this term (authored, assigned, or class supervised)
+      const gsubs = db.prepare(`
+        SELECT DISTINCT gs.*, COALESCE(c.name, s_src.class) as class, COALESCE(c.name, s_src.class) as class_name
+        FROM grading_subjects gs
+        LEFT JOIN classes c ON c.id = gs.class_id
+        LEFT JOIN subjects s_src ON s_src.id = gs.source_cbt_subject_id
+        WHERE (
+          gs.teacher_id = ?
+          OR s_src.teacher_id = ?
+          OR c.class_teacher_id = ?
+          OR EXISTS (
+            SELECT 1 FROM class_teacher_assignments cta
+            WHERE cta.class_id = gs.class_id AND cta.teacher_id = ? AND cta.action != 'unassigned'
+          )
+        ) AND gs.term_id = ?
+        ORDER BY gs.name ASC
+      `).all(auth.userId, auth.userId, auth.userId, auth.userId, targetTermId) as any[];
 
       // 4. Enrich with live stats and filter out cross-term leaked grading subjects
       const enriched = gsubs.filter((gs: any) => {
         if (gs.source_cbt_subject_id) {
-          const sourceSub = db.prepare("SELECT s.term_id, s.term, t.id as term_id_from_name FROM subjects s LEFT JOIN terms t ON s.term = t.name WHERE s.id = ?").get(gs.source_cbt_subject_id) as any;
+          const sourceSub = db.prepare("SELECT s.term_id, s.term, t.id as term_id_from_name FROM subjects s LEFT JOIN academic_terms t ON s.term = t.name WHERE s.id = ?").get(gs.source_cbt_subject_id) as any;
           if (sourceSub) {
             const matchesTerm = sourceSub.term_id === targetTermId || sourceSub.term_id_from_name === targetTermId || sourceSub.term_id == null;
             if (!matchesTerm) return false;
@@ -3120,7 +3356,7 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     if (!isPositiveIntId(gsId)) return apiError(400, "Invalid grading subject id");
     const gs = queries.getGradingSubjectById.get(gsId) as any;
     if (!gs) return apiError(404, "Grading subject not found");
-    if (auth.role === "teacher" && !sameUserId(gs.teacher_id, auth.userId)) return apiError(403, "You do not own this grading subject");
+    if (auth.role === "teacher" && !isTeacherAuthorizedForGradingSubject(auth.userId, gs)) return apiError(403, "You do not own or teach this grading subject");
     const approved = db.prepare("SELECT is_approved FROM term_results WHERE grading_subject_id = ? AND is_approved = 1 LIMIT 1").get(gsId);
     return apiSuccess({ ...gs, is_approved: !!approved });
   }
@@ -3132,9 +3368,15 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
 
     const name      = trimStr(body?.name);
     const code      = trimStr(body?.code);
-    const classId   = Number(body?.class_id) || null;
-    const termId    = Number(body?.term_id    || (queries.getActiveAcademicTerm.get()    as any)?.id);
-    const sessionId = Number(body?.session_id || (queries.getActiveAcademicSession.get() as any)?.id);
+    const rawClassId = Number(body?.class_id) || null;
+    const validClass = rawClassId ? (db.prepare("SELECT id FROM classes WHERE id = ?").get(rawClassId) as any) : null;
+    const classId   = validClass ? Number(validClass.id) : null;
+    const rawTermId = Number(body?.term_id || 0);
+    const validTerm = rawTermId ? (db.prepare("SELECT id, session_id FROM academic_terms WHERE id = ?").get(rawTermId) as any) : null;
+    const termId    = validTerm?.id || (queries.getActiveAcademicTerm.get() as any)?.id;
+    const rawSessionId = Number(body?.session_id || 0);
+    const validSession = rawSessionId ? (db.prepare("SELECT id FROM academic_sessions WHERE id = ?").get(rawSessionId) as any) : null;
+    const sessionId = validSession?.id || validTerm?.session_id || (queries.getActiveAcademicSession.get() as any)?.id;
     const teacherId = auth.role === "teacher" ? auth.userId : (Number(body?.teacher_id) || auth.userId);
     const mode      = trimStr(body?.mode) || "exam";
 
@@ -3348,7 +3590,7 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     
     if (method === "PUT") {
       const auth = requireAuth(req);
-      if (auth.role !== "operator" && subject.teacher_id !== auth.userId) return apiError(403, "Not authorized");
+      if (auth.role !== "operator" && !isTeacherAuthorizedForGradingSubject(auth.userId, subject)) return apiError(403, "Not authorized");
       
       const body = await readJson(req);
       const policyList = Array.isArray(body) ? body : (body.policies || []);
@@ -3431,13 +3673,34 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     if (method === "GET") {
       const auth = requireAuth(req);
       requireRole(auth.role, ["teacher", "operator"]);
-      if (auth.role === "teacher" && !sameUserId(subject.teacher_id, auth.userId)) return apiError(403, "You do not own this grading subject");
+      if (auth.role === "teacher" && !isTeacherAuthorizedForGradingSubject(auth.userId, subject)) return apiError(403, "You do not own or teach this grading subject");
 
-      const students = queries.getGradingStudentsBySubject.all(subjectId) as any[];
-
+      const rawStudents = queries.getGradingStudentsBySubject.all(subjectId) as any[];
       const policies = queries.getGradingPoliciesBySubject.all(subjectId) as any[];
       const manualScores = queries.getManualScoresBySubject.all(subjectId) as any[];
       const termResults = queries.getTermResultsBySubject.all(subjectId) as any[];
+
+      const cbtSubjectIds = new Set<number>();
+      if (subject.source_cbt_subject_id) cbtSubjectIds.add(Number(subject.source_cbt_subject_id));
+      for (const p of policies) {
+        if (p.mapped_cbt_subject_id) cbtSubjectIds.add(Number(p.mapped_cbt_subject_id));
+      }
+      const ungradedEssayCountStmt = db.prepare(`
+        SELECT COUNT(*) as count
+        FROM student_answers sa
+        JOIN questions q ON q.id = sa.question_id
+        JOIN exams e ON e.id = sa.exam_id
+        WHERE e.student_id = ? AND e.subject_id = ? AND e.status = 'completed'
+          AND q.question_type = 'essay' AND sa.is_graded = 0
+      `);
+      const students = rawStudents.map((s: any) => {
+        let ungraded_essays = 0;
+        for (const cbtSubId of cbtSubjectIds) {
+          const row = ungradedEssayCountStmt.get(Number(s.id), cbtSubId) as any;
+          ungraded_essays += sqlInt(row?.count ?? 0);
+        }
+        return { ...s, student_id: Number(s.id), ungraded_essays };
+      });
       
       const cbtScores: Record<number, Record<number, number>> = {}; 
       for (const p of policies) {
@@ -3476,7 +3739,7 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     
     if (method === "POST") {
       const auth = requireAuth(req);
-      if (auth.role !== "operator" && !sameUserId(subject.teacher_id, auth.userId)) return apiError(403, "Not authorized");
+      if (auth.role !== "operator" && !isTeacherAuthorizedForGradingSubject(auth.userId, subject)) return apiError(403, "Not authorized");
       
       const termResultsCheck = db.prepare("SELECT is_approved FROM term_results WHERE grading_subject_id = ? LIMIT 1").get(subjectId) as any;
       if (termResultsCheck?.is_approved) return apiError(403, "Results are locked");
@@ -3488,7 +3751,8 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
       try {
         db.transaction(() => {
           for (const entry of entries) {
-             queries.upsertManualScore.run(Number(entry.grading_policy_id), Number(entry.student_id), Number(entry.score), auth.userId);
+             const policyId = Number(entry.grading_policy_id || entry.policy_id);
+             queries.upsertManualScore.run(policyId, Number(entry.student_id), Number(entry.score), auth.userId);
           }
 
           // Recompute draft term_results so Report Cards immediately reflect saved grades
@@ -3571,7 +3835,7 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     const subjectId = Number(gradingApproveMatch[1]);
     const subject = queries.getGradingSubjectById.get(subjectId) as any;
     if (!subject) return apiError(404, "Grading Subject not found");
-    if (auth.role !== "operator" && !sameUserId(subject.teacher_id, auth.userId)) return apiError(403, "Not authorized");
+    if (auth.role !== "operator" && !isTeacherAuthorizedForGradingSubject(auth.userId, subject)) return apiError(403, "Not authorized");
     
     // --- Server-side recompute (never trust frontend math) ---
     const policies = queries.getGradingPoliciesBySubject.all(subjectId) as any[];
@@ -3654,7 +3918,7 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     const subjectId = Number(gradingUnapproveMatch[1]);
     const subject = queries.getGradingSubjectById.get(subjectId) as any;
     if (!subject) return apiError(404, "Grading Subject not found");
-    if (auth.role !== "operator" && !sameUserId(subject.teacher_id, auth.userId)) return apiError(403, "Not authorized");
+    if (auth.role !== "operator" && !isTeacherAuthorizedForGradingSubject(auth.userId, subject)) return apiError(403, "Not authorized");
     
     db.prepare("UPDATE term_results SET is_approved = 0 WHERE grading_subject_id = ?").run(subjectId);
     db.prepare("UPDATE grading_subjects SET is_published_to_class = 0 WHERE id = ?").run(subjectId);
@@ -4283,20 +4547,35 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
         LEFT JOIN users u ON u.id = ?
         LEFT JOIN grade_levels gl_u ON u.grade_level_id = gl_u.id
         LEFT JOIN grade_levels gl_s ON s.grade_level_id = gl_s.id
-        WHERE (s.is_timetable_published = 1 OR s.is_published = 1 OR se.student_id IS NOT NULL OR EXISTS (SELECT 1 FROM exams ex WHERE ex.student_id = ? AND ex.subject_id = s.id))
+        WHERE (
+          s.is_timetable_published = 1
+          OR s.is_published = 1
+          OR (s.exam_datetime IS NOT NULL AND s.exam_datetime != '' AND s.exam_datetime NOT LIKE '2099%')
+          OR se.student_id IS NOT NULL
+          OR EXISTS (SELECT 1 FROM exams ex WHERE ex.student_id = ? AND ex.subject_id = s.id)
+        )
         AND (
           se.student_id IS NOT NULL
           OR EXISTS (SELECT 1 FROM exams ex WHERE ex.student_id = ? AND ex.subject_id = s.id)
           OR (s.class IS NOT NULL AND u.grade IS NOT NULL AND REPLACE(LOWER(TRIM(s.class)), ' ', '') = REPLACE(LOWER(TRIM(u.grade)), ' ', ''))
           OR (s.grade_level_id IS NOT NULL AND u.grade_level_id IS NOT NULL AND s.grade_level_id = u.grade_level_id)
           OR (gl_s.name IS NOT NULL AND gl_u.name IS NOT NULL AND REPLACE(LOWER(TRIM(gl_s.name)), ' ', '') = REPLACE(LOWER(TRIM(gl_u.name)), ' ', ''))
+          OR EXISTS (
+            SELECT 1 FROM class_enrollments ce
+            JOIN classes c ON c.id = ce.class_id
+            WHERE ce.student_id = ?
+              AND (
+                (s.class IS NOT NULL AND REPLACE(LOWER(TRIM(c.name)), ' ', '') = REPLACE(LOWER(TRIM(s.class)), ' ', ''))
+                OR (gl_s.name IS NOT NULL AND REPLACE(LOWER(TRIM(c.name)), ' ', '') = REPLACE(LOWER(TRIM(gl_s.name)), ' ', ''))
+              )
+          )
           OR (s.class IS NULL AND s.grade_level_id IS NULL AND NOT EXISTS (SELECT 1 FROM subject_enrollments WHERE subject_id = s.id))
           OR LOWER(TRIM(COALESCE(s.class, ''))) IN ('all', 'all cohorts', 'general')
         )
       `;
-      const params: any[] = [auth.userId, auth.userId, auth.userId, auth.userId];
+      const params: any[] = [auth.userId, auth.userId, auth.userId, auth.userId, auth.userId];
       if (targetSessionId && targetTermId) {
-        query += " AND (s.session_id = ? AND s.term_id = ? OR s.session_id IS NULL OR se.student_id IS NOT NULL OR EXISTS (SELECT 1 FROM exams ex WHERE ex.student_id = ? AND ex.subject_id = s.id))";
+        query += " AND ((s.session_id = ? AND s.term_id = ?) OR s.session_id IS NULL OR se.student_id IS NOT NULL OR EXISTS (SELECT 1 FROM exams ex WHERE ex.student_id = ? AND ex.subject_id = s.id))";
         params.push(targetSessionId, targetTermId, auth.userId);
       }
       query += " ORDER BY s.name";
@@ -4783,11 +5062,10 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     if (auth.role === "student") {
       // Must be published
       if (!subject.is_published) return apiError(403, "Subject is not published");
-      // Must be enrolled
-      const enrollment = db.prepare(
-        "SELECT id FROM subject_enrollments WHERE subject_id = ? AND student_id = ?"
-      ).get(subjectId, auth.userId);
-      if (!enrollment) return apiError(403, "You are not enrolled in this subject");
+      // Must be enrolled / eligible in cohort
+      if (!isStudentEligibleForSubject(auth.userId, subject)) {
+        return apiError(403, "You are not enrolled in this subject");
+      }
       // Must be within the window (or the school has the unscheduled paper open)
       // unless an attempt already exists — in-progress/completed exams must remain
       // fetchable for resume + review even after the window closes.
@@ -4952,13 +5230,17 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     const body = await readJson(req);
     const subject_id = Number(body?.subject_id);
     const question_text = trimStr(body?.question_text);
-    const options = body?.options;
-    const correct_answer = Number(body?.correct_answer);
+    const question_type = ["objective", "essay", "true_false"].includes(body?.question_type) ? body.question_type : "objective";
+    const isTrueFalse = question_type === "true_false";
+    const isEssay = question_type === "essay";
+    const rawOptions = Array.isArray(body?.options) ? body.options : (isEssay ? ["", "", "", ""] : null);
+    const options = Array.isArray(rawOptions) && (isEssay || isTrueFalse) && rawOptions.length < 4
+      ? [...rawOptions, ...Array(4 - rawOptions.length).fill("")]
+      : rawOptions;
+    const correct_answer = isEssay && body?.correct_answer === undefined ? 0 : Number(body?.correct_answer);
     const marks = Number(body?.marks);
     const order_index = Number(body?.order_index);
     if (!isPositiveIntId(subject_id) || !question_text) return apiError(400, "Invalid question payload");
-    const question_type = ["objective", "essay", "true_false"].includes(body?.question_type) ? body.question_type : "objective";
-    const isTrueFalse = question_type === "true_false";
     // The frontend always pads options to length 4 for all types
     if (!Array.isArray(options) || options.length !== 4 || !options.every((o) => typeof o === "string")) {
       return apiError(400, `options must be an array of exactly 4 strings`);
@@ -5181,10 +5463,10 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     const studentId = Number(url.searchParams.get("student_id"));
     const subjectId = Number(url.searchParams.get("subject_id"));
     if (!isPositiveIntId(studentId) || !isPositiveIntId(subjectId)) return apiError(400, "student_id and subject_id are required");
-    // Teachers can only look up exams for their own subjects
+    // Teachers can only look up exams for their own or assigned subjects
     if (auth.role === "teacher") {
       const subject = queries.getSubjectById.get(subjectId) as any;
-      if (!subject || !sameUserId(subject.teacher_id, auth.userId)) return apiError(403, "You do not own this subject");
+      if (!subject || !isTeacherAuthorizedForGradingSubject(auth.userId, subject)) return apiError(403, "You do not own this subject");
     }
     const exam = queries.getExamByStudentSubject.get(studentId, subjectId) as any;
     if (!exam) return apiError(404, "Exam not found for this student and subject");
@@ -5204,7 +5486,22 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     // Teachers may only grade exams in their subjects
     if (auth.role === "teacher") {
       const subject = queries.getSubjectById.get(exam.subject_id) as any;
-      if (!subject || !sameUserId(subject.teacher_id, auth.userId)) return apiError(403, "You do not own this subject");
+      if (!subject || !isTeacherAuthorizedForGradingSubject(auth.userId, subject)) return apiError(403, "You do not own or teach this subject");
+    }
+    // Check if exam or mapped grading subject results are locked/approved
+    if (Number(exam.is_locked) === 1) {
+      return apiError(403, "Results for this examination are approved and locked.");
+    }
+    const approvedGs = db.prepare(`
+      SELECT tr.id FROM term_results tr
+      JOIN grading_subjects gs ON gs.id = tr.grading_subject_id
+      LEFT JOIN grading_policies gp ON gp.grading_subject_id = gs.id
+      WHERE tr.is_approved = 1
+        AND (gs.source_cbt_subject_id = ? OR gp.mapped_cbt_subject_id = ?)
+      LIMIT 1
+    `).get(exam.subject_id, exam.subject_id) as any;
+    if (approvedGs) {
+      return apiError(403, "Results for this subject are approved and locked. Unlock the subject in the Grading Centre first.");
     }
     const body          = await readJson(req);
     const questionId    = Number(body?.question_id);
@@ -5217,13 +5514,31 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     if (marksAwarded > Number(question.marks)) return apiError(400, `marks_awarded cannot exceed ${question.marks}`);
     // Update student_answers
     db.prepare(
-      "UPDATE student_answers SET marks_awarded = ?, is_correct = CASE WHEN ? >= ? THEN 1 ELSE 0 END WHERE exam_id = ? AND question_id = ?"
+      "UPDATE student_answers SET marks_awarded = ?, is_correct = CASE WHEN ? >= ? THEN 1 ELSE 0 END, is_graded = 1 WHERE exam_id = ? AND question_id = ?"
     ).run(marksAwarded, marksAwarded, Number(question.marks), examId, questionId);
     // Recompute exam total score from student_answers
     const totals = db.prepare(
       "SELECT COALESCE(SUM(marks_awarded), 0) as earned FROM student_answers WHERE exam_id = ?"
     ).get(examId) as any;
     db.prepare("UPDATE exams SET score = ? WHERE id = ?").run(Number(totals?.earned ?? 0), examId);
+
+    // Check if all essay questions for this exam are now graded
+    const remainingUngraded = db.prepare(`
+      SELECT COUNT(*) as count FROM student_answers sa
+      JOIN questions q ON q.id = sa.question_id
+      WHERE sa.exam_id = ? AND q.question_type = 'essay' AND sa.is_graded = 0
+    `).get(examId) as any;
+
+    if (sqlInt(remainingUngraded?.count) === 0 && exam.result_status === "awaiting_grading") {
+      const subject = queries.getSubjectById.get(exam.subject_id) as any;
+      let nextStatus = "released";
+      if (subject?.result_policy === "manual") nextStatus = "hidden";
+      else if (subject?.result_policy === "scheduled") {
+        const releaseTs = subject?.result_release_time ? Date.parse(subject.result_release_time) : 0;
+        if (Number.isFinite(releaseTs) && Date.now() < releaseTs) nextStatus = "scheduled";
+      }
+      db.prepare("UPDATE exams SET result_status = ? WHERE id = ?").run(nextStatus, examId);
+    }
     auditLog(auth.userId, "ESSAY_GRADE", "student_answers", examId, JSON.stringify({ question_id: questionId, marks_awarded: marksAwarded }));
     return apiSuccess({ graded: true, exam_id: examId, question_id: questionId, marks_awarded: marksAwarded, new_total: Number(totals?.earned ?? 0) });
   }
@@ -5246,19 +5561,118 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     if (!isPositiveIntId(subjectId)) return apiError(400, "Invalid subject_id");
     const subject = queries.getSubjectById.get(subjectId) as any;
     if (!subject || !subject.is_published) return apiError(403, "Exam is not live yet. Please wait for the admin to publish it.");
-    // Must be enrolled
-    const enrollment = db.prepare(
-      "SELECT id FROM subject_enrollments WHERE subject_id = ? AND student_id = ?"
-    ).get(subjectId, auth.userId);
-    if (!enrollment) return apiError(403, "You are not enrolled in this subject");
+
+    // Must be eligible for subject / class cohort
+    if (!isStudentEligibleForSubject(auth.userId, subject)) {
+      return apiError(403, "You are not enrolled in this subject or class cohort");
+    }
+
+    // Exam access gate (schedule window check)
     {
       const gate = examAccessGate(subject);
       if (gate) return gate;
     }
+
     const currentTerm = (queries.getSetting.get("CURRENT_TERM") as any)?.value || "";
     const isLearningMode = ["practice", "mock"].includes(subject.mode) || ["learning_practice", "learning_mock"].includes(subject.assessment_type);
     const initialResultStatus = isLearningMode || (subject.result_policy === "immediate") ? "released" : (subject.result_policy === "manual" ? "hidden" : "scheduled");
-    const deadline = subject.duration ? new Date(Date.now() + Number(subject.duration) * 60_000).toISOString() : null;
+
+    // Server-authoritative deadline: min(start + duration, timetable_end)
+    const sched = resolveExamSchedule(subject);
+    const durationMs = Number(subject.duration || 60) * 60_000;
+    let deadlineMs = Date.now() + durationMs;
+    if (sched.scheduled && sched.end) {
+      deadlineMs = Math.min(deadlineMs, sched.end);
+    }
+    const deadline = new Date(deadlineMs).toISOString();
+
+    // Check if an attempt already exists
+    const existingExam = queries.getExamByStudentSubject.get(auth.userId, subjectId) as any;
+    if (existingExam) {
+      if (existingExam.status === "in-progress") {
+        const now = Date.now();
+        const existingDl = existingExam.deadline ? Date.parse(existingExam.deadline) : (Date.parse(existingExam.start_time) + durationMs);
+        if (now > existingDl + 30_000) {
+          // Window/duration expired -> finalize expired attempt
+          queries.submitExam.run(
+            existingExam.answers_json || "[]",
+            new Date().toISOString(),
+            existingExam.score ?? 0,
+            existingExam.total_score || 0,
+            existingExam.id,
+            auth.userId
+          );
+          return apiError(403, "The examination time limit has expired and your attempt has been submitted.");
+        }
+        if (!body?.resume) {
+          return apiError(409, "You have already started this exam");
+        }
+        // Active in-progress attempt -> resume!
+        const questionsCacheKey = `${CacheKeys.subjectQuestions(subjectId)}:${auth.role}`;
+        const questions = cacheService.wrapSync(questionsCacheKey, 60, () => {
+          return stripCorrectAnswer(queries.getQuestionsBySubject.all(subjectId) as any[], auth.role);
+        });
+        return apiSuccess({
+          exam: existingExam,
+          questions,
+          server_time: new Date().toISOString(),
+          examId: existingExam.id,
+          startTime: existingExam.start_time,
+          deadline: existingExam.deadline || deadline,
+          resumed: true,
+          solution_reveals_remaining: existingExam.solution_reveals_remaining ?? 5,
+          revealed_solutions: JSON.parse(existingExam.revealed_solutions_json || "[]"),
+          assessment_type: subject.assessment_type || "school_mode",
+          result_policy: subject.result_policy || "immediate",
+        });
+      }
+
+      if (existingExam.status === "completed") {
+        const retakeAuth = isLearningMode ? null : (queries.getActiveRetakeAuth.get(auth.userId, subjectId) as any);
+        if (!isLearningMode && (!retakeAuth || subject.can_retake === 0)) {
+          return apiError(403, "You have already completed this examination. Retakes are not permitted without supervisor authorization.");
+        }
+        // Authorized retake: archive and reset
+        db.transaction(() => {
+          const prevAnswers = db.prepare(
+            "SELECT question_id, selected_option, essay_response, is_correct, marks_awarded, is_graded FROM student_answers WHERE exam_id = ?"
+          ).all(existingExam.id);
+          if (prevAnswers.length > 0) {
+            db.prepare("UPDATE exams SET answers_json = ? WHERE id = ?").run(JSON.stringify(prevAnswers), existingExam.id);
+          }
+          queries.archiveExamAttempt.run(existingExam.id);
+          queries.deleteStudentAnswersForExam.run(existingExam.id);
+          queries.resetExam.run(existingExam.id, auth.userId);
+          db.prepare("UPDATE exams SET deadline = ?, is_locked = 0, result_status = ? WHERE id = ?").run(
+            deadline,
+            isLearningMode ? "released" : "scheduled",
+            existingExam.id
+          );
+          if (retakeAuth) {
+            queries.incrementRetakeUsed.run(retakeAuth.id);
+          }
+        })();
+        auditLog(auth.userId, "EXAM_RETAKE_START", "exam", existingExam.id, JSON.stringify({ retake_count: existingExam.retake_count + 1 }));
+        const updatedExam = queries.getExamById.get(existingExam.id) as any;
+        const questionsCacheKey = `${CacheKeys.subjectQuestions(subjectId)}:${auth.role}`;
+        const questions = cacheService.wrapSync(questionsCacheKey, 60, () => {
+          return stripCorrectAnswer(queries.getQuestionsBySubject.all(subjectId) as any[], auth.role);
+        });
+        return apiSuccess({
+          exam: updatedExam,
+          questions,
+          server_time: new Date().toISOString(),
+          examId: updatedExam.id,
+          startTime: updatedExam.start_time,
+          deadline,
+          retake: true,
+          solution_reveals_remaining: 5,
+          revealed_solutions: [],
+          assessment_type: subject.assessment_type || "school_mode",
+          result_policy: subject.result_policy || "immediate",
+        });
+      }
+    }
 
     // Resolve session/term strings for legacy columns (fallback to CURRENT_TERM)
     const activeSessionForExam = queries.getActiveAcademicSession.get() as any;
@@ -5274,7 +5688,29 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
         deadline, initialResultStatus, 5, "[]"
       );
     } catch (e: any) {
-      if (e?.message?.includes("UNIQUE")) return apiError(409, "You have already started this exam");
+      if (e?.message?.includes("UNIQUE")) {
+        const raceExam = queries.getExamByStudentSubject.get(auth.userId, subjectId) as any;
+        if (raceExam) {
+          const questionsCacheKey = `${CacheKeys.subjectQuestions(subjectId)}:${auth.role}`;
+          const questions = cacheService.wrapSync(questionsCacheKey, 60, () => {
+            return stripCorrectAnswer(queries.getQuestionsBySubject.all(subjectId) as any[], auth.role);
+          });
+          return apiSuccess({
+            exam: raceExam,
+            questions,
+            server_time: new Date().toISOString(),
+            examId: raceExam.id,
+            startTime: raceExam.start_time,
+            deadline: raceExam.deadline || deadline,
+            resumed: true,
+            solution_reveals_remaining: raceExam.solution_reveals_remaining ?? 5,
+            revealed_solutions: JSON.parse(raceExam.revealed_solutions_json || "[]"),
+            assessment_type: subject.assessment_type || "school_mode",
+            result_policy: subject.result_policy || "immediate",
+          });
+        }
+        return apiError(409, "You have already started this exam");
+      }
       throw e;
     }
     const exam = queries.getExamByStudentSubject.get(auth.userId, subjectId) as any;
@@ -5290,6 +5726,7 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
         server_time: new Date().toISOString(),
         examId: exam.id,
         startTime: exam.start_time,
+        deadline,
         solution_reveals_remaining: exam.solution_reveals_remaining ?? 5,
         revealed_solutions: JSON.parse(exam.revealed_solutions_json || "[]"),
         assessment_type: subject.assessment_type || "school_mode",
@@ -5319,10 +5756,10 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     if (!exam) return apiError(403, "Not your exam");
     if (exam.status !== "in-progress") return apiError(409, "Exam already submitted");
     const subject = queries.getSubjectById.get(exam.subject_id) as any;
-    const deadline = Date.parse(exam.start_time) + Number(subject.duration) * 60_000;
+    const deadlineMs = exam.deadline ? Date.parse(exam.deadline) : (Date.parse(exam.start_time) + Number(subject.duration || 60) * 60_000);
     // [SECURITY FIX] Allow saves up to 15s after deadline (MUST be less than the 30s submit grace period)
-    if (Date.now() > deadline + 15_000) return apiError(409, "Exam window has closed — answers cannot be saved");
-    const remaining = Math.max(0, Math.floor((deadline - Date.now()) / 1000));
+    if (Date.now() > deadlineMs + 15_000) return apiError(409, "Exam window has closed — answers cannot be saved");
+    const remaining = Math.max(0, Math.floor((deadlineMs - Date.now()) / 1000));
     queries.saveExam.run(JSON.stringify(answers), examId, auth.userId);
     return apiSuccess({ saved: true, server_time: new Date().toISOString(), time_remaining_seconds: remaining });
   }
@@ -5409,7 +5846,7 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
         const subject = queries.getSubjectById.get(exam.subject_id) as any;
 
         // ── Grace period: allow submit up to 30s after window closes ────────────
-        const deadline = Date.parse(exam.start_time) + Number(subject.duration) * 60_000 + 30_000;
+        const deadline = (exam.deadline ? Date.parse(exam.deadline) : (Date.parse(exam.start_time) + Number(subject.duration || 60) * 60_000)) + 30_000;
         
         let usedAnswers: unknown[];
         if (Date.now() > deadline) {
@@ -5457,13 +5894,18 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
         }
 
         const questions = queries.getQuestionsBySubject.all(exam.subject_id) as any[];
+        let hasEssay = false;
         let score = 0;
         let total = 0;
         let answered = 0;
         for (const q of questions) {
           const qid = Number(q.id);
           total += Number(q.marks);
-          if (answerMap.get(qid) === Number(q.correct_answer)) score += Number(q.marks);
+          if (q.question_type === "essay") {
+            hasEssay = true;
+          } else {
+            if (answerMap.get(qid) === Number(q.correct_answer)) score += Number(q.marks);
+          }
           if (answerMap.get(qid) !== null || (essayMap.has(qid) && essayMap.get(qid) !== null)) {
             answered++;
           }
@@ -5480,21 +5922,22 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
           db.prepare("UPDATE exams SET reg_id = ? WHERE id = ?").run(student.reg_id, examId);
         }
         if (questions.length > 0) {
-          const placeholders = questions.map(() => "(?, ?, ?, ?, ?, ?, ?, ?)").join(", ");
+          const placeholders = questions.map(() => "(?, ?, ?, ?, ?, ?, ?, ?, ?)").join(", ");
           const params: any[] = [];
           for (const q of questions) {
             const qid        = Number(q.id);
-            const studentSel = answerMap.get(qid) ?? null;
-            const essayResp  = q.question_type === "essay" ? (essayMap.get(qid) ?? null) : null;
-            const isCorrect  = q.question_type !== "essay" && studentSel !== null && studentSel === Number(q.correct_answer) ? 1 : 0;
+            const isEssay    = q.question_type === "essay";
+            const studentSel = isEssay ? null : (answerMap.get(qid) ?? null);
+            const essayResp  = isEssay ? (essayMap.get(qid) ?? null) : null;
+            const isCorrect  = !isEssay && studentSel !== null && studentSel === Number(q.correct_answer) ? 1 : 0;
             const marksAwarded = isCorrect ? Number(q.marks) : 0;
+            const isGraded   = isEssay ? 0 : 1;
             params.push(
               examId, qid, auth.userId, exam.subject_id,
-              q.question_type !== "essay" ? studentSel : null,
-              essayResp, isCorrect, marksAwarded
+              studentSel, essayResp, isCorrect, marksAwarded, isGraded
             );
           }
-          db.prepare(`INSERT OR REPLACE INTO student_answers (exam_id, question_id, student_id, subject_id, selected_option, essay_response, is_correct, marks_awarded) VALUES ${placeholders}`).run(...params);
+          db.prepare(`INSERT OR REPLACE INTO student_answers (exam_id, question_id, student_id, subject_id, selected_option, essay_response, is_correct, marks_awarded, is_graded) VALUES ${placeholders}`).run(...params);
         }
 
         // Free the redundant JSON blob — student_answers is now the authoritative store
@@ -5503,7 +5946,9 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
         // ── Dual Assessment Engine: Determine Result Release Status ──────────
         const isLearning = ["practice", "mock"].includes(subject.mode) || ["learning_practice", "learning_mock"].includes(subject.assessment_type);
         let finalResultStatus = "released";
-        if (!isLearning) {
+        if (hasEssay) {
+          finalResultStatus = "awaiting_grading";
+        } else if (!isLearning) {
           if (subject.result_policy === "manual") {
             finalResultStatus = "hidden";
           } else if (subject.result_policy === "scheduled") {
@@ -5576,18 +6021,27 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
         const targetTermId = subjectRow.term_id || activeTerm?.id;
         const targetSessionId = subjectRow.session_id || activeSession?.id;
         if (targetTermId && targetSessionId) {
-          // Check if a general (class_id IS NULL) grading subject exists for this code and term
-          const existing = db.prepare("SELECT id FROM grading_subjects WHERE code = ? AND term_id = ? AND class_id IS NULL LIMIT 1").get(subjectRow.code, targetTermId) as any;
+          let resolvedClassId: number | null = null;
+          if (subjectRow.class) {
+            const classRow = db.prepare(
+              "SELECT id FROM classes WHERE LOWER(TRIM(name)) = LOWER(TRIM(?)) OR REPLACE(LOWER(name), ' ', '') = REPLACE(LOWER(?), ' ', '') LIMIT 1"
+            ).get(subjectRow.class, subjectRow.class) as any;
+            if (classRow) resolvedClassId = Number(classRow.id);
+          }
+          // Check if a grading subject already exists for this source, code, or term
+          const existing = (queries.getGradingSubjectBySource.get(subjectRow.id, targetTermId) as any)
+            ?? (db.prepare("SELECT id FROM grading_subjects WHERE code = ? AND term_id = ? AND (class_id = ? OR class_id IS NULL) ORDER BY CASE WHEN class_id = ? THEN 0 ELSE 1 END LIMIT 1").get(subjectRow.code, targetTermId, resolvedClassId, resolvedClassId) as any);
           if (!existing) {
              const gsResult = queries.createGradingSubject.run(
                subjectRow.name, 
                subjectRow.code, 
-               null, 
+               resolvedClassId, 
                targetTermId, 
                targetSessionId, 
                subjectRow.teacher_id
              ) as any;
              const newGsId = Number(gsResult.lastInsertRowid);
+             queries.updateGradingSubjectMeta.run(subjectRow.mode || "exam", subjectRow.id, newGsId);
              
              // Auto-map CBT policy based on CBT subject mode
              const mode = subjectRow.mode || "exam";
@@ -5792,9 +6246,9 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
           : "Results have not been published by your instructor yet.");
       }
     }
-    // Teachers can only view exams for their subjects
+    // Teachers can only view exams for their subjects or classes they supervise
     if (auth.role === "teacher") {
-      if (!subject || !sameUserId(subject.teacher_id, auth.userId)) return apiError(403, "Forbidden");
+      if (!subject || !isTeacherAuthorizedForGradingSubject(auth.userId, subject)) return apiError(403, "Forbidden");
     }
     let answers = queries.getStudentAnswersByExam.all(examId) as any[];
     

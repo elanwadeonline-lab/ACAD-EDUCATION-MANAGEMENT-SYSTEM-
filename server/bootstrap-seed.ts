@@ -147,18 +147,8 @@ export async function bootstrapDefaultSystemAccounts(): Promise<void> {
         }
       }
 
-      // Check if exam / result exists for Daniel
-      const existingExam = db.prepare(
-        "SELECT id FROM exams WHERE student_id = ? AND subject_id = ?"
-      ).get(studentId, subjectId) as any;
-
-      if (!existingExam) {
-        db.prepare(`
-          INSERT INTO exams 
-          (student_id, subject_id, start_time, end_time, score, total_score, teacher_remark, session_id, term_id, status, result_status)
-          VALUES (?, ?, '2025-10-15T09:00:00Z', '2025-10-15T10:00:00Z', ?, 100, ?, ?, ?, 'completed', 'published')
-        `).run(studentId, subjectId, sub.score, sub.remark, activeSession?.id || 1, activeTerm?.id || 1);
-      }
+      // Student exam attempts should be driven by actual student participation,
+      // not automatically fabricated as completed records upon bootstrap.
     }
 
     // 7. Ensure Attendance records for Daniel

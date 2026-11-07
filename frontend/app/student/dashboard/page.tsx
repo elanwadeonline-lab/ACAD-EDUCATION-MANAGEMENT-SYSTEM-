@@ -35,6 +35,7 @@ function DashboardContent() {
 
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [results, setResults] = useState<ExamResult[]>([]);
+  const [activeExamsList, setActiveExamsList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [currentTime, setCurrentTime] = useState(Date.now());
@@ -66,6 +67,8 @@ function DashboardContent() {
         const serverMs = new Date(payload.server_time).getTime();
         timeOffsetRef.current = serverMs - Date.now();
       }
+      const rawActive = Array.isArray(activeData) ? activeData : ((activeData as any)?.exams ?? []);
+      setActiveExamsList(rawActive);
 
       const now = Date.now() + timeOffsetRef.current;
       setSubjects(subjectsData ?? []);
@@ -149,9 +152,9 @@ function DashboardContent() {
     return Array.from(map.values());
   }, [subjects, completedResults]);
 
-  const { liveExams, upcomingExams, completedExams, expiredExams, unscheduledExams, assignmentItems } = useMemo(
-    () => groupStudentAssessments(allDisplaySubjects, takenIds, currentTime),
-    [allDisplaySubjects, takenIds, currentTime]
+  const { liveExams, upcomingExams, completedExams, expiredExams, unscheduledExams, assignmentItems, inProgressExams } = useMemo(
+    () => groupStudentAssessments(allDisplaySubjects, takenIds, currentTime, activeExamsList, results),
+    [allDisplaySubjects, takenIds, currentTime, activeExamsList, results]
   );
 
   // Academic Performance Analytics (Part A2) — Real data only, zero invented formulas
@@ -329,6 +332,47 @@ function DashboardContent() {
           }}
         >
           {error}
+        </div>
+      )}
+
+      {inProgressExams.length > 0 && (
+        <div style={{
+          marginBottom: "1.25rem",
+          padding: "1rem 1.25rem",
+          background: "linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(245, 158, 11, 0.04))",
+          border: "1px solid rgba(245, 158, 11, 0.35)",
+          borderRadius: "10px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: "1rem"
+        }}>
+          <div>
+            <strong style={{ display: "block", color: "var(--color-text)", fontSize: "0.9375rem" }}>
+              Assessment In Progress: {inProgressExams[0].name}
+            </strong>
+            <span style={{ fontSize: "0.8125rem", color: "var(--color-text-muted)" }}>
+              Your examination timer is running on the server. Resume your session before the window closes.
+            </span>
+          </div>
+          <Link
+            href={`/student/exam?subjectId=${inProgressExams[0].id}`}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              background: "#D97706",
+              color: "#FFFFFF",
+              padding: "0.5rem 1rem",
+              borderRadius: "6px",
+              fontWeight: 600,
+              fontSize: "0.875rem",
+              textDecoration: "none"
+            }}
+          >
+            Resume Examination →
+          </Link>
         </div>
       )}
 

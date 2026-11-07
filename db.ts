@@ -104,6 +104,7 @@ const ALTERABLE_TABLES = new Set([
   // v11 guardian & hybrid messaging tables
   "attendance_records", "fee_structures", "fee_payments",
   "guardian_message_threads", "guardian_messages", "push_subscriptions",
+  "exam_retake_authorizations",
 ]);
 
 /** Run ALTER TABLE only if the column doesn't exist yet (idempotent migration). */
@@ -306,6 +307,27 @@ export function initializeDatabase(): void {
   db.run("CREATE INDEX IF NOT EXISTS idx_attempts_subject  ON exam_attempts(subject_id)");
   db.run("CREATE INDEX IF NOT EXISTS idx_attempts_exam     ON exam_attempts(exam_id)");
 
+  // ── exam_retake_authorizations ──────────────────────────────────────────
+  // Authoritative gate for student exam retakes (medical, technical fault, admin approval)
+  db.run(`
+    CREATE TABLE IF NOT EXISTS exam_retake_authorizations (
+      id            INTEGER PRIMARY KEY AUTOINCREMENT,
+      student_id    INTEGER NOT NULL,
+      subject_id    INTEGER NOT NULL,
+      authorized_by INTEGER NOT NULL,
+      reason        TEXT NOT NULL,
+      max_attempts  INTEGER NOT NULL DEFAULT 1,
+      used_attempts INTEGER NOT NULL DEFAULT 0,
+      valid_from    TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')),
+      valid_until   TEXT,
+      created_at    TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')),
+      FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE,
+      FOREIGN KEY (authorized_by) REFERENCES users(id) ON DELETE RESTRICT
+    )
+  `);
+  db.run("CREATE INDEX IF NOT EXISTS idx_retake_auth_student_subject ON exam_retake_authorizations(student_id, subject_id)");
+
   // ── config ───────────────────────────────────────────────────────────────
   // Full Config table as per data structure diagram
   db.run(`
@@ -351,6 +373,7 @@ export function initializeDatabase(): void {
   addColumnIfMissing("student_answers", "file_url", "TEXT");
   addColumnIfMissing("student_answers", "session_id", "INTEGER");
   addColumnIfMissing("student_answers", "term_id",    "INTEGER");
+  addColumnIfMissing("student_answers", "is_graded",  "INTEGER NOT NULL DEFAULT 1");
 
   // v4: safe migration — add admin_password_hash to config
   addColumnIfMissing("config", "admin_password_hash", "TEXT");
@@ -1729,8 +1752,8 @@ export const queries = {
     ORDER BY t.exam_date, t.start_time
   `),
   createTimetable: db.prepare(`
-    INSERT INTO timetables (subject_id, class, grade_level_id, section, exam_date, start_time, end_time, duration, exam_mode, allow_students)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO timetables (subject_id, class, grade_level_id, section, exam_date, start_time, end_time, duration, exam_mode, allow_students, session_id, term_id)
+    VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, (SELECT session_id FROM subjects WHERE id = ?1), (SELECT term_id FROM subjects WHERE id = ?1))
   `),
   updateTimetable: db.prepare(`
     UPDATE timetables SET subject_id=?, class=?, grade_level_id=?, section=?, exam_date=?, start_time=?, end_time=?, duration=?, exam_mode=?, allow_students=?, updated_at=(strftime('%Y-%m-%dT%H:%M:%SZ','now'))
@@ -1784,6 +1807,37 @@ export const queries = {
   getExamAttemptsByStudent: db.prepare("SELECT * FROM exam_attempts WHERE student_id = ? ORDER BY archived_at DESC"),
   getExamsByStudent:       db.prepare("SELECT * FROM exams WHERE student_id = ? AND status = 'completed'"),
   getExamsBySubject:       db.prepare("SELECT * FROM exams WHERE subject_id = ? AND status = 'completed'"),
+
+  // ── Retake Authorizations ───────────────────────────────────────────
+  getActiveRetakeAuth: db.prepare(`
+    SELECT * FROM exam_retake_authorizations
+    WHERE student_id = ? AND subject_id = ? AND used_attempts < max_attempts
+      AND (valid_until IS NULL OR valid_until >= strftime('%Y-%m-%dT%H:%M:%SZ','now'))
+    ORDER BY id DESC LIMIT 1
+  `),
+  createRetakeAuth: db.prepare(`
+    INSERT INTO exam_retake_authorizations (student_id, subject_id, authorized_by, reason, max_attempts, used_attempts, valid_until)
+    VALUES (?, ?, ?, ?, ?, 0, ?)
+  `),
+  incrementRetakeUsed: db.prepare(`
+    UPDATE exam_retake_authorizations SET used_attempts = used_attempts + 1 WHERE id = ?
+  `),
+  getRetakeAuthorizationsByStudent: db.prepare(`
+    SELECT ra.*, s.name as subject_name, s.code as subject_code, u.name as authorized_by_name
+    FROM exam_retake_authorizations ra
+    JOIN subjects s ON s.id = ra.subject_id
+    JOIN users u ON u.id = ra.authorized_by
+    WHERE ra.student_id = ?
+    ORDER BY ra.created_at DESC
+  `),
+  getRetakeAuthorizationsBySubject: db.prepare(`
+    SELECT ra.*, u.name as student_name, u.reg_id as student_reg_id, auth_u.name as authorized_by_name
+    FROM exam_retake_authorizations ra
+    JOIN users u ON u.id = ra.student_id
+    JOIN users auth_u ON auth_u.id = ra.authorized_by
+    WHERE ra.subject_id = ?
+    ORDER BY ra.created_at DESC
+  `),
 
   // ── Config ────────────────────────────────────────────────────────────
   getConfig:    db.prepare("SELECT * FROM config WHERE id = 1"),
