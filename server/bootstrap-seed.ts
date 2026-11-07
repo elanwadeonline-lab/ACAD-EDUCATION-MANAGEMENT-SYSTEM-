@@ -3,22 +3,26 @@ import { hashPassword } from "../auth";
 
 export async function bootstrapDefaultSystemAccounts(): Promise<void> {
   try {
+    // If an operator (school administrator) exists, the school onboarding setup has been completed.
+    // Skip demo bootstrap to protect production records and prevent overriding school data.
+    const operator = db.prepare("SELECT id FROM users WHERE role = 'operator' LIMIT 1").get();
+    if (operator) {
+      console.log("[bootstrap] Administrator account exists. Preserving production records.");
+      return;
+    }
+
     const passwordHash = await hashPassword("password");
 
-    // Note: Operator account is created through the /setup wizard during first-run school onboarding.
-    // We do NOT auto-create an operator here so that setup mode remains accessible.
-
-    // 1. Ensure guardian exists (with password 'password')
+    // 1. Ensure guardian exists (initial seed only)
     let guardian = db.prepare("SELECT id FROM users WHERE email = 'guardian@exampool.ng'").get() as any;
     if (!guardian) {
       const gRes = db.prepare(
         "INSERT INTO users (name, email, role, password_hash, is_active, phone, address) VALUES (?, ?, 'guardian', ?, 1, ?, ?)"
       ).run("Chief John Doe (Guardian)", "guardian@exampool.ng", passwordHash, "+234 801 234 5678", "14 Victoria Island Crescent, Lagos");
       guardian = { id: Number(gRes.lastInsertRowid) };
-      console.log("[bootstrap] Created default guardian: guardian@exampool.ng / password");
+      console.log("[bootstrap] Initialized default guardian: guardian@exampool.ng");
     } else {
-      // Ensure active and password is set to 'password'
-      db.prepare("UPDATE users SET password_hash = ?, is_active = 1 WHERE id = ?").run(passwordHash, guardian.id);
+      db.prepare("UPDATE users SET is_active = 1 WHERE id = ?").run(guardian.id);
     }
 
     // 2. Ensure default teacher exists (with password 'password')

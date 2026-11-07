@@ -226,12 +226,9 @@ export function checkSetupRequired(): boolean {
   return rowCount(queries.countActiveOperators.get() as { count?: unknown }) === 0;
 }
 
-// User-requested datastore reset & operator wipe to unlock /setup onboarding wizard
-db.run("CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)");
-const setupResetKey = "SETUP_RESET_RELEASE_2026_V1";
-const alreadyReset = db.prepare("SELECT value FROM settings WHERE key = ?").get(setupResetKey) as any;
-if (!alreadyReset || Bun.env.RESET_DATASTORE === "true" || Bun.env.FORCE_SETUP === "true") {
-  console.log("[SetupReset] Performing datastore reset & removing active operators to unlock /setup wizard...");
+// Optional datastore reset only if explicitly requested via environment variable
+if (Bun.env.RESET_DATASTORE === "true" || Bun.env.FORCE_SETUP === "true") {
+  console.log("[SetupReset] Explicit RESET_DATASTORE / FORCE_SETUP detected. Performing datastore reset...");
   try {
     db.run("PRAGMA foreign_keys = OFF");
     const tablesToClear = [
@@ -247,19 +244,17 @@ if (!alreadyReset || Bun.env.RESET_DATASTORE === "true" || Bun.env.FORCE_SETUP =
     for (const tbl of tablesToClear) {
       try { db.prepare(`DELETE FROM ${tbl}`).run(); } catch {}
     }
-    // Delete operators so setupRequired becomes true and active admin session is cleared
     try { db.prepare("DELETE FROM users WHERE role = 'operator'").run(); } catch {}
     try { db.prepare("DELETE FROM sqlite_sequence WHERE name NOT IN ('grade_levels','settings','config')").run(); } catch {}
     db.run("PRAGMA foreign_keys = ON");
-    db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES (?, 'completed')").run(setupResetKey);
-    console.log("[SetupReset] Reset complete. Operators removed. Setup mode is now ACTIVE at /setup.");
+    console.log("[SetupReset] Datastore reset complete.");
   } catch (e) {
     console.error("[SetupReset] Error during setup reset:", e);
   }
 }
 
 let setupRequired = checkSetupRequired();
-// Automatically bootstrap default demo data (guardian, student) if empty
+// Automatically bootstrap default demo data only if no active school administrator exists
 await bootstrapDefaultSystemAccounts();
 setupRequired = checkSetupRequired();
 
@@ -1515,34 +1510,6 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
         ok = await verifyPassword(password, hash);
         if (!ok && password.trim() !== password) {
           ok = await verifyPassword(password.trim(), hash);
-        }
-        // Resilience fallbacks for default system accounts (handles mobile auto-capitalization & whitespace)
-        if (!ok && normalizedIdentifier === "guardian@exampool.ng") {
-          const cleanPwd = password.trim();
-          if (
-            cleanPwd === "password" ||
-            cleanPwd === "Password" ||
-            cleanPwd === "Guardian@2026" ||
-            cleanPwd === "guardian@2026" ||
-            cleanPwd === "guardianPassword123!" ||
-            cleanPwd.toLowerCase() === "password"
-          ) {
-            ok = true;
-            try {
-              const newHash = await hashPassword(cleanPwd);
-              db.prepare("UPDATE users SET password_hash = ?, is_active = 1 WHERE id = ?").run(newHash, Number(user.id));
-            } catch {}
-          }
-        } else if (!ok && normalizedIdentifier === "admin@exampool.ng") {
-          const cleanPwd = password.trim();
-          if (
-            cleanPwd === "Admin@2026" ||
-            cleanPwd === "admin@2026" ||
-            cleanPwd === "password" ||
-            cleanPwd === "admin"
-          ) {
-            ok = true;
-          }
         }
       } catch (e) {
         console.error("[Login] verifyPassword error:", e);

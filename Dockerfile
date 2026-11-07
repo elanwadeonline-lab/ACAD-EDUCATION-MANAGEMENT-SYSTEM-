@@ -19,6 +19,8 @@ COPY . .
 # Set production environment variables
 ENV NODE_ENV=production
 ENV PORT=10000
+ENV EXAMPOOL_DB=/app/data/exampool.db
+ENV UPLOADS_DIR=/app/data/uploads
 
 # Build Next.js static production export
 RUN cd frontend && bun run build

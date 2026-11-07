@@ -2,11 +2,24 @@ import { Database } from "bun:sqlite";
 import path from "path";
 import fs from "fs";
 
+function resolveDatabasePath(): string {
+  if (Bun.env.EXAMPOOL_DB) return Bun.env.EXAMPOOL_DB;
+  if (fs.existsSync("/app/data")) {
+    try {
+      const probeFile = "/app/data/.probe_write";
+      fs.writeFileSync(probeFile, "ok");
+      fs.unlinkSync(probeFile);
+      return "/app/data/exampool.db";
+    } catch {}
+  }
+  return path.join(import.meta.dir, "exampool.db");
+}
+
 /**
  * Absolute path so the same file is always used regardless of process cwd.
- * Override with env EXAMPOOL_DB if needed (e.g. tests).
+ * Auto-detects Render/Docker persistent disk mount (/app/data) or uses env EXAMPOOL_DB.
  */
-export const EXAMPOOL_DB_PATH = Bun.env.EXAMPOOL_DB || path.join(import.meta.dir, "exampool.db");
+export const EXAMPOOL_DB_PATH = resolveDatabasePath();
 
 const dbDir = path.dirname(EXAMPOOL_DB_PATH);
 if (!fs.existsSync(dbDir)) {
