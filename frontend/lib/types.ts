@@ -46,6 +46,7 @@ export interface Subject {
   duration?: number;
   window_duration?: number;
   is_published?: number;
+  is_timetable_published?: number;
   teacher_id?: number;
   total_score?: number;
   can_retake?: number;
