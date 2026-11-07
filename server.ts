@@ -102,12 +102,19 @@ export function isUnscheduledDatetime(value: unknown): boolean {
   return !dt || dt.startsWith("2099") || dt === "unscheduled" || dt === "tba" || dt === "null" || dt === "undefined";
 }
 
-export interface ResolvedExamSchedule {
-  scheduled: boolean;
-  start: number | null;
-  end: number | null;
-  isOpen: boolean;
-}
+export type ResolvedExamSchedule =
+  | {
+      scheduled: true;
+      start: number;
+      end: number;
+      isOpen: boolean;
+    }
+  | {
+      scheduled: false;
+      start: null;
+      end: null;
+      isOpen: boolean;
+    };
 
 export function resolveExamSchedule(subject: any): ResolvedExamSchedule {
   const dt = typeof subject?.exam_datetime === "string" ? subject.exam_datetime.trim() : "";
@@ -799,13 +806,14 @@ function resolveGamificationLevel(xp: number) {
   const safeXp = Math.max(0, Math.round(xp || 0));
   let level = 1;
   for (let i = 0; i < GAMIFICATION_LEVELS.length; i++) {
-    if (safeXp >= GAMIFICATION_LEVELS[i].xp) level = i + 1;
+    const entry = GAMIFICATION_LEVELS[i];
+    if (entry && safeXp >= entry.xp) level = i + 1;
   }
   let title = GAMIFICATION_LEVELS[level - 1]?.title || "Newcomer";
   let levelStartXp = GAMIFICATION_LEVELS[level - 1]?.xp || 0;
   let nextLevelXp: number | null = GAMIFICATION_LEVELS[level]?.xp || null;
 
-  const maxThreshold = GAMIFICATION_LEVELS[GAMIFICATION_LEVELS.length - 1].xp;
+  const maxThreshold = GAMIFICATION_LEVELS[GAMIFICATION_LEVELS.length - 1]?.xp ?? 8000;
   if (safeXp >= maxThreshold) {
     const extraLevels = Math.floor((safeXp - maxThreshold) / LEGEND_LEVEL_STEP);
     level = GAMIFICATION_LEVELS.length + extraLevels;
@@ -7375,7 +7383,7 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
         // 3. Detect inline or trailing answer keys (e.g. "Answer: B", "Ans: C", "Correct: A")
         else if (currentQuestion && /^(?:Answer|Ans|Correct(?:\s+Option|\s+Answer)?)\s*[:=\-]\s*([A-E])\b/i.test(line)) {
           const ansMatch = line.match(/^(?:Answer|Ans|Correct(?:\s+Option|\s+Answer)?)\s*[:=\-]\s*([A-E])\b/i);
-          if (ansMatch) {
+          if (ansMatch && ansMatch[1]) {
             currentQuestion.correct_answer = ansMatch[1].toUpperCase();
             currentQuestion.has_explicit_answer = true;
           }

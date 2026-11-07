@@ -159,7 +159,7 @@ export async function bootstrapDefaultSystemAccounts(): Promise<void> {
         const d = new Date(today);
         d.setDate(today.getDate() - i);
         if (d.getDay() === 0 || d.getDay() === 6) continue;
-        const dateStr = d.toISOString().split("T")[0];
+        const dateStr = d.toISOString().split("T")[0] ?? "";
         const status = i === 4 || i === 12 ? "absent" : "present";
         db.prepare(`
           INSERT OR IGNORE INTO attendance_records (student_id, date, status, remarks, marked_by)

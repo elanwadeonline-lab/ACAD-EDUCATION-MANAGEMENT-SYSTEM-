@@ -29,8 +29,6 @@ export async function tryLearningCommunity(req: Request,method: string,pathname:
     }
     if(method==='POST') {
       checkRateLimit(`learning_write_${actor.userId}`,40,60_000);
-      if(pathname==='/api/learning/chat-lock') return success(learning.setChatLock(actor,data));
-      if(pathname==='/api/learning/react') return success(learning.toggleReaction(actor,data));
       if(pathname==='/api/learning/presence') return success(learning.presence(actor));
       if(pathname==='/api/learning/files'||pathname==='/api/learning/library/files') {
         const library=pathname.includes('/library/');
@@ -53,6 +51,8 @@ export async function tryLearningCommunity(req: Request,method: string,pathname:
         catch(error) {await unlink(target);throw error;}
       }
       const data=await readJson(req);
+      if(pathname==='/api/learning/chat-lock') return success(learning.setChatLock(actor,data));
+      if(pathname==='/api/learning/react') return success(learning.toggleReaction(actor,data));
       let result: unknown;
       if(pathname==='/api/learning/posts') result=learning.post(actor,data);
       else if(post?.[2]==='replies') result=learning.reply(actor,Number(post[1]),data);
