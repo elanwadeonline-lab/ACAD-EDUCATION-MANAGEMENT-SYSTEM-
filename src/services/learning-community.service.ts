@@ -51,6 +51,7 @@ export class LearningCommunityService {
         resource_id INTEGER NOT NULL REFERENCES learning_resources(id),student_id INTEGER NOT NULL REFERENCES users(id),
         opened_at INTEGER NOT NULL,completed_at INTEGER,PRIMARY KEY(resource_id,student_id)
       );
+      CREATE INDEX IF NOT EXISTS idx_learning_resource_files_resource ON learning_resource_files(resource_id);
       CREATE TABLE IF NOT EXISTS learning_chat_lock (
         id INTEGER PRIMARY KEY, is_locked INTEGER NOT NULL DEFAULT 0,
         locked_by_id INTEGER REFERENCES users(id), reason TEXT, updated_at INTEGER NOT NULL
@@ -283,9 +284,11 @@ export class LearningCommunityService {
     if (fileIds.length>6) throw new LearningError(400,'Attach up to six files.');
     if (!body && !fileIds.length) throw new LearningError(400,'Write a lesson note or attach a PDF or photo.');
     return this.db.transaction(()=>{
+      let previousUpdatedAt=0;
       if (id) {
-        const existing=this.db.query('SELECT * FROM lesson_notes WHERE id=? AND teacher_id=?').get(id,actor.userId);
+        const existing=this.db.query('SELECT * FROM lesson_notes WHERE id=? AND teacher_id=?').get(id,actor.userId) as any;
         if (!existing) throw new LearningError(404,'Lesson note not found.');
+        previousUpdatedAt=Number(existing.updated_at);
       }
       for (const fileId of fileIds) {
         const file=this.db.query('SELECT * FROM lesson_note_files WHERE id=? AND teacher_id=?').get(fileId,actor.userId) as any;
@@ -293,7 +296,7 @@ export class LearningCommunityService {
       }
       let noteId=id;
       if (!noteId) noteId=Number(this.db.query('INSERT INTO lesson_notes(teacher_id,subject_id,title,body,state,created_at,updated_at) VALUES(?,?,?,?,?,?,?)').run(actor.userId,subject.id,title,body,data.state,this.now(),this.now()).lastInsertRowid);
-      else this.db.query("UPDATE lesson_notes SET subject_id=?,title=?,body=?,state=?,feedback='',updated_at=? WHERE id=?").run(subject.id,title,body,data.state,this.now(),noteId);
+      else this.db.query("UPDATE lesson_notes SET subject_id=?,title=?,body=?,state=?,feedback='',updated_at=? WHERE id=?").run(subject.id,title,body,data.state,Math.max(this.now(),previousUpdatedAt+1),noteId);
       this.db.query('UPDATE lesson_note_files SET note_id=NULL WHERE note_id=?').run(noteId);
       for(const fileId of fileIds) this.db.query('UPDATE lesson_note_files SET note_id=? WHERE id=?').run(noteId,fileId);
       return {id:noteId};
@@ -306,7 +309,9 @@ export class LearningCommunityService {
     const feedback=text(data.feedback||'',2000,data.state==='returned');
     const note=this.db.query("SELECT n.*,s.class,s.grade_level_id FROM lesson_notes n JOIN subjects s ON s.id=n.subject_id WHERE n.id=? AND n.state='submitted'").get(id) as any;
     if (!note) throw new LearningError(409,'This note is no longer awaiting review. Refresh the list.');
-    this.db.query('UPDATE lesson_notes SET state=?,feedback=?,updated_at=? WHERE id=?').run(data.state==='approved'?'published':'returned',feedback,this.now(),id);
+    if(data.expected_updated_at!=null&&Number(data.expected_updated_at)!==Number(note.updated_at))throw new LearningError(409,'This lesson note changed after you opened it. Refresh and review the latest version.');
+    const update=this.db.query("UPDATE lesson_notes SET state=?,feedback=?,updated_at=? WHERE id=? AND state='submitted' AND updated_at=?").run(data.state==='approved'?'published':'returned',feedback,Math.max(this.now(),Number(note.updated_at)+1),id,note.updated_at);
+    if(!update.changes)throw new LearningError(409,'Another reviewer changed this lesson note. Refresh the list.');
     return {ok:true};
   }
   addFile(actor: LearningActor,file: {filename:string;storage_key:string;mime:string;bytes:number}) {
@@ -324,19 +329,23 @@ export class LearningCommunityService {
     if(!note || !this.canReadNote(actor,note)) throw new LearningError(403,'This attachment is not available to your account.');
     return file;
   }
-  private canReadResource(actor:LearningActor,resource:any) {
-    const user=this.actor(actor);
+  private canReadResource(actor:LearningActor,resource:any,user=this.actor(actor)) {
     if(actor.role==='operator'||(actor.role==='teacher'&&resource.teacher_id===actor.userId))return true;
     if(actor.role!=='student'||resource.state!=='published')return false;
     if(resource.grade_level_id&&user.grade_level_id)return resource.grade_level_id===user.grade_level_id;
     return !!resource.class&&!!user.grade&&resource.class.replace(/\s+/g,'').toLowerCase()===user.grade.replace(/\s+/g,'').toLowerCase();
   }
   resources(actor:LearningActor) {
-    this.actor(actor);
+    const user=this.actor(actor);
     const rows=this.db.query(`SELECT r.*,s.name AS subject_name,s.class,s.grade_level_id,s.term,s.session,u.name AS teacher_name,
-      p.opened_at,p.completed_at FROM learning_resources r JOIN subjects s ON s.id=r.subject_id
-      JOIN users u ON u.id=r.teacher_id LEFT JOIN learning_resource_progress p ON p.resource_id=r.id AND p.student_id=? ORDER BY r.updated_at DESC`).all(actor.userId) as any[];
-    return rows.filter(row=>this.canReadResource(actor,row)).map(row=>({...row,files:this.db.query('SELECT id,filename,mime,bytes FROM learning_resource_files WHERE resource_id=?').all(row.id)}));
+      p.opened_at,p.completed_at,
+      (SELECT json_group_array(json_object('id',f.id,'filename',f.filename,'mime',f.mime,'bytes',f.bytes))
+       FROM learning_resource_files f WHERE f.resource_id=r.id) AS files_json
+      FROM learning_resources r JOIN subjects s ON s.id=r.subject_id
+      JOIN users u ON u.id=r.teacher_id LEFT JOIN learning_resource_progress p ON p.resource_id=r.id AND p.student_id=?
+      WHERE (?='operator' OR (?='teacher' AND r.teacher_id=?) OR (?='student' AND r.state='published'))
+      ORDER BY r.updated_at DESC`).all(actor.userId,actor.role,actor.role,actor.userId,actor.role) as any[];
+    return rows.filter(row=>this.canReadResource(actor,row,user)).map(({files_json,...row})=>({...row,files:JSON.parse(files_json)}));
   }
   saveResource(actor:LearningActor,data:any,id?:number) {
     this.staff(actor);

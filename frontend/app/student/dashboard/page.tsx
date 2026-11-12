@@ -157,15 +157,15 @@ function DashboardContent() {
     [allDisplaySubjects, takenIds, currentTime, activeExamsList, results]
   );
 
-  // Academic Performance Analytics (Part A2) — Real data only, zero invented formulas
+  // Academic Performance Analytics (Part A2) â€” Real data only, zero invented formulas
   const academicAnalytics = useMemo(() => {
     const count = releasedResults.length;
     if (count === 0) {
       return {
         avgPct: 0,
-        avgGrade: "—",
+        avgGrade: "â€”",
         highestPct: 0,
-        highestSubject: "—",
+        highestSubject: "â€”",
         formalAvg: null as number | null,
         practiceAvg: null as number | null,
         deltaFromPrior: null as number | null,
@@ -268,7 +268,7 @@ function DashboardContent() {
       avgPct,
       avgGrade,
       highestPct: highest?.pct ?? 0,
-      highestSubject: highest?.subjectName ?? "—",
+      highestSubject: highest?.subjectName ?? "â€”",
       formalAvg,
       practiceAvg,
       deltaFromPrior,
@@ -281,14 +281,14 @@ function DashboardContent() {
     <div className={styles.container}>
 
 
-      {/* ── 1. Institutional Candidate Identity Header ── */}
+      {/* â”€â”€ 1. Institutional Candidate Identity Header â”€â”€ */}
       <header className={styles.headerBar}>
         <div className={styles.headerIdentity}>
           <div className={styles.eyebrowRow}>
             {selectedSession?.name && (
               <span className={styles.sessionBadge}>
                 {selectedSession.name}
-                {selectedTerm?.name ? ` · ${selectedTerm.name}` : ""}
+                {selectedTerm?.name ? ` Â· ${selectedTerm.name}` : ""}
               </span>
             )}
             <span className={styles.metaPill}>
@@ -298,9 +298,9 @@ function DashboardContent() {
               <span className={styles.metaPill}>Reg ID: {user.reg_id}</span>
             )}
           </div>
-          <h1 className={styles.pageTitle}>Learning insights</h1>
+          <h1 className={styles.pageTitle}>Your learning, today</h1>
           <p className={styles.pageSubtitle}>
-            {user?.name ? `${user.name}, here’s your learning at a glance.` : "Adaptive learning. Steady progress."}
+            {user?.name ? `${user.name}, hereâ€™s your learning at a glance.` : "Study, practise and keep moving forward."}
           </p>
         </div>
 
@@ -318,7 +318,7 @@ function DashboardContent() {
         </div>
       </header>
 
-      <nav className={styles.sectionNav} aria-label="Learning sections"><Link href="/student/dashboard">Overview</Link><Link href="/student/examinations">Examinations</Link><Link href="/student/practice">Practice</Link><Link href="/student/results">Results</Link></nav>
+
 
       {error && (
         <div
@@ -335,46 +335,17 @@ function DashboardContent() {
         </div>
       )}
 
-      {inProgressExams.length > 0 && (
-        <div style={{
-          marginBottom: "1.25rem",
-          padding: "1rem 1.25rem",
-          background: "linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(245, 158, 11, 0.04))",
-          border: "1px solid rgba(245, 158, 11, 0.35)",
-          borderRadius: "10px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          flexWrap: "wrap",
-          gap: "1rem"
-        }}>
-          <div>
-            <strong style={{ display: "block", color: "var(--color-text)", fontSize: "0.9375rem" }}>
-              Assessment In Progress: {inProgressExams[0].name}
-            </strong>
-            <span style={{ fontSize: "0.8125rem", color: "var(--color-text-muted)" }}>
-              Your examination timer is running on the server. Resume your session before the window closes.
-            </span>
-          </div>
-          <Link
-            href={`/student/exam?subjectId=${inProgressExams[0].id}`}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "0.5rem",
-              background: "#D97706",
-              color: "#FFFFFF",
-              padding: "0.5rem 1rem",
-              borderRadius: "6px",
-              fontWeight: 600,
-              fontSize: "0.875rem",
-              textDecoration: "none"
-            }}
-          >
-            Resume Examination →
-          </Link>
-        </div>
-      )}
+      <section className={styles.nextStep} aria-labelledby="next-step-title" aria-busy={loading}>
+        <span className={styles.nextStepLabel}>{inProgressExams.length ? "In progress" : "Your next step"}</span>
+        <h2 id="next-step-title">{loading ? "Getting your learning ready…" : inProgressExams.length ? inProgressExams[0].name : "Make time for a little progress"}</h2>
+        <p>{inProgressExams.length ? "Your exam timer is still running. Return to your assessment before the window closes." : "Explore your class materials or build confidence with a practice session."}</p>
+        {!loading && <Link className={styles.nextStepAction} href={inProgressExams.length ? `/student/exam?subjectId=${inProgressExams[0].id}` : "/student/library"}>{inProgressExams.length ? "Resume examination" : "Explore study materials"}<span aria-hidden="true">→</span></Link>}
+      </section>
+      <nav className={styles.learningShortcuts} aria-label="Learning shortcuts">
+        <Link href="/student/practice"><span>Practice</span><small>Build your confidence</small></Link>
+        <Link href="/student/examinations"><span>Examinations</span><small>Assessments & assignments</small></Link>
+      </nav>
+      <div className={styles.progressHeading}><h2>Your progress</h2><p>A little effort, building over time.</p></div>
 
       <LearningOverview
         loading={loading}

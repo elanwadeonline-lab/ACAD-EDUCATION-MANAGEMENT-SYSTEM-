@@ -1,10 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Platform, ScrollView, KeyboardAvoidingView } from 'react-native';
+import { View, Text, StyleSheet, Platform, ScrollView, KeyboardAvoidingView,TextInput,Pressable,RefreshControl } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BaseHeader } from '../../src/components/base-header';
-import { Input, InputField } from '../../src/components/ui/input';
-import { Button, ButtonText } from '../../src/components/ui/button';
 import { BaseAlert } from '../../src/components/base-alert';
 import { BaseSkeleton } from '../../src/components/base-skeleton';
 import { Send, AlertCircle } from 'lucide-react-native';
@@ -16,7 +14,7 @@ import { useRemote, useNotice } from '../../src/components/common/NativeUI';
 
 export default function MessageThreadScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ id?: string; name?: string; role?: string; recipientId?: string }>();
+  const params = useLocalSearchParams<{ id?: string; name?: string; role?: string; recipientId?: string; studentId?:string;studentName?:string }>();
   const { user, token } = useGuardianAuth();
   const { activeWard } = useActiveWard();
   const toast = useNotice();
@@ -30,6 +28,7 @@ export default function MessageThreadScreen() {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
   const scrollViewRef = useRef<ScrollView>(null);
+  const followLatest=useRef(true),sendLock=useRef(false);
 
   const conversation = useRemote<{ thread: any; messages: any[] }>(
     threadId ? `/api/guardian/messages/threads/${threadId}` : null,
@@ -39,11 +38,12 @@ export default function MessageThreadScreen() {
   const messages = conversation.data?.messages || [];
 
   useEffect(() => {
-    scrollViewRef.current?.scrollToEnd({ animated: true });
+    if(followLatest.current)scrollViewRef.current?.scrollToEnd({ animated: false });
   }, [messages.length]);
 
   const handleSend = async () => {
-    if (!text.trim() || sending) return;
+    if (!text.trim() || sendLock.current) return;
+    sendLock.current=true;followLatest.current=true;
     setSending(true);
     setError('');
 
@@ -53,29 +53,28 @@ export default function MessageThreadScreen() {
           method: 'POST',
           body: JSON.stringify({ text: text.trim() }),
         });
-      } else if (params.recipientId && activeWard) {
+      } else if (params.recipientId && (params.studentId||activeWard?.id)) {
         const result = await requestData<{ threadId: number }>('/api/guardian/messages/new-thread', {
           method: 'POST',
           body: JSON.stringify({
             recipient_id: Number(params.recipientId),
-            student_id: activeWard.id,
+            student_id: Number(params.studentId||activeWard?.id),
             text: text.trim(),
           }),
         });
         toast('Conversation started');
         router.replace({
-          pathname: `/messages/${result.threadId}`,
+          pathname: '/messages/[id]',
           params: { id: String(result.threadId), name: recipientName, role: recipientRole },
         });
         return;
-      }
+      } else {throw new Error('Choose your child and a school contact before sending.');}
       setText('');
       conversation.reload();
-      toast('Message sent');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Message could not be sent.');
     } finally {
-      setSending(false);
+      sendLock.current=false;setSending(false);
     }
   };
 
@@ -83,21 +82,24 @@ export default function MessageThreadScreen() {
     <SafeAreaView edges={['top', 'left', 'right', 'bottom']} style={styles.container}>
       <BaseHeader
         title={recipientName}
-        subtitle={`${recipientRole} · ${activeWard?.name || 'Student'}`}
-        onBack={() => router.back()}
+        subtitle={`${recipientRole} · ${conversation.data?.thread?.student_name || params.studentName || activeWard?.name || 'Student'}`}
+        onBack={()=>router.canGoBack()?router.back():router.replace('/messages')}
         align="left"
       />
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 88 : 0}
+        keyboardVerticalOffset={0}
       >
         <ScrollView
           ref={scrollViewRef}
+          refreshControl={<RefreshControl refreshing={conversation.loading} onRefresh={conversation.reload} tintColor={C.primary}/>}
           contentContainerStyle={styles.messageList}
           keyboardShouldPersistTaps="handled"
-          onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
+          onContentSizeChange={()=>{if(followLatest.current)scrollViewRef.current?.scrollToEnd({animated:false});}}
+          onScroll={event=>{const {layoutMeasurement,contentOffset,contentSize}=event.nativeEvent;followLatest.current=contentSize.height-contentOffset.y-layoutMeasurement.height<80;}}
+          scrollEventThrottle={100}
         >
           {conversation.loading && (
             <View style={{ gap: 12, paddingVertical: 16 }}>
@@ -107,11 +109,12 @@ export default function MessageThreadScreen() {
             </View>
           )}
 
+          {!!conversation.error&&<BaseAlert variant="destructive" title="Connection interrupted" description="Your last messages and draft are kept. Reopen this conversation or pull to refresh your messages."/>}
           {isNew && !messages.length && (
             <View style={styles.startNotice}>
               <Text style={styles.startTitle}>Start a conversation with {recipientName}</Text>
               <Text style={styles.startDesc}>
-                Messages sent here are visible to the teacher and school leadership. Inquiries are typically responded to during school office hours.
+                Ask about lessons, attendance or your child’s progress. Your message stays linked to this student record.
               </Text>
             </View>
           )}
@@ -155,8 +158,10 @@ export default function MessageThreadScreen() {
           )}
 
           <View style={styles.inputRow}>
-            <Input style={styles.textInputWrap}>
-              <InputField
+            <View style={styles.textInputWrap}>
+              <TextInput
+                accessibilityLabel="Message to school"
+                editable={!sending}
                 value={text}
                 onChangeText={setText}
                 placeholder={`Message ${recipientName}…`}
@@ -164,15 +169,17 @@ export default function MessageThreadScreen() {
                 maxLength={4000}
                 style={styles.textInputField}
               />
-            </Input>
+            </View>
 
-            <Button
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={sending?'Sending message':'Send message'}
               onPress={handleSend}
-              disabled={sending || !text.trim()}
+              disabled={sending || !text.trim() || (isNew&&!params.recipientId) || (!isNew&&!!conversation.error)}
               style={[styles.sendBtn, (!text.trim() || sending) && { opacity: 0.5 }]}
             >
               <Send size={18} color="#FFFFFF" />
-            </Button>
+            </Pressable>
           </View>
         </View>
       </KeyboardAvoidingView>
@@ -205,11 +212,11 @@ const styles = StyleSheet.create({
     maxWidth: '82%',
     paddingHorizontal: 14,
     paddingVertical: 10,
-    borderRadius: 18,
+    borderRadius: 12,
     gap: 4,
   },
   bubbleRight: {
-    backgroundColor: '#FEF3C7',
+    backgroundColor: C.primaryLight,
     borderBottomRightRadius: 4,
     borderWidth: 1,
     borderColor: '#FDE68A',
@@ -221,8 +228,8 @@ const styles = StyleSheet.create({
     borderColor: '#E2E8F0',
   },
   bubbleText: {
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 16,
+    lineHeight: 24,
   },
   textRight: {
     color: '#0F172A',
@@ -238,7 +245,7 @@ const styles = StyleSheet.create({
     color: '#92400E',
   },
   timeLeft: {
-    color: '#94A3B8',
+    color: C.muted,
   },
   startNotice: {
     backgroundColor: '#FFFFFF',
@@ -277,7 +284,7 @@ const styles = StyleSheet.create({
   textInputWrap: {
     flex: 1,
     backgroundColor: '#F8FAFC',
-    borderRadius: 20,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: '#E2E8F0',
     minHeight: 44,
@@ -286,13 +293,14 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   textInputField: {
-    fontSize: 14,
-    color: '#0F172A',
+    fontSize: 16,
+    lineHeight:22,
+    color: C.ink,
   },
   sendBtn: {
     width: 44,
     height: 44,
-    borderRadius: 22,
+    borderRadius: 12,
     backgroundColor: C.primary,
     alignItems: 'center',
     justifyContent: 'center',

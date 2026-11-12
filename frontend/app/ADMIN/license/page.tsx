@@ -153,7 +153,7 @@ function LicenseDashboard() {
 
   const isActivated = Boolean(licenseInfo && licenseInfo.tier && licenseInfo.tier !== "core" && !licenseInfo.error);
   const formattedTier = licenseInfo?.tier ? licenseInfo.tier.replace(/_/g, " ").toUpperCase() : "STANDARD EVALUATION";
-  const schoolName = licenseInfo?.sub || "ExamPool Institutional Deployment";
+  const schoolName = licenseInfo?.sub || "Acqad Institutional Deployment";
   const issuedDate = licenseInfo?.iat ? new Date(licenseInfo.iat * 1000).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) : "Active";
   const maxDevices = licenseInfo?.max_devices ? Number(licenseInfo.max_devices) : 50;
 
@@ -416,7 +416,7 @@ function LicenseDashboard() {
             <div>
               <h3 className={styles.cardTitle}>Register Master License File</h3>
               <p className={styles.cardSubtitle}>
-                Upload the cryptographically signed <code className="font-mono text-slate-800 bg-slate-100 px-1 py-0.5 rounded">license.json</code> file provided by ExamPool HQ to register your institution or unlock capacity.
+                Upload the cryptographically signed <code className="font-mono text-slate-800 bg-slate-100 px-1 py-0.5 rounded">license.json</code> file provided by Acqad HQ to register your institution or unlock capacity.
               </p>
             </div>
 
@@ -460,7 +460,7 @@ function LicenseDashboard() {
                 <span className={styles.stepNumber}>STEP 02</span>
                 <span className={styles.stepTitle}>Request Signed License</span>
                 <p className={styles.stepText}>
-                  Submit the signature to your authorized ExamPool distributor or portal to generate a locked certificate.
+                  Submit the signature to your authorized Acqad distributor or portal to generate a locked certificate.
                 </p>
               </div>
 

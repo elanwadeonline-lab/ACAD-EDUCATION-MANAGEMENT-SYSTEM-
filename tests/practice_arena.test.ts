@@ -30,6 +30,34 @@ function status(task:()=>unknown,expected:number){
   try{task();throw new Error('Expected ArenaError');}catch(e){expect(e).toBeInstanceOf(ArenaError);expect((e as ArenaError).status).toBe(expected);}
 }
 
+describe('Persistent department study journeys',()=>{
+  function publishCombination(){
+    for(const [index,subject] of ['ENG','PHY','CHM'].entries())for(let i=1;i<=5;i++)db.query(`INSERT INTO content_bank.content_bank VALUES(?,'JAMB',2026,?,'objective','Question','["Incorrect","Correct"]','B',NULL,NULL)`).run(100+index*10+i,subject);
+  }
+  test('JAMB requires four distinct subjects including English and preserves each account',()=>{
+    publishCombination();
+    const selection={examBody:'JAMB',department:'science',subjects:['ENG','MTH','PHY','CHM']};
+    expect(arena.saveJourney(1,selection)).toEqual(selection);
+    expect(new ArenaService(db).journey(1)).toEqual(selection);expect(arena.journey(2)).toBeNull();
+    for(const subjects of [['MTH','PHY','CHM','BIO'],['ENG','MTH'],['ENG','MTH','MTH','PHY'],['ENG','COM','PHY','CHM']])status(()=>arena.saveJourney(1,{...selection,subjects}),400);
+  });
+  test('solo journey draws five questions per selected subject and resumes safely',()=>{
+    publishCombination();arena.saveJourney(1,{examBody:'JAMB',department:'science',subjects:['ENG','MTH','PHY','CHM']});
+    const quest=arena.createJourney(1,key(50));expect(quest.total).toBe(20);
+    expect(arena.createJourney(1,key(50)).id).toBe(quest.id);
+    const complete=finish(quest.id,1);expect(complete.score).toBe(20);expect(complete.xp).toBe(200);
+  });
+  test('missing subject uploads block a full combination',()=>{
+    arena.saveJourney(1,{examBody:'JAMB',department:'science',subjects:['ENG','MTH','PHY','CHM']});
+    status(()=>arena.createJourney(1,key(51)),400);
+  });
+  test('WAEC uses department without imposing JAMB four-subject requirements',()=>{
+    db.run("UPDATE content_bank.content_bank SET exam_body='WAEC'");
+    arena.saveJourney(1,{examBody:'WAEC',department:'commercial',subjects:[]});
+    expect(arena.createJourney(1,key(52)).total).toBe(5);
+  });
+});
+
 describe('Practice Arena persistence, privacy and reward integrity',()=>{
   test('overview uses real eligible papers and does not invent players',()=>{
     const overview=arena.overview(1);

@@ -1,6 +1,7 @@
 import type { Database } from 'bun:sqlite';
 import { randomBytes, randomInt } from 'node:crypto';
 import type { ArenaMode, ArenaOverview, ArenaSession, ArenaStatus } from '../../shared/arena';
+import {departments,type StudyJourney} from '../../shared/study-journey';
 
 type Student = { id: number; name: string; grade: string | null; grade_level_id: number | null };
 type Item = { id: number; text: string; options: string[]; correct: number; explanation: string | null; topic: string | null };
@@ -67,6 +68,9 @@ export class ArenaService {
         created_at INTEGER NOT NULL, UNIQUE(user_low,user_high), CHECK(requester_id != recipient_id)
       );
       CREATE INDEX IF NOT EXISTS idx_arena_partners_recipient ON arena_partners(recipient_id,status);
+      CREATE TABLE IF NOT EXISTS arena_journeys (
+        user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+        selection_json TEXT NOT NULL, updated_at INTEGER NOT NULL);
     `);
   }
 
@@ -131,11 +135,22 @@ export class ArenaService {
   overview(userId: number): ArenaOverview {
     const me = this.student(userId);
     this.expire();
-    const catalog = new Map<string, { id: string; title: string; questionCount: number }>();
-    for (const entry of this.items()) {
-      const paper = catalog.get(entry.id) || { id: entry.id, title: entry.title, questionCount: 0 };
-      paper.questionCount++; catalog.set(entry.id, paper);
-    }
+    // Count eligible papers in SQLite; do not hydrate every question and answer key for a menu.
+    const catalog=this.db.query(`WITH parsed AS (
+      SELECT exam_body,year,subject_code,question_text,
+        CASE WHEN json_valid(options_json) THEN CASE WHEN json_type(options_json)='array' THEN options_json ELSE '[]' END ELSE '[]' END AS opts,
+        TRIM(COALESCE(correct_answer,'')) AS answer
+      FROM content_bank.content_bank WHERE paper_type='objective'
+    ), keyed AS (SELECT *, CASE
+      WHEN LENGTH(answer)=1 AND UPPER(answer) BETWEEN 'A' AND 'H' THEN UNICODE(UPPER(answer))-65
+      WHEN LENGTH(answer)>0 AND answer NOT GLOB '*[^0-9]*' THEN CAST(answer AS INTEGER)
+      ELSE -1 END AS correct FROM parsed)
+    SELECT exam_body || '_' || year || '_' || subject_code AS id,
+      exam_body || ' ' || year || ' · ' || subject_code AS title,COUNT(*) AS questionCount
+    FROM keyed WHERE LENGTH(TRIM(COALESCE(question_text,''), ' ' || CHAR(9) || CHAR(10) || CHAR(13)))>0
+      AND json_array_length(opts) BETWEEN 2 AND 8 AND correct>=0 AND correct<json_array_length(opts)
+      AND NOT EXISTS(SELECT 1 FROM json_each(opts) o WHERE o.type!='text' OR LENGTH(TRIM(o.value, ' ' || CHAR(9) || CHAR(10) || CHAR(13)))=0)
+    GROUP BY exam_body,year,subject_code HAVING COUNT(*)>=5 ORDER BY exam_body,year DESC,subject_code`).all() as {id:string;title:string;questionCount:number}[];
     const xp = Number((this.db.query('SELECT COALESCE(SUM(points),0) AS xp FROM arena_rewards WHERE user_id=?').get(userId) as any).xp);
     const week = weekStart(this.now());
     const weeklyXp = Number((this.db.query('SELECT COALESCE(SUM(points),0) AS xp FROM arena_rewards WHERE user_id=? AND created_at>=?').get(userId, week) as any).xp);
@@ -152,7 +167,7 @@ export class ArenaService {
     const partners = this.db.query(`SELECT p.*,u.name FROM arena_partners p JOIN users u ON u.id=CASE WHEN p.requester_id=? THEN p.recipient_id ELSE p.requester_id END
       WHERE (p.requester_id=? OR p.recipient_id=?) AND p.status IN ('pending','accepted') AND u.is_active=1 ORDER BY p.created_at DESC LIMIT 30`).all(userId,userId,userId) as any[];
     return {
-      papers: [...catalog.values()].filter(p => p.questionCount >= 5), xp, weeklyXp,
+      papers: catalog, xp, weeklyXp,
       level: Math.floor(xp / 100) + 1, nextLevelXp: (Math.floor(xp / 100) + 1) * 100,
       completed: Number((this.db.query('SELECT COUNT(*) AS n FROM arena_players WHERE user_id=? AND finished_at IS NOT NULL').get(userId) as any).n),
       active: pending ? this.view(pending.id,userId) : null,
@@ -163,15 +178,50 @@ export class ArenaService {
     };
   }
 
-  create(userId: number, packageId: string, mode: ArenaMode, requestKey: string): ArenaSession {
+  journey(userId:number):StudyJourney|null {
+    this.student(userId);
+    const row=this.db.query('SELECT selection_json FROM arena_journeys WHERE user_id=?').get(userId) as any;
+    return row?JSON.parse(row.selection_json):null;
+  }
+
+  saveJourney(userId:number,data:any):StudyJourney {
+    this.student(userId);
+    if(!data || !Object.hasOwn(departments,data.department) || typeof data.examBody!=='string' || data.examBody.length>40 || !Array.isArray(data.subjects)) throw new ArenaError(400,'Choose an exam body and department.');
+    const allowed=departments[data.department as keyof typeof departments] as readonly string[];
+    const subjects=data.subjects;
+    if(subjects.some((s:unknown)=>typeof s!=='string'||!allowed.includes(s)) || new Set(subjects).size!==subjects.length || (data.examBody==='JAMB'?(subjects.length!==4||!subjects.includes('ENG')):subjects.length!==0)) throw new ArenaError(400,'For JAMB, choose Use of English and three distinct department subjects. Other exam bodies use your department.');
+    const published=this.overview(userId).papers;
+    if(!published.some(p=>p.id.startsWith(`${data.examBody}_`))) throw new ArenaError(400,'This examination body has no eligible published papers.');
+    const selection={examBody:data.examBody,department:data.department,subjects} as StudyJourney;
+    this.db.query('INSERT INTO arena_journeys(user_id,selection_json,updated_at) VALUES(?,?,?) ON CONFLICT(user_id) DO UPDATE SET selection_json=excluded.selection_json,updated_at=excluded.updated_at').run(userId,JSON.stringify(selection),this.now());
+    return selection;
+  }
+
+  createJourney(userId:number,requestKey:string):ArenaSession {
+    const selection=this.journey(userId);
+    if(!selection)throw new ArenaError(400,'Choose your study journey first.');
+    const papers=this.overview(userId).papers;
+    const subjects=selection.examBody==='JAMB'?selection.subjects:departments[selection.department];
+    const selected=subjects.map(subject=>papers.find(p=>p.id.startsWith(`${selection.examBody}_`)&&p.id.endsWith(`_${subject}`))).filter(Boolean);
+    if(selection.examBody==='JAMB'&&selected.length!==4)throw new ArenaError(400,'Your four subjects need published papers with at least five valid questions each.');
+    if(!selected.length)throw new ArenaError(400,'No eligible papers are available for this department yet.');
+    return this.create(userId,`journey:${selected.map(p=>p!.id).join('|')}`,'solo',requestKey,selected.map(p=>p!.id));
+  }
+
+  create(userId: number, packageId: string, mode: ArenaMode, requestKey: string, journeyPapers?:string[]): ArenaSession {
     this.student(userId); this.expire();
-    if (!['solo','duel'].includes(mode) || typeof packageId !== 'string' || !packageId || packageId.length > 128 || typeof requestKey !== 'string' || !/^[a-zA-Z0-9_-]{8,80}$/.test(requestKey)) throw new ArenaError(400,'Choose a paper and a valid quest mode.');
+    if (!['solo','duel'].includes(mode) || typeof packageId !== 'string' || !packageId || packageId.length > (journeyPapers?2000:128) || typeof requestKey !== 'string' || !/^[a-zA-Z0-9_-]{8,80}$/.test(requestKey)) throw new ArenaError(400,'Choose a paper and a valid quest mode.');
     const previous = this.db.query('SELECT * FROM arena_sessions WHERE host_id=? AND request_key=?').get(userId,requestKey) as Session | null;
     if (previous) {
       if (previous.package_id !== packageId || previous.mode !== mode) throw new ArenaError(409,'This request was already used for a different quest.');
       return this.view(previous.id,userId);
     }
-    const entries = this.items(packageId);
+    const entries = journeyPapers?journeyPapers.flatMap(id=>{
+      const items=this.items(id);
+      if(items.length<5)throw new ArenaError(400,'A selected subject no longer has enough published questions.');
+      for(let i=items.length-1;i>0;i--){const j=randomInt(i+1);[items[i],items[j]]=[items[j]!,items[i]!];}
+      return items.slice(0,5).map(entry=>({...entry,item:{...entry.item,topic:`${entry.title}${entry.item.topic?` · ${entry.item.topic}`:''}`}}));
+    }):this.items(packageId);
     if (entries.length < 5) throw new ArenaError(400,'This paper needs at least five valid multiple-choice questions. Ask your teacher to check the paper.');
     // Shuffle on the server once, then preserve the same immutable set for both players.
     for (let i=entries.length-1;i>0;i--) { const j=randomInt(i+1); [entries[i],entries[j]]=[entries[j]!,entries[i]!]; }
@@ -183,7 +233,7 @@ export class ArenaService {
     this.db.transaction(() => {
       if (this.active(userId)) throw new ArenaError(409,'Finish or leave your current quest before starting another.');
       this.db.query(`INSERT INTO arena_sessions(id,mode,status,host_id,room_code,package_id,title,questions_json,request_key,created_at,expires_at)
-        VALUES(?,?,?,?,?,?,?,?,?,?,?)`).run(id,mode,mode==='solo'?'active':'waiting',userId,code,packageId,entries[0]!.title,JSON.stringify(entries.slice(0,5).map(e=>e.item)),requestKey,this.now(),this.now()+86_400_000);
+        VALUES(?,?,?,?,?,?,?,?,?,?,?)`).run(id,mode,mode==='solo'?'active':'waiting',userId,code,packageId,journeyPapers?`${this.journey(userId)!.examBody} · ${this.journey(userId)!.department} journey`:entries[0]!.title,JSON.stringify(entries.slice(0,journeyPapers?entries.length:5).map(e=>e.item)),requestKey,this.now(),this.now()+86_400_000);
       this.db.query('INSERT INTO arena_players(session_id,user_id) VALUES(?,?)').run(id,userId);
     })();
     return this.view(id,userId);

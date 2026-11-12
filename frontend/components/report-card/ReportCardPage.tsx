@@ -1,4 +1,6 @@
 "use client";
+import {AcqadMark} from "../brand/AcqadLogo";
+import {PRODUCT_NAME,schoolDisplayName} from "../../lib/brand";
 
 import React, { useEffect, useState, useCallback, Suspense, useRef, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
@@ -251,7 +253,7 @@ function ReportCardPageInner() {
   let theme: Record<string, unknown> = {};
   try { theme = settings?.theme_json ? JSON.parse(settings.theme_json) : {}; } catch {}
   const logo = (theme.school_logo as string) || null;
-  const schoolName = settings?.school_name || "Academic Institution";
+  const schoolName = schoolDisplayName(settings?.school_name);
   const adminName = settings?.admin_name || "Principal / Head of School";
   const currentTerm = settings?.current_term || "2026-T1";
 
@@ -1300,7 +1302,7 @@ function ReportCardPageInner() {
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={logo} alt="School Logo" style={{ width: "22mm", height: "22mm", objectFit: "contain" }} />
                   ) : (
-                    <div style={{ fontSize: "7.5pt", color: "#64748B", fontWeight: 700 }}>EXAMPOOL</div>
+                    <AcqadMark width={64} height={64}/>
                   )}
                 </div>
 
@@ -1480,7 +1482,7 @@ function ReportCardPageInner() {
 
               {/* Footer */}
               <div style={{ textAlign: "center", fontSize: "7.5pt", color: "#94A3B8", borderTop: "1pt solid #E2E8F0", paddingTop: "2.5mm", marginTop: "4mm" }}>
-                {schoolName} · Official Academic Record · Powered by ExamPool
+                {schoolName} · Official Academic Record · Powered by {PRODUCT_NAME}
               </div>
 
               {/* Watermark Seal */}

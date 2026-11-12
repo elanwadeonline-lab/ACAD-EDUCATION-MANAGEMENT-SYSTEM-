@@ -3,9 +3,11 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { RequireRole } from "../../../components/auth/RequireRole";
 import { api } from "../../../lib/api";
+import {useAuth} from "../../../hooks/useAuth";
 import { PageHeader, Button } from "../../../components/ui";
 import { SearchIcon, MessageIcon } from "../../../components/icons/Icons";
 import styles from "./page.module.css";
+import {subscribeSchoolEvents} from "../../../lib/live-events";
 
 interface Thread {
   id: number;
@@ -46,6 +48,7 @@ export default function AdminMessagesPage() {
 }
 
 function AdminMessagesContent() {
+  const {user}=useAuth();
   const [threads, setThreads] = useState<Thread[]>([]);
   const [selectedThreadId, setSelectedThreadId] = useState<number | null>(null);
   const [activeThreadDetail, setActiveThreadDetail] = useState<Thread | null>(null);
@@ -67,6 +70,7 @@ function AdminMessagesContent() {
   const [sendingNew, setSendingNew] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const selectedRef=useRef<number|null>(null),messageVersion=useRef(0),sendLock=useRef(false),followLatest=useRef(true);
 
   const showToast = (text: string) => {
     setToast(text);
@@ -78,24 +82,23 @@ function AdminMessagesContent() {
       const data = await api.getAdminMessageThreads();
       const list = Array.isArray(data) ? data : [];
       setThreads(list);
-      if (list.length > 0 && selectedThreadId == null) {
-        setSelectedThreadId(Number(list[0].id));
-      }
     } catch (err) {
       console.warn("Failed to load admin inquiry threads:", err);
     } finally {
       setLoadingThreads(false);
     }
-  }, [selectedThreadId]);
+  }, []);
 
   useEffect(() => {
     loadThreads();
   }, [loadThreads]);
 
   const loadMessages = useCallback(async (threadId: number) => {
+    const version=++messageVersion.current;
     try {
       setLoadingMessages(true);
       const res = await api.getAdminMessageThread(threadId);
+      if(version!==messageVersion.current||selectedRef.current!==threadId)return;
       if (res?.thread) {
         setActiveThreadDetail(res.thread);
       }
@@ -107,72 +110,48 @@ function AdminMessagesContent() {
     } catch (err) {
       console.warn("Failed to load thread messages:", err);
     } finally {
-      setLoadingMessages(false);
+      if(version===messageVersion.current)setLoadingMessages(false);
     }
   }, []);
 
   useEffect(() => {
+    selectedRef.current=selectedThreadId;
     if (selectedThreadId) {
       loadMessages(selectedThreadId);
     }
   }, [selectedThreadId, loadMessages]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if(followLatest.current)messagesEndRef.current?.scrollIntoView({ behavior: "auto",block:"nearest" });
   }, [messages]);
 
   // Real-Time Server-Sent Events (SSE) listener
   useEffect(() => {
-    let es: EventSource | null = null;
-    try {
-      es = new EventSource("/api/notifications/stream");
-      es.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          if (data?.type === "chat_message") {
-            showToast(`💬 ${data.message || `New message from ${data.sender_name || "Guardian"}`}`);
-            loadThreads();
-            if (selectedThreadId && Number(data.thread_id) === Number(selectedThreadId)) {
-              const incomingMsg: Message = {
-                id: Number(data.message_id || Date.now()),
-                thread_id: Number(data.thread_id),
-                sender_id: Number(data.sender_id || 0),
-                sender_role: data.sender_role || "guardian",
-                sender_name: data.sender_name || "Guardian",
-                text: data.text || data.message || "",
-                is_read: 1,
-                created_at: data.created_at || new Date().toISOString(),
-              };
-              setMessages((prev) => {
-                if (prev.some((m) => m.id === incomingMsg.id || (m.text === incomingMsg.text && m.sender_role === incomingMsg.sender_role))) {
-                  return prev;
-                }
-                return [...prev, incomingMsg];
-              });
-            }
-          }
-        } catch {}
-      };
-    } catch {}
-
-    return () => {
-      if (es) es.close();
-    };
+    return subscribeSchoolEvents(data=>{
+      if(data.type!=='chat_message')return;
+      void loadThreads();
+      if(selectedRef.current&&Number(data.thread_id)===selectedRef.current){
+        const incoming={id:Number(data.message_id||data.id),thread_id:Number(data.thread_id),sender_id:Number(data.sender_id),sender_role:String(data.sender_role||'guardian'),sender_name:String(data.sender_name||'Guardian'),text:String(data.text||data.message||''),is_read:1,created_at:String(data.created_at||new Date().toISOString())};
+        setMessages(current=>current.some(m=>m.id===incoming.id)?current:[...current,incoming]);
+      }
+    });
   }, [loadThreads, selectedThreadId]);
 
   const handleSendReply = async (e?: React.FormEvent, customText?: string) => {
     if (e) e.preventDefault();
     const textToSend = (customText || replyText).trim();
-    if (!textToSend || !selectedThreadId) return;
+    if (!textToSend || !selectedThreadId || sendLock.current) return;
+    sendLock.current=true;followLatest.current=true;
 
     setSending(true);
     try {
       const res = await api.sendAdminMessageReply(selectedThreadId, textToSend);
+      if(!res?.id)throw new Error('Your reply was not saved. Your draft is kept; try again.');
       setReplyText("");
       const newMsg: Message = {
-        id: res?.id || Date.now(),
+        id: res.id,
         thread_id: selectedThreadId,
-        sender_id: 1,
+        sender_id: user?.id || 0,
         sender_role: "operator",
         sender_name: "School Administration",
         text: textToSend,
@@ -185,7 +164,7 @@ function AdminMessagesContent() {
     } catch (err: any) {
       showToast(err?.message || "Failed to send message");
     } finally {
-      setSending(false);
+      sendLock.current=false;setSending(false);
     }
   };
 
@@ -295,7 +274,7 @@ function AdminMessagesContent() {
         }
       />
 
-      <div className={styles.hubGrid}>
+      <div className={styles.hubGrid} data-active={!!selectedThreadId}>
         {/* ── Left Pane: Thread List ────────────────────────── */}
         <div className={styles.leftPanel}>
           <div className={styles.panelHeader}>
@@ -305,6 +284,7 @@ function AdminMessagesContent() {
               </div>
               <input
                 type="text"
+                aria-label="Search guardian conversations"
                 placeholder="Search guardian or ward…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -349,7 +329,9 @@ function AdminMessagesContent() {
                   <button
                     key={thread.id}
                     type="button"
-                    onClick={() => setSelectedThreadId(Number(thread.id))}
+                    onClick={()=>{if(sendLock.current)return;messageVersion.current++;selectedRef.current=Number(thread.id);setActiveThreadDetail(null);setMessages([]);setReplyText('');setSelectedThreadId(Number(thread.id));}}
+                    disabled={sending}
+                    aria-pressed={isActive}
                     className={`${styles.threadItem} ${isActive ? styles.threadItemActive : ""}`}
                   >
                     <div className={styles.threadAvatar}>{guardianInitial}</div>
@@ -385,6 +367,7 @@ function AdminMessagesContent() {
             <>
               {/* Chat Header */}
               <div className={styles.chatHeader}>
+                <button type="button" className={styles.backButton} disabled={sending} onClick={()=>{messageVersion.current++;selectedRef.current=null;setSelectedThreadId(null);setActiveThreadDetail(null);}}>← Conversations</button>
                 <div className={styles.chatHeaderLeft}>
                   <div className={styles.threadAvatar}>
                     {(activeThreadDetail.guardian_name || "G").charAt(0).toUpperCase()}
@@ -412,7 +395,7 @@ function AdminMessagesContent() {
               </div>
 
               {/* Messages Area */}
-              <div className={styles.messagesArea}>
+              <div className={styles.messagesArea} onScroll={e=>{const el=e.currentTarget;followLatest.current=el.scrollHeight-el.scrollTop-el.clientHeight<80;}}>
                 {loadingMessages ? (
                   <div style={{ textAlign: "center", padding: "2rem", color: "#64748B", fontSize: "0.8125rem" }}>
                     Loading message history…
@@ -464,6 +447,9 @@ function AdminMessagesContent() {
               <form onSubmit={handleSendReply} className={styles.composerArea}>
                 <textarea
                   className={styles.composerInput}
+                    maxLength={4000}
+                    aria-label="Reply to guardian"
+                    disabled={sending}
                   placeholder="Type official response to guardian… (Press Enter to send, Shift+Enter for new line)"
                   value={replyText}
                   onChange={(e) => setReplyText(e.target.value)}

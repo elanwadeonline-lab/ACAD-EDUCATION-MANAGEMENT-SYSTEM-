@@ -1,4 +1,5 @@
 import { serve } from "bun";
+import {AttendanceService,AttendanceError} from "./src/services/attendance.service";
 import { existsSync } from "fs";
 import fs from "fs";
 import crypto, { timingSafeEqual } from "node:crypto";
@@ -61,19 +62,29 @@ if (Bun.env.ENABLE_NODE_AGENT === "true" && Bun.env.NODE_ENV !== "test") {
   }
 }
 
+let cachedStaticDistDir = "";
+let cachedStaticDistDirAt = 0;
+
 /** Next `distDir: "../dist"` → `exampool/dist`; some layouts use `exampool/frontend/dist`. */
 function resolveStaticDistDir(): string {
+  const now = Date.now();
+  if (cachedStaticDistDir && now - cachedStaticDistDirAt < 10_000) {
+    return cachedStaticDistDir;
+  }
   const siblingDist = path.join(import.meta.dir, "dist");
   const nestedFrontendDist = path.join(import.meta.dir, "frontend", "dist");
   const siblingOut = path.join(import.meta.dir, "out");
   const nestedFrontendOut = path.join(import.meta.dir, "frontend", "out");
   
-  if (existsSync(path.join(siblingDist, "index.html"))) return siblingDist;
-  if (existsSync(path.join(nestedFrontendDist, "index.html"))) return nestedFrontendDist;
-  if (existsSync(path.join(siblingOut, "index.html"))) return siblingOut;
-  if (existsSync(path.join(nestedFrontendOut, "index.html"))) return nestedFrontendOut;
+  let resolved = siblingDist;
+  if (existsSync(path.join(siblingDist, "index.html"))) resolved = siblingDist;
+  else if (existsSync(path.join(nestedFrontendDist, "index.html"))) resolved = nestedFrontendDist;
+  else if (existsSync(path.join(siblingOut, "index.html"))) resolved = siblingOut;
+  else if (existsSync(path.join(nestedFrontendOut, "index.html"))) resolved = nestedFrontendOut;
   
-  return siblingDist;
+  cachedStaticDistDir = resolved;
+  cachedStaticDistDirAt = now;
+  return resolved;
 }
 
 let distDir = resolveStaticDistDir();
@@ -217,19 +228,34 @@ export function sameUserId(dbValue: unknown, tokenUserId: number): boolean {
   return sqlInt(dbValue) === tokenUserId;
 }
 
+const checkSubEnrollmentStmt = db.prepare("SELECT 1 FROM subject_enrollments WHERE subject_id = ? AND student_id = ?");
+const checkExistingExamStmt = db.prepare("SELECT 1 FROM exams WHERE subject_id = ? AND student_id = ?");
+const getStudentGradeInfoStmt = db.prepare("SELECT u.grade, u.grade_level_id, gl.name as gl_name FROM users u LEFT JOIN grade_levels gl ON gl.id = u.grade_level_id WHERE u.id = ?");
+const getGradeLevelNameStmt = db.prepare("SELECT name FROM grade_levels WHERE id = ?");
+const checkClassEnrollmentStmt = db.prepare(`
+  SELECT 1 FROM class_enrollments ce
+  JOIN classes c ON c.id = ce.class_id
+  WHERE ce.student_id = ? AND (
+    (? IS NOT NULL AND c.id = ?)
+    OR (? != '' AND LOWER(REPLACE(c.name, ' ', '')) = ?)
+    OR (? != '' AND LOWER(REPLACE(c.name, ' ', '')) = ?)
+  )
+`);
+const checkAnySubjectEnrollmentStmt = db.prepare("SELECT 1 FROM subject_enrollments WHERE subject_id = ? LIMIT 1");
+
 export function isStudentEligibleForSubject(studentId: number, subject: any): boolean {
   if (!subject) return false;
   const sId = Number(subject.id);
   // 1. Explicit subject enrollment
-  const subEnrollment = db.prepare("SELECT 1 FROM subject_enrollments WHERE subject_id = ? AND student_id = ?").get(sId, studentId);
+  const subEnrollment = checkSubEnrollmentStmt.get(sId, studentId);
   if (subEnrollment) return true;
 
   // 2. Existing exam record
-  const existingExam = db.prepare("SELECT 1 FROM exams WHERE subject_id = ? AND student_id = ?").get(sId, studentId);
+  const existingExam = checkExistingExamStmt.get(sId, studentId);
   if (existingExam) return true;
 
   // 3. Student user details
-  const student = db.prepare("SELECT u.*, gl.name as gl_name FROM users u LEFT JOIN grade_levels gl ON gl.id = u.grade_level_id WHERE u.id = ?").get(studentId) as any;
+  const student = getStudentGradeInfoStmt.get(studentId) as any;
   if (!student) return false;
 
   // 4. Class / Grade match
@@ -242,23 +268,15 @@ export function isStudentEligibleForSubject(studentId: number, subject: any): bo
 
   // 5. Check class_enrollments
   const subGlId = subject.grade_level_id ? Number(subject.grade_level_id) : null;
-  const subGlNameRow = subGlId ? (db.prepare("SELECT name FROM grade_levels WHERE id = ?").get(subGlId) as any) : null;
+  const subGlNameRow = subGlId ? (getGradeLevelNameStmt.get(subGlId) as any) : null;
   const subGlNameNorm = subGlNameRow?.name ? String(subGlNameRow.name).trim().toLowerCase().replace(/\s+/g, "") : "";
 
-  const classEnrollment = db.prepare(`
-    SELECT 1 FROM class_enrollments ce
-    JOIN classes c ON c.id = ce.class_id
-    WHERE ce.student_id = ? AND (
-      (? IS NOT NULL AND c.id = ?)
-      OR (? != '' AND LOWER(REPLACE(c.name, ' ', '')) = ?)
-      OR (? != '' AND LOWER(REPLACE(c.name, ' ', '')) = ?)
-    )
-  `).get(studentId, subGlId, subGlId, subClass, subClass, subGlNameNorm, subGlNameNorm);
+  const classEnrollment = checkClassEnrollmentStmt.get(studentId, subGlId, subGlId, subClass, subClass, subGlNameNorm, subGlNameNorm);
   if (classEnrollment) return true;
 
   // 6. General / All-cohort subject with no specific enrollments
   if (!subject.class && !subject.grade_level_id) {
-    const hasAnyEnrollment = db.prepare("SELECT 1 FROM subject_enrollments WHERE subject_id = ? LIMIT 1").get(sId);
+    const hasAnyEnrollment = checkAnySubjectEnrollmentStmt.get(sId);
     if (!hasAnyEnrollment) return true;
   }
   if (['all', 'all cohorts', 'general'].includes(String(subject.class || '').trim().toLowerCase())) return true;
@@ -321,22 +339,45 @@ export function isTeacherAuthorizedForGradingSubject(userId: number, subject: an
   return false;
 }
 
-/** Never fail the request if audit insert hits FK/race; log instead. */
+interface PendingAuditLog {
+  aid: number;
+  action: string;
+  resource: string;
+  rid: number | null;
+  details: string;
+}
+const pendingAuditLogs: PendingAuditLog[] = [];
+let auditFlushTimer: ReturnType<typeof setTimeout> | null = null;
+
+export function flushPendingAuditLogs(): void {
+  if (auditFlushTimer) {
+    clearTimeout(auditFlushTimer);
+    auditFlushTimer = null;
+  }
+  if (pendingAuditLogs.length === 0) return;
+  const batch = pendingAuditLogs.splice(0, pendingAuditLogs.length);
+  try {
+    db.transaction(() => {
+      for (const item of batch) {
+        queries.createAuditLog.run(item.aid, item.action, item.resource, item.rid, item.details);
+      }
+    })();
+  } catch (e) {
+    console.error("[exampool] batch audit_log failed:", e);
+  }
+}
+
+/** Micro-batched audit log: never blocks synchronous event loop or forces serialized disk write locks. */
 export function auditLog(actorId: number, action: string, resource: string, resourceId: number | null, details: string) {
   const aid = sqlInt(actorId);
   const rid = resourceId == null ? null : sqlInt(resourceId);
-  if (!Number.isFinite(aid)) {
-    console.warn("[exampool] audit_log skipped: invalid actor_id", actorId);
-    return;
-  }
-  if (resourceId != null && !Number.isFinite(rid as number)) {
-    console.warn("[exampool] audit_log skipped: invalid resource_id", resourceId);
-    return;
-  }
-  try {
-    queries.createAuditLog.run(aid, action, resource, rid, details);
-  } catch (e) {
-    console.error("[exampool] audit_log failed:", action, e);
+  if (!Number.isFinite(aid)) return;
+  if (resourceId != null && !Number.isFinite(rid as number)) return;
+  pendingAuditLogs.push({ aid, action, resource, rid, details });
+  if (pendingAuditLogs.length >= 250) {
+    flushPendingAuditLogs();
+  } else if (!auditFlushTimer) {
+    auditFlushTimer = setTimeout(flushPendingAuditLogs, 5);
   }
 }
 
@@ -381,6 +422,8 @@ export function performFullSystemFactoryReset(): void {
         "timetables",
         "subjects",
         "learning_reactions",
+        "study_messages",
+        "arena_journeys",
         "learning_replies",
         "learning_posts",
         "learning_presence",
@@ -453,7 +496,7 @@ export function performFullSystemFactoryReset(): void {
       db.prepare("INSERT INTO settings (key, value) VALUES ('SCHEMA_VERSION', '5')").run();
       db.prepare("INSERT INTO settings (key, value) VALUES ('REGISTRATION_OPEN', 'true')").run();
       db.prepare("INSERT INTO settings (key, value) VALUES ('CURRENT_TERM', '2026-T1')").run();
-      db.prepare("INSERT OR IGNORE INTO config (id, org_name, version) VALUES (1, 'ExamPool School', '1.0.0')").run();
+      db.prepare("INSERT OR IGNORE INTO config (id, org_name, version) VALUES (1, 'Acqad', '1.0.0')").run();
 
       // Reset autoincrement sequences so fresh records start at ID 1
       try {
@@ -472,6 +515,15 @@ export function performFullSystemFactoryReset(): void {
   } catch (e) {
     console.warn("[FactoryReset] initializeDatabase re-seed warning:", e);
   }
+  try {
+    pendingAuditLogs.length = 0;
+  } catch {}
+  try {
+    pendingExamSaves.clear();
+  } catch {}
+  try {
+    invalidateUserAuthCache();
+  } catch {}
   try {
     cacheService.clear();
   } catch {}
@@ -536,7 +588,7 @@ export const corsHeaders: Record<string, string> = new Proxy({} as Record<string
     }
     const base: Record<string, string> = {
       "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
-      "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With, X-Portal-Role",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With, X-Portal-Role, X-Tab-Session",
       "Access-Control-Allow-Credentials": "true",
       "Cache-Control": "no-store, no-cache, must-revalidate",
       "Pragma": "no-cache",
@@ -626,10 +678,54 @@ export function checkRateLimit(key: string, limit: number, windowMs: number) {
   if (record.count > limit) throw new HttpError(429, "Too Many Requests");
 }
 
-// ── Server-Sent Events (SSE) Manager ───────────────────────────────────────
+// ── Server-Sent Events (SSE) Manager & Distributed Event Bus ───────────────
 export const sseClients = new Map<number, Set<ReadableStreamDefaultController>>();
+export const sseControllerMeta = new WeakMap<
+  ReadableStreamDefaultController,
+  { userId: number; jti: string; token: string; close: () => void }
+>();
 // [SECURITY] Max SSE connections per user — prevents memory exhaustion DoS
 const SSE_MAX_CONNECTIONS_PER_USER = 5;
+
+function dispatchLocalSsePayload(userId: number, payload: string) {
+  const clients = sseClients.get(userId);
+  if (!clients || clients.size === 0) return;
+  for (const client of clients) {
+    try {
+      client.enqueue(payload);
+    } catch {
+      sseControllerMeta.get(client)?.close();
+    }
+  }
+}
+
+cacheService.subscribe("sse:user_event", (msg: { userId?: number; payload?: string }) => {
+  if (msg && typeof msg.userId === "number" && typeof msg.payload === "string") {
+    dispatchLocalSsePayload(msg.userId, msg.payload);
+  }
+});
+
+// Single global SSE heartbeat ticker (replaces 10,000 per-connection intervals & DB queries)
+const sseGlobalHeartbeat = setInterval(() => {
+  if (sseClients.size === 0) return;
+  for (const [, clients] of sseClients) {
+    for (const controller of clients) {
+      const meta = sseControllerMeta.get(controller);
+      if (meta && isSessionRevokedFast(meta.token, meta.jti)) {
+        meta.close();
+        continue;
+      }
+      try {
+        controller.enqueue(": keepalive\n\n");
+      } catch {
+        meta?.close();
+      }
+    }
+  }
+}, 25_000);
+if (typeof (sseGlobalHeartbeat as any).unref === "function") {
+  (sseGlobalHeartbeat as any).unref();
+}
 
 export function notifyUser(userId: number, eventData: any) {
   try {
@@ -640,22 +736,17 @@ export function notifyUser(userId: number, eventData: any) {
       eventData.link || null
     ) as any;
 
-    const clients = sseClients.get(userId);
-    if (clients && clients.size > 0) {
-      const fullPayload = {
-        ...(record || {}),
-        ...eventData,
-        id: record?.id || eventData.id || Date.now(),
-        created_at: record?.created_at || new Date().toISOString(),
-      };
-      const payload = `data: ${jsonSafeStringify(fullPayload)}\n\n`;
-      // Push to next tick to avoid blocking the synchronous event loop
-      setTimeout(() => {
-        for (const client of clients) {
-          try { client.enqueue(payload); } catch (e) {}
-        }
-      }, 0);
-    }
+    const fullPayload = {
+      ...(record || {}),
+      ...eventData,
+      id: record?.id || eventData.id || Date.now(),
+      created_at: record?.created_at || new Date().toISOString(),
+    };
+    const payload = `data: ${jsonSafeStringify(fullPayload)}\n\n`;
+    // Push to next tick and broadcast across local + distributed subscribers
+    setTimeout(() => {
+      cacheService.publish("sse:user_event", { userId, payload });
+    }, 0);
   } catch (err) {
     console.error("[exampool] Failed to send notification", err);
   }
@@ -810,14 +901,73 @@ export function recordUserSession(userId: number, role: string, req: Request) {
   return meta;
 }
 
+const revokedTokensMem = new Set<string>();
+const revokedJtisMem = new Set<string>();
+const userAuthVersion = new Map<number, number>();
+const pragmaDataVersionStmt = db.prepare("PRAGMA data_version");
+let lastKnownDbDataVersion = Number((pragmaDataVersionStmt.get() as any)?.data_version || 0);
+let lastDataVersionCheckAt = 0;
+
+function checkExternalDbMutation(): void {
+  const now = Date.now();
+  if (now - lastDataVersionCheckAt < 100) return;
+  lastDataVersionCheckAt = now;
+  try {
+    const currentVer = Number((pragmaDataVersionStmt.get() as any)?.data_version || 0);
+    if (currentVer !== lastKnownDbDataVersion) {
+      lastKnownDbDataVersion = currentVer;
+      cacheService.deletePattern("auth_token:");
+    }
+  } catch {}
+}
+
+export function isSessionRevokedFast(token?: string | null, jti?: string | null): boolean {
+  if (token && revokedTokensMem.has(token)) return true;
+  if (jti && revokedJtisMem.has(jti)) return true;
+  return false;
+}
+
+export function invalidateUserAuthCache(userId?: number): void {
+  if (typeof userId === "number") {
+    userAuthVersion.set(userId, (userAuthVersion.get(userId) || 0) + 1);
+    cacheService.delete(CacheKeys.user(userId));
+  } else {
+    userAuthVersion.clear();
+    revokedTokensMem.clear();
+    revokedJtisMem.clear();
+    cacheService.deletePattern("auth_token:");
+  }
+}
+
+function closeRevokedSseStreams(userId: number, targetJti?: string, targetToken?: string, exceptJti?: string): void {
+  const clients = sseClients.get(userId);
+  if (!clients || clients.size === 0) return;
+  for (const controller of clients) {
+    const meta = sseControllerMeta.get(controller);
+    if (!meta) continue;
+    if (exceptJti && meta.jti === exceptJti) continue;
+    if (!targetJti && !targetToken) {
+      meta.close();
+    } else if ((targetJti && meta.jti === targetJti) || (targetToken && meta.token === targetToken)) {
+      meta.close();
+    }
+  }
+}
+
 export function revokeSingleSessionForUser(userId: number, jti: string, reason = "logout", rawToken?: string) {
   try {
     if (jti) {
+      revokedJtisMem.add(jti);
       queries.revokeUserTokenByOwner.run(jti, userId);
       queries.insertTokenBlacklist.run(rawToken || null, jti, reason);
     } else if (rawToken) {
       queries.insertTokenBlacklist.run(rawToken, null, reason);
     }
+    if (rawToken) {
+      revokedTokensMem.add(rawToken);
+      cacheService.delete(CacheKeys.authToken(rawToken));
+    }
+    closeRevokedSseStreams(userId, jti, rawToken);
   } catch (e) {
     console.warn("[Auth] Failed to revoke single session:", e);
   }
@@ -829,6 +979,7 @@ export function revokeAllSessionsForUser(userId: number, reason = "revoked_all",
     db.transaction(() => {
       for (const row of rows) {
         if (!row?.jti || (exceptJti && row.jti === exceptJti)) continue;
+        revokedJtisMem.add(row.jti);
         queries.revokeUserToken.run(row.jti);
         queries.insertTokenBlacklist.run(null, row.jti, reason);
       }
@@ -836,9 +987,23 @@ export function revokeAllSessionsForUser(userId: number, reason = "revoked_all",
         queries.revokeAllUserTokens.run(userId);
       }
     })();
+    if (!exceptJti) {
+      invalidateUserAuthCache(userId);
+    }
+    closeRevokedSseStreams(userId, undefined, undefined, exceptJti);
   } catch (e) {
     console.warn("[Auth] Failed to revoke all user sessions:", e);
   }
+}
+
+interface CachedAuthSession {
+  userId: number;
+  role: string;
+  jti: string;
+  name?: string;
+  email?: string;
+  userVer: number;
+  tokenExpiresAtMs: number;
 }
 
 export function requireAuth(req: Request): { userId: number; role: string; token: string; jti: string; name?: string; email?: string } {
@@ -858,46 +1023,99 @@ export function requireAuth(req: Request): { userId: number; role: string; token
   // 2. Role-scoped portal cookie (__exampool_session_<role>) when portal role header/referer is present
   // 3. Standard __exampool_session cookie
   // 4. Any active role-scoped cookie
-  const candidates = [headerToken, roleScopedCookie, cookies.__exampool_session, fallbackRoleCookie].filter(
-    (t): t is string => Boolean(t && t.trim())
+  // Explicit credentials are authoritative: never substitute another user's cookie
+  // when this tab's token is absent, expired or revoked.
+  if(req.headers.get('x-tab-session')==='required'&&!headerToken)throw new HttpError(401,'Sign in in this tab.');
+  const candidates = (headerToken?[headerToken]:[roleScopedCookie,cookies.__exampool_session,fallbackRoleCookie]).filter(
+    (t):t is string=>Boolean(t&&t.trim())
   );
 
   if (candidates.length === 0) throw new HttpError(401, "Not authenticated");
 
+  checkExternalDbMutation();
+
   let lastError: HttpError | null = null;
+  const now = Date.now();
   for (const token of candidates) {
+    if (revokedTokensMem.has(token)) {
+      lastError = new HttpError(401, "Session invalidated (Logged out)");
+      continue;
+    }
+
     const decoded = verifySimpleToken(token);
     if (!decoded) {
       lastError = new HttpError(401, "Not authenticated");
       continue;
     }
 
-    if (queries.isTokenBlacklisted.get(token, decoded.jti)) {
+    if (decoded.jti && revokedJtisMem.has(decoded.jti)) {
       lastError = new HttpError(401, "Session invalidated (Logged out)");
       continue;
     }
 
-    if (decoded.jti) {
-      const tokenRecord = queries.getUserTokenByJti.get(decoded.jti) as any;
-      if (tokenRecord) {
-        if (tokenRecord.revoked_at) {
-          lastError = new HttpError(401, "Session revoked");
-          continue;
-        }
-        if (tokenRecord.expires_at && Date.parse(tokenRecord.expires_at) <= Date.now()) {
-          lastError = new HttpError(401, "Session expired");
-          continue;
-        }
-      }
+    const currentUserVer = userAuthVersion.get(decoded.userId) || 0;
+    const cacheKey = CacheKeys.authToken(token);
+    const cached = cacheService.get<CachedAuthSession>(cacheKey);
+    if (
+      cached &&
+      cached.userId === decoded.userId &&
+      cached.role === decoded.role &&
+      cached.userVer === currentUserVer &&
+      (cached.tokenExpiresAtMs === 0 || cached.tokenExpiresAtMs > now)
+    ) {
+      return { ...decoded, token, name: cached.name, email: cached.email };
     }
 
-    const user = queries.getUserById.get(decoded.userId) as any;
-    if (!user || sqlInt(user.is_active) !== 1 || user.role !== decoded.role) {
+    // Single combined SQLite lookup on cache miss (replaces 3 separate queries)
+    const row = queries.verifyAuthSession.get(
+      token,
+      decoded.jti || null,
+      decoded.userId
+    ) as any;
+
+    if (row?.is_blacklisted) {
+      revokedTokensMem.add(token);
+      if (decoded.jti) revokedJtisMem.add(decoded.jti);
+      cacheService.delete(cacheKey);
+      lastError = new HttpError(401, "Session invalidated (Logged out)");
+      continue;
+    }
+
+    if (decoded.jti && row?.token_revoked_at) {
+      revokedJtisMem.add(decoded.jti);
+      cacheService.delete(cacheKey);
+      lastError = new HttpError(401, "Session revoked");
+      continue;
+    }
+
+    const tokenExpiresAtMs = row?.token_expires_at ? Date.parse(row.token_expires_at) : 0;
+    if (decoded.jti && tokenExpiresAtMs > 0 && tokenExpiresAtMs <= now) {
+      cacheService.delete(cacheKey);
+      lastError = new HttpError(401, "Session expired");
+      continue;
+    }
+
+    if (!row?.user_id || sqlInt(row.is_active) !== 1 || row.role !== decoded.role) {
+      cacheService.delete(cacheKey);
       lastError = new HttpError(401, "Session invalidated or user suspended");
       continue;
     }
 
-    return { ...decoded, token, name: user.name, email: user.email };
+    cacheService.set<CachedAuthSession>(
+      cacheKey,
+      {
+        userId: decoded.userId,
+        role: decoded.role,
+        jti: decoded.jti,
+        name: row.name,
+        email: row.email,
+        userVer: currentUserVer,
+        tokenExpiresAtMs,
+      },
+      15
+    );
+
+    return { ...decoded, token, name: row.name, email: row.email };
   }
 
   throw lastError || new HttpError(401, "Not authenticated");
@@ -1278,6 +1496,27 @@ async function serveStatic(urlPath: string, req?: Request): Promise<Response> {
   }
 
   const rel = pathname.replace(/^\/+/, "").replace(/\/+$/, "");
+  const staticCacheKey = CacheKeys.staticRoute(rel || "__root_index__");
+  const cachedStaticPath = cacheService.get<string>(staticCacheKey);
+  if (cachedStaticPath) {
+    const cachedFile = Bun.file(cachedStaticPath);
+    if (await cachedFile.exists()) {
+      const isSvg = cachedStaticPath.toLowerCase().endsWith(".svg");
+      const respHeaders = {
+        ...corsHeaders,
+        "Content-Type": getMimeType(cachedStaticPath),
+        "Cache-Control": getCacheControl(cachedStaticPath),
+        "Pragma": (cachedStaticPath.endsWith(".html") || cachedStaticPath.endsWith(".txt") || cachedStaticPath.endsWith(".rsc") || cachedStaticPath.endsWith(".meta")) ? "no-cache" : "",
+        ...(isSvg ? { "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; sandbox" } : {}),
+      };
+      if (req?.method?.toUpperCase() === "HEAD") {
+        return new Response(null, { status: 200, headers: respHeaders });
+      }
+      return new Response(cachedFile, { headers: respHeaders });
+    }
+    cacheService.delete(staticCacheKey);
+  }
+
   const candidates: string[] = [];
 
   const currentDistDir = resolveStaticDistDir();
@@ -1332,6 +1571,7 @@ async function serveStatic(urlPath: string, req?: Request): Promise<Response> {
     }
     const file = Bun.file(filePath);
     if (await file.exists()) {
+      cacheService.set(staticCacheKey, filePath, 120);
       const isSvg = filePath.toLowerCase().endsWith(".svg");
       const respHeaders = {
         ...corsHeaders,
@@ -1403,12 +1643,75 @@ async function serveStatic(urlPath: string, req?: Request): Promise<Response> {
   return apiError(404, "Not found");
 }
 
+// ── High-Concurrency CBT Exam Autosave Write-Coalescing Engine ────────────
+// Groups concurrent /api/exams/:id/save updates arriving in the same 2ms window
+// into a single atomic SQLite WAL transaction, eliminating single-writer lock
+// contention under 10,000-user CBT bursts while preserving 100% durability.
+interface PendingExamSave {
+  examId: number;
+  studentId: number;
+  answersJson: string;
+  resolvers: Array<() => void>;
+  rejecters: Array<(err: unknown) => void>;
+}
+const pendingExamSaves = new Map<number, PendingExamSave>();
+let examSaveFlushTimer: ReturnType<typeof setTimeout> | null = null;
+
+export function flushPendingExamSaves(): void {
+  if (examSaveFlushTimer) {
+    clearTimeout(examSaveFlushTimer);
+    examSaveFlushTimer = null;
+  }
+  if (pendingExamSaves.size === 0) return;
+  const batch = Array.from(pendingExamSaves.values());
+  pendingExamSaves.clear();
+  try {
+    db.transaction(() => {
+      for (const item of batch) {
+        queries.saveExam.run(item.answersJson, item.examId, item.studentId);
+      }
+    })();
+    for (const item of batch) {
+      for (const res of item.resolvers) res();
+    }
+  } catch (err) {
+    for (const item of batch) {
+      for (const rej of item.rejecters) rej(err);
+    }
+  }
+}
+
+function queueExamSave(examId: number, studentId: number, answersJson: string): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    const existing = pendingExamSaves.get(examId);
+    if (existing) {
+      existing.answersJson = answersJson;
+      existing.resolvers.push(resolve);
+      existing.rejecters.push(reject);
+    } else {
+      pendingExamSaves.set(examId, {
+        examId,
+        studentId,
+        answersJson,
+        resolvers: [resolve],
+        rejecters: [reject],
+      });
+    }
+    if (pendingExamSaves.size >= 250) {
+      flushPendingExamSaves();
+    } else if (!examSaveFlushTimer) {
+      examSaveFlushTimer = setTimeout(flushPendingExamSaves, 2);
+    }
+  });
+}
+
 function isApiExemptWhileSetup(pathname: string, method: string): boolean {
   const clean = pathname.toLowerCase().replace(/[./\s]+$/, "");
   // Always permit health checks and base API discovery during first-run setup
   if (clean === "/api/health" || clean === "/health" || clean === "/api" || clean.includes("health")) return true;
   // [SECURITY FIX VULN-14] /api/server-info is no longer exempt from auth.
   // The setup wizard uses /api/setup (POST) which is still exempt below.
+  if(method==='GET'&&clean==='/api/setup/status')return true;
   if (method === "POST" && (clean === "/api/setup" || clean === "/api/setup/complete" || clean === "/api/auth/bootstrap" || clean === "/api/setup/reset-wizard")) return true;
   return false;
 }
@@ -1497,40 +1800,22 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
   if ((pathname === "/api/notifications/stream" || pathname === "/api/events" || pathname === "/api/sse") && method === "GET") {
     let auth;
     try { auth = requireAuth(req); } catch (e) { return new Response("Unauthorized", { status: 401 }); }
+    let cleanup=()=>{};
     return new Response(new ReadableStream({
       start(controller) {
-        let clients = sseClients.get(auth.userId);
-        if (!clients) {
-          clients = new Set();
-          sseClients.set(auth.userId, clients);
-        }
-        // [SECURITY FIX] Limit SSE connections per user to prevent DoS memory exhaustion
-        if (clients.size >= SSE_MAX_CONNECTIONS_PER_USER) {
-          // Close the oldest connection before adding the new one
-          const oldest = clients.values().next().value;
-          if (oldest) {
-            try { oldest.close(); } catch {}
-            clients.delete(oldest);
-          }
-        }
+        let clients=sseClients.get(auth.userId);
+        if(!clients){clients=new Set();sseClients.set(auth.userId,clients);}
+        if(clients.size>=SSE_MAX_CONNECTIONS_PER_USER){const oldest=clients.values().next().value;if(oldest){try{oldest.close();}catch{}clients.delete(oldest);}}
         clients.add(controller);
-        const keepAlive = setInterval(() => {
-          try { controller.enqueue(": keepalive\n\n"); } catch {}
-        }, 15000);
-        req.signal.addEventListener("abort", () => {
-          clearInterval(keepAlive);
-          clients?.delete(controller);
-          if (clients?.size === 0) sseClients.delete(auth.userId);
-        });
-      }
-    }), {
-      headers: {
-        ...corsHeaders,
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache",
-        "Connection": "keep-alive",
-      }
-    });
+        let closed=false;
+        const close=()=>{cleanup();try{controller.close();}catch{}};
+        cleanup=()=>{if(closed)return;closed=true;req.signal.removeEventListener('abort',close);clients?.delete(controller);if(clients?.size===0)sseClients.delete(auth.userId);};
+        sseControllerMeta.set(controller,{userId:auth.userId,jti:auth.jti,token:auth.token,close});
+        controller.enqueue(': connected\n\n');
+        req.signal.addEventListener('abort',close,{once:true});
+      },
+      cancel(){cleanup();}
+    }),{headers:{...corsHeaders,'Content-Type':'text/event-stream','Cache-Control':'no-cache, no-transform','Connection':'keep-alive','X-Accel-Buffering':'no'}});
   }
 
   if (pathname === "/api/notifications" && method === "GET") {
@@ -1560,20 +1845,17 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     let auth;
     try { auth = requireAuth(req); } catch (e) { return new Response("Unauthorized", { status: 401 }); }
     const examId = Number(examStreamMatch[1]);
-    const exam = queries.getExamByIdAndStudent.get(examId, auth.userId) as any;
+    const exam = queries.getExamSaveMeta.get(examId, auth.userId) as any;
     if (!exam) return new Response("Not found", { status: 404 });
 
     return new Response(new ReadableStream({
       start(controller) {
         // Cache subject duration outside the interval to prevent N+1 queries
-        const subject = queries.getSubjectById.get(exam.subject_id) as any;
+        const subject = cacheService.wrapSync(CacheKeys.subject(exam.subject_id), 30, () => queries.getSubjectById.get(exam.subject_id)) as any;
         const durationSeconds = Number(subject?.duration || 60) * 60;
-        
-        // Prepare a lightweight query to avoid fetching the massive answers_json payload every 15s
-        const statusStmt = db.prepare("SELECT status, start_time FROM exams WHERE id = ?");
 
         const sendTimeSync = () => {
-          const e = statusStmt.get(examId) as any;
+          const e = queries.getExamSyncStatus.get(examId) as any;
           if (e && e.status === "in-progress") {
              const elapsed = Math.floor((Date.now() - Date.parse(e.start_time)) / 1000);
              const remaining = Math.max(0, durationSeconds - elapsed);
@@ -1602,6 +1884,7 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
   }
   // ─────────────────────────────────────────────────────────────────────────
 
+  if(method==='GET'&&pathname==='/api/setup/status')return apiSuccess({setupRequired:checkSetupRequired()},200,{'Cache-Control':'no-store'});
   setupRequired = checkSetupRequired();
   if (setupRequired && !isApiExemptWhileSetup(pathname, method)) {
     const ua = req.headers.get("user-agent") || "";
@@ -1653,14 +1936,21 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     const hash = await hashPassword(password);
     let result: { lastInsertRowid: number | bigint };
     try {
-      result = queries.createUser.run(name, email, "operator", hash, null, null, null, null, null, null, null, null) as { lastInsertRowid: number | bigint };
+      // Hashing yields: recheck inside the transaction so two setup requests cannot create two initial admins.
+      result = db.transaction(() => {
+        if (!checkSetupRequired()) throw Object.assign(new Error("Setup already completed"), {status:403});
+        const created = queries.createUser.run(name, email, "operator", hash, null, null, null, null, null, null, null, null) as { lastInsertRowid:number|bigint };
+        queries.upsertSetting.run("SCHOOL_NAME", schoolName || "Acqad");
+        db.query('UPDATE config SET org_name=?,admin_name=?,admin_email=? WHERE id=1').run(schoolName||'Acqad',name,email);
+        queries.upsertSetting.run("CURRENT_TERM", (currentTerm || "2026-T1").slice(0,64));
+        queries.upsertSetting.run("REGISTRATION_OPEN", "true");
+        return created;
+      })();
     } catch (e) {
+      if ((e as any)?.status === 403) return apiError(403,"Setup already completed");
       if (isSqliteUniqueError(e)) return apiError(409, "Email already registered");
       throw e;
     }
-    queries.upsertSetting.run("SCHOOL_NAME", schoolName || "Exampool");
-    queries.upsertSetting.run("CURRENT_TERM", (currentTerm || "2026-T1").slice(0, 64));
-    queries.upsertSetting.run("REGISTRATION_OPEN", "true");
     const userId = Number(result.lastInsertRowid);
     setupRequired = false;
     const sessionMeta = recordUserSession(userId, "operator", req);
@@ -1682,6 +1972,8 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
   }
 
   if (method === "POST" && pathname === "/api/setup/reset-wizard") {
+    const resetActor = requireAuth(req);
+    requireRole(resetActor.role, ["operator"]);
     const body = await readJson(req).catch(() => ({}));
     const confirmVal = trimStr(body?.confirm || body?.confirmation || "").toUpperCase();
     if (confirmVal !== "RESET_ALL_DATA" && confirmVal !== "RESET" && confirmVal !== "DELETE ALL DATA") {
@@ -4033,6 +4325,13 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
       db.prepare("UPDATE grading_subjects SET is_published_to_class = 1 WHERE id = ?").run(subjectId);
       auditLog(auth.userId, "SCORE_APPROVE", "grading_subject", subjectId, JSON.stringify({ approved_by: auth.userId }));
     })();
+    for(const student of students){
+      notifyUser(Number(student.id),{type:'results_published',message:`Your approved ${subject.name} results are available.`,link:'/student/results'});
+      for(const guardian of queries.getStudentGuardians.all(student.id) as any[]){
+        if(guardian.notify_results===0)continue;
+        notifyUser(Number(guardian.guardian_id),{type:'results_published',student_id:Number(student.id),message:`Approved ${subject.name} results are available for your ward.`,link:`/guardian/performance?ward_id=${student.id}`});
+      }
+    }
     return apiSuccess({ success: true });
   }
 
@@ -5672,6 +5971,7 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
   if (method === "GET" && pathname === "/api/exams/active") {
     const auth = requireAuth(req);
     requireRole(auth.role, ["student"]);
+    flushPendingExamSaves();
     const exams = db.prepare(
       "SELECT e.*, s.name as subject_name, s.duration FROM exams e JOIN subjects s ON s.id = e.subject_id WHERE e.student_id = ? AND e.status = 'in-progress'",
     ).all(auth.userId);
@@ -5681,6 +5981,7 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
   if (method === "POST" && pathname === "/api/exams/start") {
     const auth = requireAuth(req);
     requireRole(auth.role, ["student"]);
+    flushPendingExamSaves();
     const body = await readJson(req);
     const subjectId = Number(body?.subject_id);
     if (!isPositiveIntId(subjectId)) return apiError(400, "Invalid subject_id");
@@ -5877,15 +6178,15 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
       if (!entry || typeof entry !== "object") return apiError(400, "Each answer must be an object");
       if (!Number.isInteger(entry.question_id) || entry.question_id <= 0) return apiError(400, "Each answer must have a valid question_id");
     }
-    const exam = queries.getExamByIdAndStudent.get(examId, auth.userId) as any;
+    const exam = queries.getExamSaveMeta.get(examId, auth.userId) as any;
     if (!exam) return apiError(403, "Not your exam");
     if (exam.status !== "in-progress") return apiError(409, "Exam already submitted");
-    const subject = queries.getSubjectById.get(exam.subject_id) as any;
-    const deadlineMs = exam.deadline ? Date.parse(exam.deadline) : (Date.parse(exam.start_time) + Number(subject.duration || 60) * 60_000);
+    const subject = cacheService.wrapSync(CacheKeys.subject(exam.subject_id), 15, () => queries.getSubjectById.get(exam.subject_id)) as any;
+    const deadlineMs = exam.deadline ? Date.parse(exam.deadline) : (Date.parse(exam.start_time) + Number(subject?.duration || 60) * 60_000);
     // [SECURITY FIX] Allow saves up to 15s after deadline (MUST be less than the 30s submit grace period)
     if (Date.now() > deadlineMs + 15_000) return apiError(409, "Exam window has closed — answers cannot be saved");
     const remaining = Math.max(0, Math.floor((deadlineMs - Date.now()) / 1000));
-    queries.saveExam.run(JSON.stringify(answers), examId, auth.userId);
+    await queueExamSave(examId, auth.userId, JSON.stringify(answers));
     return apiSuccess({ saved: true, server_time: new Date().toISOString(), time_remaining_seconds: remaining });
   }
 
@@ -5950,6 +6251,7 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     checkRateLimit(`submit_${auth.userId}_${examId}`, 15, 60_000);
     const body = await readJson(req);
     const answers = Array.isArray(body?.answers) ? body.answers : null;
+    flushPendingExamSaves();
 
     // Use a single db.transaction to avoid nested transaction crash
     // (previously used manual BEGIN/COMMIT + db.transaction inside = ERROR)
@@ -6740,7 +7042,7 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     requireRole(auth.role, ["operator"]);
     const body = await readJson(req);
     const current = (queries.getConfig.get() as any) ?? {};
-    const orgName = trimStr(body?.org_name) || current.org_name || "ExamPool School";
+    const orgName = trimStr(body?.org_name) || current.org_name || "Acqad";
     const licType = ["basic", "standard", "premium"].includes(body?.licence_type) ? body.licence_type : (current.licence_type || "basic");
     queries.upsertConfig.run(
       trimStr(body?.description) || current.description || null,
@@ -6805,6 +7107,7 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
       trimStr(body?.image_url) || target.image_url || null,
       uid,
     );
+    invalidateUserAuthCache(uid);
     auditLog(auth.userId, "USER_UPDATE", "user", uid, "{}");
     return apiSuccess(queries.getUserById.get(uid));
   }
@@ -7665,8 +7968,9 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
       });
     }
 
-    const selectedClassId = classIdParam ? Number(classIdParam) : teacherClasses[0].id;
-    const currentClass = teacherClasses.find((c: any) => Number(c.id) === selectedClassId) || teacherClasses[0];
+    const selectedClassId = classIdParam ? Number(classIdParam) : Number(teacherClasses[0].id);
+    const currentClass = teacherClasses.find((c: any) => Number(c.id) === selectedClassId);
+    if(!currentClass)return apiError(403,"You cannot access this class register.");
 
     const activeTerm = queries.getActiveAcademicTerm.get() as any;
     const tid = activeTerm?.id || 1;
@@ -7704,27 +8008,18 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     requireRole(auth.role, ["teacher", "operator"]);
     const body = await readJson(req);
     const classId = Number(body?.class_id);
-    const date = trimStr(body?.date) || new Date().toISOString().slice(0, 10);
+    const date = trimStr(body?.date) || new Date(Date.now()+3600000).toISOString().slice(0, 10);
     const records = Array.isArray(body?.records) ? body.records : [];
 
     if (!records.length) return apiError(400, "Records array required");
 
-    const activeTerm = queries.getActiveAcademicTerm.get() as any;
-    const activeSession = queries.getActiveAcademicSession.get() as any;
-    const tid = Number(body?.term_id || activeTerm?.id || 1);
-    const sid = Number(body?.session_id || activeSession?.id || 1);
-
-    let savedCount = 0;
+    let attendance;
+    try { attendance = new AttendanceService(db).save(auth,body); }
+    catch(error) {if(error instanceof AttendanceError)return apiError(error.status,error.message);throw error;}
+    let savedCount = attendance.records.length;
     let alertsSent = 0;
-
-    for (const r of records) {
-      const studentId = Number(r.student_id);
-      if (!isPositiveIntId(studentId)) continue;
-      const status = ["present", "absent", "late", "holiday", "excused"].includes(r.status) ? r.status : "present";
-      const remarks = r.remarks ? trimStr(r.remarks) : null;
-
-      queries.upsertAttendanceRecord.run(studentId, tid, sid, date, status, remarks, auth.userId);
-      savedCount++;
+    for (const r of attendance.records) {
+      const {studentId,status,remarks} = r;
 
       // Dispatch alert to student and student's guardians
       try {
@@ -7768,6 +8063,7 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     const subjectId = Number(body?.subject_id);
     const action = String(body?.action || "publish_now"); // 'publish_now' | 'schedule' | 'hold'
     const releaseTime = body?.release_time ? String(body.release_time) : null;
+    if(!['publish_now','schedule','hold'].includes(action))return apiError(400,'Choose publish_now, schedule or hold.');
 
     if (!isPositiveIntId(subjectId)) return apiError(400, "Valid subject_id is required");
 
@@ -7782,7 +8078,7 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
     let finalReleaseTime: string | null = null;
 
     if (action === "schedule") {
-      if (!releaseTime || !isValidExamDateTime(releaseTime)) {
+      if (!releaseTime || !isValidExamDateTime(releaseTime) || Date.parse(releaseTime) <= Date.now()) {
         return apiError(400, "Valid future release_time is required for scheduled release");
       }
       resultPolicy = "scheduled";
@@ -7824,7 +8120,6 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
         for (const s of studentRows) {
           studentCount++;
           const studentMsg = `Exam Results Released: Your score in ${subject.name} (${subject.code}) is now available!`;
-          queries.createNotification.run(s.student_id, "results", studentMsg, "/student/results");
           notifyUser(s.student_id, {
             type: "results",
             message: studentMsg,
@@ -7838,12 +8133,6 @@ async function handleApi(req: Request, url: URL): Promise<Response> {
             if (guardianUser && guardianUser.notify_results === 0) continue;
             guardianCount++;
             const guardianMsg = `Academic Update: Examination results for ${s.name} in ${subject.name} (${subject.code}) have been officially published.`;
-            queries.createNotification.run(
-              Number(g.guardian_id),
-              "results",
-              guardianMsg,
-              `/guardian/performance?ward_id=${s.student_id}`
-            );
             notifyUser(Number(g.guardian_id), {
               type: "results",
               message: guardianMsg,
@@ -8359,7 +8648,15 @@ if (!isCloudDeploy && Bun.env.DISABLE_LOCAL_DNS !== "true") {
 // --- Graceful Shutdown ---
 function shutdown() {
   console.log(JSON.stringify({ timestamp: new Date().toISOString(), level: "info", message: "Shutting down server gracefully..." }));
-  server.stop();
+  try {
+    server.stop();
+  } catch {}
+  try {
+    flushPendingExamSaves();
+    flushPendingAuditLogs();
+  } catch (e) {
+    console.error(JSON.stringify({ timestamp: new Date().toISOString(), level: "error", message: "Error flushing pending writes during shutdown", error: String(e) }));
+  }
   try {
     db.close();
     console.log(JSON.stringify({ timestamp: new Date().toISOString(), level: "info", message: "Database connection closed cleanly." }));

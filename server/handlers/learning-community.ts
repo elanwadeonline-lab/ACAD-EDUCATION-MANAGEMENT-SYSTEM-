@@ -3,7 +3,7 @@ import path from 'node:path';
 import { mkdir, unlink } from 'node:fs/promises';
 import { randomBytes } from 'node:crypto';
 import { LearningCommunityService, LearningError } from '../../src/services/learning-community.service';
-import { apiSuccess, apiError, readJson, requireAuth, checkRateLimit, auditLog } from '../../server';
+import { apiSuccess, apiError, readJson, requireAuth, checkRateLimit, auditLog,notifyUser,notifyOperators } from '../../server';
 
 let service: LearningCommunityService | undefined;
 const fileRoot=path.join(path.dirname(Bun.env.EXAMPOOL_DB || path.join(process.cwd(),'exampool.db')),'lesson-note-attachments');
@@ -64,9 +64,15 @@ export async function tryLearningCommunity(req: Request,method: string,pathname:
       else {
         const note=pathname.match(/^\/api\/learning\/notes\/(\d+)(?:\/(review))?$/);
         if(!note) return apiError(404,'Learning action not found.');
+        if(note[2]&&!Number.isSafeInteger(data?.expected_updated_at))return apiError(400,'Refresh the note and provide its expected_updated_at review version.');
         result=note[2]?learning.review(actor,Number(note[1]),data):learning.saveNote(actor,data,Number(note[1]));
       }
-      auditLog(actor.userId,'LEARNING_UPDATE','learning',null,JSON.stringify({path:pathname}));
+      if(/^\/api\/learning\/notes(?:\/\d+)?$/.test(pathname)&&data?.state==='submitted')notifyOperators({type:'lesson_note_submitted',message:'A teacher submitted a lesson note for review.',link:'/ADMIN/lesson-notes'});
+      if(/^\/api\/learning\/notes\/\d+\/review$/.test(pathname)){
+        const owner=db.query('SELECT teacher_id FROM lesson_notes WHERE id=?').get(Number(pathname.split('/')[4])) as any;
+        if(owner)notifyUser(Number(owner.teacher_id),{type:'lesson_note_reviewed',message:`Your lesson note was ${data.state}.`,link:'/teacher/lesson-notes'});
+      }
+      auditLog(actor.userId,'LEARNING_UPDATE' ,'learning',null,JSON.stringify({path:pathname}));
       return success(result);
     }
     return apiError(404,'Learning action not found.');

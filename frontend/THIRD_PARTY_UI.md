@@ -5,7 +5,7 @@ The Card slot composition in `components/ui/Card.tsx` and academic metric compos
 - https://github.com/shadcn-ui/ui/blob/main/apps/v4/registry/new-york-v4/ui/card.tsx
 - https://github.com/shadcn-ui/ui/blob/main/apps/v4/registry/new-york-v4/blocks/dashboard-01/components/section-cards.tsx
 
-The adaptation preserves the existing eCard Card API, replaces Tailwind 4/container-query utilities with CSS modules and existing brand variables, and replaces sample revenue/trends with authenticated academic values. Installed Radix Dialog and Tabs and Recharts are used through their supported package APIs; Konsta/Tremor are research references, not bundled source.
+The adaptation preserves the existing Acqad Card API, replaces Tailwind 4/container-query utilities with CSS modules and existing brand variables, and replaces sample revenue/trends with authenticated academic values. Installed Radix Dialog and Tabs and Recharts are used through their supported package APIs; Konsta/Tremor are research references, not bundled source.
 
 ## shadcn/ui license
 

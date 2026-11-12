@@ -11,7 +11,7 @@ describe("Guardian Portal & Hybrid Messaging API Tests", () => {
   let guardianToken: string;
   let teacherToken: string;
 
-  const baseUrl = "http://127.0.0.1:8001";
+  const baseUrl = process.env.TEST_BASE_URL ?? "http://127.0.0.1:8001";
 
   beforeAll(async () => {
     await bootstrapOperator("op_guardian_api@acqad.test", "Operator@123");

@@ -756,7 +756,7 @@ function SettingsContent() {
                   <li>Access your Wi-Fi router admin page (commonly <code>192.168.1.1</code> or <code>192.168.8.1</code>).</li>
                   <li>Under <strong>DHCP / LAN DNS Settings</strong>, set <strong>Primary DNS</strong> to <code>{networkInfo?.primary_ip || systemSettings?.server_ip || "SERVER_IP"}</code>.</li>
                   <li>Set <strong>Secondary DNS</strong> to <code>8.8.8.8</code> (Google DNS) or leave default.</li>
-                  <li><strong>Full Internet Preserved:</strong> ExamPool includes an integrated recursive DNS proxy, so phones and computers retain uninterrupted internet access (Google, WhatsApp, Apple services) while resolving <code>http://{systemSettings?.custom_url || customUrlInput || "exampool.ng"}:{systemSettings?.server_port || 8001}</code>!</li>
+                  <li><strong>Full Internet Preserved:</strong> Acqad includes an integrated recursive DNS proxy, so phones and computers retain uninterrupted internet access (Google, WhatsApp, Apple services) while resolving <code>http://{systemSettings?.custom_url || customUrlInput || "exampool.ng"}:{systemSettings?.server_port || 8001}</code>!</li>
                   <li style={{ color: "#64748B" }}><strong>Tip:</strong> If router access is restricted, candidates can always connect instantly via Zero-Config <code>http://exampool.local:{systemSettings?.server_port || 8001}</code> or direct IP.</li>
                 </ol>
               </div>

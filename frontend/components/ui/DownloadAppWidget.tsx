@@ -58,9 +58,9 @@ export function DownloadAppWidget() {
             <span className="badge badge-primary">Recommended</span>
           </div>
         </div>
-        <h3 className={styles.subjectName} style={{ marginTop: "0.75rem" }}>Download ExamPool App</h3>
+        <h3 className={styles.subjectName} style={{ marginTop: "0.75rem" }}>Download Acqad App</h3>
         <p style={{ color: "var(--color-muted)", fontSize: "0.9rem", marginTop: "0.25rem", lineHeight: 1.4 }}>
-          Install ExamPool to your device for a seamless, full-screen experience and fast offline access.
+          Install Acqad to your device for a seamless, full-screen experience and fast offline access.
         </p>
 
         <div style={{ display: "flex", gap: "1rem", marginTop: "1.5rem", flexWrap: "wrap" }}>

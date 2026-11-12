@@ -40,7 +40,7 @@ function SettingsContent() {
   const { logout } = useAuth();
   const [profileLoading, setProfileLoading] = useState(true);
   const [profileError, setProfileError] = useState("");
-  const { guardianName, theme, setTheme } = useGuardian();
+  const { guardianName } = useGuardian();
   const [profile, setProfile] = useState<ProfileData>({
     id: 0,
     name: guardianName || "",
@@ -304,21 +304,7 @@ function SettingsContent() {
       <div className={styles.settingsCard}>
         <span className={styles.settingSectionHeading}>Preferences & Management</span>
 
-        <div
-          className={styles.settingRow}
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-        >
-          <div>
-            <div className={styles.settingLabel}>Appearance Theme</div>
-            <div className={styles.settingSub}>Toggle Light and Dark Mode</div>
-          </div>
-          <div className={styles.settingRightGroup}>
-            <span className={styles.settingValueText}>{theme === "dark" ? "🌙 Dark Mode" : "☀️ Light Mode"}</span>
-            <div className={`${styles.switchTrack} ${theme === "dark" ? styles.switchTrackActive : ""}`}>
-              <div className={`${styles.switchThumb} ${theme === "dark" ? styles.switchThumbActive : ""}`} />
-            </div>
-          </div>
-        </div>
+
 
         <Link href="/guardian/links" className={styles.settingRow}>
           <div>

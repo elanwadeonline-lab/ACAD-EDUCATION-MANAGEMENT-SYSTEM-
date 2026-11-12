@@ -270,9 +270,10 @@ function TeacherDashboard() {
                         {s.class && <span className={styles.codeBadge}>{s.class}</span>}
                       </div>
                     </div>
-                    <span className={`${styles.statusTag} ${isLive ? styles.statusLive : styles.statusDraft}`}>
-                      {isLive ? "Published" : "Draft"}
-                    </span>
+                    <div className={styles.courseStatus}>
+                      <span className={`${styles.statusTag} ${isLive ? styles.statusLive : styles.statusDraft}`}>{isLive ? "Published" : "Draft"}</span>
+                      <Link className={styles.viewSubject} href={`/teacher/results?subjectId=${s.id}`} aria-label={`View ${s.name} results`}><EyeIcon width="18" height="18"/></Link>
+                    </div>
                   </div>
 
                   <div className={styles.courseMetaGrid}>
@@ -295,25 +296,11 @@ function TeacherDashboard() {
                   </div>
 
                   <div className={styles.courseActions}>
-                    <Link
-                      href={`/teacher/questions?subjectId=${s.id}`}
-                      style={{ textDecoration: "none" }}
-                    >
-                      <button type="button" className={styles.moreTrigger} style={{ background: "var(--color-surface-2, #f1f5f9)" }}>
-                        Item Bank
-                      </button>
-                    </Link>
-                    <Link
-                      href={`/teacher/questions?subjectId=${s.id}&action=create`}
-                      style={{ textDecoration: "none" }}
-                    >
-                      <button type="button" className={styles.moreTrigger} style={{ background: "var(--color-primary, #0F766E)", color: "#ffffff", borderColor: "transparent" }}>
-                        + Author
-                      </button>
-                    </Link>
+                    <Link href={`/teacher/questions?subjectId=${s.id}`} className={styles.subjectAction}>Questions</Link>
+                    <Link href={`/teacher/questions?subjectId=${s.id}&action=create`} className={styles.subjectAction}>Add question</Link>
                     <DropdownMenu.Root>
                       <DropdownMenu.Trigger asChild>
-                        <button type="button" className={styles.moreTrigger} aria-label={`See more for ${s.name}`}>
+                        <button type="button" className={styles.subjectAction} aria-label={`More actions for ${s.name}`}>
                           More <span aria-hidden="true">⌄</span>
                         </button>
                       </DropdownMenu.Trigger>

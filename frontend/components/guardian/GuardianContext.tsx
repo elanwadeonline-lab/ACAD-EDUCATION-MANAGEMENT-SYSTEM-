@@ -1,8 +1,9 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "../../lib/api";
+import {subscribeSchoolEvents} from "../../lib/live-events";
 import { useAuth } from "../../hooks/useAuth";
 
 export interface WardSubjectPerformance {
@@ -172,8 +173,6 @@ interface GuardianContextType {
   messages: GuardianMessageThread[];
   loading: boolean;
   theme: "light" | "dark";
-  setTheme: (theme: "light" | "dark") => void;
-  toggleTheme: () => void;
   refreshData: () => Promise<void>;
   markAllNotificationsRead: () => Promise<void>;
 }
@@ -191,178 +190,57 @@ export function GuardianProvider({ children }: { children: React.ReactNode }) {
   const [messages, setMessages] = useState<GuardianMessageThread[]>([]);
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [theme, setThemeState] = useState<"light" | "dark">("light");
+  const theme = "light" as const;
+  const refreshSequence=useRef(0);
+  const refreshing=useRef(false);
 
-  // Initialize theme from localStorage or system preference
-  useEffect(() => {
-    try {
-      const savedTheme = localStorage.getItem("acad_guardian_theme") as "light" | "dark" | null;
-      if (savedTheme) {
-        setThemeState(savedTheme);
-        document.documentElement.setAttribute("data-theme", savedTheme);
-        document.documentElement.classList.toggle("dark", savedTheme === "dark");
-        document.documentElement.style.colorScheme = savedTheme;
-      } else if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
-        setThemeState("dark");
-        document.documentElement.setAttribute("data-theme", "dark");
-        document.documentElement.classList.add("dark");
-        document.documentElement.style.colorScheme = "dark";
+  const refreshData=useCallback(async()=>{
+    if(!user||user.role!=='guardian'||refreshing.current)return;
+    refreshing.current=true;const sequence=++refreshSequence.current;
+    try{
+      const [wardResult,notificationResult,threadResult]=await Promise.allSettled([
+        api.get<{wards:Ward[]}>('/api/guardian/wards'),
+        api.get<{items:any[];unreadCount:number}>('/api/guardian/notifications'),
+        api.get<any[]>('/api/guardian/messages/threads')
+      ]);
+      if(sequence!==refreshSequence.current)return;
+      if(wardResult.status==='fulfilled'){
+        const next=wardResult.value?.wards||[];setWards(next);
+        setActiveWardIdState(current=>{
+          if(next.some(w=>Number(w.student_id||w.id)===current))return current;
+          let saved=0;try{saved=Number(localStorage.getItem(`acad_active_ward_id_${user.id}`));}catch{}
+          return next.some(w=>Number(w.student_id||w.id)===saved)?saved:next[0]?Number(next[0].student_id||next[0].id):null;
+        });
       }
-    } catch {}
-  }, []);
-
-  const setTheme = useCallback((newTheme: "light" | "dark") => {
-    setThemeState(newTheme);
-    try {
-      localStorage.setItem("acad_guardian_theme", newTheme);
-      document.documentElement.setAttribute("data-theme", newTheme);
-      document.documentElement.classList.toggle("dark", newTheme === "dark");
-      document.documentElement.style.colorScheme = newTheme;
-    } catch {}
-  }, []);
-
-  const toggleTheme = useCallback(() => {
-    setTheme(theme === "light" ? "dark" : "light");
-  }, [theme, setTheme]);
-
-  // Load wards, notifications, and messages from backend
-  const refreshData = useCallback(async () => {
-    if (!user || user.role !== "guardian") return;
-    try {
-      setLoading(true);
-
-      // 1. Fetch wards list & aggregated stats
-      const wardsRes = await api.get<{ wards: Ward[]; stats?: any }>("/api/guardian/wards");
-      const fetchedWards = wardsRes?.wards || [];
-      setWards(fetchedWards);
-
-      // Set initial active ward if not selected or invalid
-      if (fetchedWards.length > 0) {
-        const savedWardId = typeof window !== "undefined" ? Number(localStorage.getItem("acad_active_ward_id")) : null;
-        const exists = fetchedWards.some((w) => w.id === savedWardId || w.student_id === savedWardId);
-        if (savedWardId && exists) {
-          setActiveWardIdState(savedWardId);
-        } else {
-          const firstId = fetchedWards[0].student_id || fetchedWards[0].id;
-          setActiveWardIdState(firstId);
-          try { localStorage.setItem("acad_active_ward_id", String(firstId)); } catch {}
-        }
+      if(notificationResult.status==='fulfilled'){
+        const data=notificationResult.value;
+        const next=(data?.items||[]).map(n=>({id:n.id,category:n.type||'academic',title:n.title||n.message?.slice(0,40)||'Notification',message:n.message,time_ago:n.created_at?formatTimeAgo(n.created_at):'Recently',is_read:Boolean(n.is_read),action_link:n.link||n.action_link||'/guardian/dashboard',created_at:n.created_at}));
+        setNotifications(next);setUnreadNotificationCount(data?.unreadCount??next.filter(n=>!n.is_read).length);
       }
+      if(threadResult.status==='fulfilled'&&Array.isArray(threadResult.value))setMessages(threadResult.value.map(t=>{
+        const admin=t.recipient_role==='operator'||['admin','school','system'].includes(t.category);
+        return {id:String(t.id),recipient_id:t.recipient_id,guardian_id:t.guardian_id,student_id:t.student_id,student_name:t.student_name,student_grade:t.student_grade,sender_name:t.recipient_name||(admin?'School Administration':'Class Teacher'),sender_role:admin?'School Administration':t.student_name?`${t.student_name}'s Teacher`:'Teacher',category:admin?'admin' as const:'teacher' as const,last_message:t.last_message||'No messages yet',time_label:t.last_message_at?formatTimeAgo(t.last_message_at):'Today',unread:Number(t.unread_for_guardian)>0,unread_count:Number(t.unread_for_guardian)||0,messages:[]};
+      }));
+    }finally{if(sequence===refreshSequence.current){refreshing.current=false;setLoading(false);}}
+  },[user?.id,user?.role]);
 
-      // 2. Fetch Notifications
-      try {
-        const notifRes = await api.get<{ items: any[]; unreadCount: number }>("/api/guardian/notifications");
-        if (notifRes?.items) {
-          const formattedNotifs: GuardianNotification[] = notifRes.items.map((n: any) => ({
-            id: n.id,
-            category: (n.type as any) || "academic",
-            title: n.title || (n.message ? n.message.slice(0, 40) + "…" : "Notification"),
-            message: n.message,
-            time_ago: n.created_at ? formatTimeAgo(n.created_at) : "Recently",
-            is_read: Boolean(n.is_read),
-            action_link: n.link || n.action_link || "/guardian/dashboard",
-            created_at: n.created_at,
-          }));
-          setNotifications(formattedNotifs);
-          setUnreadNotificationCount(notifRes.unreadCount || formattedNotifs.filter(n => !n.is_read).length);
-        }
-      } catch {}
-
-      // 3. Fetch Message Threads
-      try {
-        const threadsRes = await api.get<any[]>("/api/guardian/messages/threads");
-        if (Array.isArray(threadsRes)) {
-          const formattedThreads: GuardianMessageThread[] = threadsRes.map((t: any) => {
-            const isAdmin = t.recipient_role === "operator" || t.category === "admin" || t.category === "school" || t.category === "system";
-            return {
-              id: String(t.id),
-              recipient_id: t.recipient_id,
-              guardian_id: t.guardian_id,
-              student_id: t.student_id,
-              student_name: t.student_name,
-              student_grade: t.student_grade,
-              sender_name: t.recipient_name || (isAdmin ? "School Administration" : "Class Teacher"),
-              sender_role: isAdmin ? "School Administration" : (t.student_name ? `${t.student_name}'s Teacher` : "Teacher"),
-              category: (isAdmin ? "admin" : "teacher") as "teacher" | "school" | "system" | "admin",
-              last_message: t.last_message || "No messages yet",
-              time_label: t.last_message_at ? formatTimeAgo(t.last_message_at) : "Today",
-              unread: Number(t.unread_for_guardian) > 0,
-              unread_count: Number(t.unread_for_guardian) || 0,
-              messages: [],
-            };
-          });
-          setMessages(formattedThreads);
-        }
-      } catch {}
-
-    } catch (err) {
-      console.warn("[GuardianContext] Failed to load live guardian data:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, [user]);
-
-  useEffect(() => {
-    refreshData();
-  }, [refreshData]);
-
-  // Real-time SSE / event listener
-  useEffect(() => {
-    if (!user || user.role !== "guardian") return;
-    let eventSource: EventSource | null = null;
-    try {
-      // Auto-request browser push notification permission if default
-      if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "default") {
-        try {
-          Notification.requestPermission().catch(() => {});
-        } catch {}
-      }
-
-      eventSource = new EventSource("/api/notifications/stream");
-      eventSource.onmessage = (e) => {
-        try {
-          const data = JSON.parse(e.data);
-          if (data && (data.type === "notification" || data.type === "chat_message" || data.type === "attendance" || data.type === "results_published" || data.type === "exam" || data.type === "results")) {
-            refreshData();
-
-            // Push native browser notification if enabled
-            if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
-              const notifTitle = data.type === "chat_message" 
-                ? (data.sender_name ? `💬 Message from ${data.sender_name}` : "💬 New Message") 
-                : (data.title || "🔔 ACAD Guardian Alert");
-              const notifBody = data.text || data.message || "You have a new update";
-              try {
-                const notif = new Notification(notifTitle, {
-                  body: notifBody,
-                  icon: "/favicon.ico",
-                  badge: "/favicon.ico",
-                  tag: data.type === "chat_message" ? `msg-${data.thread_id || Date.now()}` : `notif-${data.id || Date.now()}`,
-                });
-                notif.onclick = () => {
-                  window.focus();
-                  if (data.link) {
-                    window.location.href = data.link;
-                  }
-                };
-              } catch {}
-            }
-          }
-        } catch {}
-      };
-    } catch {}
-
-    return () => {
-      if (eventSource) eventSource.close();
-    };
-  }, [user, refreshData]);
+  useEffect(()=>{
+    setWards([]);setNotifications([]);setMessages([]);setActiveWardIdState(null);refreshing.current=false;
+    void refreshData();
+    if(!user||user.role!=='guardian')return;
+    const stop=subscribeSchoolEvents(event=>{void refreshData();window.dispatchEvent(new CustomEvent('guardian_record_updated',{detail:event}));},()=>void refreshData());
+    // Recover missed events after a connection drop; background tabs do not poll.
+    const timer=setInterval(()=>{if(!document.hidden)void refreshData();},30000);
+    return()=>{stop();clearInterval(timer);refreshSequence.current++;refreshing.current=false;};
+  },[refreshData,user?.id,user?.role]);
 
   const setActiveWardId = useCallback((id: number) => {
     setActiveWardIdState(id);
     try {
-      localStorage.setItem("acad_active_ward_id", String(id));
+      localStorage.setItem(`acad_active_ward_id_${user?.id}`, String(id));
     } catch {}
     setChildSwitcherOpen(false);
-  }, []);
+  }, [user?.id]);
 
   const activeWard = useMemo(() => {
     if (!wards || wards.length === 0) return null;
@@ -404,8 +282,6 @@ export function GuardianProvider({ children }: { children: React.ReactNode }) {
         messages,
         loading,
         theme,
-        setTheme,
-        toggleTheme,
         refreshData,
         markAllNotificationsRead,
       }}

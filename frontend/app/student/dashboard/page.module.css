@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Student Dashboard — Editorial Institutional Design System (Parts A, B, C)
+   Student Dashboard â€” Editorial Institutional Design System (Parts A, B, C)
    Restrained surfaces, purposeful hierarchy, tabular numerals, brand accents
    ========================================================================== */
 
@@ -12,7 +12,7 @@
   gap: 24px;
 }
 
-/* ── 1. Institutional Identity Header ── */
+/* â”€â”€ 1. Institutional Identity Header â”€â”€ */
 .headerBar {
   display: flex;
   align-items: center;
@@ -129,7 +129,7 @@
   background: var(--color-primary);
 }
 
-/* ── 2. Primary Action Area (Immediate Next Step) ── */
+/* â”€â”€ 2. Primary Action Area (Immediate Next Step) â”€â”€ */
 .primaryActionCard {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -230,7 +230,7 @@
   flex-shrink: 0;
 }
 
-/* ── 3. Restrained 4-Metric Summary Strip (Part C Metric & Progress Contract) ── */
+/* â”€â”€ 3. Restrained 4-Metric Summary Strip (Part C Metric & Progress Contract) â”€â”€ */
 
 .metricBadge {
   font-size: 0.6875rem;
@@ -258,7 +258,7 @@
   transition: width 300ms ease;
 }
 
-/* ── 4. Academic Performance Analytics Component (Part A2) ── */
+/* â”€â”€ 4. Academic Performance Analytics Component (Part A2) â”€â”€ */
 
 .sectionCard {
   background: var(--color-surface);
@@ -357,7 +357,7 @@
 
 /* Breakdown List in Analytics Right Card */
 
-/* ── 5. Learning Activity: Enrolled Curriculum & Schedule ── */
+/* â”€â”€ 5. Learning Activity: Enrolled Curriculum & Schedule â”€â”€ */
 .tabList {
   display: inline-flex;
   align-items: center;
@@ -545,7 +545,7 @@
   border-color: var(--color-border-hover);
 }
 
-/* ── 6. Personal Progress & Milestones — Restrained Editorial Gamification (Part A3) ── */
+/* â”€â”€ 6. Personal Progress & Milestones â€” Restrained Editorial Gamification (Part A3) â”€â”€ */
 .gamificationGrid {
   display: grid;
   grid-template-columns: 1.45fr 1fr;
@@ -742,7 +742,7 @@
   flex-shrink: 0;
 }
 
-/* ── 7. Schedule & Recent Evaluations (Part A4 & C Result Tables) ── */
+/* â”€â”€ 7. Schedule & Recent Evaluations (Part A4 & C Result Tables) â”€â”€ */
 .bottomGrid {
   display: grid;
   grid-template-columns: 1fr 1.45fr;
@@ -871,7 +871,7 @@
   gap: 0.4rem;
 }
 
-/* ── Responsive Breakpoints ── */
+/* â”€â”€ Responsive Breakpoints â”€â”€ */
 @media (max-width: 1024px) {
 
   .gamificationGrid,
@@ -1065,3 +1065,18 @@
     font-size: 0.8125rem;
   }
 }
+
+/* Task-first learning home */
+.nextStep { padding:24px; border:1px solid var(--color-primary-border); border-radius:16px; background:var(--color-primary-subtle); color:var(--color-text); }
+.nextStepLabel { font-size:13px; font-weight:600; color:var(--color-primary); }
+.nextStep h2 { font-size:clamp(22px,3vw,30px); letter-spacing:-.035em; line-height:1.2; margin:12px 0; overflow-wrap:anywhere; }
+.nextStep p { color:var(--color-text-3); font-size:16px; line-height:1.6; max-width:52ch; margin:0 0 20px; }
+.nextStepAction { display:inline-flex; align-items:center; justify-content:space-between; gap:24px; min-height:48px; padding:12px 16px; border-radius:10px; background:var(--color-primary); color:var(--color-on-primary); font-size:15px; font-weight:600; text-decoration:none; }
+.learningShortcuts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+.learningShortcuts a { display:flex; flex-direction:column; gap:6px; padding:16px; min-width:0; border:1px solid var(--color-border); border-radius:12px; background:var(--color-surface); text-decoration:none; }
+.learningShortcuts span { font-size:16px; font-weight:600; }
+.learningShortcuts small { font-size:14px; color:var(--color-muted); line-height:1.5; }
+.progressHeading h2 { font-size:20px; letter-spacing:-.025em; margin:4px 0; }
+.progressHeading p { color:var(--color-muted); font-size:14px; margin:0; }
+.nextStepAction:focus-visible,.learningShortcuts a:focus-visible { outline:2px solid var(--color-primary); outline-offset:3px; }
+@media(max-width:700px) { .headerActions { gap:8px; } .headerActions .secondaryBtn,.referenceDate,.metaPill { display:none; } .headerBar { flex-wrap:nowrap; align-items:flex-start; gap:12px; } .headerIdentity { min-width:0; } .pageTitle { font-size:26px; } .pageSubtitle { font-size:16px; } .nextStep { padding:20px; } .nextStepAction { display:flex; width:100%; } .container { gap:20px; } }

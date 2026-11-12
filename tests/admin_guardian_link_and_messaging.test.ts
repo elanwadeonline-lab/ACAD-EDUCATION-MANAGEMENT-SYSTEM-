@@ -8,7 +8,7 @@ describe("Admin Guardian Linking & Admin-Guardian Messaging API Tests", () => {
   let adminUser: any;
   let guardianUser: any;
   let studentUser: any;
-  const baseUrl = "http://localhost:8001";
+  const baseUrl = process.env.TEST_BASE_URL ?? "http://localhost:8001";
 
   beforeAll(async () => {
     // 1. Ensure operator/admin exists

@@ -804,3 +804,71 @@
   }
 }
 
+
+/* Shared community flow: restrained surfaces and readable touch controls. */
+.page { min-width:0; }
+.chatCard { box-shadow:none; }
+.chatStream { overflow-wrap:anywhere; }
+.btnSubmit { background:var(--color-primary); color:var(--color-on-primary); min-height:44px; }
+.btnNewPost,.btnLockToggle,.channelPill { min-height:44px; }
+@media(max-width:640px) {
+ .channelNav { flex-wrap:nowrap; overflow-x:auto; overscroll-behavior-x:contain; padding-bottom:4px; }
+ .channelPill { flex-shrink:0; }
+ .composerFooter { flex-wrap:wrap; }
+ .composerInput { font-size:16px; }
+}
+
+/* Student-portal rhythm: one reading column, quiet surfaces and a single main action. */
+.page { max-width:960px; padding:8px 0 32px; font-weight:400; min-width:0; }
+.topBar { align-items:flex-start; margin-bottom:24px; gap:16px; }
+.titleArea { align-items:flex-start; min-width:0; }
+.channelIcon { background:var(--color-primary-subtle); color:var(--color-primary); border-radius:10px; width:44px; height:44px; flex-shrink:0; }
+.titleGroup { min-width:0; }
+.titleGroup h1 { font-size:clamp(1.375rem,3vw,1.75rem); line-height:1.3; letter-spacing:-.035em; flex-wrap:wrap; }
+.intro { margin:8px 0 0; max-width:58ch; color:var(--color-text-2); font-size:.875rem; line-height:1.7; }
+.presencePill { color:var(--color-muted); background:var(--color-surface-2); border:1px solid var(--color-border); border-radius:6px; font-size:.6875rem; font-weight:500; }
+.presenceDot { width:5px; height:5px; background:var(--color-success); box-shadow:none; animation:none; }
+.channelNav { gap:4px; padding:0 0 8px; margin-bottom:16px; border-bottom:1px solid var(--color-border); background:transparent; }
+.channelPill { border:1px solid transparent; border-radius:8px; background:transparent; color:var(--color-muted); padding:10px 12px; font-weight:500; white-space:nowrap; }
+.channelActive { background:var(--color-surface); border-color:var(--color-border); color:var(--color-text); box-shadow:none; }
+.searchBox { background:var(--color-surface); border:1px solid var(--color-border); border-radius:8px; }
+.searchInput { min-height:44px; font-size:1rem; color:var(--color-text); }
+.btnNewPost,.btnSubmit,.btnJoinChallenge { background:var(--color-primary); color:var(--color-on-primary); border:1px solid var(--color-primary); border-radius:8px; min-height:44px; padding:10px 16px; font-size:.8125rem; box-shadow:none; }
+.chatStream { gap:12px; }
+.chatCard { padding:20px; border-radius:12px; transition:border-color 150ms; box-shadow:none; }
+.chatCard:hover { box-shadow:none; border-color:var(--color-border); }
+.chatCardPinned,.pinnedCard { background:var(--color-surface); border-color:var(--color-primary-border); box-shadow:none; }
+.pinnedCard { border-radius:10px; }
+.pinnedIconWrap { background:var(--color-primary-subtle); color:var(--color-primary); }
+.pinnedTitle { display:block; background:none; border:0; text-align:left; padding:6px 0; font:inherit; font-weight:600; color:var(--color-text); cursor:pointer; }
+.pinnedLabel { color:var(--color-primary); }
+.avatarStudent,.avatarTeacher,.avatarAdmin { background:var(--color-surface-2); border:1px solid var(--color-border); color:var(--color-text); border-radius:10px; }
+.badgeGrade,.badgeTeacher,.badgeAdmin,.tagPill { background:var(--color-surface-2); color:var(--color-text-2); border-color:var(--color-border); }
+.authorBlock,.authorMeta { min-width:0; }
+.postTitle { color:var(--color-text); font-size:1rem; line-height:1.5; }
+.postBody { color:var(--color-text-2); font-size:.875rem; line-height:1.75; }
+.challengeBanner { border:1px solid var(--color-primary-border); background:var(--color-primary-subtle); border-radius:8px; }
+.challengeCodeText { border-color:var(--color-border); background:var(--color-surface); color:var(--color-text); }
+.reactionBtn,.btnReactAdd,.replyCountBtn,.btnActionText { min-height:36px; border-radius:6px; }
+.reactionActive { background:var(--color-primary-subtle); color:var(--color-primary); border-color:var(--color-primary-border); }
+.composerBox { padding:20px; border:1px solid var(--color-border); border-radius:12px; background:var(--color-surface); box-shadow:none; }
+.composerTabs { gap:6px; flex-wrap:wrap; }
+.composerTab { min-height:44px; border-radius:6px; padding:8px 10px; background:var(--color-surface); color:var(--color-muted); border:1px solid var(--color-border); }
+.composerTabActive { background:var(--color-primary-subtle); color:var(--color-primary); border-color:var(--color-primary-border); }
+.inputField,.textareaField { font-size:1rem; border-radius:8px; color:var(--color-text); background:var(--color-surface); border-color:var(--color-border); }
+.textareaField { min-height:120px; }
+.replyItem { background:var(--color-surface); border-color:var(--color-border); border-radius:10px; }
+.lockBanner,.composerLockedBanner { background:var(--color-primary-subtle); color:var(--color-text); border-color:var(--color-primary-border); box-shadow:none; }
+.page :is(button,a,input,textarea):focus-visible { outline:2px solid var(--color-primary); outline-offset:3px; }
+@media(max-width:640px) {
+ .page { padding:4px 0 24px; }
+ .topBar { display:block; }
+ .headerActions { margin-top:16px; }
+ .headerActions>.btnNewPost { width:100%; justify-content:center; }
+ .channelNav { flex-wrap:nowrap; overflow-x:auto; }
+ .chatCard,.composerBox { padding:16px; }
+ .cardHeader { align-items:flex-start; }
+ .composerFooter { align-items:stretch; }
+ .composerFooter .btnSubmit { width:100%; justify-content:center; }
+ .reactionBtn,.btnReactAdd,.replyCountBtn,.btnActionText { min-height:44px; }
+}

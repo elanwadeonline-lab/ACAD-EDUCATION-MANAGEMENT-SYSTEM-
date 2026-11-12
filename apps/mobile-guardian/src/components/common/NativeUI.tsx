@@ -1,5 +1,5 @@
-import React,{useEffect,useState,useCallback} from 'react';
-import {Text,Pressable,StyleSheet,ScrollView,RefreshControl,type TextInputProps} from 'react-native';
+import React,{useEffect,useState,useCallback,useRef} from 'react';
+import {Text,Pressable,StyleSheet,ScrollView,RefreshControl,AppState,type TextInputProps} from 'react-native';
 import {Box as View} from '../ui/box';
 import {Button as GluestackButton,ButtonText} from '../ui/button';
 import {Avatar as GluestackAvatar,AvatarFallbackText,AvatarImage} from '../ui/avatar';
@@ -29,9 +29,22 @@ const DANIEL_AVATAR = require('../../../assets/images/student_daniel.jpg');
 
 export function useRemote<T>(path:string|null,identity:string|number=''){
   const [data,setData]=useState<T|null>(null),[error,setError]=useState(''),[loading,setLoading]=useState(!!path),[revision,setRevision]=useState(0);
-  useEffect(()=>{let active=true;const controller=new AbortController();setData(null);setError('');setLoading(!!path);
-    if(path)void requestData<T>(path,{signal:controller.signal}).then(v=>{if(active)setData(v);}).catch(e=>{if(active)setError(e.message||'Could not load records.');}).finally(()=>{if(active)setLoading(false);});
-    return()=>{active=false;controller.abort();};
+  const lastIdentity=useRef('');
+  useEffect(()=>{
+    let active=true,pending=false;const controller=new AbortController();
+    const key=JSON.stringify([path,identity]);
+    if(lastIdentity.current!==key){setData(null);setLoading(!!path);lastIdentity.current=key;}
+    setError('');
+    const load=async()=>{
+      if(!path||pending||(AppState.currentState&&AppState.currentState!=='active'))return;
+      pending=true;
+      try{const next=await requestData<T>(path,{signal:controller.signal});if(active){setData(next);setError('');}}
+      catch(e){if(active)setError(e instanceof Error?e.message:'Could not load records.');}
+      finally{pending=false;if(active)setLoading(false);}
+    };
+    void load();const timer=setInterval(()=>void load(),15000);
+    const subscription=AppState.addEventListener('change',state=>{if(state==='active')void load();});
+    return()=>{active=false;clearInterval(timer);subscription.remove();controller.abort();};
   },[path,identity,revision]);
   return {data,error,loading,reload:useCallback(()=>setRevision(n=>n+1),[])};
 }

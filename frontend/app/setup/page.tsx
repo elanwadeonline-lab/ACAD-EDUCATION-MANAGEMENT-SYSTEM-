@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { api, API_BASE } from "../../lib/api";
+import { api, API_BASE,setTabSession } from "../../lib/api";
 import { useAuth } from "../../hooks/useAuth";
 import {
   WarningIcon,
@@ -12,11 +12,14 @@ import {
   AcadBrandIcon,
 } from "../../components/icons/Icons";
 import styles from "./page.module.css";
+import {AcqadLogo} from "../../components/brand/AcqadLogo";
+import {MIN_PASSWORD_LENGTH,isValidEmail} from "../../../validation";
 
 export default function SetupPage() {
   const router = useRouter();
   const { init } = useAuth();
   const [name, setName] = useState("");
+  const [schoolName,setSchoolName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -36,13 +39,15 @@ export default function SetupPage() {
     const timeoutId = setTimeout(() => controller.abort(), 10000);
     setLoading(true);
     setCheckError("");
-    const targetUrl = API_BASE ? `${API_BASE}/api/setup` : "/api/setup";
-    fetch(targetUrl, { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}", signal: controller.signal })
-      .then((res) => {
-        if (res.status === 403) router.replace("/");
+    const targetUrl = API_BASE ? `${API_BASE}/api/setup/status` : "/api/setup/status";
+    fetch(targetUrl, { signal: controller.signal, cache:"no-store" })
+      .then(async res => {
+        if(!res.ok)throw new Error("Setup status unavailable");
+        const body=await res.json();
+        if((body.data??body).setupRequired===false)router.replace("/ADMIN/");
       })
       .catch(() => {
-        setCheckError("Could not reach the local server. Make sure the backend is running (bun server.ts on port 8001) and retry.");
+        setCheckError("Could not reach your school server. Check the connection and try again.");
       })
       .finally(() => {
         clearTimeout(timeoutId);
@@ -57,11 +62,12 @@ export default function SetupPage() {
   const onStep1Submit = (e: FormEvent) => {
     e.preventDefault();
     setError("");
+    if(!schoolName.trim()){setError("Enter your school name.");return;}
     if (!name.trim()) {
       setError("Please enter the administrator's full name");
       return;
     }
-    if (!email.trim() || !email.includes("@")) {
+    if (!isValidEmail(email)) {
       setError("Please enter a valid administrative email address");
       return;
     }
@@ -75,14 +81,15 @@ export default function SetupPage() {
       setError("Passwords do not match. Please verify your entries.");
       return;
     }
-    if (password.length < 6) {
-      setError("Master password must be at least 6 characters long.");
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      setError(`Password must be at least ${MIN_PASSWORD_LENGTH} characters long.`);
       return;
     }
     setSubmitting(true);
     try {
-      const result = await api.setup({ name: name.trim(), email: email.trim(), password });
-      if (!result) return;
+      const result = await api.setup({ name: name.trim(), schoolName:schoolName.trim(), email: email.trim(), password });
+      if (!result) throw new Error("Setup could not be completed. Try again.");
+      if(result.token)setTabSession(result.token,"operator",result.session_id??null);
       await init();
       setStep(3);
       setTimeout(() => router.replace("/ADMIN/dashboard/"), 2200);
@@ -130,23 +137,17 @@ export default function SetupPage() {
       <header className={styles.topHeader}>
         <div className={styles.topHeaderContent}>
           <div className={styles.brandRow}>
-            <div className={styles.brandBadge}>
-              <AcadBrandIcon width={22} height={22} />
-            </div>
-            <div>
-              <span className={styles.brandTitle}>Acqad</span>
-              <span className={styles.brandDivider}>/</span>
-              <span className={styles.brandSubtitle}>Academic Coordination, Quality & Administration</span>
-            </div>
+            <AcqadLogo size="md"/>
+            <span className={styles.brandSubtitle}>School setup</span>
           </div>
 
           <div className={styles.headerTelemetry}>
             <div className={styles.telemetryPill}>
               <span className={styles.statusDot} />
-              <span>Offline LAN Engine Active</span>
+              <span>Create your school workspace</span>
             </div>
             <div className={styles.telemetryPillMuted}>
-              <span>Port: 8001</span>
+              <span>First-time setup</span>
             </div>
           </div>
         </div>
@@ -159,16 +160,16 @@ export default function SetupPage() {
           <div className={`${styles.stepNode} ${step >= 1 ? styles.stepNodeActive : ""}`}>
             <span className={styles.stepNumber}>1</span>
             <div className={styles.stepInfo}>
-              <span className={styles.stepLabel}>Operator Profile</span>
-              <span className={styles.stepDesc}>Master admin details</span>
+              <span className={styles.stepLabel}>Admin details</span>
+              <span className={styles.stepDesc}>School and account details</span>
             </div>
           </div>
           <div className={styles.stepConnector} />
           <div className={`${styles.stepNode} ${step >= 2 ? styles.stepNodeActive : ""}`}>
             <span className={styles.stepNumber}>2</span>
             <div className={styles.stepInfo}>
-              <span className={styles.stepLabel}>Master Security</span>
-              <span className={styles.stepDesc}>Credentials & access lock</span>
+              <span className={styles.stepLabel}>Account security</span>
+              <span className={styles.stepDesc}>Choose your password</span>
             </div>
           </div>
           <div className={styles.stepConnector} />
@@ -186,52 +187,11 @@ export default function SetupPage() {
           {/* Left Column: Server Architecture & Readiness */}
           <aside className={styles.sidePane}>
             <div className={styles.sideCard}>
-              <div className={styles.sideCardHeader}>
-                <div className={styles.sideCardIcon}>
-                  <ActivityIcon width="18" height="18" />
-                </div>
-                <div>
-                  <h3 className={styles.sideCardTitle}>Server Architecture</h3>
-                  <p className={styles.sideCardSubtitle}>Local Area Network deployment</p>
-                </div>
-              </div>
-
-              <div className={styles.specsList}>
-                <div className={styles.specItem}>
-                  <div className={styles.specDot} />
-                  <div>
-                    <strong>Local Area Network Central Host</strong>
-                    <p>Teachers, students, and guardians connect directly to this host PC via local Wi-Fi or Ethernet.</p>
-                  </div>
-                </div>
-
-                <div className={styles.specItem}>
-                  <div className={styles.specDot} />
-                  <div>
-                    <strong>Air-Gapped & Offline Resilient</strong>
-                    <p>Zero active internet connection required during examinations and daily attendance taking.</p>
-                  </div>
-                </div>
-
-                <div className={styles.specItem}>
-                  <div className={styles.specDot} />
-                  <div>
-                    <strong>Enterprise Cryptography</strong>
-                    <p>Master account is secured with memory-hard Argon2id and authenticated session tokens.</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className={styles.readinessBox}>
-                <div className={styles.readinessHeader}>
-                  <ShieldCheckIcon width="16" height="16" />
-                  <span>Deployment Checklist</span>
-                </div>
-                <ul className={styles.readinessList}>
-                  <li><span>✓</span> SQLite High-Throughput WAL Engine</li>
-                  <li><span>✓</span> Zero-Config LAN Multicast DNS</li>
-                  <li><span>✓</span> Real-Time Server-Sent Events Dispatcher</li>
-                </ul>
+              <div className={styles.sideCardHeader}><div><h3 className={styles.sideCardTitle}>Your school, ready to manage</h3><p className={styles.sideCardSubtitle}>Start with one administrator account.</p></div></div>
+              <div className={styles.specList}>
+                <div className={styles.specItem}><div><strong>Use your official school name</strong><p>This name appears on student reports and school records. You can update your crest in Settings.</p></div></div>
+                <div className={styles.specItem}><div><strong>Keep your sign-in details</strong><p>Your administrator account manages staff access, academic sessions and school settings.</p></div></div>
+                <div className={styles.specItem}><div><strong>Set up the academic year next</strong><p>Create your session and term, add classes, then assign teachers and enroll students.</p></div></div>
               </div>
             </div>
           </aside>
@@ -243,7 +203,7 @@ export default function SetupPage() {
                 <div className={styles.stepBody}>
                   <div className={styles.cardHeaderArea}>
                     <span className={styles.stageTag}>Stage 01 / 02</span>
-                    <h2 className={styles.cardHeading}>Create Master Administrator</h2>
+                    <h2 className={styles.cardHeading}>Create your admin account</h2>
                     <p className={styles.cardSubtext}>
                       Enter the primary administrative profile responsible for school curriculum, timetables, and teacher assignments.
                     </p>
@@ -257,6 +217,7 @@ export default function SetupPage() {
                   )}
 
                   <form onSubmit={onStep1Submit} className={styles.form}>
+                    <div className={styles.inputGroup}><label className={styles.inputLabel} htmlFor="school-name">School name</label><input id="school-name" className={styles.schoolInput} value={schoolName} onChange={e=>setSchoolName(e.target.value)} maxLength={160} autoComplete="organization" placeholder="Your institution’s official name" required/></div>
                     <div className={styles.inputGroup}>
                       <label className={styles.inputLabel} htmlFor="admin-name">
                         Full Name / Principal / Head Administrator
@@ -280,7 +241,7 @@ export default function SetupPage() {
 
                     <div className={styles.inputGroup}>
                       <label className={styles.inputLabel} htmlFor="admin-email">
-                        Primary Operator Email Address
+                        Admin email address
                       </label>
                       <div className={styles.inputWrapper}>
                         <svg className={styles.inputIcon} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -296,12 +257,12 @@ export default function SetupPage() {
                           required
                         />
                       </div>
-                      <span className={styles.inputHint}>This address will be your master login handle on the Admin Hub.</span>
+                      <span className={styles.inputHint}>Use this email to sign in to your school portal.</span>
                     </div>
 
                     <div className={styles.btnRow}>
                       <button type="submit" className={styles.btnPrimary}>
-                        <span>Continue to Security Setup</span>
+                        <span>Continue</span>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                           <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
                         </svg>
@@ -315,7 +276,7 @@ export default function SetupPage() {
                 <div className={styles.stepBody}>
                   <div className={styles.cardHeaderArea}>
                     <span className={styles.stageTag}>Stage 02 / 02</span>
-                    <h2 className={styles.cardHeading}>Establish Master Password</h2>
+                    <h2 className={styles.cardHeading}>Secure your account</h2>
                     <p className={styles.cardSubtext}>
                       Set a secure password for <strong style={{ color: "var(--color-text)" }}>{email}</strong>. This credential protects all grading, questions, and system settings.
                     </p>
@@ -331,7 +292,7 @@ export default function SetupPage() {
                   <form onSubmit={onSubmit} className={styles.form}>
                     <div className={styles.inputGroup}>
                       <label className={styles.inputLabel} htmlFor="admin-password">
-                        Master Administrator Password
+                        Password
                       </label>
                       <div className={styles.inputWrapper}>
                         <svg className={styles.inputIcon} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -343,7 +304,9 @@ export default function SetupPage() {
                           className={styles.inputField}
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
-                          placeholder="Minimum 6 characters"
+                          placeholder={`Minimum ${MIN_PASSWORD_LENGTH} characters`}
+                          minLength={MIN_PASSWORD_LENGTH}
+                          autoComplete="new-password"
                           required
                           autoFocus
                           style={{ paddingRight: "2.75rem" }}

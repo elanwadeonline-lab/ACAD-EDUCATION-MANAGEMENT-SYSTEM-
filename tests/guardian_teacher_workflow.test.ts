@@ -11,7 +11,7 @@ describe("Guardian-Teacher Hybrid Workflow & Attendance API Tests", () => {
   let teacherToken: string;
   let guardianToken: string;
 
-  const baseUrl = "http://localhost:8001";
+  const baseUrl = process.env.TEST_BASE_URL ?? "http://localhost:8001";
 
   beforeAll(async () => {
     await bootstrapOperator("op_gt_workflow@acqad.test", "Operator@123");

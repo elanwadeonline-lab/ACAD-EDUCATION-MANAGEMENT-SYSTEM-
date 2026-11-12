@@ -1,8 +1,27 @@
 // Zone file extracted from server.ts during route modularization.
 // Route logic below is verbatim from server.ts; identifiers resolve via ../server bindings.
 import db, { queries } from "../../db";
-import { isPositiveIntId, trimStr, MIN_PASSWORD_LENGTH } from "../../validation";
+import {AttendanceService,AttendanceError} from "../../src/services/attendance.service";
+import {schoolDisplayName} from '../../shared/brand';
 import crypto from "node:crypto";
+
+function getShareSecret(): string {
+  const envSecret = (typeof Bun !== "undefined" && Bun.env?.JWT_SECRET) || process.env.JWT_SECRET;
+  if (envSecret && envSecret !== "exampool-lan-secret-change-me" && envSecret !== "changeme") {
+    return envSecret;
+  }
+  try {
+    const existing = queries.getSetting.get("REPORT_SHARE_SECRET") as { value: string } | undefined;
+    if (existing?.value && existing.value.length >= 32) {
+      return existing.value;
+    }
+    const newSecret = crypto.randomBytes(32).toString("hex");
+    queries.upsertSetting.run("REPORT_SHARE_SECRET", newSecret);
+    return newSecret;
+  } catch {
+    return envSecret || "default-stable-report-signing-key";
+  }
+}
 import { buildRichWardPayload } from "./v2-academic";
 import { hashPassword, verifyPassword } from "../../auth";
 import {
@@ -51,6 +70,9 @@ export async function tryGuardianPortalZoneA(req: Request, method: string, pathn
       const link = db.prepare("SELECT student_id FROM guardian_student_links WHERE guardian_id = ? AND student_id = ? AND status = 'approved'").get(auth.userId, studentId) as any;
       if (!link) return apiError(403, "Access denied: not your ward");
     }
+    if(auth.role==='teacher') {
+      try {new AttendanceService(db).canReadStudent(auth,studentId);}catch(error){if(error instanceof AttendanceError)return apiError(error.status,error.message);throw error;}
+    }
     const activeTerm = queries.getActiveAcademicTerm.get() as any;
     const tid = activeTerm?.id || 1;
     const summary = queries.getStudentAttendanceSummary.get(studentId, tid) as any;
@@ -63,19 +85,16 @@ export async function tryGuardianPortalZoneA(req: Request, method: string, pathn
     requireRole(auth.role, ["teacher", "operator"]);
     const studentId = Number(wardAttMatch[1]);
     const body = await readJson(req);
-    const date = trimStr(body?.date) || new Date().toISOString().slice(0, 10);
-    const status = ["present", "absent", "late", "holiday", "excused"].includes(body?.status) ? body.status : "present";
-    const remarks = body?.remarks ? trimStr(body.remarks) : null;
-    const activeTerm = queries.getActiveAcademicTerm.get() as any;
-    const activeSession = queries.getActiveAcademicSession.get() as any;
-    const tid = Number(body?.term_id || activeTerm?.id || 1);
-    const sid = Number(body?.session_id || activeSession?.id || 1);
+    let attendance;
+    try {attendance=new AttendanceService(db).save(auth,body,studentId);}
+    catch(error){if(error instanceof AttendanceError)return apiError(error.status,error.message);throw error;}
+    const {date}=attendance;
+    const {status}=attendance.records[0]!;
 
-    queries.upsertAttendanceRecord.run(studentId, tid, sid, date, status, remarks, auth.userId);
-    
     // Broadcast notification to student's guardians
     const guardians = queries.getStudentGuardians.all(studentId) as any[];
     for (const g of guardians) {
+      if(g.notify_attendance===0)continue;
       notifyUser(Number(g.guardian_id), {
         type: "attendance",
         message: `Attendance marked as ${status.toUpperCase()} for ${date}`,
@@ -162,9 +181,17 @@ export async function tryGuardianPortalZoneA(req: Request, method: string, pathn
     const link = db.prepare("SELECT student_id FROM guardian_student_links WHERE guardian_id = ? AND student_id = ? AND status = 'approved'").get(auth.userId, wardId) as any;
     if (!link) return apiError(403, "Access denied: not your ward");
     const actualStudentId = Number(link.student_id);
-    const results = queries.getStudentTermResultsForReportCard.all(actualStudentId);
-    const remarks = db.prepare("SELECT * FROM student_term_remarks WHERE student_id = ? ORDER BY updated_at DESC").all(actualStudentId);
-    return apiSuccess({ results, remarks });
+    const activeTerm=queries.getActiveAcademicTerm.get() as any;
+    const activeSession=queries.getActiveAcademicSession.get() as any;
+    const termId=Number(url.searchParams.get('termId')||activeTerm?.id||0);
+    const sessionId=Number(url.searchParams.get('sessionId')||activeSession?.id||0);
+    if(!isPositiveIntId(termId)||!isPositiveIntId(sessionId))return apiError(409,'Choose an academic session and term.');
+    const term=db.query('SELECT * FROM academic_terms WHERE id=? AND session_id=?').get(termId,sessionId) as any;
+    if(!term)return apiError(400,'The term does not belong to this academic session.');
+    const results = (queries.getStudentTermResultsForReportCard.all(actualStudentId) as any[]).filter(r=>Number(r.term_id)===termId&&Number(r.session_id)===sessionId);
+    const remarks = results.length?db.prepare("SELECT * FROM student_term_remarks WHERE student_id=? AND term_id=? AND session_id=? ORDER BY updated_at DESC").all(actualStudentId,termId,sessionId):[];
+    const cfg=queries.getConfig.get() as any;
+    return apiSuccess({ results, remarks,school_name:schoolDisplayName(cfg?.org_name),term_id:termId,session_id:sessionId,term_name:term.name });
   }
 
   // ── Guardian Ward Exams ───────────────────────────────────────────────────
@@ -755,7 +782,7 @@ export async function tryGuardianPortalZoneC(req: Request, method: string, pathn
     const timestamp = Date.now();
     const nonce = crypto.randomBytes(8).toString("hex");
     const payload = `${auth.userId}:${link.student_id}:${timestamp}:${nonce}`;
-    const secret = process.env.JWT_SECRET || "acqad-guardian-share-secret";
+    const secret = getShareSecret();
     const signature = crypto.createHmac("sha256", secret).update(payload).digest("hex");
     const token = Buffer.from(`${payload}.${signature}`).toString("base64url");
     const shareUrl = `/student/report-card?student_id=${link.student_id}&token=${token}`;
@@ -771,7 +798,7 @@ export async function tryGuardianPortalZoneC(req: Request, method: string, pathn
       const payload = decoded.substring(0, dotIdx);
       const signature = decoded.substring(dotIdx + 1);
 
-      const secret = process.env.JWT_SECRET || "acqad-guardian-share-secret";
+      const secret = getShareSecret();
       const expectedSig = crypto.createHmac("sha256", secret).update(payload).digest("hex");
       const sigBuf = Buffer.from(signature, "hex");
       const expBuf = Buffer.from(expectedSig, "hex");

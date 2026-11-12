@@ -2,7 +2,9 @@
 
 import React, { useEffect, useRef, useState, useMemo } from "react";
 import Link from "next/link";
-import { fetchWithAuth } from "../../lib/api";
+import { fetchWithAuth,buildAuthHeaders,API_BASE } from "../../lib/api";
+
+import {tabSessionReady} from '../../lib/tab-session';
 
 type NotificationItem = {
   id: number;
@@ -129,10 +131,12 @@ export function NotificationBell({ role = "ADMIN" }: { role?: "ADMIN" | "teacher
     let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 
     const connectSSE = async () => {
+      await tabSessionReady();
+      if(controller.signal.aborted)return;
       try {
-        const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
         const response = await fetch(`${API_BASE}/api/notifications/stream`, {
           credentials: "include",
+          headers:buildAuthHeaders(),
           signal: controller.signal,
         });
 

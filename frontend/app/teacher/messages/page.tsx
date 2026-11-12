@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { RequireRole } from "../../../components/auth/RequireRole";
 import { api } from "../../../lib/api";
 import styles from "./page.module.css";
+import {subscribeSchoolEvents} from "../../../lib/live-events";
 
 interface TeacherThread {
   id: number;
@@ -45,6 +46,10 @@ function TeacherMessagesContent() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [error, setError] = useState("");
+  const activeId = useRef<number | null>(null);
+  const sendLock = useRef(false);
+  const selectionVersion = useRef(0);
   const chatMessagesRef = useRef<HTMLDivElement>(null);
 
   const loadThreads = async () => {
@@ -53,12 +58,9 @@ function TeacherMessagesContent() {
       const res = await api.get<TeacherThread[]>("/api/teacher/messages/threads");
       if (Array.isArray(res)) {
         setThreads(res);
-        if (res.length > 0 && !activeThread) {
-          handleSelectThread(res[0]);
-        }
       }
     } catch (err) {
-      console.error("Failed to load teacher threads", err);
+      setError("Unable to load conversations. Please refresh and try again.");
     } finally {
       setLoading(false);
     }
@@ -69,14 +71,17 @@ function TeacherMessagesContent() {
   }, []);
 
   const handleSelectThread = async (t: TeacherThread) => {
-    setActiveThread(t);
+    if (sendLock.current) return;
+    const version = ++selectionVersion.current;
+    activeId.current = t.id;
+    setActiveThread(t); setMessages([]); setNewReply(""); setError("");
     try {
       const res = await api.get<{ thread: TeacherThread; messages: Message[] }>(`/api/teacher/messages/threads/${t.id}`);
-      if (res?.messages) {
+      if (version === selectionVersion.current && res?.messages) {
         setMessages(res.messages);
       }
     } catch (err) {
-      console.error("Failed to load thread details", err);
+      if (version === selectionVersion.current) setError("Unable to load this conversation. Select it again to retry.");
     }
   };
 
@@ -88,66 +93,36 @@ function TeacherMessagesContent() {
 
   // Real-time SSE live message listener inside teacher chat
   useEffect(() => {
-    let es: EventSource | null = null;
-    try {
-      es = new EventSource("/api/notifications/stream");
-      es.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          if (data && data.type === "chat_message") {
-            loadThreads();
-            // If the message is for the currently open active thread, append it immediately!
-            if (activeThread && (Number(data.thread_id) === Number(activeThread.id))) {
-              const incomingMsg: Message = {
-                id: Number(data.message_id || Date.now()),
-                sender_id: Number(data.sender_id || 0),
-                sender_role: (data.sender_role || "guardian") as any,
-                sender_name: data.sender_name || "Guardian",
-                text: data.text || data.message || "",
-                created_at: data.created_at || new Date().toISOString(),
-              };
-              setMessages((prev) => {
-                if (prev.some((m) => m.id === incomingMsg.id || (m.text === incomingMsg.text && m.sender_role === incomingMsg.sender_role))) {
-                  return prev;
-                }
-                return [...prev, incomingMsg];
-              });
-            }
-          }
-        } catch {}
-      };
-    } catch {}
-
-    return () => {
-      if (es) es.close();
-    };
+    return subscribeSchoolEvents(data=>{
+      if(data.type!=='chat_message')return;
+      void loadThreads();
+      if(activeThread&&Number(data.thread_id)===Number(activeThread.id)){
+        const id=activeThread.id;
+        void api.get<{messages:Message[]}>(`/api/teacher/messages/threads/${id}`).then(result=>{
+          if(activeId.current===id&&result?.messages)setMessages(current=>[...new Map([...current,...result.messages].map(m=>[m.id,m])).values()].sort((a,b)=>a.id-b.id));
+        }).catch(()=>{});
+      }
+    });
   }, [activeThread]);
 
   const handleSendReply = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newReply.trim() || !activeThread || sending) return;
-
+    if (!newReply.trim() || !activeThread || sendLock.current) return;
+    const threadId = activeThread.id;
     const textToSend = newReply.trim();
-    setNewReply("");
-    setSending(true);
-
-    const tempMsg: Message = {
-      id: Date.now(),
-      sender_id: 0,
-      sender_role: "teacher",
-      sender_name: "You",
-      text: textToSend,
-      created_at: new Date().toISOString(),
-    };
-    setMessages((prev) => [...prev, tempMsg]);
-
+    sendLock.current = true; setSending(true); setError("");
     try {
-      await api.post(`/api/teacher/messages/threads/${activeThread.id}`, { text: textToSend });
-      loadThreads();
-    } catch (err: any) {
-      alert(err.message || "Failed to send message");
+      const saved = await api.post<Message>(`/api/teacher/messages/threads/${threadId}`, { text: textToSend });
+      if (!saved) throw new Error("Unable to save this reply. Please try again.");
+      if (activeId.current === threadId) {
+        setMessages(prev => prev.some(m => m.id === saved.id) ? prev : [...prev, saved]);
+        setNewReply("");
+      }
+      void loadThreads();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to send. Your draft is kept; try again.");
     } finally {
-      setSending(false);
+      sendLock.current = false; setSending(false);
     }
   };
 
@@ -164,7 +139,7 @@ function TeacherMessagesContent() {
   return (
     <div className={styles.container}>
       <div className={styles.headerRow}>
-        <h1 className={styles.pageTitle}>Guardian Inquiries & Messages</h1>
+        <h1 className={styles.pageTitle}>Messages</h1>
       </div>
 
       <div className={styles.searchBox}>
@@ -174,6 +149,7 @@ function TeacherMessagesContent() {
         </svg>
         <input
           type="text"
+          aria-label="Search conversations"
           placeholder="Search by parent name, student name, or message..."
           className={styles.searchInput}
           value={searchQuery}
@@ -181,7 +157,8 @@ function TeacherMessagesContent() {
         />
       </div>
 
-      <div className={styles.threadsGrid}>
+      {error && <p className={styles.error} role="alert">{error}</p>}
+      <div className={styles.threadsGrid} data-active={!!activeThread}>
         {/* Threads List */}
         <div className={styles.threadsSidebar}>
           {loading && <div style={{ padding: "1.5rem", textAlign: "center", color: "#94A3B8" }}>Loading inquiries...</div>}
@@ -196,7 +173,9 @@ function TeacherMessagesContent() {
               <div
                 key={t.id}
                 className={`${styles.threadItem} ${isActive ? styles.threadItemActive : ""}`}
-                onClick={() => handleSelectThread(t)}
+                role="button" tabIndex={0} aria-pressed={isActive} aria-disabled={sending}
+                onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); void handleSelectThread(t); } }}
+                onClick={() => void handleSelectThread(t)}
               >
                 <div className={styles.avatar}>{t.guardian_name.charAt(0)}</div>
                 <div className={styles.threadInfo}>
@@ -221,6 +200,7 @@ function TeacherMessagesContent() {
           {activeThread ? (
             <>
               <div className={styles.chatHeader}>
+                <button className={styles.backButton} disabled={sending} onClick={()=>{selectionVersion.current++;activeId.current=null;setActiveThread(null);setMessages([]);}}>← Conversations</button>
                 <div className={styles.chatHeaderTitle}>{activeThread.guardian_name}</div>
                 <div className={styles.chatHeaderSub}>
                   Parent of <strong>{activeThread.student_name}</strong> • {activeThread.guardian_email}
@@ -247,6 +227,8 @@ function TeacherMessagesContent() {
               <form className={styles.chatInputRow} onSubmit={handleSendReply}>
                 <input
                   type="text"
+                  maxLength={4000}
+                  aria-label="Reply to parent"
                   placeholder="Type your response to parent..."
                   className={styles.chatInput}
                   value={newReply}

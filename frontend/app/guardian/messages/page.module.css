@@ -434,7 +434,7 @@
   border-radius: var(--g-radius-xl, 20px);
   width: 100%;
   max-width: 400px;
-  max-height: 80vh;
+  max-height: 80dvh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -501,3 +501,7 @@
 .container:has([data-guardian-detail]) > :not([data-guardian-detail]),.page:has([data-guardian-detail]) > :not([data-guardian-detail]) { display:none; }
 .modalBackdrop { position:static; inset:auto; background:transparent; backdrop-filter:none; padding:0; display:block; z-index:auto; }
 .modalContent,.sheetContent,.contactPickerModal { width:100%; max-width:900px; max-height:none; margin:0 auto; border:0; border-radius:12px; box-shadow:none; }
+
+.chatBackBtn,.chatSendBtn,.newChatBtn { min-width:44px; min-height:44px; }
+.chatMessagesBody { overscroll-behavior:contain; overflow-wrap:anywhere; }
+.chatInputBar { padding-bottom:calc(12px + env(safe-area-inset-bottom,0px)); }

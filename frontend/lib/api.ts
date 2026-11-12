@@ -1,3 +1,4 @@
+import {initializeTabSession,tabSessionReady} from './tab-session';
 import type { User, Subject, Question, ExamResult, ActiveExamData, Config, AuditLog, EnrolledStudent } from "./types";
 
 const API_BASE = (() => {
@@ -81,6 +82,7 @@ export function getPortalLoginRoute(role?: SessionUser["role"] | null): string {
 
 export function getTabToken(role?: SessionUser["role"] | null): string | null {
   if (typeof window === "undefined") return null;
+  initializeTabSession();
   try {
     const portalRole = role ?? inferPortalRoleFromPath();
     if (portalRole) {
@@ -115,6 +117,7 @@ export function setTabSession(
   sessionId?: string | null,
 ): void {
   if (typeof window === "undefined") return;
+  initializeTabSession();
   try {
     if (token) {
       window.sessionStorage.setItem(TAB_TOKEN_KEY, token);
@@ -159,7 +162,7 @@ export function buildAuthHeaders(
   explicitPortalRole?: SessionUser["role"] | null,
   includeJsonContentType = true,
 ): Record<string, string> {
-  const headers: Record<string, string> = {};
+  const headers: Record<string, string> = {"X-Tab-Session":"required"};
   if (includeJsonContentType) {
     headers["Content-Type"] = "application/json";
   }
@@ -201,6 +204,7 @@ function isSessionUser(value: unknown): value is SessionUser {
 
 /** Session probe: never navigates. Used on initial load and /setup so 401/503 do not cause redirect loops. */
 export async function getSession(explicitPortalRole?: SessionUser["role"] | null): Promise<SessionInfo> {
+  await tabSessionReady();
   // Never hang the app boot: abort after 10s so AuthProvider.init() always
   // settles (callers treat abort as logged-out, login page shows server status).
   const controller = new AbortController();
@@ -244,6 +248,7 @@ type FetchAuthBehavior = {
 };
 
 export async function fetchWithAuth<T = any>(url: string, options: RequestInit = {}, behavior: FetchAuthBehavior = {}): Promise<T> {
+  await tabSessionReady();
   const redirectOn401 = behavior.redirectOn401 ?? true;
   const redirectOn503 = behavior.redirectOn503 ?? true;
   const res = await fetch(API_BASE + url, {

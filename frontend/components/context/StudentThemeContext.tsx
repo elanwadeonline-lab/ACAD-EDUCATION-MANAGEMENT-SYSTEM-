@@ -48,7 +48,6 @@ export function StudentThemeProvider({ children }: { children: ReactNode }) {
     applyTheme(next);
     try {
       localStorage.setItem(STORAGE_KEY, next);
-      localStorage.setItem('acqad_theme', next);
     } catch {}
   };
 

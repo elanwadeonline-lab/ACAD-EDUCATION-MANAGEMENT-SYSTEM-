@@ -263,3 +263,38 @@
 .container:has([data-guardian-detail]) > :not([data-guardian-detail]) { display:none; }
 .modalBackdrop,.modalOverlay { position:static; inset:auto; display:block; background:transparent; padding:0; z-index:auto; }
 .modalContent,.modalSheet { width:100%; max-width:900px; max-height:none; margin:0 auto; border:0; border-radius:12px; box-shadow:none; }
+
+/* The record view is an in-page document, with the same measured surface as the list. */
+.modalSheet { background:var(--g-surface,#fff); border:1px solid var(--g-border,#e2e8f0); overflow:hidden; color:var(--g-text-primary,#0f172a); }
+.sheetHeader { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; padding:20px; border-bottom:1px solid var(--g-border,#e2e8f0); }
+.sheetTitleGroup { display:grid; gap:6px; min-width:0; }
+.sheetDocType,.sheetWardMeta { font-size:.75rem; color:var(--g-text-secondary,#475569); }
+.sheetTitle { font-size:1.125rem; line-height:1.35; margin:0; overflow-wrap:anywhere; }
+.sheetCloseBtn { flex-shrink:0; display:grid; place-items:center; width:44px; height:44px; border:1px solid var(--g-border,#e2e8f0); border-radius:8px; background:var(--g-surface,#fff); color:var(--g-text-primary,#0f172a); cursor:pointer; }
+.sheetBody { padding:20px; overflow-wrap:anywhere; }
+.reportSheetPreview { display:grid; gap:20px; }
+.previewSchoolHeader { display:grid; justify-items:center; gap:10px; text-align:center; padding-bottom:20px; border-bottom:2px solid var(--g-border,#e2e8f0); }
+.previewSchoolName { font-size:1.25rem; font-weight:700; line-height:1.35; }
+.previewTerm { font-size:.6875rem; font-weight:600; letter-spacing:.06em; color:var(--g-text-secondary,#475569); }
+.studentSummaryGrid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px 16px; font-size:.8125rem; line-height:1.6; }
+.gradesTable { width:100%; border-collapse:collapse; font-size:.8125rem; table-layout:fixed; }
+.gradesTable th { background:var(--g-surface-subtle,#f8fafc); font-weight:600; }
+.gradesTable :is(th,td) { padding:12px 6px; text-align:center; border-bottom:1px solid var(--g-border,#e2e8f0); overflow-wrap:anywhere; }
+.gradesTable :is(th,td):first-child { width:30%; text-align:left; }
+.gradeBadgeInline { font-weight:600; }
+.remarksBlock { padding:16px; border:1px solid var(--g-border,#e2e8f0); border-radius:8px; font-size:.8125rem; line-height:1.7; }
+.remarksHeading { font-weight:600; }
+.remarkQuote { margin:8px 0; }
+.reportBrand { margin:0; color:var(--g-text-secondary,#475569); font-size:.6875rem; text-align:center; }
+.sheetFooter { display:flex; flex-wrap:wrap; gap:10px; padding:16px 20px; border-top:1px solid var(--g-border,#e2e8f0); }
+.shareReportBtn,.downloadPdfBtn { flex:1 1 150px; display:flex; align-items:center; justify-content:center; gap:8px; min-height:44px; padding:12px; font:inherit; font-size:.8125rem; font-weight:600; border:1px solid var(--g-border,#e2e8f0); border-radius:8px; cursor:pointer; background:var(--g-surface,#fff); color:var(--g-text-primary,#0f172a); }
+.downloadPdfBtn { background:var(--g-primary,#92400e); color:#fff; border-color:var(--g-primary,#92400e); }
+.sheetFooter button:focus-visible,.sheetCloseBtn:focus-visible { outline:2px solid var(--g-primary,#92400e); outline-offset:3px; }
+@media(max-width:420px) { .sheetHeader,.sheetBody { padding:16px; } .studentSummaryGrid { grid-template-columns:minmax(0,1fr); } .gradesTable { font-size:.75rem; } }
+@media print {
+ .modalSheet,.modalSheet * { visibility:visible !important; }
+ .modalSheet { position:absolute; left:0; top:0; width:100%; max-width:none; border:0; background:#fff; color:#111; }
+ .sheetHeader,.sheetFooter { display:none; }
+ .sheetBody { padding:0; }
+ .gradesTable tr { break-inside:avoid; }
+}

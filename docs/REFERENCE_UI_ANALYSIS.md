@@ -1,10 +1,10 @@
-# eCard reference analysis and component integration map
+# Acqad reference analysis and component integration map
 
 Date: 2 November 2026. Status: initial audit retained as design evidence; implementation is now recorded in UI_REFERENCE_IMPLEMENTATION.md following the user’s explicit request to start coding.
 
 ## Request interpretation
 
-The latest request assigns images 1–2 to Admin/Teacher, image 3 to Student, and image 4 to Guardian. These references supersede the earlier proposed visual compositions in `ROLE_DESIGN_DIRECTIONS.md`. Keep the existing eCard brand tokens and real product behavior.
+The latest request assigns images 1–2 to Admin/Teacher, image 3 to Student, and image 4 to Guardian. These references supersede the earlier proposed visual compositions in `ROLE_DESIGN_DIRECTIONS.md`. Keep the existing Acqad brand tokens and real product behavior.
 
 The immediate request is to read and understand the supplied prompt and references before replacement work. The implementation objective described in that prompt is an in-place modernization: analyze each existing component, select a compatible external foundation, adapt it, reconnect its existing state/actions/data, and verify it. A static reference dashboard is not the deliverable.
 
@@ -34,7 +34,7 @@ Verified installed versions came from `frontend/node_modules/*/package.json`, in
 
 The matching external block is [shadcn dashboard-01](https://ui.shadcn.com/view/new-york-v4/dashboard-01): its navigation labels, metric content and table headings match the supplied examples.
 
-Adopt the narrow light sidebar, compact header, neutral surfaces, restrained borders, readable metric hierarchy, chart toolbar and table density. Use eCard operational content and the existing session selector. A chart needs actual historical data: do not manufacture a visitors-style series from current totals. Teacher should prioritize assigned work, grading and attendance; Admin should prioritize institution operations and session management.
+Adopt the narrow light sidebar, compact header, neutral surfaces, restrained borders, readable metric hierarchy, chart toolbar and table density. Use Acqad operational content and the existing session selector. A chart needs actual historical data: do not manufacture a visitors-style series from current totals. Teacher should prioritize assigned work, grading and attendance; Admin should prioritize institution operations and session management.
 
 Current shared sidebar already has an unboxed logo and no active left-border strip. Preserve these existing improvements. Its carbon treatment still differs from the light reference.
 
@@ -44,7 +44,7 @@ This is the main composition reference, not merely a color sample. Its distincti
 
 Replicate the hierarchy and proportions responsively using the student's actual academic performance, practice and gamification features. Retain the existing routes rather than add empty Overview/Activity/Progress/Report tabs solely because the image contains them. On smaller screens place the next action first, then progress, activity and subject information.
 
-The pastel waves and bubbles cannot imply nonexistent measurements. The supplied prompt also asks to remove unnecessary gradients and retain eCard colors. Therefore use a real data chart/progress graphic in the large panel, with restrained brand accents; do not copy the screenshot's fake names, 92%, XP targets or decorative chart data. Missing telemetry should have an unavailable state rather than be presented as verified zero progress.
+The pastel waves and bubbles cannot imply nonexistent measurements. The supplied prompt also asks to remove unnecessary gradients and retain Acqad colors. Therefore use a real data chart/progress graphic in the large panel, with restrained brand accents; do not copy the screenshot's fake names, 92%, XP targets or decorative chart data. Missing telemetry should have an unavailable state rather than be presented as verified zero progress.
 
 ### Guardian: image 4
 

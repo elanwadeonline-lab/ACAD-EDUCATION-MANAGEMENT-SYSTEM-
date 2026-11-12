@@ -278,3 +278,33 @@
   color: #94A3B8;
   text-align: center;
 }
+
+/* Keep the conversation usable while the mobile keyboard is open. */
+.chatArea { min-width:0; min-height:0; }
+.chatMessages { overscroll-behavior:contain; overflow-wrap:anywhere; }
+.sendBtn { min-width:44px; min-height:44px; }
+@media(max-width:640px) {
+ .chatMessages { max-height:45dvh; }
+ .chatInputRow { flex-wrap:wrap; padding-bottom:calc(1rem + env(safe-area-inset-bottom,0px)); }
+ .chatInput { min-width:0; flex:1 1 180px; font-size:16px; }
+}
+
+.error { color:var(--color-error,#b91c1c); padding:12px; border:1px solid var(--color-border); border-radius:8px; }
+.backButton { display:none; min-height:44px; border:1px solid var(--color-border); color:var(--color-text); background:var(--color-surface); border-radius:8px; padding:8px 12px; margin-bottom:12px; cursor:pointer; }
+.threadItem:focus-visible { outline:2px solid var(--color-primary); outline-offset:-2px; }
+@media(max-width:768px) {
+ .backButton { display:block; }
+ .threadsGrid { min-height:0; }
+ .threadsGrid[data-active="true"] .threadsSidebar { display:none; }
+ .threadsGrid[data-active="false"] .chatArea { display:none; }
+}
+
+.threadsGrid { grid-template-columns:minmax(260px,320px) minmax(0,1fr); box-shadow:none; border-radius:12px; }
+.threadsSidebar { background:var(--color-surface); }
+.threadItemActive { background:var(--color-surface-2); box-shadow:inset 3px 0 var(--color-primary); }
+.chatInput,.sendBtn { border-radius:8px; }
+.chatInput { font-size:1rem; }
+.bubbleTeacher { background:var(--color-primary-subtle); border:1px solid var(--color-primary-border); color:var(--color-text); }
+.bubbleGuardian { background:var(--color-surface-2); border:1px solid var(--color-border); color:var(--color-text); }
+.bubbleTeacher,.bubbleGuardian { max-width:85%; border-radius:12px; padding:12px 16px; line-height:1.75; }
+@media(max-width:768px) { .threadsGrid { grid-template-columns:minmax(0,1fr); } }

@@ -74,3 +74,12 @@ describe('Teacher lesson notes and admin review',()=>{
  test('attachments stay private even after approval and cannot be stolen',()=>{const file=service.addFile(teacher,{filename:'Lesson.pdf',storage_key:'random',mime:'application/pdf',bytes:100});const {id}=service.saveNote(teacher,noteData('submitted',{file_ids:[file.id]}));status(()=>service.file(student,file.id),403);expect(service.file(admin,file.id).filename).toBe('Lesson.pdf');status(()=>service.saveNote(secondTeacher,noteData('draft',{subject_id:2,file_ids:[file.id]})),403);service.review(admin,id,{state:'approved'});expect(service.file(teacher,file.id).filename).toBe('Lesson.pdf');status(()=>service.file(student,file.id),403);status(()=>service.file(secondTeacher,file.id),403);status(()=>service.saveNote(teacher,noteData('draft',{file_ids:[file.id]})),403);});
  test('photo-only notes work and invalid saves leave no partial records',()=>{const file=service.addFile(teacher,{filename:'Photo.jpg',storage_key:'photo',mime:'image/jpeg',bytes:20});service.saveNote(teacher,noteData('submitted',{body:'',file_ids:[file.id]}));status(()=>service.saveNote(teacher,noteData('draft',{body:'',file_ids:[]})),400);status(()=>service.saveNote(teacher,noteData('draft',{file_ids:[999]})),403);expect(service.notes(admin)).toHaveLength(1);});
 });
+
+test('reviewing a stale lesson-note version fails and cannot approve changed contents',()=>{
+ const {id}=service.saveNote(teacher,noteData('submitted'));const version=service.notes(admin).find(n=>n.id===id).updated_at;
+ service.saveNote(teacher,noteData('submitted',{body:'Changed after admin opened the note'}),id);
+ status(()=>service.review(admin,id,{state:'approved',expected_updated_at:version}),409);
+ expect(service.notes(admin).find(n=>n.id===id).state).toBe('submitted');
+ const current=service.notes(admin).find(n=>n.id===id);service.review(admin,id,{state:'approved',expected_updated_at:current.updated_at});
+ expect(service.notes(teacher).find(n=>n.id===id).state).toBe('approved');
+});

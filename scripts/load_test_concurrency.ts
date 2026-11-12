@@ -78,7 +78,7 @@ async function runPool<T>(
 
 async function main() {
   console.log("================================================================================");
-  console.log(" eCard / ACAD — High-Concurrency & Session-Isolation Benchmark Suite (Part F)");
+  console.log(" Acqad / ACAD — High-Concurrency & Session-Isolation Benchmark Suite (Part F)");
   console.log(` Target Server: ${BASE}`);
   console.log("================================================================================\n");
 

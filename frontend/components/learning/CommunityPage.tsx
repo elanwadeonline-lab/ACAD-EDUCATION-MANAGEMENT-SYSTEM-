@@ -84,6 +84,7 @@ export function CommunityPage() {
   const [more, setMore] = useState(true);
 
   const lockRef = useRef(false);
+  const updateVersion=useRef(0);
   const paginated = useRef(false);
   const staff = user?.role === 'teacher' || user?.role === 'operator';
 
@@ -91,6 +92,7 @@ export function CommunityPage() {
   const run = async (fn: () => Promise<void>) => {
     if (lockRef.current) return;
     lockRef.current = true;
+    updateVersion.current++;
     setBusy(true);
     setError('');
     try {
@@ -126,11 +128,14 @@ export function CommunityPage() {
   useEffect(() => {
     if (!user) return;
     let alive = true;
+    let pending=false;
     paginated.current = false;
     setError('');
     setLoading(true);
 
     const loadData = async () => {
+      if(pending||lockRef.current)return;
+      pending=true;const version=updateVersion.current;
       try {
         const [statusData, contentData] = await Promise.all([
           learningRequest<ChatStatus>('/chat-status').catch(() => null),
@@ -139,7 +144,7 @@ export function CommunityPage() {
             : learningRequest<LearningPost[]>('/posts')
         ]);
 
-        if (alive) {
+        if (alive&&version===updateVersion.current) {
           if (statusData) setChatStatus(statusData);
           if (view && view !== 'new') {
             setThread(contentData as { post: LearningPost; replies: LearningReply[] });
@@ -152,6 +157,7 @@ export function CommunityPage() {
       } catch (e) {
         if (alive) setError(e instanceof Error ? e.message : 'Unable to connect to community.');
       } finally {
+        pending=false;
         if (alive) setLoading(false);
       }
     };
@@ -303,7 +309,7 @@ export function CommunityPage() {
           </div>
           <div className={s.titleGroup}>
             <h1>
-              <span>School Community Chat</span>
+              <span>{staff?'School community':'Student community'}</span>
               {online !== null && (
                 <span className={s.presencePill}>
                   <span className={s.presenceDot} />
@@ -312,6 +318,7 @@ export function CommunityPage() {
                 </span>
               )}
             </h1>
+            <p className={s.intro}>Ask a question, share a study tip, and learn with your school.</p>
           </div>
         </div>
 
@@ -344,7 +351,7 @@ export function CommunityPage() {
               onClick={() => setComposerOpen(true)}
             >
               <PenSquare size={14} strokeWidth={2.2} />
-              <span>New Discussion</span>
+              <span>Start discussion</span>
             </button>
           )}
 
@@ -355,7 +362,7 @@ export function CommunityPage() {
               onClick={() => navigate('')}
             >
               <ArrowLeft size={15} strokeWidth={2.2} />
-              <span>Back to Chat Feed</span>
+              <span>All discussions</span>
             </button>
           )}
         </div>
@@ -366,7 +373,7 @@ export function CommunityPage() {
         <div className={s.lockBanner} role="alert">
           <div className={s.lockText}>
             <Lock size={16} strokeWidth={2.2} style={{ flexShrink: 0 }} />
-            <span><strong>Community Chat is Locked</strong></span>
+            <span><strong>Posting is paused</strong></span>
             {chatStatus.reason && <span className={s.lockReason}>— {chatStatus.reason}</span>}
             <span className={s.lockReason}>
               {staff ? '(Staff can still post official guidance)' : '(Read-only mode for students)'}
@@ -400,7 +407,7 @@ export function CommunityPage() {
       {/* ─── THREAD VIEW ─── */}
       {view ? (
         loading && !thread ? (
-          <p style={{ padding: '40px 0', textAlign: 'center', color: '#64748b' }}>Loading conversation…</p>
+          <p style={{ padding: '40px 0', textAlign: 'center', color: 'var(--color-muted)' }}>Loading conversation…</p>
         ) : thread ? (
           <div className={s.threadContainer}>
             {/* Original Post in Thread */}
@@ -573,7 +580,7 @@ export function CommunityPage() {
 
             {/* Replies Stream */}
             <div className={s.repliesStream}>
-              <h3 style={{ fontSize: 15, fontWeight: 700, margin: '16px 0 8px', color: '#475569', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <h3 style={{ fontSize: 15, fontWeight: 700, margin: '16px 0 8px', color: 'var(--color-text-2)', display: 'flex', alignItems: 'center', gap: 6 }}>
                 <MessageSquare size={16} strokeWidth={2.2} />
                 <span>Comments & Answers ({thread.replies.length})</span>
               </h3>
@@ -690,7 +697,7 @@ export function CommunityPage() {
             ) : (
               <form className={s.composerBox} onSubmit={handleReplySubmit}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>Drop an Answer or Comment:</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text)' }}>Your reply</span>
                   {staff && (
                     <span className={s.badgeTeacher}>
                       <ShieldCheck size={11} strokeWidth={2.2} />
@@ -701,6 +708,8 @@ export function CommunityPage() {
                 <textarea
                   required
                   maxLength={10000}
+                  disabled={busy}
+                  aria-label="Your reply"
                   className={s.textareaField}
                   value={replyText}
                   onChange={e => setReplyText(e.target.value)}
@@ -710,7 +719,7 @@ export function CommunityPage() {
                   <span className={s.composerHint}>Keep explanations clear and respectful.</span>
                   <button type="submit" className={s.btnSubmit} disabled={busy || !replyText.trim()}>
                     <Send size={14} strokeWidth={2.2} />
-                    <span>Post Reply</span>
+                    <span>Send reply</span>
                   </button>
                 </div>
               </form>
@@ -728,7 +737,7 @@ export function CommunityPage() {
               onClick={() => setChannel('all')}
             >
               <Hash size={14} strokeWidth={2.2} />
-              <span>All Channels</span>
+              <span>All</span>
             </button>
             <button
               type="button"
@@ -736,7 +745,7 @@ export function CommunityPage() {
               onClick={() => setChannel('general')}
             >
               <MessageSquare size={14} strokeWidth={2.2} />
-              <span>General Discussion</span>
+              <span>Discussions</span>
             </button>
             <button
               type="button"
@@ -744,7 +753,7 @@ export function CommunityPage() {
               onClick={() => setChannel('question')}
             >
               <HelpCircle size={14} strokeWidth={2.2} />
-              <span>Questions & Help</span>
+              <span>Questions</span>
             </button>
             <button
               type="button"
@@ -752,7 +761,7 @@ export function CommunityPage() {
               onClick={() => setChannel('tip')}
             >
               <Lightbulb size={14} strokeWidth={2.2} />
-              <span>Tips & Formulas</span>
+              <span>Study tips</span>
             </button>
             <button
               type="button"
@@ -787,22 +796,14 @@ export function CommunityPage() {
                 <button
                   type="button"
                   onClick={() => setSearch('')}
+                  aria-label="Clear search"
                   style={{ position: 'absolute', right: 10, background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8' }}
                 >
                   <X size={14} strokeWidth={2.2} />
                 </button>
               )}
             </div>
-            {!composerOpen && !chatStatus?.is_locked && (
-              <button
-                type="button"
-                className={s.btnNewPost}
-                onClick={() => setComposerOpen(true)}
-              >
-                <PenSquare size={14} strokeWidth={2.2} />
-                <span>Drop a Question / Tip</span>
-              </button>
-            )}
+
           </div>
 
           {/* Pinned Notice Card if not in pinned channel */}
@@ -816,10 +817,10 @@ export function CommunityPage() {
                   <Sparkles size={11} strokeWidth={2.5} style={{ display: 'inline', marginRight: 4 }} />
                   Official Notice · {pinnedPost.author_name} ({pinnedPost.author_role})
                 </span>
-                <span className={s.pinnedTitle} onClick={() => navigate(String(pinnedPost.id))}>
+                <button type="button" className={s.pinnedTitle} onClick={() => navigate(String(pinnedPost.id))}>
                   {pinnedPost.title}
-                </span>
-                <p style={{ margin: '4px 0 0', fontSize: 13, color: '#475569' }}>
+                </button>
+                <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--color-text-2)' }}>
                   {pinnedPost.body.length > 140 ? `${pinnedPost.body.slice(0, 140)}…` : pinnedPost.body}
                 </p>
               </div>
@@ -830,7 +831,7 @@ export function CommunityPage() {
           {composerOpen && (
             <form className={s.composerBox} onSubmit={handleCreatePost} style={{ marginBottom: 24 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                <span style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: 6 }}>
                   <PenSquare size={15} strokeWidth={2.2} />
                   <span>Share with the School Community</span>
                 </span>
@@ -853,7 +854,7 @@ export function CommunityPage() {
                   onClick={() => setComposerCategory('general')}
                 >
                   <MessageSquare size={13} strokeWidth={2.2} style={{ display: 'inline', marginRight: 5, verticalAlign: 'middle' }} />
-                  General Discussion
+                  Discussions
                 </button>
                 <button
                   type="button"
@@ -884,6 +885,8 @@ export function CommunityPage() {
               <input
                 required
                 maxLength={140}
+                disabled={busy}
+                aria-label="Discussion title"
                 className={s.inputField}
                 value={title}
                 onChange={e => setTitle(e.target.value)}
@@ -928,7 +931,7 @@ export function CommunityPage() {
                 <span className={s.composerHint}>Visible to all students, teachers, and school administrators.</span>
                 <button type="submit" className={s.btnSubmit} disabled={busy || !title.trim() || !body.trim()}>
                   <Send size={14} strokeWidth={2.2} />
-                  <span>Post to Community</span>
+                  <span>Post discussion</span>
                 </button>
               </div>
             </form>
@@ -938,14 +941,14 @@ export function CommunityPage() {
           {loading ? (
             <p style={{ textAlign: 'center', padding: '40px 0', color: '#94a3b8' }}>Loading community discussions…</p>
           ) : filteredPosts.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '50px 20px', background: '#f8fafc', borderRadius: 16, border: '1px solid #e2e8f0' }}>
+            <div style={{ textAlign: 'center', padding: '50px 20px', background: 'var(--color-surface-2)', borderRadius: 16, border: '1px solid var(--color-border)' }}>
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
                 <MessagesSquare size={44} strokeWidth={1.5} color="#94a3b8" />
               </div>
-              <h3 style={{ fontSize: 17, fontWeight: 700, margin: '0 0 6px', color: '#1e293b' }}>
+              <h3 style={{ fontSize: 17, fontWeight: 700, margin: '0 0 6px', color: 'var(--color-text)' }}>
                 {search ? 'No matching discussions found' : 'No posts in this channel yet'}
               </h3>
-              <p style={{ color: '#64748b', fontSize: 13, margin: '0 0 16px' }}>
+              <p style={{ color: 'var(--color-muted)', fontSize: 13, margin: '0 0 16px' }}>
                 {search ? 'Try adjusting your search terms' : 'Be the first student or teacher to drop a tip or question!'}
               </p>
               {!chatStatus?.is_locked && (
@@ -1112,8 +1115,8 @@ export function CommunityPage() {
                     padding: '12px 20px',
                     borderRadius: 10,
                     border: '1px solid #cbd5e1',
-                    background: '#f8fafc',
-                    color: '#475569',
+                    background: 'var(--color-surface-2)',
+                    color: 'var(--color-text-2)',
                     fontWeight: 600,
                     cursor: 'pointer',
                     margin: '10px auto',

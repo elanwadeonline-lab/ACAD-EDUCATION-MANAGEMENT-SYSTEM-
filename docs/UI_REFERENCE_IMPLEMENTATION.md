@@ -83,7 +83,7 @@ The wider pass also refines the existing shared Table, FilterBar, PageHeader, As
 - Screenshots in ignored local scratch/ui-reference use test fixtures, not school data. Student desktop visual review confirmed the closer reference composition with gold XP wave, icon rail, pills and rounded app frame.
 - The operational inventory is a 21-page surface refinement plus shared delegated surfaces. Full bespoke composition and end-to-end acceptance of every non-dashboard route remain open; no claim is made otherwise.
 
-Material UI cache integration uses enableCssLayer so unlayered eCard CSS modules retain precedence over Material defaults. This was added after reviewing the rendered Guardian tool cards. The current Student screenshot is a production fixture render; percentages, names and dates in that artifact are test data. Production components continue using the existing authenticated API and context values.
+Material UI cache integration uses enableCssLayer so unlayered Acqad CSS modules retain precedence over Material defaults. This was added after reviewing the rendered Guardian tool cards. The current Student screenshot is a production fixture render; percentages, names and dates in that artifact are test data. Production components continue using the existing authenticated API and context values.
 
 Final CSS-layer rebuild passed and the fixture browser suite was rerun against it. The Student reference revision and Guardian Material UI integration retain passing desktop/390px/320px checks. Backend concurrency and full bespoke per-route workflow acceptance remain separate open validation items.
 

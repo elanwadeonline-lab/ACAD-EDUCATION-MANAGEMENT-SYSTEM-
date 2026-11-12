@@ -1,4 +1,6 @@
 "use client";
+import {AcqadMark} from "../brand/AcqadLogo";
+import {PRODUCT_NAME,schoolDisplayName} from "../../lib/brand";
 
 import { useEffect, useState } from "react";
 import { api, fetchWithAuth } from "../../lib/api";
@@ -122,7 +124,7 @@ export function ReportCardModal({ student, onClose }: { student: any; onClose: (
   const loadExams = () => {
     setLoading(true);
     setFetchError("");
-    const studentId = Number(student.id);
+    const studentId = Number((student.student_user_id ?? student.id));
     const sessionParam = currentAcademicSession?.id ? `&sessionId=${currentAcademicSession.id}` : "";
     const termParam = currentAcademicTerm?.id ? `&termId=${currentAcademicTerm.id}` : "";
     const url = `/api/users/${studentId}/report-card-results?_t=${Date.now()}${sessionParam}${termParam}`;
@@ -179,12 +181,12 @@ export function ReportCardModal({ student, onClose }: { student: any; onClose: (
   useEffect(() => {
     loadExams();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [student.id, config?.current_term, currentAcademicSession?.id, currentAcademicTerm?.id]);
+  }, [(student.student_user_id ?? student.id), config?.current_term, currentAcademicSession?.id, currentAcademicTerm?.id]);
 
   let theme: any = {};
   try { theme = config?.theme_json ? JSON.parse(config.theme_json) : {}; } catch {}
   const logo = theme.school_logo as string | undefined;
-  const schoolName = config?.org_name || config?.school_name || "School Name";
+  const schoolName = schoolDisplayName(config?.org_name || config?.school_name);
   const adminName = config?.admin_name || "Principal";
   const currentTerm = currentAcademicTerm?.name || config?.current_term || "2026-T1";
 
@@ -205,9 +207,9 @@ export function ReportCardModal({ student, onClose }: { student: any; onClose: (
     const term = currentAcademicTerm?.name || currentTerm;
     try {
       if (type === "principal") {
-        await api.saveTermRemark(student.id, term, principalRemarks[0] ?? "", currentAcademicSession?.id, currentAcademicTerm?.id);
+        await api.saveTermRemark((student.student_user_id ?? student.id), term, principalRemarks[0] ?? "", currentAcademicSession?.id, currentAcademicTerm?.id);
       } else {
-        await api.saveTermRemark(student.id, term, teacherRemarks[0] ?? "", currentAcademicSession?.id, currentAcademicTerm?.id);
+        await api.saveTermRemark((student.student_user_id ?? student.id), term, teacherRemarks[0] ?? "", currentAcademicSession?.id, currentAcademicTerm?.id);
       }
       setSavedRemarks((prev) => new Set([...prev, 0]));
       showToast("Remark saved successfully.", "success");
@@ -629,7 +631,7 @@ export function ReportCardModal({ student, onClose }: { student: any; onClose: (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={logo} alt="School Logo" style={{ width: "22mm", height: "22mm", objectFit: "contain" }} />
                 ) : (
-                  <div style={{ fontSize: "8pt", color: "#94a3b8", fontWeight: 700 }}>LOGO</div>
+                  <AcqadMark width={64} height={64}/>
                 )}
               </div>
 
@@ -807,7 +809,7 @@ export function ReportCardModal({ student, onClose }: { student: any; onClose: (
 
             {/* ── Footer ── */}
             <div style={{ position: "absolute", bottom: "10mm", left: "14mm", right: "14mm", textAlign: "center", fontSize: "8pt", color: "#94a3b8", borderTop: "1pt solid #e2e8f0", paddingTop: "3mm" }}>
-              {schoolName} &nbsp;·&nbsp; Generated {new Date().toISOString().slice(0, 10)} &nbsp;·&nbsp; Powered by ExamPool
+              {schoolName} &nbsp;·&nbsp; Generated {new Date().toISOString().slice(0, 10)} &nbsp;·&nbsp; Powered by {PRODUCT_NAME}
             </div>
 
             {/* ── Watermark logo seal ── */}

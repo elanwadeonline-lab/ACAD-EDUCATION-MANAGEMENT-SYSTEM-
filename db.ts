@@ -1,6 +1,26 @@
 import { Database } from "bun:sqlite";
 import path from "path";
 import fs from "fs";
+import os from "os";
+
+function resolveContainerMemoryMb(): number {
+  const envCap = Number(Bun.env.CONTAINER_MEMORY_MB || 0);
+  if (envCap > 0) return envCap;
+  for (const cgroupPath of ["/sys/fs/cgroup/memory.max", "/sys/fs/cgroup/memory/memory.limit_in_bytes"]) {
+    try {
+      if (fs.existsSync(cgroupPath)) {
+        const raw = fs.readFileSync(cgroupPath, "utf8").trim();
+        if (raw && raw !== "max") {
+          const bytes = Number(raw);
+          if (Number.isFinite(bytes) && bytes > 0 && bytes < 1024 * 1024 * 1024 * 64) {
+            return Math.floor(bytes / (1024 * 1024));
+          }
+        }
+      }
+    } catch {}
+  }
+  return Math.floor(os.totalmem() / (1024 * 1024));
+}
 
 function resolveDatabasePath(): string {
   if (Bun.env.EXAMPOOL_DB) return Bun.env.EXAMPOOL_DB;
@@ -27,13 +47,20 @@ if (!fs.existsSync(dbDir)) {
 }
 
 const db = new Database(EXAMPOOL_DB_PATH, { create: true });
+const availMemMb = resolveContainerMemoryMb();
+const isConstrainedMem = availMemMb <= 768;
+const cacheSizeKb = isConstrainedMem ? -16000 : availMemMb <= 2048 ? -32000 : -64000;
+const mainMmapBytes = isConstrainedMem ? 33554432 : availMemMb <= 2048 ? 134217728 : 268435456;
+const bankMmapBytes = isConstrainedMem ? 33554432 : availMemMb <= 2048 ? 67108864 : 134217728;
 
 db.run("PRAGMA journal_mode = WAL");
 db.run("PRAGMA foreign_keys = ON");
 db.run("PRAGMA busy_timeout = 30000");
 db.run("PRAGMA synchronous = NORMAL");
-db.run("PRAGMA cache_size = -64000"); // 64MB memory page cache
-db.run("PRAGMA mmap_size = 268435456"); // 256MB zero-copy memory-mapped I/O
+db.run("PRAGMA wal_autocheckpoint = 2000"); // 8MB checkpoint window to prevent write-lock stalls during CBT bursts
+db.run("PRAGMA journal_size_limit = 67108864"); // Cap WAL file at 64MB to protect cloud persistent disks
+db.run(`PRAGMA cache_size = ${cacheSizeKb}`);
+db.run(`PRAGMA mmap_size = ${mainMmapBytes}`);
 db.run("PRAGMA temp_store = MEMORY"); // RAM for temp tables and sort buffers
 
 // Attach auxiliary databases for ExamPool v4.1 Naija Hybrid
@@ -50,7 +77,7 @@ db.run(`PRAGMA practice_logs.journal_mode = WAL`);
 db.run(`PRAGMA practice_logs.synchronous = NORMAL`);
 db.run(`PRAGMA practice_logs.busy_timeout = 30000`);
 db.run(`PRAGMA content_bank.busy_timeout = 30000`);
-db.run(`PRAGMA content_bank.mmap_size = 134217728`); // 128MB mmap for fast question search
+db.run(`PRAGMA content_bank.mmap_size = ${bankMmapBytes}`);
 
 // Create content_bank schemas before making it read-only
 db.run(`
@@ -336,7 +363,7 @@ export function initializeDatabase(): void {
       description      TEXT,
       favicon          TEXT,
       admin_name       TEXT,
-      org_name         TEXT NOT NULL DEFAULT 'ExamPool School',
+      org_name         TEXT NOT NULL DEFAULT 'Acqad',
       licence_key      TEXT,
       licence_type     TEXT NOT NULL DEFAULT 'basic' CHECK(licence_type IN ('basic','standard','premium')),
       theme_json            TEXT NOT NULL DEFAULT '{}',
@@ -681,7 +708,7 @@ export function initializeDatabase(): void {
   db.prepare("UPDATE settings SET value = '3' WHERE key = 'SCHEMA_VERSION' AND value = '2'").run();
 
   // Ensure at least one config row exists
-  db.prepare("INSERT OR IGNORE INTO config (id, org_name, version) VALUES (1, 'ExamPool School', '1.0.0')").run();
+  db.prepare("INSERT OR IGNORE INTO config (id, org_name, version) VALUES (1, 'Acqad', '1.0.0')").run();
 
   // ── v4.1 Operational Tables (core_exampool.db) ───────────────────────────
   db.run(`
@@ -1793,6 +1820,8 @@ export const queries = {
   updateExamReveals: db.prepare("UPDATE exams SET solution_reveals_remaining = ?, revealed_solutions_json = ? WHERE id = ?"),
   releaseSubjectResults: db.prepare("UPDATE exams SET result_status = 'released' WHERE subject_id = ? AND status = 'completed'"),
   getExamById:             db.prepare("SELECT * FROM exams WHERE id = ?"),
+  getExamSaveMeta:         db.prepare("SELECT id, student_id, subject_id, status, start_time, deadline FROM exams WHERE id = ? AND student_id = ?"),
+  getExamSyncStatus:       db.prepare("SELECT status, start_time FROM exams WHERE id = ?"),
   getExamByStudentSubject: db.prepare("SELECT * FROM exams WHERE student_id = ? AND subject_id = ?"),
   saveExam:                db.prepare("UPDATE exams SET answers_json = ? WHERE id = ? AND student_id = ?"),
   submitExam:              db.prepare("UPDATE exams SET answers_json=?, end_time=?, score=?, total_score=?, status='completed' WHERE id=? AND student_id=? AND status='in-progress'"),
@@ -1873,6 +1902,21 @@ export const queries = {
       last_used = strftime('%Y-%m-%dT%H:%M:%SZ','now')
   `),
   getUserTokenByJti: db.prepare("SELECT * FROM user_tokens WHERE jti = ? LIMIT 1"),
+  verifyAuthSession: db.prepare(`
+    SELECT
+      u.id AS user_id,
+      u.name AS name,
+      u.email AS email,
+      u.role AS role,
+      u.is_active AS is_active,
+      (SELECT 1 FROM token_blacklist tb WHERE tb.token = ?1 OR (?2 IS NOT NULL AND tb.jti = ?2) LIMIT 1) AS is_blacklisted,
+      ut.revoked_at AS token_revoked_at,
+      ut.expires_at AS token_expires_at
+    FROM (SELECT 1)
+    LEFT JOIN users u ON u.id = ?3
+    LEFT JOIN user_tokens ut ON (?2 IS NOT NULL AND ut.jti = ?2)
+    LIMIT 1
+  `),
   getActiveUserSessions: db.prepare(`
     SELECT ut.jti, ut.user_id, ut.device_fingerprint, ut.token_type, ut.created_at, ut.expires_at, ut.revoked_at,
            ud.device_name, ud.user_agent, ud.ip, ud.last_used

@@ -14,7 +14,7 @@ import { Plus, Users } from 'lucide-react-native';
 import { Colors as C } from '../theme/tokens';
 import { useGuardianAuth } from '../context/GuardianAuthContext';
 import { useActiveWard } from '../context/ActiveWardContext';
-import { useRemote } from '../components/common/NativeUI';
+import { useRemote,Feedback } from '../components/common/NativeUI';
 
 export function GuardianMessagesScreen({ onBack }: { onBack?: () => void }) {
   const router = useRouter();
@@ -26,7 +26,7 @@ export function GuardianMessagesScreen({ onBack }: { onBack?: () => void }) {
   const [showContacts, setShowContacts] = useState(false);
 
   const threads = useRemote<any[]>('/api/guardian/messages/threads', `${token}:${activeWard?.id || ''}`);
-  const contacts = useRemote<any>(showContacts ? `/api/guardian/messages/contacts?student_id=${activeWard?.id || ''}` : null, token || '');
+  const contacts = useRemote<any>(showContacts&&activeWard ? `/api/guardian/messages/contacts?student_id=${activeWard.id}` : null, token || '');
 
   const threadList = threads.data || [];
   const filteredThreads = threadList.filter((t) => {
@@ -52,11 +52,11 @@ export function GuardianMessagesScreen({ onBack }: { onBack?: () => void }) {
 
   const openThread = (t: any) => {
     router.push({
-      pathname: `/messages/${t.id}`,
+      pathname: '/messages/[id]',
       params: {
         id: String(t.id),
         name: t.recipient_name || 'Teacher',
-        role: t.role || 'Faculty Member',
+        role: t.recipient_role === 'operator' ? 'School administration' : 'Teacher',
       },
     });
   };
@@ -64,9 +64,12 @@ export function GuardianMessagesScreen({ onBack }: { onBack?: () => void }) {
   const startThreadWithContact = (c: any) => {
     setShowContacts(false);
     router.push({
-      pathname: `/messages/new`,
+      pathname: '/messages/[id]',
       params: {
+        id:'new',
         recipientId: String(c.id),
+        studentId:String(activeWard?.id||''),
+        studentName:activeWard?.name||'',
         name: c.name,
         role: c.role_label || c.role || 'Teacher',
       },
@@ -76,7 +79,7 @@ export function GuardianMessagesScreen({ onBack }: { onBack?: () => void }) {
   return (
     <SafeAreaView edges={['top', 'left', 'right', 'bottom']} style={styles.container}>
       <BaseHeader
-        title={showContacts ? 'New Conversation' : 'Messages'}
+        title={showContacts ? 'Choose a contact' : 'Messages'}
         subtitle={activeWard ? `Conversations about ${activeWard.name}` : 'School messages'}
         onBack={handleBack}
         actions={
@@ -109,6 +112,8 @@ export function GuardianMessagesScreen({ onBack }: { onBack?: () => void }) {
           />
         }
       >
+        <Text style={styles.subNote}>School conversations stay linked to your child. Updates refresh while the app is open.</Text>
+        <Feedback loading={showContacts?contacts.loading:threads.loading} error={showContacts?contacts.error:threads.error} onRetry={()=>showContacts?contacts.reload():threads.reload()}/>
         {showContacts ? (
           <>
             <Text style={styles.subNote}>Select a teacher or administrative staff member to start a conversation:</Text>
@@ -183,7 +188,7 @@ export function GuardianMessagesScreen({ onBack }: { onBack?: () => void }) {
 
             {!threads.loading && !filteredThreads.length && (
               <BaseEmptyState
-                icon={<SolidMessage size={36} color="#6366F1" secondaryColor="#4F46E5" />}
+                icon={<SolidMessage size={36} color={C.primary} secondaryColor={C.primaryDark} />}
                 title={search ? 'No matching conversations' : 'No conversations yet'}
                 description={search ? 'Try searching for a different teacher name or subject.' : "Use '+ New' above to start a message with your child’s class teacher."}
               />
@@ -214,14 +219,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
     borderColor: 'rgba(245, 158, 11, 0.35)',
-    borderRadius: 18,
+    borderRadius: 10,
     paddingHorizontal: 12,
   },
   searchBar: {
     backgroundColor: '#FFFFFF',
     borderRadius: 14,
-    borderWidth: 0,
-    borderColor: 'transparent',
+    borderWidth: 1,
+    borderColor: C.cardBorder,
     minHeight: 46,
     paddingHorizontal: 12,
     shadowColor: '#0F172A',
@@ -236,7 +241,7 @@ const styles = StyleSheet.create({
       : {}),
   },
   searchInput: {
-    fontSize: 14,
+    fontSize: 16,
     color: '#0F172A',
     fontFamily: MANROPE_MEDIUM,
   },

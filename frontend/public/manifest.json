@@ -1,11 +1,11 @@
 {
-  "name": "ExamPool - School Management Platform",
-  "short_name": "ExamPool",
+  "name": "Acqad - School Management Platform",
+  "short_name": "Acqad",
   "description": "Complete school management platform with CBT, grading, and guardian monitoring",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#4F7cff",
+  "theme_color": "#92400E",
   "orientation": "any",
   "icons": [
     {

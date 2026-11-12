@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import {PRODUCT_NAME} from "../../lib/brand";
 
 export interface AcqadLogoProps {
   size?: "sm" | "md" | "lg" | "xl";
@@ -38,7 +39,7 @@ export function AcqadMark({
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={className}
-      aria-label="Acqad Logo"
+      aria-label="Acqad logo"
     >
       <defs>
         {/* Acqad Imperial Gold Gradient */}
@@ -132,7 +133,7 @@ export function AcqadLogo({
         }}
       >
         <AcqadMark width={size === "xl" ? 72 : 56} height={size === "xl" ? 72 : 56} theme="gold" />
-        <span className="mt-3 font-display text-3xl font-bold tracking-tight text-white">Acqad</span>
+        <span className="mt-3 font-display text-3xl font-bold tracking-tight text-white">{PRODUCT_NAME}</span>
         {showSubtitle && (
           <span className="mt-1 max-w-[220px] text-center text-[10px] font-medium leading-tight tracking-wider uppercase text-slate-300">
             Academic Coordination, Quality & Administration, Digital Platform
@@ -152,7 +153,7 @@ export function AcqadLogo({
               className={`font-display ${currentSize.text} font-semibold tracking-tight`}
               style={{ letterSpacing: "-0.03em", fontWeight: wordmarkWeight }}
             >
-              Acqad
+              {PRODUCT_NAME}
             </span>
           </div>
           {showSubtitle && (

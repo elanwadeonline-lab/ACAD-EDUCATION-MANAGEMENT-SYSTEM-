@@ -8,6 +8,9 @@ import { StudentAvatar } from "../../../components/guardian/StudentAvatar";
 import { api } from "../../../lib/api";
 import {useGuardianRecordPage} from "../../../components/guardian/useGuardianPageView";
 import styles from "./page.module.css";
+import {AcqadMark} from "../../../components/brand/AcqadLogo";
+import {schoolDisplayName,PRODUCT_NAME} from "../../../lib/brand";
+import {scorePct,letterGrade} from "../../../lib/gradeUtils";
 
 export default function GuardianReportsPage() {
   return (
@@ -21,16 +24,16 @@ function ReportsList() {
   const { activeWard, period, setPeriod, openChildSwitcher } = useGuardian();
   const router = useRouter();
   const [selectedDoc,setSelectedDoc]=useGuardianRecordPage(activeWard?.reports||[]);
-  const [reportCardData, setReportCardData] = useState<{ results: any[]; remarks: any[] } | null>(null);
+  const [reportCardData, setReportCardData] = useState<{ results: any[]; remarks: any[]; school_name?:string;term_name?:string } | null>(null);
   const [loadingCard, setLoadingCard] = useState(false);
   const [shareToast, setShareToast] = useState<string | null>(null);
 
   useEffect(()=>{
     if(!selectedDoc||!activeWard)return;
     let cancelled=false;setLoadingCard(true);setReportCardData(null);
-    api.get<{results:any[];remarks:any[]}>(`/api/guardian/wards/${activeWard.student_id||activeWard.id}/report-card`).then(data=>{if(!cancelled)setReportCardData(data)}).catch(()=>{if(!cancelled)setReportCardData(null)}).finally(()=>{if(!cancelled)setLoadingCard(false)});
+    api.get<{results:any[];remarks:any[]}>(`/api/guardian/wards/${activeWard.student_id||activeWard.id}/report-card${selectedDoc.url?.includes('?')?selectedDoc.url.slice(selectedDoc.url.indexOf('?')):''}`).then(data=>{if(!cancelled)setReportCardData(data)}).catch(()=>{if(!cancelled)setReportCardData(null)}).finally(()=>{if(!cancelled)setLoadingCard(false)});
     return()=>{cancelled=true};
-  },[selectedDoc?.id,activeWard?.id]);
+  },[selectedDoc?.id,activeWard]);
   if (!activeWard) {
     return <div style={{ padding: "2rem", textAlign: "center", color: "var(--g-text-secondary, #64748B)" }}>No active ward selected.</div>;
   }
@@ -39,7 +42,7 @@ function ReportsList() {
     ? activeWard.reports
     : [];
 
-  const handleOpenDoc=(doc:WardReportDocument)=>setSelectedDoc(doc);
+  const handleOpenDoc=(doc:WardReportDocument)=>{if(doc.category==='attendance'){router.push('/guardian/attendance');return;}setSelectedDoc(doc);};
 
   const handleShareDoc = async (doc: WardReportDocument) => {
     try {
@@ -49,10 +52,8 @@ function ReportsList() {
       setShareToast(`Verified report link copied to clipboard!`);
       setTimeout(() => setShareToast(null), 3500);
     } catch {
-      const fallbackUrl = `${window.location.origin}/student/report-card?student_id=${activeWard.student_id || activeWard.id}`;
-      await navigator.clipboard.writeText(fallbackUrl);
-      setShareToast(`Report link copied to clipboard!`);
-      setTimeout(() => setShareToast(null), 3500);
+      setShareToast('Unable to create a verified report link. Please try again.');
+      setTimeout(()=>setShareToast(null),3500);
     }
   };
 
@@ -171,7 +172,7 @@ function ReportsList() {
 
       {/* ── Report Viewer Modal ── */}
       {selectedDoc && (
-        <div className={styles.modalOverlay} data-guardian-detail="true">
+        <div className={styles.modalOverlay} data-guardian-detail="true" data-guardian-report="true">
           <div className={styles.modalSheet} onClick={(e) => e.stopPropagation()}>
             <div className={styles.sheetHeader}>
               <div className={styles.sheetTitleGroup}>
@@ -197,7 +198,7 @@ function ReportsList() {
               ) : reportCardData ? (
                 <div className={styles.reportSheetPreview}>
                   <div className={styles.previewSchoolHeader}>
-                    <span className={styles.previewSchoolName}>ACADEMY / EXAMPOOL HIGH SCHOOL</span>
+                    <AcqadMark width={44} height={44}/><span className={styles.previewSchoolName}>{schoolDisplayName(reportCardData.school_name)}</span>
                     <span className={styles.previewTerm}>TERMLY ACADEMIC ASSESSMENT BROADSHEET</span>
                   </div>
 
@@ -213,8 +214,8 @@ function ReportsList() {
                       <thead>
                         <tr>
                           <th>Subject</th>
-                          <th>CA (40)</th>
-                          <th>Exam (60)</th>
+                          <th>CA</th>
+                          <th>Exam</th>
                           <th>Total</th>
                           <th>Grade</th>
                         </tr>
@@ -225,8 +226,8 @@ function ReportsList() {
                             <td>{r.subject_name || r.name}</td>
                             <td>{r.ca_score ?? "—"}</td>
                             <td>{r.exam_score ?? "—"}</td>
-                            <td><strong>{r.total_score ?? r.score}%</strong></td>
-                            <td><span className={styles.gradeBadgeInline}>{r.grade || "A"}</span></td>
+                            <td><strong>{scorePct(r.score,r.total_score)}%</strong></td>
+                            <td><span className={styles.gradeBadgeInline}>{r.grade || letterGrade(scorePct(r.score,r.total_score))}</span></td>
                           </tr>
                         ))}
                       </tbody>
@@ -237,12 +238,13 @@ function ReportsList() {
                     </div>
                   )}
 
+                  <p className={styles.reportBrand}>Powered by {PRODUCT_NAME} · {reportCardData.term_name}</p>
                   {reportCardData.remarks && reportCardData.remarks.length > 0 && (
                     <div className={styles.remarksBlock}>
                       <span className={styles.remarksHeading}>Official Comments:</span>
                       {reportCardData.remarks.map((rem: any, idx: number) => (
                         <p key={idx} className={styles.remarkQuote}>
-                          <strong>{rem.author || "Principal"}:</strong> {rem.text}
+                          <strong>Principal:</strong> {rem.principal_remark || "—"}<br/><strong>Class teacher:</strong> {rem.teacher_remark || "—"}
                         </p>
                       ))}
                     </div>
@@ -279,7 +281,7 @@ function ReportsList() {
                   <polyline points="7 10 12 15 17 10" />
                   <line x1="12" y1="15" x2="12" y2="3" />
                 </svg>
-                <span>Download PDF</span>
+                <span>Print / save PDF</span>
               </button>
             </div>
           </div>

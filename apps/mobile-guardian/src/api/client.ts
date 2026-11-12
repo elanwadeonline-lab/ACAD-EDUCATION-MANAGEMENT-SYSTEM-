@@ -24,6 +24,8 @@ export async function apiRequest<T = any>(
 ): Promise<{ success: boolean; data?: T; error?: string }> {
   const controller=new AbortController();
   const timeout=setTimeout(()=>controller.abort(),20000);
+  const abort=()=>controller.abort();
+  if(options.signal?.aborted)controller.abort();else options.signal?.addEventListener('abort',abort,{once:true});
   try {
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
@@ -37,7 +39,7 @@ export async function apiRequest<T = any>(
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       ...options,
       headers,
-      signal: options.signal || controller.signal,
+      signal: controller.signal,
     });
 
     const json = await response.json().catch(() => ({}));
@@ -60,6 +62,7 @@ export async function apiRequest<T = any>(
     };
   } finally {
     clearTimeout(timeout);
+    options.signal?.removeEventListener('abort',abort);
   }
 }
 

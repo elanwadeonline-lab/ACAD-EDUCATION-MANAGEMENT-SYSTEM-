@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ADMIN MESSAGES / GUARDIAN INQUIRIES — eCard Systems ACQAD
+   ADMIN MESSAGES / GUARDIAN INQUIRIES — Acqad ACQAD
    Strictly Manrope typography, Institutional Amber-Orange accents,
    Obsidian surfaces, clean 1px borders, Linear-style density & restraint.
    ========================================================================== */
@@ -9,7 +9,7 @@
   flex-direction: column;
   gap: 1.25rem;
   width: 100%;
-  height: calc(100vh - 110px);
+  height: calc(100dvh - 110px);
   font-family: var(--font-sans), 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
@@ -402,3 +402,30 @@
 .threadItemActive { box-shadow:inset 2px 0 var(--color-primary); }
 .wardBadge,.quickPill,.threadAvatar { background:transparent; border:0; border-radius:0; color:var(--color-muted); }
 .guardianName { color:var(--color-text); }.threadItem:focus-visible { outline:2px solid var(--color-primary); outline-offset:-2px; }
+
+.composerArea { padding-bottom:calc(1rem + env(safe-area-inset-bottom,0px)); }
+
+/* The same conversation surface as the teacher portal. */
+.hubGrid { grid-template-columns:minmax(260px,320px) minmax(0,1fr); }
+.leftPanel,.rightPanel,.chatHeaderLeft,.threadContent { min-width:0; }
+.threadItem { border-bottom:1px solid var(--color-border); padding:16px; min-height:80px; }
+.threadItemActive { background:var(--color-surface-2); box-shadow:inset 3px 0 var(--color-primary); }
+.threadAvatar { border-radius:10px; background:var(--color-primary-subtle); color:var(--color-primary); }
+.messagesArea { overscroll-behavior:contain; overflow-wrap:anywhere; min-height:0; }
+.messageBubbleMe,.messageBubbleThem { max-width:85%; border-radius:12px; box-shadow:none; padding:12px 16px; }
+.messageBubbleMe { background:var(--color-primary-subtle); color:var(--color-text); border:1px solid var(--color-primary-border); }
+.messageBubbleThem { background:var(--color-surface-2); color:var(--color-text); border:1px solid var(--color-border); }
+.bubbleText { font-size:.875rem; line-height:1.75; }
+.quickPill { min-height:36px; padding:8px 12px; border-radius:8px; }
+.composerInput { font-size:1rem; border-radius:8px; min-width:0; }
+.backButton { display:none; min-height:44px; padding:10px 12px; border:1px solid var(--color-border); border-radius:8px; color:var(--color-text); background:var(--color-surface); cursor:pointer; }
+@media(max-width:900px) {
+ .container { height:auto; min-height:calc(100dvh - 140px); }
+ .hubGrid { display:flex; flex-direction:column; min-height:0; }
+ .hubGrid[data-active="true"] .leftPanel,.hubGrid[data-active="false"] .rightPanel { display:none; }
+ .backButton { display:block; }
+ .chatHeader { align-items:flex-start; flex-wrap:wrap; gap:12px; padding:16px; }
+ .messagesArea { height:46dvh; min-height:220px; }
+ .quickRepliesBar { flex-wrap:nowrap; overflow:auto; }
+ .quickPill { min-height:44px; flex-shrink:0; }
+}

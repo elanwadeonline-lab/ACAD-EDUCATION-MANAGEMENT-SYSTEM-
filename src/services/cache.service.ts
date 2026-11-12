@@ -12,14 +12,17 @@ interface CacheEntry<T> {
 
 export class CacheService {
   private memoryCache: Map<string, CacheEntry<any>> = new Map();
+  private inFlight: Map<string, Promise<any>> = new Map();
+  private subscribers: Map<string, Set<(payload: any) => void>> = new Map();
   private maxEntries: number;
   private cleanupIntervalMs: number;
   private cleanupTimer: ReturnType<typeof setInterval> | null = null;
   private redisClient: any = null;
+  private redisSubClient: any = null;
   private isRedisActive: boolean = false;
 
   constructor(options: { maxEntries?: number; cleanupIntervalMs?: number } = {}) {
-    this.maxEntries = options.maxEntries || 10000;
+    this.maxEntries = options.maxEntries || 50000;
     this.cleanupIntervalMs = options.cleanupIntervalMs || 30000; // 30s purge cycle
 
     // Start background cleanup timer
@@ -29,21 +32,72 @@ export class CacheService {
     }
   }
 
-  /** Set an optional Redis client for distributed cloud deployments */
-  public setRedisClient(client: any) {
+  /** Set an optional Redis client (and optional subscriber client) for distributed cloud deployments */
+  public setRedisClient(client: any, subClient?: any) {
     this.redisClient = client;
     this.isRedisActive = !!client;
+    if (subClient) {
+      this.redisSubClient = subClient;
+      try {
+        subClient.on?.("message", (channel: string, message: string) => {
+          const handlers = this.subscribers.get(channel);
+          if (!handlers || handlers.size === 0) return;
+          try {
+            const parsed = JSON.parse(message);
+            for (const fn of handlers) fn(parsed);
+          } catch {}
+        });
+      } catch {}
+    }
+  }
+
+  /** Publish an event across local and distributed subscribers (e.g. SSE fanout or cache invalidation) */
+  public publish(channel: string, payload: any): void {
+    const handlers = this.subscribers.get(channel);
+    if (handlers && handlers.size > 0) {
+      for (const fn of handlers) {
+        try { fn(payload); } catch {}
+      }
+    }
+    if (this.isRedisActive && this.redisClient && typeof this.redisClient.publish === "function") {
+      try {
+        this.redisClient.publish(channel, JSON.stringify(payload)).catch?.(() => {});
+      } catch {}
+    }
+  }
+
+  /** Subscribe to a local/distributed pub-sub channel */
+  public subscribe(channel: string, handler: (payload: any) => void): () => void {
+    let set = this.subscribers.get(channel);
+    if (!set) {
+      set = new Set();
+      this.subscribers.set(channel, set);
+      if (this.redisSubClient && typeof this.redisSubClient.subscribe === "function") {
+        try { this.redisSubClient.subscribe(channel).catch?.(() => {}); } catch {}
+      }
+    }
+    set.add(handler);
+    return () => {
+      set?.delete(handler);
+      if (set && set.size === 0) {
+        this.subscribers.delete(channel);
+      }
+    };
   }
 
   /**
    * Set a value in cache with a TTL (in seconds).
    */
   public set<T>(key: string, value: T, ttlSeconds: number = 60): void {
-    if (this.memoryCache.size >= this.maxEntries) {
-      // Evict oldest 10% when full
-      const keysToEvict = Array.from(this.memoryCache.keys()).slice(0, Math.floor(this.maxEntries * 0.1));
-      for (const k of keysToEvict) {
+    if (this.memoryCache.has(key)) {
+      this.memoryCache.delete(key);
+    } else if (this.memoryCache.size >= this.maxEntries) {
+      // O(1) LRU eviction: evict least-recently-used 10% from head of Map iterator
+      const evictCount = Math.max(1, Math.floor(this.maxEntries * 0.1));
+      let i = 0;
+      for (const k of this.memoryCache.keys()) {
         this.memoryCache.delete(k);
+        if (++i >= evictCount) break;
       }
     }
 
@@ -59,6 +113,7 @@ export class CacheService {
 
   /**
    * Get a cached value. Returns null if missing or expired.
+   * Promotes hit entry to most-recently-used position in O(1).
    */
   public get<T>(key: string): T | null {
     const entry = this.memoryCache.get(key);
@@ -68,6 +123,10 @@ export class CacheService {
       this.memoryCache.delete(key);
       return null;
     }
+
+    // O(1) LRU promotion
+    this.memoryCache.delete(key);
+    this.memoryCache.set(key, entry);
 
     return entry.value as T;
   }
@@ -112,9 +171,9 @@ export class CacheService {
   }
 
   /**
-   * Get or compute wrapper.
+   * Single-flight get or compute wrapper (prevents Thundering Herd / Cache Stampede).
    * If `key` is cached, returns cached value.
-   * Otherwise executes `fetcher()`, stores in cache with `ttlSeconds`, and returns result.
+   * If a fetch for `key` is already in-flight, shares the pending Promise across all callers.
    */
   public async wrap<T>(key: string, ttlSeconds: number, fetcher: () => Promise<T> | T): Promise<T> {
     const cached = this.get<T>(key);
@@ -122,11 +181,25 @@ export class CacheService {
       return cached;
     }
 
-    const fresh = await fetcher();
-    if (fresh !== null && fresh !== undefined) {
-      this.set(key, fresh, ttlSeconds);
+    const pending = this.inFlight.get(key);
+    if (pending) {
+      return pending as Promise<T>;
     }
-    return fresh;
+
+    const promise = (async () => {
+      try {
+        const fresh = await fetcher();
+        if (fresh !== null && fresh !== undefined) {
+          this.set(key, fresh, ttlSeconds);
+        }
+        return fresh;
+      } finally {
+        this.inFlight.delete(key);
+      }
+    })();
+
+    this.inFlight.set(key, promise);
+    return promise;
   }
 
   /**
@@ -150,6 +223,7 @@ export class CacheService {
    */
   public clear(): void {
     this.memoryCache.clear();
+    this.inFlight.clear();
   }
 
   /**
@@ -177,6 +251,8 @@ export const CacheKeys = {
   subjectQuestions: (subjectId: number | string) => `subject_questions:${subjectId}`,
   subject: (subjectId: number | string) => `subject:${subjectId}`,
   user: (userId: number | string) => `user:${userId}`,
+  authToken: (token: string) => `auth_token:${token}`,
+  staticRoute: (urlPath: string) => `static_route:${urlPath}`,
   activeSession: () => `academic:active_session`,
   activeTerm: () => `academic:active_term`,
   timetableSubject: (subjectId: number | string) => `timetable:${subjectId}`,

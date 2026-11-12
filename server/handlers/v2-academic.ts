@@ -354,19 +354,10 @@ export function buildRichWardPayload(studentId: number, guardianId: number, term
     const results = queries.getStudentTermResultsForReportCard.all(studentId) as any[];
     let termResults = results.filter((r: any) => Number(r.term_id) === Number(tid) && Number(r.session_id) === Number(sid));
     
-    // If student has no results in current active term, fall back to their most recent term with results
-    if (termResults.length === 0 && results.length > 0) {
-      const latest = results[results.length - 1];
-      termResults = results.filter((r: any) => Number(r.term_id) === Number(latest.term_id) && Number(r.session_id) === Number(latest.session_id));
-    }
-
     let averageScore: number | null = null;
     if (termResults.length > 0) {
       const sum = termResults.reduce((acc: number, r: any) => acc + publishedScorePercent(r), 0);
       averageScore = Math.round((sum / termResults.length) * 10) / 10;
-    } else {
-      const examsAvg = db.prepare("SELECT ROUND(AVG(CASE WHEN status='completed' AND total_score>0 THEN CAST(score AS REAL)/total_score*100 END), 1) as avg FROM exams WHERE student_id = ?").get(studentId) as any;
-      averageScore = examsAvg?.avg !== null && examsAvg?.avg !== undefined ? Number(examsAvg.avg) : null;
     }
 
     let classPosition = "—";
@@ -436,25 +427,17 @@ export function buildRichWardPayload(studentId: number, guardianId: number, term
     const feeStructures = queries.getFeeStructuresForStudent.all(studentId, tid, sid) as any[];
     const feePayments = queries.getFeePaymentsForStudent.all(studentId) as any[];
 
-    let totalFees = 0;
-    const items = feeStructures.map((fs: any) => {
-      const amt = Number(fs.amount || 0);
-      totalFees += amt;
-      const payment = feePayments.find((fp: any) => Number(fp.fee_id) === Number(fs.id) && fp.status === "completed");
-      const isPaid = !!payment;
-      return {
-        id: fs.id,
-        title: fs.title,
-        amount: amt,
-        status: isPaid ? "paid" : "pending",
-        paid_date: payment ? payment.paid_at.slice(0, 10) : null,
-        due_date: fs.due_date || null,
-      };
+    const items=feeStructures.map((fee:any)=>{
+      const amount=Math.max(0,Number(fee.amount)||0);
+      const payments=feePayments.filter((p:any)=>Number(p.fee_id)===Number(fee.id)&&p.status==='completed');
+      const paid=payments.reduce((sum:number,p:any)=>sum+Math.max(0,Number(p.amount_paid)||0),0);
+      const balance=Math.max(0,amount-paid);
+      return {id:fee.id,title:fee.title,amount,paid:Math.min(paid,amount),balance,status:balance===0?'paid':paid>0?'partial':'pending',paid_date:payments[0]?.paid_at?.slice(0,10)||null,due_date:fee.due_date||null};
     });
-
-    const amountPaid = feePayments.filter((fp: any) => fp.status === "completed").reduce((acc: number, fp: any) => acc + Number(fp.amount_paid || 0), 0);
-    const balance = Math.max(0, totalFees - amountPaid);
-    const feePct = totalFees > 0 ? Math.min(100, Math.round((amountPaid / totalFees) * 100)) : 100;
+    const totalFees=items.reduce((sum:number,item:any)=>sum+item.amount,0);
+    const amountPaid=items.reduce((sum:number,item:any)=>sum+item.paid,0);
+    const balance=Math.max(0,totalFees-amountPaid);
+    const feePct=totalFees>0?Math.min(100,Math.round(amountPaid/totalFees*100)):100;
 
     // 4. Upcoming Examinations & Timetable
     const timetableEvents = db.prepare(`
@@ -462,11 +445,14 @@ export function buildRichWardPayload(studentId: number, guardianId: number, term
       FROM timetables t
       LEFT JOIN subjects s ON s.id = t.subject_id
       WHERE (t.session_id = ? OR t.session_id IS NULL) AND (t.term_id = ? OR t.term_id IS NULL)
+      AND (EXISTS(SELECT 1 FROM subject_enrollments se WHERE se.subject_id=t.subject_id AND se.student_id=?)
+        OR (t.class IS NOT NULL AND LOWER(REPLACE(t.class,' ',''))=LOWER(REPLACE(?,' ',''))))
+      AND t.exam_date IS NOT NULL AND t.exam_date!=''
       ORDER BY t.exam_date ASC, t.start_time ASC
-    `).all(sid, tid) as any[];
+    `).all(sid, tid,studentId,studentGrade) as any[];
 
     const upcoming_events = timetableEvents.map((t: any, idx: number) => {
-      const d = new Date(t.exam_date || "2026-06-01");
+      const d = new Date(t.exam_date);
       const month = d.toLocaleString("default", { month: "short" }).toUpperCase();
       const day = d.getDate();
       const weekday = d.toLocaleString("default", { weekday: "short" });
@@ -499,35 +485,9 @@ export function buildRichWardPayload(studentId: number, guardianId: number, term
 
     // 5. Reports
     const todayIso = new Date().toISOString().slice(0, 10);
-    const reports = [
-      {
-        id: 1,
-        title: `${activeTerm?.name || "Current Term"} Report Card`,
-        category: "academic",
-        date: todayIso,
-        term: `${activeTerm?.name || "Current Term"} ${activeSession?.name || ""}`.trim(),
-        description: "Comprehensive academic broadsheet with subject CA, exam scores, and principal remarks.",
-        url: `/api/grading/report-card/${studentId}`,
-      },
-      {
-        id: 2,
-        title: "Attendance & Punctuality Record",
-        category: "attendance",
-        date: todayIso,
-        term: `${activeTerm?.name || "Current Term"}`,
-        description: `${presentDays} of ${totalDays} school days attended (${attPct}% attendance rate).`,
-        url: `/api/guardian/wards/${studentId}/attendance`,
-      },
-      {
-        id: 3,
-        title: "Behavioral & Character Assessment",
-        category: "behaviour",
-        date: todayIso,
-        term: `${activeTerm?.name || "Current Term"}`,
-        description: "Conduct, team participation, attentiveness, and neatness evaluation by Form Teacher.",
-        url: `/api/guardian/wards/${studentId}/reports`,
-      }
-    ];
+    const reports:any[]=[];
+    if(termResults.length)reports.push({id:`academic-${sid}-${tid}`,title:`${activeTerm?.name||'Term'} Report Card`,category:'academic',date:todayIso,term:`${activeTerm?.name||''} ${activeSession?.name||''}`.trim(),term_id:tid,session_id:sid,description:'Approved subject marks and official remarks.',url:`/api/guardian/wards/${studentId}/report-card?sessionId=${sid}&termId=${tid}`});
+    if(totalDays>0)reports.push({id:`attendance-${sid}-${tid}`,title:'Attendance & Punctuality Record',category:'attendance',date:todayIso,term:activeTerm?.name||'Current term',description:`${presentDays} of ${totalDays} recorded school days attended.`,url:`/api/guardian/wards/${studentId}/attendance`});
 
     const unreadMsg = db.prepare("SELECT SUM(unread_for_guardian) as count FROM guardian_message_threads WHERE guardian_id = ? AND student_id = ?").get(guardianId, studentId) as any;
 

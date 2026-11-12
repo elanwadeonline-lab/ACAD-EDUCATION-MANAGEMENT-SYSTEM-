@@ -7,7 +7,7 @@ import BottomNavigation from "@mui/material/BottomNavigation";
 import BottomNavigationAction from "@mui/material/BottomNavigationAction";
 import SwipeableDrawer from "@mui/material/SwipeableDrawer";
 import ListItemButton from "@mui/material/ListItemButton";
-import { ArrowLeft, Home, Users, FileText, MessageCircle, MoreHorizontal, Bell, Sun, Moon, Plus, Check, X, ChevronDown, CalendarDays, Wallet, ClipboardCheck, Megaphone, Link2 } from "./GuardianSolidIcons";
+import { ArrowLeft, Home, Users, FileText, MessageCircle, MoreHorizontal, Bell, Plus, Check, X, ChevronDown, CalendarDays, Wallet, ClipboardCheck, Megaphone, Link2 } from "./GuardianSolidIcons";
 import { useGuardian } from "./GuardianContext";
 import { StudentAvatar } from "./StudentAvatar";
 import { AcqadLogo } from "../brand/AcqadLogo";
@@ -31,7 +31,7 @@ const tools = [
 export function GuardianMobileShell({ children }: { children: React.ReactNode }) {
   const pathname = (usePathname() || "").replace(/\/+$/, "");
   const { activeWard, wards, guardianName, setActiveWardId, childSwitcherOpen, openChildSwitcher, closeChildSwitcher,
-    unreadNotificationCount, unreadMessageCount, theme, toggleTheme } = useGuardian();
+    unreadNotificationCount, unreadMessageCount } = useGuardian();
   const isHome = pathname === "/guardian/dashboard";
   const pageTitles: Record<string,string> = { "select-child":"Choose a child",more:"School tools",wards:"My children",results:"Results",reports:"Reports",performance:"Progress",examinations:"Examinations",messages:"Messages",settings:"Your account",fees:"Fees & receipts",attendance:"Attendance",calendar:"School calendar",announcements:"School notices",links:"Manage children",notifications:"Notifications" };
   const pageTitle = pageTitles[pathname.split("/")[2]] || "Your family";
@@ -82,7 +82,6 @@ export function GuardianMobileShell({ children }: { children: React.ReactNode })
         {isHome ? (<Link href="/guardian/dashboard" className={styles.greetingLink}><span className={styles.parentAvatar}>{guardianName?.trim().charAt(0) || <Users size={20} />}</span><span className={styles.parentGreeting}><small>Hello,</small><strong>{guardianName || "Your family"}</strong></span></Link>) : <div className={styles.subpageHeading}><Link href="/guardian/dashboard" className={styles.iconButton} aria-label="Back to home"><ArrowLeft size={20}/></Link><strong>{pageTitle}</strong></div>}
         <div className={styles.headerRight}>
           {activeWard && !isHome && <button type="button" className={styles.childSelectorPill} onClick={openChildSwitcher} aria-label={`Switch child, currently ${activeWard.name}`} ><StudentAvatar name={activeWard.name} imageUrl={activeWard.image_url} size="xs" /><span className={styles.childSelectorName}>{activeWard.name.split(" ")[0]}</span><ChevronDown size={14} /></button>}
-          <button type="button" className={styles.iconButton} onClick={toggleTheme} aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}>{theme === "light" ? <Moon size={19} /> : <Sun size={19} />}</button>
           <Link href="/guardian/notifications" className={styles.iconButton} aria-label={`Notifications${unreadNotificationCount ? `, ${unreadNotificationCount} unread` : ""}`}><Bell size={20} />{unreadNotificationCount > 0 && <span className={styles.notifyDot}>{unreadNotificationCount > 99 ? "99+" : unreadNotificationCount}</span>}</Link>
         </div>
       </header>

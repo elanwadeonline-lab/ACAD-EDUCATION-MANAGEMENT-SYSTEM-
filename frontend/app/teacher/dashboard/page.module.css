@@ -41,7 +41,7 @@
 /* ── Course Grid (Neutral Surface Cards, No Thick Top Borders) ── */
 .courseGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 360px));
   gap: 0.875rem;
 }
 
@@ -355,3 +355,14 @@
 .actionMenuLabel { font-size:.6875rem; color:var(--color-muted); padding:8px 10px; overflow-wrap:anywhere; }
 .actionMenuItem { display:flex; align-items:center; min-height:44px; padding:10px; font-size:.8125rem; text-decoration:none; border-radius:5px; outline:none; cursor:pointer; }
 .actionMenuItem[data-highlighted] { background:var(--color-surface-2); color:var(--color-text); }
+
+/* Keep one assignment compact and every action equally sized. */
+.courseGrid { justify-content:start; align-items:start; }
+.courseCard,.courseCardTop>div { min-width:0; }
+.courseName { overflow-wrap:anywhere; }
+.courseStatus { display:flex; align-items:center; flex-shrink:0; gap:8px; }
+.viewSubject { display:grid; place-items:center; width:44px; height:44px; border:1px solid var(--color-border); border-radius:8px; color:var(--color-text-2); }
+.courseActions { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+.subjectAction { display:flex; align-items:center; justify-content:center; gap:4px; min-width:0; min-height:44px; padding:10px 8px; border:1px solid var(--color-border); border-radius:8px; background:var(--color-surface); color:var(--color-text); font:inherit; font-size:.75rem; font-weight:600; text-decoration:none; text-align:center; cursor:pointer; }
+.subjectAction:focus-visible,.viewSubject:focus-visible { outline:2px solid var(--color-primary); outline-offset:3px; }
+@media(hover:hover) and (pointer:fine) { .subjectAction:hover,.viewSubject:hover { background:var(--color-surface-2); border-color:var(--color-primary-border); } }

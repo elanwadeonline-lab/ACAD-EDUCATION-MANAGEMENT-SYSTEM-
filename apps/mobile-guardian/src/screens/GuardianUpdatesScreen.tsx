@@ -7,7 +7,7 @@ import { Search } from 'lucide-react-native';
 import { Colors as C } from '../theme/tokens';
 import { useGuardianAuth } from '../context/GuardianAuthContext';
 import { useRemote } from '../components/common/NativeUI';
-import { type CalendarEvent } from '../api/records';
+import { type CalendarEvent } from '../api/client';
 
 export function GuardianUpdatesScreen({ onBack }: { onBack?: () => void }) {
   const router = useRouter();
